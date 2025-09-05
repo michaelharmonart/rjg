@@ -67,11 +67,17 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     elif character == 'DungeonMonster':
         body_mesh = mc.listRelatives('dungeonmonster_FINAL_GEO', children=True)
 
+    if character == 'Luciana':
+        neckList = ['Neck', 'Neck1', 'Neck2','Neck3','Neck4', 'Head']
+        neckik = False
+    else:
+        neckList = ['Neck', 'Neck1', 'Head']
+        neckik = True
     #Building Parts // setting up the diffrent changes per character
     hip = rBuild.build_module(module_type='hip', side='M', part='COG', guide_list=['Hips'], ctrl_scale=50, cog_shape='quad_arrow', waist_shape='circle')
     chest = rBuild.build_module(module_type='chest', side='M', part='chest', guide_list=['Spine2'], ctrl_scale=70, chest_shape='circle')
     spine = rBuild.build_module(module_type='spine', side='M', part='spine', guide_list=['Hips', 'Spine', 'Spine1', 'Spine2'], ctrl_scale=1, mid_ctrl=True, joint_num=4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
-    neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=['Neck', 'Neck1', 'Head'], ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
+    neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
     head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50)
 
     if character == "Skeleton":
@@ -150,9 +156,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1)
         faceconnect.build()
 
-
-
-
     # previs face rig
     if not not_previs and not bony and character != 'Jett' and character != 'Blitz' and character != 'Bobo' and character != 'Susaka' and character != 'Drummer' and character !='Luciana' and character !='Domingo' and character != 'Fisherman': 
         arbit_guides = mc.listRelatives('FaceGuides', children=True)
@@ -168,13 +171,15 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
 
     #Mirrored Base Rig Parts
-    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman'] else 'lollipop'
+    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo'] else 'lollipop'
     for fs in ['Left', 'Right']:    
         arm = rBuild.build_module(module_type='biped_limb', side=fs[0], part='arm', guide_list=[fs + piece for piece in ['Arm', 'ForeArm', 'Hand']], offset_pv=50, ctrl_scale=5, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
         clavicle = rBuild.build_module(module_type='clavicle', side=fs[0], part='clavicle', guide_list=[fs + piece for piece in ['Shoulder', 'Arm']], local_orient=False, ctrl_scale=9) 
         hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8)
-        
-        leg = rBuild.build_module(module_type='biped_limb', side=fs[0], part='leg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Foot']], offset_pv=50, ctrl_scale=8, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
+        if character == 'Luciana':
+            leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
+        else:    
+            leg = rBuild.build_module(module_type='biped_limb', side=fs[0], part='leg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Foot']], offset_pv=50, ctrl_scale=8, bendy=not_previs, twisty=not_previs, stretchy=True, segments=4 if not_previs else 1)
         foot = rBuild.build_module(module_type='foot', side=fs[0], part='foot', guide_list=[fs + piece for piece in ['Foot', 'ToeBase', 'Toe_End']], ctrl_scale=10, toe_piv=fs+'ToePiv', heel_piv=fs+'HeelPiv', in_piv=fs+'In', out_piv=fs+'Out')
         
         fingers = []
@@ -188,12 +193,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             fingers.append(finger)
         thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(4)], ctrl_scale=1, fk_shape=fing_shape)
         fingers.append(thumb) 
-        if character == 'Luciana':
-            wingarm = rBuild.build_module(module_type='wing', side=fs[0], part='wing', guide_list=[fs + piece for piece in ['WingArm', 'WingForeArm', 'WingHand']], offset_pv=50, ctrl_scale=5, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
-            wingclavicle = rBuild.build_module(module_type='scapula', side=fs[0], part='scapula', guide_list=[fs + piece for piece in ['Scapula', 'WingArm']], local_orient=False, ctrl_scale=9)
-            #winghand = rBuild.build_module(module_type='winghand', side=fs[0], part='winghand', guide_list=[fs + 'WingHand'], ctrl_scale=8) 
 
-    
     #Bobo Specifics
     if character == 'Bobo':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 4)], ctrl_scale=10, pad=2)

@@ -27,6 +27,7 @@ import rjg.build.parts.ear as rEar
 import rjg.build.parts.wing as rWing
 import rjg.build.parts.scapula as rScapula
 import rjg.build.parts.winghand as rWingHand
+import rjg.build.parts.dragonleg as rDragonLeg
 
 reload(rAttr)
 reload(rRoot)
@@ -54,7 +55,7 @@ reload(rEar)
 reload(rWing)
 reload(rScapula)
 reload(rWingHand)
-
+reload(rDragonLeg)
 
 '''
 Wrapper for all part modules
@@ -86,6 +87,7 @@ MODULE_DICT = {
                'wing' : rWing.Wing,
                'scapula' : rScapula.Scapula,
                'winghand' : rWingHand.WingHand,
+               'dragonleg' : rDragonLeg.DragonLeg
                }
 
 
