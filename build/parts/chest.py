@@ -11,9 +11,10 @@ reload(rCtrl)
 reload(rAttr)
 
 class Chest(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, chest_shape='circle', chest_2_shape='circle', model_path=None, guide_path=None, rotate_ctrl=False):
+    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, chest_shape='circle', chest_2_shape='circle', model_path=None, guide_path=None, rotate_ctrl=False, spinejnt_count=4):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
-
+        
+        self.spinejnt_count = spinejnt_count
         self.rotate_ctrl = rotate_ctrl
 
         self.chest_shape = chest_shape
@@ -65,7 +66,7 @@ class Chest(rModule.RigModule):
         target_list = ['ROOT',
                        'global_M_CTRL',
                        'root_02_M_CTRL',
-                       'spine_03_FK_M_CTRL',
+                       f'spine_0{self.spinejnt_count - 1}_FK_M_CTRL',
                        '3']
         name_list = ['world', 'global', 'root', 'spine', 'default_value']
         point_names = ['point' + name.title() for name in name_list]

@@ -35,18 +35,19 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     geo = mc.ls(selection=True, type='mesh')
 
     sk_g = []
-
-    #geo = ['hair', 'bandanna', 'eyebrows', 'eyelashes', 'earrrings', 'honey_pin', 'gloves', 'beltloops', 
-    #       'RightEye', 'RightPupil', 'RightCornea', 'LeftEye', 'LeftCornea', 'LeftPupil', 'topteeth', 'tounge', 'bottomteeth', 
-    #       'hinge', 'frame', 'glasses', 'lenses', 'button', 'button3', 'pPlane4', 'pPlane3', 'pPlane5', 'pPlane6', 'belt', 'buckle', 
-    #       'loopleather', 'buckle2', 'backpockets', 'sidepocket', 'frontpockets']
     
-    geo = ['belt', 'buckle', 'loopleather', 'buckle2', 'beltloops', 'frontpockets', 'sidepocket', 'backpockets', 
-           'button', 'button3', 'thread1', 'thread', 'gloves', 'honey_pin', 'hinge', 'frame', 'glasses', 
-           'lenses', 'topteeth', 'tounge', 'bottomteeth', 'RightEye', 'RightPupil', 'RightCornea', 'LeftEye', 'LeftCornea', 
-           'LeftPupil', 'earrrings', 'eyelashes', 'eyebrows', 'hair', 'bandanna']
-
+    #geo = ['belt', 'buckle', 'loopleather', 'buckle2', 'beltloops', 'frontpockets', 'sidepocket', 'backpockets', 
+    #       'button', 'button3', 'thread1', 'thread', 'honey_pin', 'hinge', 'frame', 'glasses', 
+    #       'lenses', 'topteeth', 'tounge', 'bottomteeth', 'RightEye', 'RightPupil', 'RightCornea', 'LeftEye', 'LeftCornea', 
+    #       'LeftPupil', 'earrrings', 'eyelashes', 'eyebrows', 'hair', 'bandanna']
     
+    geo = ['bandanna', 'loopleather2', 'buckle2', 'buckle', 'beltloops', 'front_pockets', 'side_pocket', 'backpockets', 'button', 
+           'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
+           'LeftPupil', 'eyelashes', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
+           'topteeth', 'tounge']
+
+
+    classic_sk = ['gloves']
 
     #rUtil.create_pxWrap('shirt1', 'pantsCreased1', 'boots', 'Gretchen_UBM')
     rUtil.create_pxWrap('shirt', 'pants', 'boots', 'Gretchen_UBM')
@@ -56,6 +57,9 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     for g in geo:
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]
         sk_g.append(sk)
+    
+    for g in classic_sk:
+        sk_gloves = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=0, n='clothingSkc')[0]
 
     #mc.skinCluster('head_M_JNT', 'Hair', tsb=True, skinMethod=1, n='hairSkc') #skin the hair to only the head joint in order to avoid weird stretching
 

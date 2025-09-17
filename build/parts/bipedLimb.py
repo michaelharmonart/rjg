@@ -16,9 +16,9 @@ reload(rAttr)
 class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
     def __init__(self,side=None,part=None,guide_list=None, ctrl_scale=1,create_ik=True,create_fk=True,stretchy=True,twisty=True,bendy=True,segments=4,
                  sticky=None, solver=None, pv_guide='auto', offset_pv=0, slide_pv=None, gimbal=True, offset=True, 
-                 pad='auto', fk_shape='circle', gimbal_shape='circle', offset_shape='square', model_path=None, guide_path=None):
+                 pad='auto', fk_shape='circle', gimbal_shape='circle', offset_shape='square', model_path=None, guide_path=None, spinejnt_count = 4):
         super(BipedLimb, self).__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
-
+        self.spinejnt_count = spinejnt_count
         self.__dict__.update(locals())
 
         if self.twisty or self.bendy and not self.segments:
@@ -278,11 +278,20 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             driven_list = ['neck_M_01_fk_CTRL_CNST_GRP']#, 'neck_M_03_fk_CTRL_CNST_GRP']
             rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
 
-            hide_list = [self.base_name + '_tip_CTRL_CNST_GRP', self.base_name + '_base_CTRL_CNST_GRP', 'neck_03_FK_M_CTRL_CNST_GRP']
+            hide_list = [self.base_name + '_tip_CTRL_CNST_GRP', self.base_name + '_base_CTRL_CNST_GRP', f'neck_0{self.spinejnt_count - 1}_FK_M_CTRL_CNST_GRP']
             rAttr.Attribute(node=self.part_grp, type='plug', value=[' '.join(hide_list)], name='hideRigPlugs', children_name=['hideNodes'])
 
-            mc.hide('neck_M_03_fk_CTRL_CNST_GRP')
+            mc.hide(f'neck_M_0{self.spinejnt_count - 1}_fk_CTRL_CNST_GRP')
+            if self.create_ik:
+                if mc.objExists('switch_CTRL'):
+                    mc.addAttr('switch_CTRL', longName='Neck_M_IKFK', attributeType='bool', keyable=True)
+                    mc.connectAttr('switch_CTRL.Neck_M_IKFK', 'neck_M.switch', force=True)
+                for obj in ['chest_M_02_CTRL', 'neck_M_IK_CTRL_GRP','neck_M_IK_BASE_CTRL', 'neck_M_IK_MAIN_CTRL_CNST_GRP']:
+                    print(obj, mc.objExists(obj))
+                mc.parentConstraint('chest_M_02_CTRL', 'neck_M_IK_CTRL_GRP', mo=True)
+                mc.parentConstraint('neck_M_IK_BASE_CTRL', 'neck_M_IK_MAIN_CTRL_CNST_GRP', mo=True)
             return
+
         else:
             par = 'insert limb plug here'
             driver_list = ['driver list']

@@ -454,7 +454,7 @@ def output_rig(guide_list, side):
     dist = mc.createNode('distanceBetween', name=f"{side}_IKMaths" + "_stretch_DIST")
     mc.connectAttr(f'{side}_FootRoot_CTRL' + '.worldMatrix[0]', dist + '.inMatrix1')
     mc.connectAttr(f'{side}_Hip_CTRL' + '.worldMatrix[0]', dist + '.inMatrix2')
-    mdl = mc.createNode('multDoubleLinear', name=f"{side}_IKMaths" + "_stretch_MDL")
+    mdl = mc.createNode('multDL', name=f"{side}_IKMaths" + "_stretch_MDL")
     mc.setAttr(mdl + '.input1', 1)              # no global scale, just identity
     #mc.connectAttr(scale_attr, mdl + '.input1')
     mc.setAttr(mdl + '.input2', restlength)

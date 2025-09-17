@@ -510,9 +510,13 @@ def final(vis_ctrl=True, color_ctrl=True, switch_ctrl=True, constrain_model=Fals
     if polish:
         polish_rig()
 
-    mc.rename('neck_M_01_fk_CTRL', 'neck_01_FK_M_CTRL')
-    mc.rename('neck_M_02_fk_CTRL', 'neck_02_FK_M_CTRL')
-    mc.rename('neck_M_03_fk_CTRL', 'neck_03_FK_M_CTRL')
+    try:
+        mc.rename('neck_M_01_fk_CTRL', 'neck_01_FK_M_CTRL')
+        mc.rename('neck_M_02_fk_CTRL', 'neck_02_FK_M_CTRL')
+        mc.rename('neck_M_03_fk_CTRL', 'neck_03_FK_M_CTRL')
+    except:
+        print('neck rename didnt work')
+        pass
 
     try:
         mc.delete('*xgm*')

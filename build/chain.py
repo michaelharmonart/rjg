@@ -189,7 +189,7 @@ class Chain:
             t_percent = t_val - t_i
             if reverse:
                 t_percent = 1 - t_percent
-            mdl = mc.createNode('multDoubleLinear', name=jnt + '_twist_MDL')
+            mdl = mc.createNode('multDL', name=jnt + '_twist_MDL')
             mc.connectAttr(twist_loc + '.rotateY', mdl + '.input1')
             mc.setAttr(mdl + '.input2', t_percent)
             mc.connectAttr(mdl + '.output', jnt + '.rotateY')
@@ -253,7 +253,7 @@ class Chain:
             d = mc.getAttr(dist + '.distance')
 
             if global_scale:
-                mdl = mc.createNode('multDoubleLinear', name=jnt.replace('JNT', 'MDL'))
+                mdl = mc.createNode('multDL', name=jnt.replace('JNT', 'MDL'))
                 mc.connectAttr(global_scale, mdl + '.input1')
                 mc.connectAttr(mdl + '.output', mdn + '.input2X')
                 mc.setAttr(mdl + '.input2', d)
@@ -399,7 +399,7 @@ def stretch_segment(jnt, start, end, stretch_driver=None, global_scale=None):
     d = mc.getAttr(dist + '.distance')
 
     if global_scale:
-        mdl = mc.createNode('multDoubleLinear', name=jnt.replace('JNT', 'MDL'))
+        mdl = mc.createNode('multDL', name=jnt.replace('JNT', 'MDL'))
         mc.connectAttr(global_scale, mdl + '.input1')
         mc.connectAttr(mdl + '.output', mdn + '.input2X')
         mc.setAttr(mdl + '.input2', d)

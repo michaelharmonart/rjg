@@ -16,6 +16,7 @@ import rjg.build.parts.head as rHead
 import rjg.build.parts.metaFinger as rMetaFinger
 import rjg.build.parts.fingerAttr as rFingerAttr
 import rjg.build.parts.tail as rTail
+import rjg.build.parts.splinetail as rSplineTail
 import rjg.build.parts.floatBone as rFloatBone
 import rjg.build.parts.hinge as rHinge
 import rjg.build.parts.arbit as rArbit
@@ -44,6 +45,7 @@ reload(rHead)
 reload(rMetaFinger)
 reload(rFingerAttr)
 reload(rTail)
+reload(rSplineTail)
 reload(rFloatBone)
 reload(rHinge)
 reload(rArbit)
@@ -76,6 +78,7 @@ MODULE_DICT = {
                'meta_finger': rMetaFinger.MetaFinger,
                'finger_attr': rFingerAttr.FingerAttr,
                'tail': rTail.Tail,
+               'splinetail': rSplineTail.SplineTail,
                'float_bone' : rFloatBone.FloatBone,
                'hinge' : rHinge.Hinge,
                'arbitrary' : rArbit.Arbitrary,

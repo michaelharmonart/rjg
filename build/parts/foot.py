@@ -103,13 +103,13 @@ class Foot(rModule.RigModule):
 
         roll_cnd = mc.createNode('condition', name=self.base_name + '_roll_CND')
         roll_pma = mc.createNode('plusMinusAverage', name=self.base_name + '_roll_PMA')
-        ball_mdl = mc.createNode('multDoubleLinear', name=self.base_name + '_roll_MDL')
-        toe_mdl = mc.createNode('multDoubleLinear', name=self.base_name + '_toe_MDL')
-        toe_adl = mc.createNode('addDoubleLinear', name=self.base_name + '_toe_ADL')
+        ball_mdl = mc.createNode('multDL', name=self.base_name + '_roll_MDL')
+        toe_mdl = mc.createNode('multDL', name=self.base_name + '_toe_MDL')
+        toe_adl = mc.createNode('addDL', name=self.base_name + '_toe_ADL')
         bank_cnd = mc.createNode('condition', name=self.base_name + '_bank_CND')
         
         roll_cnd2 = mc.createNode('condition', name=self.base_name + '_roll2_CND')
-        roll_mdl2 = mc.createNode('multDoubleLinear', name=self.base_name + '_roll2_MDL')
+        roll_mdl2 = mc.createNode('multDL', name=self.base_name + '_roll2_MDL')
         ball_cnd3 = mc.createNode('condition', name=self.base_name + '_ball3_CND')
 
         mc.setAttr(ball_mdl + '.input2', -1)
@@ -160,8 +160,8 @@ class Foot(rModule.RigModule):
             mc.connectAttr(bank_cnd + '.outColorG', self.in_piv.group_list[1] + '.rotateZ')
         else:
             mc.setAttr(bank_cnd + '.operation', 4)
-            in_mdl = mc.createNode('multDoubleLinear', name=self.base_name + '_bank_in_MDL')
-            out_mdl = mc.createNode('multDoubleLinear', name=self.base_name + '_bank_out_MDL')
+            in_mdl = mc.createNode('multDL', name=self.base_name + '_bank_in_MDL')
+            out_mdl = mc.createNode('multDL', name=self.base_name + '_bank_out_MDL')
             mc.setAttr(in_mdl + '.input2', -1)
             mc.setAttr(out_mdl + '.input2', -1)
             mc.connectAttr(bank_cnd + '.outColorG', in_mdl + '.input1')

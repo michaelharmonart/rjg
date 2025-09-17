@@ -75,9 +75,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         neckik = True
     #Building Parts // setting up the diffrent changes per character
     hip = rBuild.build_module(module_type='hip', side='M', part='COG', guide_list=['Hips'], ctrl_scale=50, cog_shape='quad_arrow', waist_shape='circle')
-    chest = rBuild.build_module(module_type='chest', side='M', part='chest', guide_list=['Spine2'], ctrl_scale=70, chest_shape='circle')
+    chest = rBuild.build_module(module_type='chest', side='M', part='chest', guide_list=['Spine2'], ctrl_scale=70, chest_shape='circle', spinejnt_count = 4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
     spine = rBuild.build_module(module_type='spine', side='M', part='spine', guide_list=['Hips', 'Spine', 'Spine1', 'Spine2'], ctrl_scale=1, mid_ctrl=True, joint_num=4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
-    neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
+    if character == 'Luciana':
+        neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=True , spinejnt_count = 6)
+    else:    
+        neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
     head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50)
 
     if character == "Skeleton":
@@ -122,8 +125,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.bindSkin(tsb=True, cj=False)
         
 
-    if character in ["Luciana", 'Domingo']:
-        tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2)
+    if character in ["Luciana"]:
+        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2, IK_Spline=True)
         #jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
         
     if character in ['Susaka', 'NPC','Fisherman']:
@@ -156,6 +159,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1)
         faceconnect.build()
 
+    if character == 'Luciana':
+        for side in ['L', 'R']:
+            from rjg.build.parts.UEwing import UEwing
+            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=1)
+            UEwing.build_wing()
+
     # previs face rig
     if not not_previs and not bony and character != 'Jett' and character != 'Blitz' and character != 'Bobo' and character != 'Susaka' and character != 'Drummer' and character !='Luciana' and character !='Domingo' and character != 'Fisherman': 
         arbit_guides = mc.listRelatives('FaceGuides', children=True)
@@ -180,7 +189,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
         else:    
             leg = rBuild.build_module(module_type='biped_limb', side=fs[0], part='leg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Foot']], offset_pv=50, ctrl_scale=8, bendy=not_previs, twisty=not_previs, stretchy=True, segments=4 if not_previs else 1)
-        foot = rBuild.build_module(module_type='foot', side=fs[0], part='foot', guide_list=[fs + piece for piece in ['Foot', 'ToeBase', 'Toe_End']], ctrl_scale=10, toe_piv=fs+'ToePiv', heel_piv=fs+'HeelPiv', in_piv=fs+'In', out_piv=fs+'Out')
+            foot = rBuild.build_module(module_type='foot', side=fs[0], part='foot', guide_list=[fs + piece for piece in ['Foot', 'ToeBase', 'Toe_End']], ctrl_scale=10, toe_piv=fs+'ToePiv', heel_piv=fs+'HeelPiv', in_piv=fs+'In', out_piv=fs+'Out')
         
         fingers = []
         
@@ -400,7 +409,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.warning(e)
         else:
            try:
-               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
+               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil', 'ArmsFur', 'BellyFur', 'HeadFur'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
                from Bobo_Build_Scripts import Clean_Fur
                Clean_Fur()
            except Exception as e:
@@ -831,6 +840,14 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         except Exception as e:
             print(e)
         
+
+
+
+
+    if character == 'Luciana':
+        if mc.objExists('switch_CTRL'):
+            mc.addAttr('switch_CTRL', longName='Neck_M_IKFK', attributeType='bool', keyable=True)
+            mc.connectAttr('switch_CTRL.Neck_M_IKFK', 'neck_M.switch', force=True)
     #Fixing/Reskinning Facial Geo for Robin, Rayden, Jett and Blitz
     if not not_previs and not bony and character != 'Bobo' and character != 'Gretchen' and character != 'BoboQuad' and character !='Susaka' and character != 'Drummer' and character != 'NPC' and character != 'Fisherman':
         try:
@@ -976,6 +993,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
 
     mc.select(clear=True)
+
+    if character == 'Luciana':
+        mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
+        mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
     print(f"\n{character} rig build complete.")
 
 

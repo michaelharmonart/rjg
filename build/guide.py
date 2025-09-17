@@ -132,8 +132,8 @@ def create_pv_guide(guide_list=None,
 
     # calculate distance between mid joint and upV
     dist = mc.createNode('distanceBetween', name=name + '_DST')
-    adl = mc.createNode('addDoubleLinear', name=name + '_ADL')
-    mdl = mc.createNode('multDoubleLinear', name=name + '_MDL')
+    adl = mc.createNode('addDL', name=name + '_ADL')
+    mdl = mc.createNode('multDL', name=name + '_MDL')
     rev = mc.createNode('reverse', name=name + '_REV')
 
     mc.connectAttr(upv_loc + '.worldMatrix[0]', dist + '.inMatrix1')

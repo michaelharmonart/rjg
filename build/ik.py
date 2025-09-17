@@ -105,7 +105,7 @@ class Ik:
 
             dist = mc.createNode('distanceBetween', name=self.base_name + "_stretch_DIST")
             mdn = mc.createNode('multiplyDivide', name=self.base_name + "_stretch_MDN")
-            mdl = mc.createNode('multDoubleLinear', name=self.base_name + "_stretch_MDL")
+            mdl = mc.createNode('multDL', name=self.base_name + "_stretch_MDL")
             stretch_cond = mc.createNode('condition', name=self.base_name + "_stretch_COND")
             squash_cond = mc.createNode('condition', name=self.base_name + "_squash_COND")
             stretch_bta = mc.createNode('blendTwoAttr', name=self.base_name + "_stretch_switch_BTA")
