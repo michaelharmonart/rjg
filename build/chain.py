@@ -231,7 +231,19 @@ class Chain:
                                  rig_type='bendy', translate=start_pos, rotate=joint, ctrl_scale=ctrl_scale*0.5)
             mid_ctrl = rCtrl.Control(parent=segment_ctl, shape='square', side=None, suffix='CTRL', name=start_jnt.replace('JNT', 'Mid'), axis='y', group_type='main', 
                                  rig_type='bendy', translate=mid_pos, rotate=joint, ctrl_scale=ctrl_scale*0.5)
-            
+            end_ctrl = rCtrl.Control(
+                parent=segment_ctl,
+                shape="square",
+                side=None,
+                suffix="CTRL",
+                name=end_jnt.replace("JNT", "End"),
+                axis="y",
+                group_type="main",
+                rig_type="bendy",
+                translate=end_pos,
+                rotate=joint,
+                ctrl_scale=ctrl_scale * 0.5,
+            )
             # Twist for mid joint
             mult_matrix = mc.createNode('multMatrix', name=f"{joint}_MMX") # Put the end joint into the space of the start joint
             mc.connectAttr(f"{end_jnt}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
@@ -242,12 +254,27 @@ class Chain:
             twist_mult = mc.createNode("multiply", name=f"{joint}_MLT")
             mc.connectAttr(f"{decompose_matrix}.outputRotateY", f"{twist_mult}.input[0]")
             mc.setAttr(f"{twist_mult}.input[1]", 0.5)
-            mc.connectAttr(f"{twist_mult}.output", f"{mid_ctrl.ctrl_name}_CNST_GRP.rotateY")
+            mc.connectAttr(f"{twist_mult}.output", f"{mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
 
-            end_ctrl = rCtrl.Control(parent=segment_ctl, shape='square', side=None, suffix='CTRL', name=end_jnt.replace('JNT', 'End'), axis='y', group_type='main', 
-                                 rig_type='bendy', translate=end_pos, rotate=joint, ctrl_scale=ctrl_scale*0.5)
-            rXform.matrix_constraint(source_transform=end_jnt, constrain_transform=f"{end_ctrl.ctrl_name}_CNST_GRP", keep_offset=False) 
-            rSpline.matrix_spline_from_transforms(transforms=[start_ctrl.ctrl_name, mid_ctrl.ctrl_name, end_ctrl.ctrl_name], transforms_to_pin=seg_jnt_list, degree=2, spline_group=segment_grp, name=f"{joint}", secondary_axis=(1,0,0), padded=False)
+            rSpline.matrix_spline_from_transforms(
+                transforms=[start_ctrl.ctrl_name, end_ctrl.ctrl_name],
+                transforms_to_pin=[f"{mid_ctrl.ctrl_name}_CNST_GRP"],
+                degree=1,
+                secondary_axis=(1, 0, 0),
+                twist=False,
+                name=f"{joint}_Mid",
+            )
+
+            rXform.matrix_constraint(source_transform=end_jnt, constrain_transform=f"{end_ctrl.ctrl_name}_CNST_GRP", keep_offset=False)
+            rSpline.matrix_spline_from_transforms(
+                transforms=[start_ctrl.ctrl_name, mid_ctrl.ctrl_name, end_ctrl.ctrl_name],
+                transforms_to_pin=seg_jnt_list,
+                degree=2,
+                spline_group=segment_grp,
+                name=f"{joint}",
+                secondary_axis=(1, 0, 0),
+                padded=False,
+            )
             prev_end_ctrl = end_ctrl
         return {'control':ctrl_grp, 'module':rig_grp}
         

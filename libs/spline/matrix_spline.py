@@ -151,6 +151,7 @@ def pin_to_matrix_spline(
     stretch: bool = True,
     primary_axis: tuple[int, int, int] | None = (0, 1, 0),
     secondary_axis: tuple[int, int, int] | None = (0, 0, 1),
+    twist: bool = True,
 ) -> None:
     """
     Pins a transform to a matrix spline at a given parameter along the curve.
@@ -168,6 +169,8 @@ def pin_to_matrix_spline(
             from the spline. Used to resolve orientation. Must be one of the
             cardinal axes (±X, ±Y, ±Z) and orthogonal to ``primary_axis``.
             Defaults to (0, 0, 1) (the +Z axis).
+        twist (bool): When True the secondary axis will be used as the interpolated up vector for the pinned transform.+
+
     Returns:
         None
     """
@@ -247,7 +250,7 @@ def pin_to_matrix_spline(
         (0, 0, -1): blended_matrix_row3,
     }
     secondary_row: node.RowFromMatrixNode | None = axis_to_row.get(tuple(secondary_axis))
-    if secondary_row:
+    if secondary_row and twist:
         mc.connectAttr(
             f"{secondary_row.output}X", f"{aim_matrix}.secondary.secondaryTargetVectorX"
         )
@@ -257,6 +260,8 @@ def pin_to_matrix_spline(
         mc.connectAttr(
             f"{secondary_row.output}Z", f"{aim_matrix}.secondary.secondaryTargetVectorZ"
         )
+    else:
+        mc.setAttr(f"{aim_matrix}.secondary.secondaryTargetVector", *secondary_axis)
 
     # Create nodes to access the values of the aim matrix node.
     deconstruct_matrix_attribute = f"{aim_matrix}.outputMatrix"
@@ -367,6 +372,7 @@ def matrix_spline_from_transforms(
     spline_group: str | None = None,
     primary_axis: tuple[int, int, int] | None = (0, 1, 0),
     secondary_axis: tuple[int, int, int] | None = (0, 0, 1),
+    twist: bool = True,
 ) -> MatrixSpline:
     """
     Takes a set of transforms (cvs) and creates a matrix spline with controls and deformation joints.
@@ -390,6 +396,7 @@ def matrix_spline_from_transforms(
             from the spline. Used to resolve orientation. Must be one of the
             cardinal axes (±X, ±Y, ±Z) and orthogonal to ``primary_axis``.
             Defaults to (0, 0, 1) (the +Z axis).
+        twist (bool): When True the spline will use the secondary axis as the up vector of the pinned transforms.
     Returns:
         matrix_spline: The resulting matrix spline.
     """
@@ -456,7 +463,7 @@ def matrix_spline_from_transforms(
     )
 
     for index, segment in enumerate(transforms_to_pin):
-        segment_pin: str = mc.group(name=f"{segment}_Pin", empty=True, parent=spline_group)
+        segment_pin: str = mc.group(name=f"{segment}_Pin", empty=True, parent=container_group)
         matrix_constraint(segment_pin, segment, keep_offset=False)
         pin_to_matrix_spline(
             matrix_spline=matrix_spline,
@@ -466,5 +473,6 @@ def matrix_spline_from_transforms(
             primary_axis=primary_axis,
             secondary_axis=secondary_axis,
             normalize_parameter=False,
+            twist=twist
         )
     return matrix_spline
