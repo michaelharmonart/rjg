@@ -124,39 +124,18 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                     self.src_joints.append(s_jnt)
             self.src_joints.append(self.src_chain.joints[-1])
 
-        if self.twisty:
-            # up limb
-            self.src_chain.twist_chain(start_translate=self.src_chain.joints[1],
-                                       start_rotate=self.src_chain.joints[0],
-                                       end_translate=self.src_chain.joints[0],
-                                       end_rotate=self.src_chain.joints[0],
-                                       twist_bone=self.src_chain.joints[0],
-                                       twist_driver=up_twist,
-                                       reverse=True)
-            # lo limb
-            self.src_chain.twist_chain(start_translate=self.src_chain.joints[2],
-                                       start_rotate=self.src_chain.joints[1],
-                                       end_translate=self.src_chain.joints[2],
-                                       end_rotate=self.src_chain.joints[1],
-                                       twist_bone=self.src_chain.joints[1],
-                                       twist_driver=lo_twist)
-
         if self.bendy:
             if self.side == 'R':
                 mirror = True
             else:
                 mirror = False
-            bend_01 = self.src_chain.bend_chain(bone=self.src_chain.joints[0],
+            bend = self.src_chain.bend_twist_chain(
                                                 ctrl_scale=self.ctrl_scale,
                                                 mirror=mirror,
                                                 global_scale=self.global_scale.attr)
-            bend_02 = self.src_chain.bend_chain(bone=self.src_chain.joints[1],
-                                                ctrl_scale=self.ctrl_scale,
-                                                mirror=mirror,
-                                                global_scale=self.global_scale.attr)
-            mc.parent(bend_01['control'], bend_02['control'],
-                        self.control_grp)
-            mc.parent(bend_01['module'], bend_02['module'], self.module_grp)
+
+            mc.parent(bend['control'], self.control_grp)
+            mc.parent(bend['module'], self.module_grp)
 
     def skeleton(self):
         limb_chain = rChain.Chain(transform_list=self.src_joints,
