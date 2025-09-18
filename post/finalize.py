@@ -57,81 +57,104 @@ def add_color_attrs(x, y, z, utScale):
     type_dict = get_ctrl_types()
     side_dict = get_ctrl_sides()
 
-    if mc.objExists('global_M_CTRL'):
-        par = ('global_M_CTRL')
+    if mc.objExists("global_M_CTRL"):
+        par = "global_M_CTRL"
     else:
-        par = 'RIG'
+        par = "RIG"
 
-    c_ctrl = rCtrl.Control(parent=par, shape='rgb_circles', side=None, name='color', suffix='CTRL', axis='y', group_type=None, rig_type='global', ctrl_scale=utScale, translate=(x, y, z))
+    c_ctrl = rCtrl.Control(
+        parent=par,
+        shape="rgb_circles",
+        side=None,
+        name="color",
+        suffix="CTRL",
+        axis="y",
+        group_type=None,
+        rig_type="global",
+        ctrl_scale=utScale,
+        translate=(x, y, z),
+    )
     attr_util.lock_and_hide(node=c_ctrl.ctrl)
     c_ctrl.tag_as_controller()
 
     c_shapes = mc.listRelatives(c_ctrl.ctrl, shapes=True)
     for shape in c_shapes:
-        mc.setAttr(shape + '.overrideEnabled', 1)
-        mc.setAttr(shape + '.overrideRGBColors', 1)
-    mc.setAttr(c_shapes[1] + '.overrideColorRGB', 1, 0, 0)
-    mc.setAttr(c_shapes[2] + '.overrideColorRGB', 0, 1, 0)
-    mc.setAttr(c_shapes[0] + '.overrideColorRGB', 0, 0, 1)
+        mc.setAttr(shape + ".overrideEnabled", 1)
+        mc.setAttr(shape + ".overrideRGBColors", 1)
+    mc.setAttr(c_shapes[1] + ".overrideColorRGB", 1, 0, 0)
+    mc.setAttr(c_shapes[2] + ".overrideColorRGB", 0, 1, 0)
+    mc.setAttr(c_shapes[0] + ".overrideColorRGB", 0, 0, 1)
 
-    c_view = rAttr.Attribute(node = c_ctrl.ctrl, type='enum', value=0, enum_list=['Side', 'Set'], keyable=False, name='colorView')
-    mc.setAttr(c_view.attr, cb=True)
-
+    ctrl_side_color_map = {}
     for side, ctrl_list in side_dict.items():
         # TODO: longName
-        if side == 'M':
-            name = 'middle'
-        elif side == 'L':
-            name = 'left'
-        elif side == 'R':
-            name = 'right'
-        elif side == 'P':
-            name = 'prop'
-        elif side == 'F':
-            name = 'floatBone'
+        if side == "M":
+            name = "middle"
+        elif side == "L":
+            name = "left"
+        elif side == "R":
+            name = "right"
+        elif side == "P":
+            name = "prop"
+        elif side == "F":
+            name = "floatBone"
         else:
-            name = 'unknown'
+            name = "unknown"
             print(side, ctrl_list)
             continue
-        rAttr.Attribute(node=c_ctrl.ctrl, type='separator', name=name)
-        color = rAttr.Attribute(node=c_ctrl.ctrl, type='double3', value=0, keyable=False, min=0, max=1, name=name + 'Color', children_name='RGB')
+        rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name=name)
+        color = rAttr.Attribute(
+            node=c_ctrl.ctrl,
+            type="double3",
+            value=0,
+            keyable=False,
+            min=0,
+            max=1,
+            name=name + "Color",
+            children_name="RGB",
+        )
         mc.setAttr(color.attr, cb=True)
         for ctrl in ctrl_list:
-            cond = mc.createNode('condition', n='{}_CCOND'.format(ctrl))
-            mc.connectAttr(c_view.attr, cond + '.firstTerm')
-            mc.connectAttr(color.attr, cond + '.colorIfTrue')
-            for shape in mc.listRelatives(ctrl, shapes=True, type='nurbsCurve'):
-                mc.setAttr(shape + '.overrideEnabled', 1)
-                mc.setAttr(shape + '.overrideRGBColors', 1)
-                mc.connectAttr(cond + '.outColor', shape + '.overrideColorRGB')
-    
-    rAttr.Attribute(node=c_ctrl.ctrl, type='separator', name='___')
+            ctrl_side_color_map[ctrl] = color.attr
+
+    rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name="___")
     for type, ctrl_list in type_dict.items():
-        rAttr.Attribute(node=c_ctrl.ctrl, type='separator', name=type)
-        color = rAttr.Attribute(node=c_ctrl.ctrl, type='double3', value=0, keyable=False, min=0, max=1, name=type + 'Color', children_name='RGB')
+        rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name=type)
+        color = rAttr.Attribute(
+            node=c_ctrl.ctrl,
+            type="double3",
+            value=0,
+            keyable=False,
+            min=0,
+            max=1,
+            name=type + "Color",
+            children_name="RGB",
+        )
         mc.setAttr(color.attr, cb=True)
         for ctrl in ctrl_list:
-            cond = '{}_CCOND'.format(ctrl)
             try:
-                mc.connectAttr(color.attr, cond + '.colorIfFalse')
-                for shape in mc.listRelatives(ctrl, shapes=True, type='nurbsCurve'):
-                    mc.setAttr(shape + '.overrideEnabled', 1)
-                    mc.setAttr(shape + '.overrideRGBColors', 1)
-                    #mc.connectAttr(color.attr, shape + '.overrideColorRGB')
+                for shape in mc.listRelatives(ctrl, shapes=True, type="nurbsCurve"):
+                    mc.setAttr(shape + ".overrideEnabled", 1)
+                    mc.setAttr(shape + ".overrideRGBColors", 1)
+                    if type == "primary":
+                        mc.connectAttr(ctrl_side_color_map[ctrl], shape + ".overrideColorRGB")
+                    else:
+                        mc.connectAttr(color.attr, shape + ".overrideColorRGB")
             except Exception as e:
                 print(e)
 
     set_color_defaults(c_ctrl.ctrl)
-    mc.setAttr('color_CTRL.v', cb=False)
+    mc.setAttr("color_CTRL.v", cb=False)
     return c_ctrl.ctrl
 
 def set_color_defaults(ctrl):
     color_dict = {
         'gimbal'    : (0.00, 0.45, 0.00),
-        'root'      : (0.00, 1.00, 0.00),
-        'global'    : (1.00, 0.00, 1.00),
+        'root'      : (0.00, 0.30, 0.50),
+        'global'    : (0.00, 0.50, 0.50),
+        'cog'       : (0.00, 0.30, 0.50),
         'pivot'     : (1.00, 0.25, 0.00),
-        'primary'   : (1.00, 1.00, 0.00),
+        'primary'   : (0.882, 0.683, 0.081),
         'bendy'     : (1.00, 0.20, 0.40),
         'tangent'   : (0.85, 0.15, 0.00),
         'offset'    : (0.75, 0.00, 0.00),
@@ -141,9 +164,9 @@ def set_color_defaults(ctrl):
         # 'l_eye'     : (0.10, 0.10, 0.70),
         # 'r_eye'     : (0.70, 0.10, 0.10),
         # 'c_eye'     : (0.70, 0.70, 0.10),
-        'middle'    : (1.00, 0.00, 1.00),
-        'left'      : (0.00, 0.00, 1.00),
-        'right'     : (1.00, 0.00, 0.00),
+        'middle'    : (0.882, 0.683, 0.081),
+        'left'      : (0.027, 0.191, 0.846),
+        'right'     : (0.953, 0.000, 0.181),
         'prop'      : (1.00, 1.00, 1.00),
     }
 
