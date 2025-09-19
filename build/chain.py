@@ -244,6 +244,14 @@ class Chain:
                 rotate=joint,
                 ctrl_scale=ctrl_scale * 0.5,
             )
+            attr_util = rAttr.Attribute(add=False)
+            start_ctrl.tag_as_controller()
+            mid_ctrl.tag_as_controller()
+            end_ctrl.tag_as_controller()
+            attr_util.lock_and_hide(node=start_ctrl.ctrl, translate=False, rotate=False, scale=False)
+            attr_util.lock_and_hide(node=mid_ctrl.ctrl, translate=False, rotate=False, scale=False)
+            attr_util.lock_and_hide(node=end_ctrl.ctrl, translate=False, rotate=False, scale=False)
+
             # Twist for mid joint
             mult_matrix = mc.createNode('multMatrix', name=f"{joint}_MMX") # Put the end joint into the space of the start joint
             mc.connectAttr(f"{end_jnt}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
