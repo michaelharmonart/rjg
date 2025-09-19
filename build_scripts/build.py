@@ -988,9 +988,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             from Bobo_Build_Scripts import fix_position
             fix_position()
 
-        from importskins import import_weights
+        '''from importskins import import_weights
         for g in ['HeadFur', 'BellyFur', 'ArmsFur']:
-            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
+            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')'''
 
     mc.select(clear=True)
 

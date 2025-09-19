@@ -41,16 +41,21 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     #       'lenses', 'topteeth', 'tounge', 'bottomteeth', 'RightEye', 'RightPupil', 'RightCornea', 'LeftEye', 'LeftCornea', 
     #       'LeftPupil', 'earrrings', 'eyelashes', 'eyebrows', 'hair', 'bandanna']
     
-    geo = ['bandanna', 'loopleather2', 'buckle2', 'buckle', 'beltloops', 'front_pockets', 'side_pocket', 'backpockets', 'button', 
-           'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
-           'LeftPupil', 'eyelashes', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
-           'topteeth', 'tounge']
+    #geo = ['bandanna', 'loopleather2', 'buckle2', 'buckle', 'beltloops', 'front_pockets', 'side_pocket', 'backpockets', 'button', 
+    #       'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
+    #       'LeftPupil', 'eyelashes', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
+    #       'topteeth', 'tounge']
+    
+    geo = ['bandanna', 'loopleather1', 'buckle2', 'buckle', 'beltloops', 'front_pockets', 'side_pocket', 'backpockets', 'button', 
+            'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
+            'LeftPupil', 'eyelashes', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
+            'topteeth', 'tounge']
 
 
     classic_sk = ['gloves']
 
     #rUtil.create_pxWrap('shirt1', 'pantsCreased1', 'boots', 'Gretchen_UBM')
-    rUtil.create_pxWrap('shirt', 'pants', 'boots', 'Gretchen_UBM')
+    rUtil.create_pxWrap('shirt1', 'pants', 'boots', 'Gretchen_UBM')
     #rUtil.create_pxWrap('VestFluff', 'Clothes')
     #mc.parent('Fingernails', 'Rayden_EXTRAS')
 

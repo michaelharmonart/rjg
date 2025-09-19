@@ -139,7 +139,7 @@ def Clean_Fur():
         except Exception as e:
             print(f"Failed to connect {full_attr} -> {obj}.visibility: {e}")
 
-    proxywrap_fur(['HeadFur', 'ArmsFur', 'LegFur', 'BellyFur', 'SnoutFur', 'FootFur', 'HandFur'])
+    #proxywrap_fur(['HeadFur', 'ArmsFur', 'LegFur', 'BellyFur', 'SnoutFur', 'FootFur', 'HandFur'])
 
 
 
