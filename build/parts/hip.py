@@ -27,7 +27,7 @@ class Hip(rModule.RigModule):
         self.add_plugs()
 
     def control_rig(self):
-        self.hip_01 = rCtrl.Control(parent=self.control_grp, shape=self.cog_shape, side=None, suffix='CTRL', name='COG_M', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0] if self.ctrl_rotate else (0, 0, 0), ctrl_scale=self.ctrl_scale)
+        self.hip_01 = rCtrl.Control(parent=self.control_grp, shape=self.cog_shape, side=None, suffix='CTRL', name='COG_M', axis='y', group_type='main', rig_type='cog', translate=self.guide_list[0], rotate=self.guide_list[0] if self.ctrl_rotate else (0, 0, 0), ctrl_scale=self.ctrl_scale)
         self.hip_02 = rCtrl.Control(parent=self.hip_01.ctrl, shape=self.waist_shape, side=None, suffix='CTRL', name='waist_M', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0] if self.ctrl_rotate else (0, 0, 0), ctrl_scale=self.ctrl_scale*0.35)
         self.hip_01.tag_as_controller()
         self.hip_02.tag_as_controller()
