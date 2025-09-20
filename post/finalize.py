@@ -1,5 +1,6 @@
 import ast
 import maya.cmds as mc
+import maya.api.OpenMaya as om2
 from importlib import reload
 
 import rjg.libs.control.ctrl as rCtrl
@@ -499,7 +500,6 @@ def add_switch_ctrl(x, y, z, utScale, quad=False, character=None):
                 switch_controls: list[str] = ast.literal_eval(switch_controls_str)
                 for control in switch_controls:
                     mc.addAttr(control, longName=switch_name, proxy=switch_attr.attr)
-                    print(switch_attr.attr)
 
     if character == 'Rayden':
         rev = mc.createNode('reverse', n='cbow_rev')

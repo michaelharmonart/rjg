@@ -1,4 +1,5 @@
 import maya.cmds as mc
+import maya.api.OpenMaya as om2
 from importlib import reload
 
 class Attribute:
@@ -25,6 +26,12 @@ class Attribute:
             if not self.type:
                 mc.error("Must define type when adding attributes.")
             self.add_attr()
+
+    def is_proxy(self) -> bool:
+        sel: om2.MSelectionList = om2.MSelectionList()
+        sel.add(self.attr)
+        plug: om2.MPlug = sel.getPlug(0)
+        return plug.isProxy
 
     def add_attr(self):
         self.attr = self.node + '.' + self.name
@@ -136,9 +143,18 @@ class Attribute:
         old_attr = self.attr
         self.get_attr()
         self.node = self.transfer_to
-        self.add_attr()
-        if connect:
-            mc.connectAttr(self.attr, old_attr)
+        if self.is_proxy() and connect:
+            sel: om2.MSelectionList = om2.MSelectionList()
+            sel.add(old_attr)
+            plug: om2.MPlug = sel.getPlug(0)
+            source: om2.MPlug = plug.source()
+            source_node_name = om2.MFnDependencyNode(source.node()).name()
+            source_attr_name = source.partialName()
+            mc.addAttr(self.transfer_to, longName=self.name, proxy=f"{source_node_name}.{source_attr_name}")
+        else:
+            self.add_attr()
+            if connect:
+                mc.connectAttr(self.attr, old_attr)
 
     def get_attr(self):
         if 'stretch' in self.attr or 'squash' in self.attr:
@@ -163,6 +179,8 @@ class Attribute:
             self.value = mc.getAttr(self.attr)
         if not self.keyable:
             self.keyable = mc.getAttr(self.attr, keyable=True)
+
+
         
         
 
