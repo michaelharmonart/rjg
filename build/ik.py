@@ -89,6 +89,7 @@ class Ik:
         if constrain:
             mc.parentConstraint(self.base_ctrl.ctrl, self.ik_joints[0], mo=True)
             mc.parentConstraint(self.main_ctrl.ctrl, self.ikh, mo=True)
+            mc.orientConstraint(self.main_ctrl.ctrl, self.ik_joints[-1], maintainOffset=True)
 
         if self.pv_guide:
             mc.poleVectorConstraint(self.pv_ctrl.ctrl, self.ikh)
