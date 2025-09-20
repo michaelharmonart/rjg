@@ -86,6 +86,8 @@ def add_color_attrs(x, y, z, utScale):
     mc.setAttr(c_shapes[0] + ".overrideColorRGB", 0, 0, 1)
 
     ctrl_side_color_map = {}
+    ctrl_side_show_on_top_map = {}
+    ctrl_side_thickness_map = {}
     for side, ctrl_list in side_dict.items():
         # TODO: longName
         if side == "M":
@@ -105,7 +107,7 @@ def add_color_attrs(x, y, z, utScale):
         rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name=name)
         color = rAttr.Attribute(
             node=c_ctrl.ctrl,
-            type="double3",
+            type="color",
             value=0,
             keyable=False,
             min=0,
@@ -114,15 +116,22 @@ def add_color_attrs(x, y, z, utScale):
             children_name="RGB",
         )
         mc.setAttr(color.attr, cb=True)
+        show_on_top = rAttr.Attribute(node=c_ctrl.ctrl, type="bool", name=f"{name}ShowOnTop", value=0, keyable=False)
+        mc.setAttr(show_on_top.attr, cb=True)
+        thickness = rAttr.Attribute(node=c_ctrl.ctrl, type="double", name=f"{name}Thickness", value=-1, keyable=False)
+        mc.setAttr(thickness.attr, cb=True)
+        mc.setAttr(thickness.attr, -1)
         for ctrl in ctrl_list:
             ctrl_side_color_map[ctrl] = color.attr
+            ctrl_side_show_on_top_map[ctrl] = show_on_top.attr
+            ctrl_side_thickness_map[ctrl] = thickness.attr
 
     rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name="___")
     for type, ctrl_list in type_dict.items():
         rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name=type)
         color = rAttr.Attribute(
             node=c_ctrl.ctrl,
-            type="double3",
+            type="color",
             value=0,
             keyable=False,
             min=0,
@@ -131,6 +140,11 @@ def add_color_attrs(x, y, z, utScale):
             children_name="RGB",
         )
         mc.setAttr(color.attr, cb=True)
+        show_on_top = rAttr.Attribute(node=c_ctrl.ctrl, type="bool", name=f"{type}ShowOnTop", value=0, keyable=False)
+        mc.setAttr(show_on_top.attr, cb=True)
+        thickness = rAttr.Attribute(node=c_ctrl.ctrl, type="double", name=f"{type}Thickness", value=-1, keyable=False)
+        mc.setAttr(thickness.attr, cb=True)
+        mc.setAttr(thickness.attr, -1)
         for ctrl in ctrl_list:
             try:
                 for shape in mc.listRelatives(ctrl, shapes=True, type="nurbsCurve"):
@@ -138,8 +152,12 @@ def add_color_attrs(x, y, z, utScale):
                     mc.setAttr(shape + ".overrideRGBColors", 1)
                     if type == "primary":
                         mc.connectAttr(ctrl_side_color_map[ctrl], shape + ".overrideColorRGB")
+                        mc.connectAttr(ctrl_side_show_on_top_map[ctrl], shape + ".alwaysDrawOnTop")
+                        mc.connectAttr(ctrl_side_thickness_map[ctrl], shape + ".lineWidth")
                     else:
                         mc.connectAttr(color.attr, shape + ".overrideColorRGB")
+                        mc.connectAttr(show_on_top.attr, shape + ".alwaysDrawOnTop")
+                        mc.connectAttr(thickness.attr, shape + ".lineWidth")
             except Exception as e:
                 print(e)
 
@@ -147,33 +165,80 @@ def add_color_attrs(x, y, z, utScale):
     mc.setAttr("color_CTRL.v", cb=False)
     return c_ctrl.ctrl
 
+
 def set_color_defaults(ctrl):
     color_dict = {
-        'gimbal'    : (0.00, 0.45, 0.00),
-        'root'      : (0.00, 0.30, 0.50),
-        'global'    : (0.00, 0.50, 0.50),
-        'cog'       : (0.00, 0.30, 0.50),
-        'pivot'     : (1.00, 0.25, 0.00),
-        'primary'   : (0.882, 0.683, 0.081),
-        'bendy'     : (1.00, 0.20, 0.40),
-        'tangent'   : (0.85, 0.15, 0.00),
-        'offset'    : (0.75, 0.00, 0.00),
-        'pv'        : (0.00, 1.00, 1.00),
-        'fk'        : (0.00, 0.00, 1.00),
-        'secondary' : (1.00, 0.20, 0.20),
+        "gimbal": (0.00, 0.45, 0.00),
+        "root": (0.00, 0.30, 0.50),
+        "global": (0.00, 0.50, 0.50),
+        "cog": (0.00, 0.30, 0.50),
+        "pivot": (1.00, 0.25, 0.00),
+        "primary": (0.882, 0.683, 0.081),
+        "bendy": (1.00, 0.20, 0.40),
+        "tangent": (0.85, 0.15, 0.00),
+        "offset": (0.75, 0.00, 0.00),
+        "pv": (0.00, 1.00, 1.00),
+        "fk": (0.00, 0.00, 1.00),
+        "secondary": (1.00, 0.20, 0.20),
         # 'l_eye'     : (0.10, 0.10, 0.70),
         # 'r_eye'     : (0.70, 0.10, 0.10),
         # 'c_eye'     : (0.70, 0.70, 0.10),
-        'middle'    : (1.000, 0.587, 0.073),
-        'left'      : (0.073, 0.085, 1.000),
-        'right'     : (1.000, 0.073, 0.073),
-        'prop'      : (1.00, 1.00, 1.00),
+        "middle": (1.000, 0.587, 0.073),
+        "left": (0.073, 0.085, 1.000),
+        "right": (1.000, 0.073, 0.073),
+        "prop": (1.00, 1.00, 1.00),
+    }
+    show_on_top_dict = {
+        "gimbal": False,
+        "root": False,
+        "global": False,
+        "cog": False,
+        "pivot": False,
+        "primary": False,
+        "bendy": False,
+        "tangent": False,
+        "offset": False,
+        "pv": False,
+        "fk": False,
+        "secondary": False,
+        "middle": False,
+        "left": False,
+        "right": False,
+        "prop": False,
+    }
+
+    thickness_dict = {
+        "gimbal": -1,
+        "root": -1,
+        "global": -1,
+        "cog": -1,
+        "pivot": -1,
+        "primary": -1,
+        "bendy": -1,
+        "tangent": -1,
+        "offset": -1,
+        "pv": -1,
+        "fk": -1,
+        "secondary": -1,
+        "middle": -1,
+        "left": -1,
+        "right": -1,
+        "prop": -1,
     }
 
     for type, value in color_dict.items():
-        color = '{}.{}Color'.format(ctrl, type)
+        color = "{}.{}Color".format(ctrl, type)
         if mc.objExists(color):
-            mc.setAttr(color , *value)
+            mc.setAttr(color, *value)
+    for type, show in show_on_top_dict.items():
+        attribute = f"{ctrl}.{type}ShowOnTop"
+        if mc.objExists(attribute):
+            mc.setAttr(attribute, 1 if show else 0)
+    for type, value in thickness_dict.items():
+        attribute = f"{ctrl}.{type}Thickness"
+        if mc.objExists(attribute):
+            mc.setAttr(attribute, value)
+
 
 def add_display_type(node, value, name, target):
     dt = rAttr.Attribute(node=node, type='enum', value=value, enum_list=['Normal', 'Template', 'Reference'], keyable=False, name=name)
