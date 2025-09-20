@@ -157,7 +157,6 @@ class Chain:
         return split_jnts
     
     def twist_chain(self, start_translate, start_rotate, end_translate, end_rotate, twist_bone, twist_driver, reverse=False):
-        """
         if not mc.pluginInfo('quatNodes', q=True, loaded=True):
             mc.loadPlugin('quatNodes')
 
@@ -197,8 +196,6 @@ class Chain:
             mc.setAttr(mdl + '.input2', t_percent)
             mc.connectAttr(mdl + '.output', jnt + '.rotateY')
             t_val += t_i
-        """
-        pass
 
     def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None):
         if mirror:
