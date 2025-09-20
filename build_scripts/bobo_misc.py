@@ -36,7 +36,8 @@ def bobo_extras(skin_src, skin_trg_grp):
     geo = ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'TempBrows']
 
 
-    rUtil.create_pxWrap('ArmsFur', 'BellyFur', 'HeadFur')
+    rUtil.create_pxWrap( 'ArmsFur', 'BellyFur', 'HeadFur', 'Bobo_UBM',)
+    print('Create Fur Proxy Wrap')
     #rUtil.create_pxWrap('VestFluff', 'Clothes')
     #mc.parent('Fingernails', 'Rayden_EXTRAS')
 

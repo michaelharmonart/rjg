@@ -270,6 +270,13 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                 mc.parentConstraint('chest_M_02_CTRL', 'neck_M_IK_CTRL_GRP', mo=True)
                 mc.parentConstraint('neck_M_IK_BASE_CTRL', 'neck_M_IK_MAIN_CTRL_CNST_GRP', mo=True)
             return
+        elif self.part == 'fin':
+            rAttr.Attribute(node=self.part_grp, type='plug', value=['chest_M_JNT'], name='skeletonPlugs', children_name=[self.bind_joints[0]])
+            par = 'neck_M_02_JNT'
+            driver_list = ['neck_02_FK_M_CTRL']
+            driven_list = ['fin_M_01_fk_CTRL_CNST_GRP']
+            hide_list = [self.base_name + '_tip_CTRL_CNST_GRP', self.base_name + '_base_CTRL_CNST_GRP', f'fin_0{self.spinejnt_count - 1}_FK_M_CTRL_CNST_GRP']
+            rAttr.Attribute(node=self.part_grp, type='plug', value=[' '.join(hide_list)], name='hideRigPlugs', children_name=['hideNodes'])
 
         else:
             par = 'insert limb plug here'

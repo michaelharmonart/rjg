@@ -47,7 +47,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     ## Setting parameters for individual Characters (splitting off groups)
     not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else True
-    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', "BoboQuad", 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman']) else True
+    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', "BoboQuad", 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy']) else True
 
     body_mesh = f'{character}_UBM'
 
@@ -123,13 +123,15 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     continue
         mc.select('rib_10_L_01_JNT', 'sword_10_L_geo')
         mc.bindSkin(tsb=True, cj=False)
-        
+
+
+
 
     if character in ["Luciana"]:
         tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2, IK_Spline=True)
         #jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
         
-    if character in ['Susaka', 'NPC','Fisherman']:
+    if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy']:
         for side in ['L', 'R']:
             from rjg.build.parts.UEeye import UEeye
             eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1)
@@ -140,9 +142,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             from rjg.build.parts.UEcheek import UEcheek
             cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1)
             cheek.build()
-            from rjg.build.parts.UEear import UEear
-            ear = UEear(f'Ear_{side}_guides', ctrl_scale=1)
-            ear.build()
+            try:
+                from rjg.build.parts.UEear import UEear
+                ear = UEear(f'Ear_{side}_guides', ctrl_scale=1)
+                ear.build()
+            except:
+                print('no ear guides found')
         from rjg.build.parts.UEnose import UEnose
         nose = UEnose('Nose_guides', ctrl_scale=1)
         nose.build()
@@ -180,7 +185,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
 
     #Mirrored Base Rig Parts
-    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo'] else 'lollipop'
+    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy'] else 'lollipop'
     for fs in ['Left', 'Right']:    
         arm = rBuild.build_module(module_type='biped_limb', side=fs[0], part='arm', guide_list=[fs + piece for piece in ['Arm', 'ForeArm', 'Hand']], offset_pv=50, ctrl_scale=5, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
         clavicle = rBuild.build_module(module_type='clavicle', side=fs[0], part='clavicle', guide_list=[fs + piece for piece in ['Shoulder', 'Arm']], local_orient=False, ctrl_scale=9) 
@@ -195,7 +200,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         
         ffs = ['Index', 'Middle', 'Ring', 'Pinky']
         #Fix Bobo's 3 fingered-ness
-        if character in ['Bobo', 'Luciana']:
+        if character in ['Bobo', 'Luciana', 'Sharkguy']:
             ffs = ffs[:-1]
         for f in ffs:
             finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape)
@@ -212,6 +217,57 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             for side in ['L', 'R']:
                 toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=10, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT')
         
+
+
+
+
+    if character == 'Sharkguy':
+        tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail01', 'Tail02', 'Tail03', 'Tail04', 'Tail05', 'Tail06', 'TailFin01', 'TailFin02', 'TailFin03'], ctrl_scale=10, pad=2)
+        #fin = rBuild.build_module(module_type='biped_limb', side='M', part='fin', guide_list=['Fin01', 'Fin02', 'Fin03'], ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
+        pj_list = [
+            'clavicle_L_01_JNT', 'clavicle_L_01_JNT', 'clavicle_L_01_JNT', 'clavicle_L_01_JNT',
+            'arm_L_04_JNT', 'arm_R_04_JNT', 'arm_R_09_JNT', 'COG_M_JNT', 'root_M_JNT', 'neck_M_02_JNT', 'tail_M_06_JNT'
+        ]
+        pc_list = [
+            'clavicle_L_CTRL', 'clavicle_L_CTRL', 'clavicle_L_CTRL', 'clavicle_L_CTRL', 
+            'arm_L_02_fk_CTRL', 'arm_R_02_fk_CTRL', 'fingerRing_R_01_fk_CTRL',
+            'waist_M_CTRL', 'global_M_CTRL', 'neck_02_FK_M_CTRL', 'tail_M_06_fk_CTRL'
+        ]
+        ag_list = [
+            'pauldren_F', 'pauldren_B', 'pauldren_1', 'pauldren_2',
+            'bracer_l', 'bracer_r', 'bracer_hand', 'sheath', 'sword', 'Fin01', 'TailFinLower01'
+        ]
+
+        # zip them together so each index lines up
+        for ag, pj, pc in zip(ag_list, pj_list, pc_list):
+            arb = rBuild.build_module(
+                module_type='arbitrary',
+                side='M',
+                part=ag,
+                guide_list=mc.getAttr(ag + '.translate'),
+                ctrl_scale=1,
+                par_jnt=pj,
+                par_ctrl=pc
+            )
+
+        try:
+            sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build/parts')
+            from driverjoints import create_driver_joints
+            driver_controls = ['Major_Mouth_M_LowerLip_01_Mouth_CTRL', 'Major_Mouth_R_LowerLip_03_Mouth_CTRL', 'Major_Mouth_R_UpperLip_03_Mouth_CTRL', 'Major_Mouth_R_CornerLip_Mouth_CTRL', 'Major_Mouth_L_LowerLip_03_Mouth_CTRL', 'Major_Mouth_L_UpperLip_03_Mouth_CTRL', 'Major_Mouth_M_UpperLip_01_Mouth_CTRL', 'Major_Mouth_L_CornerLip_Mouth_CTRL', 'Eye_L_Upper_Major_L_CTRL', 'Eye_L_Lower_Major_L_CTRL', 'Eye_R_Lower_Major_R_CTRL', 'Eye_R_Upper_Major_R_CTRL', 'Brow_R_01_Major_R_CTRL', 'Brow_R_02_Major_R_CTRL', 'Brow_R_Inner_R_CTRL', 'Brow_R_Outer_R_CTRL', 'Brow_R_Master_R_CTRL', 'Brow_L_02_Major_L_CTRL', 'Brow_L_01_Major_L_CTRL', 'Brow_L_Inner_L_CTRL', 'Brow_L_Outer_L_CTRL', 'Brow_L_Master_L_CTRL', 'Jaw_M_root_M_CTRL']
+            create_driver_joints(default_mult=10.0, ctrl_suffix="_CTRL", joint_suffix="_Driver", controls=driver_controls, parent='head')
+        except:
+            print('couldnt create driver joints')
+
+
+        
+
+
+
+        '''pj_list = ['clavicle_L_01_JNT', 'clavicle_L_01_JNT', 'clavicle_L_01_JNT', 'clavicle_L_01_JNT', 'arm_L_04_JNT', 'arm_R_04_JNT', 'arm_R_09_JNT', 'COG_M_JNT', 'root_M_JNT']
+        pc_list = ['clavicle_L_CTRL', 'clavicle_L_CTRL', 'clavicle_L_CTRL', 'clavicle_L_CTRL', 'arm_L_02_fk_CTRL', 'arm_R_02_fk_CTRL', 'fingerRing_R_01_fk_CTRL', 'waist_M_CTRL', 'global_M_CTRL']
+        for ag in ['pauldren_F', 'pauldren_B', 'pauldren_1', 'pauldren_2', 'bracer_l', 'bracer_r', 'bracer_hand', 'sheath', 'sword']
+            arb = rBuild.build_module(module_type='arbitrary', side='M', part=ag, guide_list=mc.getAttr(ag + '.translate'), ctrl_scale=1, par_jnt=pj, par_ctrl=pc)
+        '''
     #Legacy UE Correctives build       
     if character in ['Jett', 'Blitz']:
         rBuild.build_module(module_type='UeCorrective', side='L', part='upperarmCorrective', guide_list=['upperarm_out_l', 'upperarm_fwd_l', 'upperarm_bck_l', 'upperarm_in_l', 'upperarm_twist_02_l', 'upperarm_twist_01_l' ], ctrl_scale=1, par_jnt='arm_L_01_JNT', par_ctrl='arm_L_01_fk_CTRL', root_loc='LeftArm')
@@ -269,6 +325,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.parent("UE_Correctives", w=True)
     if character in ['Bobo', 'Bobo_quad']:
         mc.parent("CurveNet_Guide_Group", w=True)
+    if character == 'Sharkguy':
+        mc.parent("Extras_Guides", w=True)
+    
 
     #Clearing Guides grom the scene
     mc.delete('Guides')
@@ -409,7 +468,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.warning(e)
         else:
            try:
-               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil', 'ArmsFur', 'BellyFur', 'HeadFur'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
+               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
                from Bobo_Build_Scripts import Clean_Fur
                Clean_Fur()
            except Exception as e:
@@ -765,7 +824,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         ribbons()
         
 
-
         bindjoints = mc.select(mc.listRelatives("SKEL", ad=True, type="joint"))
         mc.select(f'{character}_UBM')
         mc.skinCluster(f'{character}_UBM', edit=True, unbind=True)
@@ -841,6 +899,29 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             print(e)
         
 
+    if character == 'Sharkguy':
+        import sys
+        sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts')
+        from Sharkguy_Build_Scripts import ribbons
+        ribbons()
+        bindjoints = mc.select(mc.listRelatives("SKEL", ad=True, type="joint"))
+        mc.select(f'{character}_UBM')
+        mc.skinCluster(f'{character}_UBM', edit=True, unbind=True)
+        skc = mc.skinCluster('root_M_JNT', f'{character}_UBM', tsb=False, skinMethod=1, bindMethod=0)[0]
+        mc.setAttr(skc + '.dqsSupportNonRigid', 1)
+        if sp:
+            sp_div = sp.split('/')
+            dir = '/'.join(sp_div[:-1])
+            rWeightNgIO.read_skin(f'{character}_UBM', dir, sp_div[-1][:-5])
+        geo = ['MouthGEO', 'RopesGEO', 'ShirtGEO', 'SwordGEO', 'PauldrenGEO', 'ChestGEO', 'RGautletGEO', 'BeltGEO', 'PantsGEO', 'LGautletGEO', 'OtherEyeBitGEO', 'EyesGEO']
+        for g in geo:
+            sk = mc.skinCluster('root_M_JNT', g, tsb=False, skinMethod=1, n=f'clothingSkc{g}')[0]
+            mc.copySkinWeights(ss='skinCluster11', ds=f'clothingSkc{g}', surfaceAssociation='closestPoint', noMirror=True, )
+        mc.delete("Extras_Guides")
+        sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts/SteveUtils')
+        from importskins import import_weights
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'MouthGEO', 'RopesGEO', 'ShirtGEO', 'SwordGEO', 'PauldrenGEO', 'ChestGEO', 'RGautletGEO', 'BeltGEO', 'PantsGEO', 'LGautletGEO', 'OtherEyeBitGEO', 'EyesGEO']:
+            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
 
 
 

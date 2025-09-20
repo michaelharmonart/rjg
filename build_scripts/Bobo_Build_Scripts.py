@@ -104,6 +104,8 @@ def proxywrap_fur(*argv):
     mc.setAttr(f"{pxWrap[0]}.softNormalization", 1)
 
 def Clean_Fur():
+    
+    mc.setAttr("proximityWrap2.falloffScale", 100)
     # Correctly paired objects and attributes
     charater = 'Bobo'
     connections = [

@@ -126,8 +126,11 @@ class UEfaceconnect(UEface):
             mc.pointConstraint('LowerLip_M_M_CTRL_CNST_GRP', f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_CNST_GRP', mo=True)
             mc.pointConstraint(loc, f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_CNST_GRP', mo=True)
             mc.parentConstraint(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', f'NLFold_{side}_{side}_CTRL_CNST_GRP', mo=True)
-            mc.parent(f'Ear_{side}_Root_JNT', 'head_M_JNT')
-            mc.parent(f'Ear_{side}_Root_{side}_CTRL_CNST_GRP', 'head_M_01_CTRL')
+            try:
+                mc.parent(f'Ear_{side}_Root_JNT', 'head_M_JNT')
+                mc.parent(f'Ear_{side}_Root_{side}_CTRL_CNST_GRP', 'head_M_01_CTRL')
+            except:
+                print('no ear controls')
         mc.parent(loc, 'LowerHead_M_CTRL')
 
         mc.parent('Eye_L_JNT', 'Eye_R_JNT' ,'UpperHead_JNT' )
