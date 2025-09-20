@@ -922,7 +922,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         from importskins import import_weights
         for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'MouthGEO', 'RopesGEO', 'ShirtGEO', 'SwordGEO', 'PauldrenGEO', 'ChestGEO', 'RGautletGEO', 'BeltGEO', 'PantsGEO', 'LGautletGEO', 'OtherEyeBitGEO', 'EyesGEO']:
             import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
-
+        mc.parentConstraint('neck_02_FK_M_CTRL', 'Fin01_M_M_CTRL_CNST_GRP', mo=True)
 
 
     if character == 'Luciana':
