@@ -286,9 +286,10 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             ik_ctrl = ['ik ctrl']
 
         switch_attr = self.part.lower() + self.side.capitalize() + '_IKFK'
+        switch_ctrls: list[str] = [ctrl.ctrl_name for ctrl in self.fk_ctrls] + [ctrl.ctrl_name for ctrl in self.ik_ctrls]
         rAttr.Attribute(node=self.part_grp, type='plug', value=[par], name='skeletonPlugs', children_name=[self.bind_joints[0]])
         rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
         rAttr.Attribute(node=self.part_grp, type='plug', value=[' '.join(hide_list)], name='hideRigPlugs', children_name=['hideNodes']) if hide_list else None
         rAttr.Attribute(node=self.part_grp, type='plug', value=pv_targets, name=self.pv_ctrl.ctrl + '_parent', children_name=pv_names)
-        rAttr.Attribute(node=self.part_grp, type='plug', value=[switch_attr], name='switchRigPlugs', children_name=['ikFkSwitch'])
+        rAttr.Attribute(node=self.part_grp, type='plug', value=[switch_attr, str(switch_ctrls)], name='switchRigPlugs', children_name=['ikFkSwitch', 'ikFKSwitchControls'])
         rAttr.Attribute(node=self.part_grp, type='plug', value=ik_ctrl, name='transferAttributes', children_name=[self.main_ctrl.ctrl]) if ik_ctrl else None

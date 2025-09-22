@@ -196,7 +196,6 @@ class Chain:
             mc.setAttr(mdl + '.input2', t_percent)
             mc.connectAttr(mdl + '.output', jnt + '.rotateY')
             t_val += t_i
-
         pass
 
     def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None):
