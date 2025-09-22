@@ -1,4 +1,6 @@
+import ast
 import maya.cmds as mc
+import maya.api.OpenMaya as om2
 from importlib import reload
 
 import rjg.libs.control.ctrl as rCtrl
@@ -478,7 +480,8 @@ def add_switch_ctrl(x, y, z, utScale, quad=False, character=None):
     for part in mc.listRelatives('RIG'):
         if mc.objExists(part + '.switchRigPlugs'):
             switch_name = mc.getAttr(part + '.ikFkSwitch')
-            if 'arm' in part or 'hand' in part or 'finger' in part or 'spine' in part:
+            
+            if any(name in part for name in ("arm", "hand", "finger", "spine")):
                 default_val = 1
             else:
                 default_val = 0
@@ -489,6 +492,14 @@ def add_switch_ctrl(x, y, z, utScale, quad=False, character=None):
             else:
                 switch_attr = rAttr.Attribute(node=s_ctrl.ctrl, type='double', value=default_val, keyable=True, min=0, max=1, name=switch_name)
             mc.connectAttr(switch_attr.attr, part + '.switch')
+
+            # Create proxy attributes for IK FK switching on all relevant controls.
+            if mc.objExists(part + '.ikFKSwitchControls'):
+                switch_controls_str: str = mc.getAttr(part + '.ikFKSwitchControls')
+                
+                switch_controls: list[str] = ast.literal_eval(switch_controls_str)
+                for control in switch_controls:
+                    mc.addAttr(control, longName=switch_name, proxy=switch_attr.attr)
 
     if character == 'Rayden':
         rev = mc.createNode('reverse', n='cbow_rev')
