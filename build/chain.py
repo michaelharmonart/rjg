@@ -196,6 +196,7 @@ class Chain:
             mc.setAttr(mdl + '.input2', t_percent)
             mc.connectAttr(mdl + '.output', jnt + '.rotateY')
             t_val += t_i
+        pass
 
     def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None):
         if mirror:
@@ -250,21 +251,25 @@ class Chain:
             attr_util.lock_and_hide(node=end_ctrl.ctrl, translate=False, rotate=False, scale=False)
 
             # Twist for mid joint
+            end_jnt_twist = mc.group(empty=True, parent=segment_grp, name=f"{end_jnt}_Twist")
+            rXform.match_pose(end_jnt_twist, translate=end_jnt, rotate=start_jnt)
+            rXform.matrix_constraint(end_jnt, end_jnt_twist)
             mult_matrix = mc.createNode('multMatrix', name=f"{joint}_MMX") # Put the end joint into the space of the start joint
-            mc.connectAttr(f"{end_jnt}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
-            mc.connectAttr(f"{start_jnt}.parentInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]")
+            mc.connectAttr(f"{end_jnt_twist}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
+            mc.connectAttr(f"{start_jnt}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]")
             decompose_matrix = mc.createNode('decomposeMatrix', name=f"{joint}_DCM") # Retrieve the twist value from the resulting matrix
             mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
             mc.setAttr(f"{decompose_matrix}.inputRotateOrder", 1) # Make sure the rotate order is set so that the Y is the twist axis
             twist_mult = mc.createNode("multiply", name=f"{joint}_MLT")
             mc.connectAttr(f"{decompose_matrix}.outputRotateY", f"{twist_mult}.input[0]")
-            mc.setAttr(f"{twist_mult}.input[1]", 0.5 * mirror)
+            mc.setAttr(f"{twist_mult}.input[1]", 0.5)
             mc.connectAttr(f"{twist_mult}.output", f"{mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
 
             rSpline.matrix_spline_from_transforms(
                 transforms=[start_ctrl.ctrl_name, end_ctrl.ctrl_name],
                 transforms_to_pin=[f"{mid_ctrl.ctrl_name}_CNST_GRP"],
                 degree=1,
+                primary_axis=(0, 1 * mirror, 0),
                 secondary_axis=(1, 0, 0),
                 twist=False,
                 name=f"{joint}_Mid",
@@ -277,6 +282,7 @@ class Chain:
                 degree=2,
                 spline_group=segment_grp,
                 name=f"{joint}",
+                primary_axis=(0, 1 * mirror, 0),
                 secondary_axis=(1, 0, 0),
                 padded=False,
             )
