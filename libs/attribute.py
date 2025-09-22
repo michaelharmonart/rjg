@@ -41,6 +41,7 @@ class Attribute:
                      'enum' : self.add_enum,
                      'separator' : self.add_separator,
                      'double3' : self.add_double3,
+                     'color' : self.add_color,
                      'plug' : self.add_plug}
         type_dict[self.type]()
 
@@ -54,10 +55,13 @@ class Attribute:
         mc.setAttr(self.attr, self.value, type='string')
 
     def add_bool(self):
-        try:
-            mc.addAttr(self.node, attributeType='bool', defaultValue=self.value, keyable=self.keyable, longName=self.name)
-        except Exception as e:
-            pass
+        mc.addAttr(
+            self.node,
+            attributeType="bool",
+            defaultValue=self.value if self.value else 0,
+            keyable=self.keyable if self.keyable else True,
+            longName=self.name,
+        )
 
     def add_double(self):
         if not self.value:
@@ -79,6 +83,36 @@ class Attribute:
             mc.addAttr(self.node, parent=self.name, attributeType='double', hasMinValue=self.hasMinValue, hasMaxValue=self.hasMaxValue, defaultValue=self.value, keyable=self.keyable, longName=self.name + child)
             
         for child in self.children_name:    
+            child_attr = self.attr + child
+            if self.hasMinValue:
+                mc.addAttr(child_attr, edit=True, min=self.min)
+            if self.hasMaxValue:
+                mc.addAttr(child_attr, edit=True, max=self.max)
+            mc.setAttr(child_attr, cb=True)
+
+    def add_color(self):
+        mc.addAttr(
+            self.node,
+            attributeType="float3",
+            hasMinValue=self.hasMinValue,
+            hasMaxValue=self.hasMaxValue,
+            keyable=self.keyable,
+            longName=self.name,
+            usedAsColor=True,
+        )
+        for child in self.children_name:
+            mc.addAttr(
+                self.node,
+                parent=self.name,
+                attributeType="float",
+                hasMinValue=self.hasMinValue,
+                hasMaxValue=self.hasMaxValue,
+                defaultValue=self.value,
+                keyable=self.keyable,
+                longName=self.name + child,
+            )
+
+        for child in self.children_name:
             child_attr = self.attr + child
             if self.hasMinValue:
                 mc.addAttr(child_attr, edit=True, min=self.min)
