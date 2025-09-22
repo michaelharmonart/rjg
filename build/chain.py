@@ -267,7 +267,7 @@ class Chain:
             mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1) # Make sure the rotate order is set so that the Y is the twist axis
             # Use the resulting twist value
             twist_mult = mc.createNode("multiply", name=f"{joint}_MLT")
-            mc.connectAttr(f"{decompose_matrix}.outputRotateY", f"{twist_mult}.input[0]")
+            mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{twist_mult}.input[0]")
             mc.setAttr(f"{twist_mult}.input[1]", 0.5)
             mc.connectAttr(f"{twist_mult}.output", f"{mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
 
