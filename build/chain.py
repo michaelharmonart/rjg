@@ -256,10 +256,16 @@ class Chain:
             rXform.matrix_constraint(end_jnt, end_jnt_twist)
             mult_matrix = mc.createNode('multMatrix', name=f"{joint}_MMX") # Put the end joint into the space of the start joint
             mc.connectAttr(f"{end_jnt_twist}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
-            mc.connectAttr(f"{start_jnt}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]")
-            decompose_matrix = mc.createNode('decomposeMatrix', name=f"{joint}_DCM") # Retrieve the twist value from the resulting matrix
+            mc.connectAttr(f"{start_jnt}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]") # Retrieve the rotation from the resulting matrix
+            decompose_matrix = mc.createNode('decomposeMatrix', name=f"{joint}_DCM") 
             mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
-            mc.setAttr(f"{decompose_matrix}.inputRotateOrder", 1) # Make sure the rotate order is set so that the Y is the twist axis
+            # Create a quaternion from only the Y (down the chain axis) and W (scalar component)
+            # The resulting quaternion is the twist part of a swing twist decomposition. 
+            quat_to_euler = mc.createNode('quatToEuler', name=f"{joint}_QTE")
+            mc.connectAttr(f"{decompose_matrix}.outputQuatY", f"{quat_to_euler}.inputQuatY")
+            mc.connectAttr(f"{decompose_matrix}.outputQuatW", f"{quat_to_euler}.inputQuatW")
+            mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1) # Make sure the rotate order is set so that the Y is the twist axis
+            # Use the resulting twist value
             twist_mult = mc.createNode("multiply", name=f"{joint}_MLT")
             mc.connectAttr(f"{decompose_matrix}.outputRotateY", f"{twist_mult}.input[0]")
             mc.setAttr(f"{twist_mult}.input[1]", 0.5)
