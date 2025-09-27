@@ -491,9 +491,9 @@ def resample(
         domain_start: float = knots[degree]
         domain_end: float = knots[-degree - 1]
 
-    if not u_min:
+    if u_min is None:
         u_min: float = domain_start
-    if not u_max:
+    if u_max is None:
         u_max: float = domain_end
 
     if not u_min < u_max:
