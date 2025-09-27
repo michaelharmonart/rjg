@@ -267,9 +267,11 @@ class Chain:
             mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1) # Make sure the rotate order is set so that the Y is the twist axis
             # Use the resulting twist value
             twist_mult = mc.createNode("multiply", name=f"{joint}_MLT")
-            mc.connectAttr(f"{decompose_matrix}.outputRotateY", f"{twist_mult}.input[0]")
+            mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{twist_mult}.input[0]")
             mc.setAttr(f"{twist_mult}.input[1]", 0.5)
             mc.connectAttr(f"{twist_mult}.output", f"{mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
+
+           
 
             rSpline.matrix_spline_from_transforms(
                 transforms=[start_ctrl.ctrl_name, end_ctrl.ctrl_name],
@@ -281,7 +283,13 @@ class Chain:
                 name=f"{joint}_Mid",
             )
 
-            rXform.matrix_constraint(source_transform=end_jnt, constrain_transform=f"{end_ctrl.ctrl_name}_CNST_GRP", keep_offset=False)
+            # Handle End Control (follow the next segment, or if this is the last segment then only use the twist)
+            if index == len(segments) - 1:
+                # Twist for end joint
+                mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{end_ctrl.ctrl_name}_CNST_GRP.rotateY")
+            else:
+                rXform.matrix_constraint(source_transform=end_jnt, constrain_transform=f"{end_ctrl.ctrl_name}_CNST_GRP", keep_offset=False)
+
             rSpline.matrix_spline_from_transforms(
                 transforms=[start_ctrl.ctrl_name, mid_ctrl.ctrl_name, end_ctrl.ctrl_name],
                 transforms_to_pin=seg_jnt_list,
