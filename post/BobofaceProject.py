@@ -325,6 +325,12 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
             mc.connectAttr(f'R_Aim_ctrl.{attr}', f'R_Eye_ctrl_clone.{attr}')
     except:
         pass
+
+    try:
+        mc.connectAttr('Floof_2_ctrl.Floof_Vis', 'Floof_3_grp.visibility')
+        mc.connectAttr('Floof_2_ctrl.Floof_Vis', "FloofGeo.visibility")
+    except:
+        pass  
     '''
     try:
         parent_list = []

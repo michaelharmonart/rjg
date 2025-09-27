@@ -468,7 +468,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.warning(e)
         else:
            try:
-               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
+               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil', 'FloofGeo'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
                from Bobo_Build_Scripts import Clean_Fur
                Clean_Fur()
            except Exception as e:
@@ -1005,7 +1005,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if not_previs and character == 'Bobo':
         try:
             try:
-                mc.select('LeftEye', 'RightEye', 'LeftCornea', 'RightCornea', 'BotTeeth', 'TopTeeth', 'Tounge', 'LeftPupil', 'RightPupil')
+                mc.select('LeftEye', 'RightEye', 'LeftCornea', 'RightCornea', 'BotTeeth', 'TopTeeth', 'Tounge', 'LeftPupil', 'RightPupil', 'FloofGeo')
                 mel.eval('doDetachSkin 3 { "1", "1", "1" };')
                 mc.skinCluster('head_M_JNT', 'LeftCornea', mi=1, tsb=True)
                 mc.skinCluster('head_M_JNT', 'RightCornea', mi=1, tsb=True)
@@ -1016,6 +1016,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.skinCluster('head_M_JNT', 'BotTeeth', mi=1, tsb=True)
                 mc.skinCluster('head_M_JNT', 'Tounge', mi=1, tsb=True)
                 mc.skinCluster('head_M_JNT', 'TopTeeth', mi=1, tsb=True)
+                mc.skinCluster('head_M_JNT', 'FloofGeo', mi=1, tsb=True)
                 print('Reskinned')
             except Exception as e:
                 print(e)
@@ -1079,6 +1080,27 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
         mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
     print(f"\n{character} rig build complete.")
+
+    try:
+        skin_clusters = mc.ls(type="skinCluster") or []
+        if not skin_clusters:
+            print("No skinClusters found in the scene.")
+            return
+        
+        for sc in skin_clusters:
+            attr = f"{sc}.dqsSupportNonRigid"
+            if mc.objExists(attr):
+                try:
+                    mc.setAttr(attr, 1)
+                    print(f"Set {attr} = 1")
+                except Exception as e:
+                    print(f"Failed to set {attr}: {e}")
+            else:
+                print(f"{attr} does not exist on {sc}")
+    except Exception as e:
+        print(f"Failed")
+
+
 
 
 

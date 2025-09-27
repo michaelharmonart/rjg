@@ -291,6 +291,7 @@ class Chain:
                 primary_axis=(0, 1 * mirror, 0),
                 secondary_axis=(1, 0, 0),
                 padded=False,
+                stretch=False,
             )
             prev_end_ctrl = end_ctrl
         return {'control':ctrl_grp, 'module':rig_grp}

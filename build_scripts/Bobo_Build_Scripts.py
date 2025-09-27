@@ -60,6 +60,12 @@ def fix_position():
         #mc.setAttr(f'fingerRing_{d}_02_fk_CTRL_OFF_GRP.scaleY', 1.2)
 
     mc.scaleConstraint('BellyHighM_M_M_CTRL', 'BellyHighM_M_JNT')
+    for side in ["L", "R"]:
+        for attr in [['translate', 'Translate'], ['rotate', 'Rotate']]:
+            mc.disconnectAttr( f'{side}_Snout_04_jnt_ctrl_parentConstraint1_clone.constraint{attr[1]}', f"{side}_Snout_04_jnt_ctrl.{attr[0]}") 
+                    
+                                
+                                                           
 
 
 def clean_claws():
