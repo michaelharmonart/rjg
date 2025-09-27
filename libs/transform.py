@@ -168,3 +168,8 @@ def matrix_constraint(
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{constrain_transform}.translate")
     mc.connectAttr(f"{decompose_matrix}.outputScale", f"{constrain_transform}.scale")
     mc.connectAttr(f"{decompose_matrix}.outputShear", f"{constrain_transform}.shear")
+
+
+def freeze_and_zero(transform: str) -> None:
+    mc.makeIdentity(transform, apply=True)
+    mc.xform(pivots=(0, 0, 0))

@@ -30,6 +30,8 @@ import rjg.build.parts.scapula as rScapula
 import rjg.build.parts.winghand as rWingHand
 import rjg.build.parts.dragonleg as rDragonLeg
 
+from rjg.build.parts.hybrid_spine import HybridSpine
+
 reload(rAttr)
 reload(rRoot)
 reload(rHip)
@@ -58,7 +60,6 @@ reload(rWing)
 reload(rScapula)
 reload(rWingHand)
 reload(rDragonLeg)
-
 '''
 Wrapper for all part modules
 '''

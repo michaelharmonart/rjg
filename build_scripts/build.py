@@ -76,7 +76,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     #Building Parts // setting up the diffrent changes per character
     hip = rBuild.build_module(module_type='hip', side='M', part='COG', guide_list=['Hips'], ctrl_scale=50, cog_shape='quad_arrow', waist_shape='circle')
     chest = rBuild.build_module(module_type='chest', side='M', part='chest', guide_list=['Spine2'], ctrl_scale=70, chest_shape='circle', spinejnt_count = 4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
-    spine = rBuild.build_module(module_type='spine', side='M', part='spine', guide_list=['Hips', 'Spine', 'Spine1', 'Spine2'], ctrl_scale=1, mid_ctrl=True, joint_num=4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
+    if character == 'Gretchen':
+        spine = rBuild.HybridSpine(side="M", part="spine", guide_list=['Hips', 'Spine', 'Spine1', 'Spine2'], ctrl_scale=1.5, joint_num=6)
+    else:
+        spine = rBuild.build_module(module_type='spine', side='M', part='spine', guide_list=['Hips', 'Spine', 'Spine1', 'Spine2'], ctrl_scale=1, mid_ctrl=True, joint_num=4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
     if character == 'Luciana':
         neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=True , spinejnt_count = 6)
     else:    
