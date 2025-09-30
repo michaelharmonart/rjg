@@ -253,8 +253,9 @@ class HybridSpine(rModule.RigModule):
         chest_02_jnt = mc.group(name="chest_M_02_JNT", empty=True, parent=self.module_grp)
         rXform.matrix_constraint(self.chest_top_ctrl.ctrl, chest_02_jnt)
 
-        # Leg dependencies:
-
+        # Rename Joint for Skinning and Parenting.
+        mc.rename(self.bind_joints[-1], "chest_M_JNT")
+        mc.rename(self.bind_joints[0], )
         pass
 
     def add_plugs(self):
@@ -269,8 +270,8 @@ class HybridSpine(rModule.RigModule):
             )
 
             # add parentConstraint rig plugs
-            driver_list = ["waist_M_CTRL"]
-            driven_list = [self.base_name + "_torso_M_CTRL_CNST_GRP"]
+            driver_list = ["COG_M_CTRL"]
+            driven_list = [self.base_ctrl.top]
             rAttr.Attribute(
                 node=self.part_grp,
                 type="plug",
