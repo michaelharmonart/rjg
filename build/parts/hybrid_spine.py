@@ -9,7 +9,7 @@ import rjg.build.chain as rChain
 import rjg.libs.spline as spline
 import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.attribute as rAttr
-import rjg.libs.transform as rXform 
+import rjg.libs.transform as rXform
 
 reload(rModule)
 reload(rChain)
@@ -26,6 +26,9 @@ class HybridSpine(rModule.RigModule):
         guide_list: list[str],
         ctrl_scale: float = 1,
         joint_num: int = 5,
+        base_tangent: float = 3,
+        mid_tangent: float = 3,
+        end_tangent: float = 3,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale)
         if len(self.guide_list) != 4:
@@ -37,7 +40,9 @@ class HybridSpine(rModule.RigModule):
         self.__dict__.update(locals())
 
         self.base_name = self.part + "_" + self.side
-
+        self.base_tangent: float = base_tangent
+        self.mid_tangent: float = mid_tangent
+        self.end_tangent: float = end_tangent
         self.create_module()
 
     def create_module(self):
@@ -68,7 +73,7 @@ class HybridSpine(rModule.RigModule):
             translate=base_jnt,
             rotate=base_jnt,
             ctrl_scale=self.ctrl_scale * 14,
-            rotate_order=1
+            rotate_order=1,
         )
         tag_as_controller(base_ctrl.ctrl)
         self.base_ctrl = base_ctrl
@@ -84,7 +89,7 @@ class HybridSpine(rModule.RigModule):
             translate=chest_jnt,
             rotate=chest_jnt,
             ctrl_scale=self.ctrl_scale * 12,
-            rotate_order=1
+            rotate_order=1,
         )
         tag_as_controller(spine_mid_ctrl.ctrl)
         self.spine_mid_ctrl = spine_mid_ctrl
@@ -102,7 +107,7 @@ class HybridSpine(rModule.RigModule):
             ctrl_scale=self.ctrl_scale * 14,
             shape_translate=end_jnt,
             shape_rotate=chest_top_jnt,
-            rotate_order=1
+            rotate_order=1,
         )
         tag_as_controller(chest_ctrl.ctrl)
         self.chest_ctrl = chest_ctrl
@@ -120,7 +125,7 @@ class HybridSpine(rModule.RigModule):
             ctrl_scale=self.ctrl_scale * 14,
             shape_translate=chest_top_jnt,
             shape_rotate=chest_top_jnt,
-            rotate_order=1
+            rotate_order=1,
         )
         tag_as_controller(ik_chest_ctrl.ctrl)
         self.ik_chest_ctrl = ik_chest_ctrl
@@ -137,41 +142,46 @@ class HybridSpine(rModule.RigModule):
             rotate=chest_top_jnt,
             ctrl_scale=self.ctrl_scale * 14,
             shape_translate=(0, self.ctrl_scale * 2, 0),
-            rotate_order=1
+            rotate_order=1,
         )
         tag_as_controller(chest_top_ctrl.ctrl)
         self.chest_top_ctrl = chest_top_ctrl
 
-        spine_start: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_startPoint")
+        # Create transforms to make a spline to drive the mid control position
+        spine_start: str = mc.group(
+            empty=True, parent=self.module_grp, name=f"{self.part}_startPoint"
+        )
         rXform.match_pose(node=spine_start, translate=base_jnt, rotate=base_jnt)
         rXform.matrix_constraint(base_ctrl.ctrl, spine_start)
-
-        spine_mid: str =  mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midPoint")
+        spine_mid: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midPoint")
         rXform.match_pose(node=spine_mid, translate=chest_jnt, rotate=chest_jnt)
         rXform.matrix_constraint(base_ctrl.ctrl, spine_mid)
-        
         spine_end: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_endPoint")
         rXform.match_pose(node=spine_end, translate=chest_top_jnt, rotate=chest_top_jnt)
-        rXform.matrix_constraint(ik_chest_ctrl.ctrl, spine_end)
+        rXform.matrix_constraint(chest_top_ctrl.ctrl, spine_end)
 
         # Twist for mid joint
-        mult_matrix = mc.createNode('multMatrix', name=f"{self.part}_TwistRelativeMatrix") # Put the end joint into the space of the start joint
+        # Put the end joint into the space of the start joint
+        mult_matrix = mc.createNode("multMatrix", name=f"{self.part}_TwistRelativeMatrix")
         mc.connectAttr(f"{spine_end}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
-        mc.connectAttr(f"{spine_start}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]") # Retrieve the rotation from the resulting matrix
-        decompose_matrix = mc.createNode('decomposeMatrix', name=f"{self.part}_Twist_DCM") 
+        mc.connectAttr(f"{spine_start}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]")
+        # Retrieve the rotation from the resulting matrix
+        decompose_matrix = mc.createNode("decomposeMatrix", name=f"{self.part}_Twist_DCM")
         mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
         # Create a quaternion from only the Y (down the chain axis) and W (scalar component)
-        # The resulting quaternion is the twist part of a swing twist decomposition. 
-        quat_to_euler = mc.createNode('quatToEuler', name=f"{self.part}_Twist_QTE")
+        # The resulting quaternion is the twist part of a swing twist decomposition.
+        quat_to_euler = mc.createNode("quatToEuler", name=f"{self.part}_Twist_QTE")
         mc.connectAttr(f"{decompose_matrix}.outputQuatY", f"{quat_to_euler}.inputQuatY")
         mc.connectAttr(f"{decompose_matrix}.outputQuatW", f"{quat_to_euler}.inputQuatW")
-        mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1) # Make sure the rotate order is set so that the Y is the twist axis
+        # Make sure the rotate order is set so that the Y is the twist axis
+        mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1)
         # Use the resulting twist value
         twist_mult = mc.createNode("multiply", name=f"{self.part}_Twist_Mid_MLT")
         mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{twist_mult}.input[0]")
         mc.setAttr(f"{twist_mult}.input[1]", 0.5)
         mc.connectAttr(f"{twist_mult}.output", f"{spine_mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
 
+        # Create the spline to drive the mid control position. (3 control points, quadratic)
         spline.matrix_spline_from_transforms(
             name=f"{self.part}_Mid",
             transforms=[base_ctrl.ctrl, spine_mid, spine_end],
@@ -183,7 +193,6 @@ class HybridSpine(rModule.RigModule):
             degree=2,
             parent=self.module_grp,
         )
-        self.spine_cvs: list[str] = [spine_start, spine_mid_ctrl.ctrl, spine_end]
 
         self.tweak_ctrls: list[Control] = []
         self.tweak_transforms: list[str] = []
@@ -192,7 +201,9 @@ class HybridSpine(rModule.RigModule):
         for i in range(self.joint_num):
             # Skip making controls for the first and last tweak points
             if i == 0 or i == self.joint_num - 1:
-                tweak_point = mc.group(empty=True, name=f"{self.part}_Tweak_{i:02}", parent=self.module_grp)
+                tweak_point = mc.group(
+                    empty=True, name=f"{self.part}_Tweak_{i:02}", parent=self.module_grp
+                )
                 self.tweak_transforms.append(tweak_point)
                 if i == self.joint_num - 1:
                     self.joint_drivers.append(chest_top_ctrl.ctrl)
@@ -201,7 +212,7 @@ class HybridSpine(rModule.RigModule):
             else:
                 tweak_ctrl: Control = rCtrl.Control(
                     name=f"{self.part}_Tweak_{i:02}",
-                    parent=ik_chest_ctrl.ctrl,
+                    parent=self.control_grp,
                     shape="circle",
                     side=self.side,
                     axis="y",
@@ -212,26 +223,70 @@ class HybridSpine(rModule.RigModule):
                     ctrl_scale=self.ctrl_scale * 1,
                     shape_translate=(0, 0, self.ctrl_scale * 12),
                     shape_rotate=(90, 0, 0),
-                    rotate_order=1
+                    rotate_order=1,
                 )
                 tag_as_controller(tweak_ctrl.ctrl)
                 self.tweak_ctrls.append(tweak_ctrl)
                 self.tweak_transforms.append(tweak_ctrl.top)
                 self.joint_drivers.append(tweak_ctrl.ctrl)
-        
-        
 
     def output_rig(self):
+        # Create the transforms to drive the actual spine curve/spline (two control points for each control, start mid and end)
+        spine_start_driver: str = mc.spaceLocator(name=f"{self.part}_startDriver")[0]
+        mc.parent(spine_start_driver, self.module_grp)
+        rXform.matrix_constraint(self.base_ctrl.ctrl, spine_start_driver, keep_offset=False)
+        spine_start_tangent = mc.spaceLocator(name=f"{self.part}_startTangent")[0]
+        mc.parent(spine_start_tangent, spine_start_driver)
+        rXform.match_pose(
+            node=spine_start_tangent, translate=spine_start_driver, rotate=spine_start_driver
+        )
+        mc.move(0, self.base_tangent, 0, spine_start_tangent, objectSpace=True)
+
+        spine_mid_driver: str = mc.group(
+            empty=True, parent=self.module_grp, name=f"{self.part}_midPointDriver"
+        )
+        rXform.matrix_constraint(self.spine_mid_ctrl.ctrl, spine_mid_driver, keep_offset=False)
+        spine_mid_tangent1: str = mc.spaceLocator(name=f"{self.part}_midTangent1")[0]
+        mc.parent(spine_mid_tangent1, spine_mid_driver)
+        rXform.match_pose(
+            node=spine_mid_tangent1, translate=spine_mid_driver, rotate=spine_mid_driver
+        )
+        mc.move(0, -self.mid_tangent * 0.5, 0, spine_mid_tangent1, objectSpace=True)
+
+        spine_mid_tangent2: str = mc.spaceLocator(name=f"{self.part}_midTangent2")[0]
+        mc.parent(spine_mid_tangent2, spine_mid_driver)
+        rXform.match_pose(
+            node=spine_mid_tangent2, translate=spine_mid_driver, rotate=spine_mid_driver
+        )
+        mc.move(0, self.mid_tangent * 0.5, 0, spine_mid_tangent2, objectSpace=True)
+
+        spine_end_driver: str = mc.spaceLocator(name=f"{self.part}_endDriver")[0]
+        mc.parent(spine_end_driver, self.module_grp)
+        rXform.matrix_constraint(self.chest_top_ctrl.ctrl, spine_end_driver, keep_offset=False)
+        spine_end_tangent: str = mc.spaceLocator(name=f"{self.part}_endTangent")[0]
+        mc.parent(spine_end_tangent, spine_end_driver)
+        rXform.match_pose(
+            node=spine_end_tangent, translate=spine_end_driver, rotate=spine_end_driver
+        )
+        mc.move(0, -self.end_tangent, 0, spine_end_tangent, objectSpace=True)
+
         spline.matrix_spline_from_transforms(
             name=f"{self.part}_Spline",
-            transforms=self.spine_cvs,
+            transforms=[
+                spine_start_driver,
+                spine_start_tangent,
+                spine_mid_tangent1,
+                spine_mid_tangent2,
+                spine_end_tangent,
+                spine_end_driver,
+            ],
             transforms_to_pin=self.tweak_transforms,
             padded=False,
             stretch=False,
             parent=self.module_grp,
-            primary_axis=(0,1,0),
-            secondary_axis=(0,0,1),
-            degree=2,
+            primary_axis=(0, 1, 0),
+            secondary_axis=(0, 0, 1),
+            degree=3,
         )
 
     def skeleton(self):
@@ -255,7 +310,9 @@ class HybridSpine(rModule.RigModule):
 
         # Rename Joint for Skinning and Parenting.
         mc.rename(self.bind_joints[-1], "chest_M_JNT")
-        mc.rename(self.bind_joints[0], )
+        mc.rename(
+            self.bind_joints[0],
+        )
         pass
 
     def add_plugs(self):
