@@ -2,6 +2,7 @@ from rjg.libs.control.ctrl import Control, tag_as_controller
 
 
 import maya.cmds as mc
+import maya.api.OpenMaya as om2
 from importlib import reload
 
 import rjg.build.rigModule as rModule
@@ -26,9 +27,9 @@ class HybridSpine(rModule.RigModule):
         guide_list: list[str],
         ctrl_scale: float = 1,
         joint_num: int = 5,
-        base_tangent: float = 3,
-        mid_tangent: float = 3,
-        end_tangent: float = 3,
+        base_tangent: float = 0.15,
+        mid_tangent: float = 0.15,
+        end_tangent: float = 0.15,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale)
         if len(self.guide_list) != 4:
@@ -231,6 +232,11 @@ class HybridSpine(rModule.RigModule):
                 self.joint_drivers.append(tweak_ctrl.ctrl)
 
     def output_rig(self):
+        # Get spine length
+        start: om2.MPoint = om2.MPoint(mc.xform(self.guide_list[0], q=True, ws=True, t=True))
+        end: om2.MPoint = om2.MPoint(mc.xform(self.guide_list[2], q=True, ws=True, t=True))
+        length: float = start.distanceTo(end)
+
         # Create the transforms to drive the actual spine curve/spline (two control points for each control, start mid and end)
         spine_start_driver: str = mc.spaceLocator(name=f"{self.part}_startDriver")[0]
         mc.parent(spine_start_driver, self.module_grp)
@@ -240,7 +246,7 @@ class HybridSpine(rModule.RigModule):
         rXform.match_pose(
             node=spine_start_tangent, translate=spine_start_driver, rotate=spine_start_driver
         )
-        mc.move(0, self.base_tangent, 0, spine_start_tangent, objectSpace=True)
+        mc.move(0, self.base_tangent * length, 0, spine_start_tangent, objectSpace=True)
 
         spine_mid_driver: str = mc.group(
             empty=True, parent=self.module_grp, name=f"{self.part}_midPointDriver"
@@ -251,14 +257,14 @@ class HybridSpine(rModule.RigModule):
         rXform.match_pose(
             node=spine_mid_tangent1, translate=spine_mid_driver, rotate=spine_mid_driver
         )
-        mc.move(0, -self.mid_tangent * 0.5, 0, spine_mid_tangent1, objectSpace=True)
+        mc.move(0, -self.mid_tangent * 0.5 * length, 0, spine_mid_tangent1, objectSpace=True)
 
         spine_mid_tangent2: str = mc.spaceLocator(name=f"{self.part}_midTangent2")[0]
         mc.parent(spine_mid_tangent2, spine_mid_driver)
         rXform.match_pose(
             node=spine_mid_tangent2, translate=spine_mid_driver, rotate=spine_mid_driver
         )
-        mc.move(0, self.mid_tangent * 0.5, 0, spine_mid_tangent2, objectSpace=True)
+        mc.move(0, self.mid_tangent * 0.5 * length, 0, spine_mid_tangent2, objectSpace=True)
 
         spine_end_driver: str = mc.spaceLocator(name=f"{self.part}_endDriver")[0]
         mc.parent(spine_end_driver, self.module_grp)
@@ -268,7 +274,7 @@ class HybridSpine(rModule.RigModule):
         rXform.match_pose(
             node=spine_end_tangent, translate=spine_end_driver, rotate=spine_end_driver
         )
-        mc.move(0, -self.end_tangent, 0, spine_end_tangent, objectSpace=True)
+        mc.move(0, -self.end_tangent * length, 0, spine_end_tangent, objectSpace=True)
 
         spline.matrix_spline_from_transforms(
             name=f"{self.part}_Spline",
