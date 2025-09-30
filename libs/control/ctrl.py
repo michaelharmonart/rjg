@@ -23,6 +23,7 @@ class Control(rDraw.Draw, rGroup.Group):
         suffix="CTRL",
         name="default",
         axis="y",
+        rotate_order: int | None = None,
         group_type="main",
         rig_type="primary",
         ctrl_scale=1,
@@ -60,7 +61,7 @@ class Control(rDraw.Draw, rGroup.Group):
             else:
                 self.ctrl_name = "{}_{}".format(name, suffix)
 
-            self.create(shape_translate=shape_translate, shape_rotate=shape_rotate)
+            self.create(shape_translate=shape_translate, shape_rotate=shape_rotate, rotate_order=rotate_order)
 
         else:
             try:
@@ -75,6 +76,7 @@ class Control(rDraw.Draw, rGroup.Group):
         self,
         shape_translate: str | tuple[float, float, float] | None = None,
         shape_rotate: str | tuple[float, float, float] | None = None,
+        rotate_order: int | None = None,
     ):
         self.create_curve(name=self.ctrl_name, shape=self.shape, axis=self.axis, scale=self.ctrl_scale)
         self.ctrl = self.curve
@@ -111,6 +113,8 @@ class Control(rDraw.Draw, rGroup.Group):
             rXform.freeze_and_zero(transform=self.curve)
 
         mc.setAttr(self.ctrl_name + '.rotateOrder', k=True)
+        if rotate_order:
+            mc.setAttr(f"{self.ctrl_name}.rotateOrder", rotate_order)
 
         if self.parent:
             mc.parent(self.top, self.parent)

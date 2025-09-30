@@ -46,6 +46,7 @@ class HybridSpine(rModule.RigModule):
         self.control_rig()
         self.output_rig()
         self.skeleton()
+        self.compatibility_transforms()
         self.add_plugs()
 
     def control_rig(self):
@@ -67,8 +68,10 @@ class HybridSpine(rModule.RigModule):
             translate=base_jnt,
             rotate=base_jnt,
             ctrl_scale=self.ctrl_scale * 14,
+            rotate_order=1
         )
         tag_as_controller(base_ctrl.ctrl)
+        self.base_ctrl = base_ctrl
 
         spine_mid_ctrl: Control = rCtrl.Control(
             name="spine_mid",
@@ -81,8 +84,10 @@ class HybridSpine(rModule.RigModule):
             translate=chest_jnt,
             rotate=chest_jnt,
             ctrl_scale=self.ctrl_scale * 12,
+            rotate_order=1
         )
         tag_as_controller(spine_mid_ctrl.ctrl)
+        self.spine_mid_ctrl = spine_mid_ctrl
 
         chest_ctrl: Control = rCtrl.Control(
             name="chest",
@@ -97,8 +102,10 @@ class HybridSpine(rModule.RigModule):
             ctrl_scale=self.ctrl_scale * 14,
             shape_translate=end_jnt,
             shape_rotate=chest_top_jnt,
+            rotate_order=1
         )
         tag_as_controller(chest_ctrl.ctrl)
+        self.chest_ctrl = chest_ctrl
 
         ik_chest_ctrl: Control = rCtrl.Control(
             name="IK_chest",
@@ -113,8 +120,10 @@ class HybridSpine(rModule.RigModule):
             ctrl_scale=self.ctrl_scale * 14,
             shape_translate=chest_top_jnt,
             shape_rotate=chest_top_jnt,
+            rotate_order=1
         )
         tag_as_controller(ik_chest_ctrl.ctrl)
+        self.ik_chest_ctrl = ik_chest_ctrl
 
         chest_top_ctrl: Control = rCtrl.Control(
             name="chest_top",
@@ -128,8 +137,10 @@ class HybridSpine(rModule.RigModule):
             rotate=chest_top_jnt,
             ctrl_scale=self.ctrl_scale * 14,
             shape_translate=(0, self.ctrl_scale * 2, 0),
+            rotate_order=1
         )
         tag_as_controller(chest_top_ctrl.ctrl)
+        self.chest_top_ctrl = chest_top_ctrl
 
         spine_start: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_startPoint")
         rXform.match_pose(node=spine_start, translate=base_jnt, rotate=base_jnt)
@@ -195,12 +206,13 @@ class HybridSpine(rModule.RigModule):
                     side=self.side,
                     axis="y",
                     group_type="main",
-                    rig_type="primary",
+                    rig_type="bendy",
                     translate=chest_top_jnt,
                     rotate=chest_top_jnt,
                     ctrl_scale=self.ctrl_scale * 1,
                     shape_translate=(0, 0, self.ctrl_scale * 12),
                     shape_rotate=(90, 0, 0),
+                    rotate_order=1
                 )
                 tag_as_controller(tweak_ctrl.ctrl)
                 self.tweak_ctrls.append(tweak_ctrl)
@@ -229,6 +241,21 @@ class HybridSpine(rModule.RigModule):
         spine_chain.create_from_transforms(parent=self.skel)
         self.bind_joints = spine_chain.joints
         self.tag_bind_joints(self.bind_joints[:-1])
+
+    def compatibility_transforms(self) -> None:
+        # These are needed until we refactor the modules to actually be modular instead of having hardcoded connections between each other.
+
+        # Arm, Clavicle, and Neck dependencies:
+        chest_01 = mc.group(name="chest_M_01_CTRL", empty=True, parent=self.module_grp)
+        rXform.matrix_constraint(self.ik_chest_ctrl.ctrl, chest_01)
+        chest_02 = mc.group(name="chest_M_02_CTRL", empty=True, parent=self.module_grp)
+        rXform.matrix_constraint(self.chest_top_ctrl.ctrl, chest_02)
+        chest_02_jnt = mc.group(name="chest_M_02_JNT", empty=True, parent=self.module_grp)
+        rXform.matrix_constraint(self.chest_top_ctrl.ctrl, chest_02_jnt)
+
+        # Leg dependencies:
+
+        pass
 
     def add_plugs(self):
         if self.part == "spine":
