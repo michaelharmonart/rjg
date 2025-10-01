@@ -400,6 +400,10 @@ def matrix_spline_from_transforms(
     """
     segments = len(transforms_to_pin)
     num_cvs: int = len(transforms)
+    
+    if num_cvs <= degree:
+        raise ValueError(f"Curves of degree {degree} require at least {degree + 1} CVs.")
+
     if not knots:
         if periodic:
             knots = generate_knots(num_cvs + degree, degree=degree, periodic=True)
