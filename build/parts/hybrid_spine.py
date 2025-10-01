@@ -343,11 +343,11 @@ class HybridSpine(rModule.RigModule):
             transform_list=[self.joint_drivers[0]], side=self.side, suffix="JNT", name="COG",
         )
         cog_chain.create_from_transforms(parent=self.skel, pad=False)
-
         spine_chain = rChain.Chain(
             transform_list=self.joint_drivers[1:], side=self.side, suffix="JNT", name=self.part
         )
         spine_chain.create_from_transforms(parent=self.skel)
+        mc.parent(spine_chain.joints[0], cog_chain.joints[0], relative=True)
         self.bind_joints = cog_chain.joints + spine_chain.joints
         self.tag_bind_joints(self.bind_joints)
 
@@ -377,9 +377,9 @@ class HybridSpine(rModule.RigModule):
             rAttr.Attribute(
                 node=self.part_grp,
                 type="plug",
-                value=["root_M_JNT", self.bind_joints[0]],
+                value=["root_M_JNT"],
                 name="skeletonPlugs",
-                children_name=[self.bind_joints[0], self.bind_joints[1]],
+                children_name=[self.bind_joints[0]],
             )
 
             # add parentConstraint rig plugs
