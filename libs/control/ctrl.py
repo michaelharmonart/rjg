@@ -14,9 +14,26 @@ reload(rAttr)
 reload(rXform)
 
 class Control(rDraw.Draw, rGroup.Group):
-    def __init__(self, ctrl=None, parent=None, shape='circle', side='M', suffix='CTRL', name='default', axis='y', 
-                 group_type='main', rig_type='primary', ctrl_scale=1, translate=(0, 0, 0), rotate=(0, 0, 0), scale=(1, 1, 1),
-                 color_rgb=None):
+    def __init__(
+        self,
+        ctrl=None,
+        parent=None,
+        shape="circle",
+        side="M",
+        suffix="CTRL",
+        name="default",
+        axis="y",
+        rotate_order: int | None = None,
+        group_type="main",
+        rig_type="primary",
+        ctrl_scale=1,
+        translate=(0, 0, 0),
+        rotate=(0, 0, 0),
+        scale=(1, 1, 1),
+        color_rgb=None,
+        shape_translate: str | tuple[float, float, float] | None = None,
+        shape_rotate: str | tuple[float, float, float] | None = None,
+    ):
         self.group_dict = {
                            "main": ["CNST", "SDK", "OFF"],
                            "offset": ["CNST", "OFF"],
@@ -44,7 +61,7 @@ class Control(rDraw.Draw, rGroup.Group):
             else:
                 self.ctrl_name = "{}_{}".format(name, suffix)
 
-            self.create()
+            self.create(shape_translate=shape_translate, shape_rotate=shape_rotate, rotate_order=rotate_order)
 
         else:
             try:
@@ -54,10 +71,16 @@ class Control(rDraw.Draw, rGroup.Group):
     '''
     creates a control, adds padding, and sets SRT position, tags control with information
     '''
-    def create(self):
+
+    def create(
+        self,
+        shape_translate: str | tuple[float, float, float] | None = None,
+        shape_rotate: str | tuple[float, float, float] | None = None,
+        rotate_order: int | None = None,
+    ):
         self.create_curve(name=self.ctrl_name, shape=self.shape, axis=self.axis, scale=self.ctrl_scale)
         self.ctrl = self.curve
-
+        
         if self.color_rgb:
             shapes = mc.listRelatives(self.ctrl, shapes=True, fullPath=True) or []
             for shape in shapes:
@@ -85,7 +108,13 @@ class Control(rDraw.Draw, rGroup.Group):
         rXform.match_pose(node=self.top, translate=self.translate, rotate=self.rotate, scale=self.scale)
         mc.setAttr(self.ctrl_name + '.v', keyable=False, cb=True)
 
+        if shape_translate or shape_rotate:
+            rXform.match_pose(node=self.curve, translate=shape_translate, rotate=shape_rotate)
+            rXform.freeze_and_zero(transform=self.curve)
+
         mc.setAttr(self.ctrl_name + '.rotateOrder', k=True)
+        if rotate_order:
+            mc.setAttr(f"{self.ctrl_name}.rotateOrder", rotate_order)
 
         if self.parent:
             mc.parent(self.top, self.parent)

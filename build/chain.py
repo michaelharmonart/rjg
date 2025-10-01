@@ -7,12 +7,13 @@ import rjg.libs.common as rCommon
 import rjg.libs.attribute as rAttr
 import rjg.libs.transform as rXform
 import rjg.libs.math as rMath
-import rjg.libs.spline as rSpline
+import rjg.libs.spline as spline
 reload(rCtrl)
 reload(rCommon)
 reload(rAttr)
 reload(rXform)
 reload(rMath)
+reload(spline)
 
 '''
 Class used to create joint chains from a list of transforms.
@@ -273,7 +274,7 @@ class Chain:
 
            
 
-            rSpline.matrix_spline_from_transforms(
+            spline.matrix_spline_from_transforms(
                 transforms=[start_ctrl.ctrl_name, end_ctrl.ctrl_name],
                 transforms_to_pin=[f"{mid_ctrl.ctrl_name}_CNST_GRP"],
                 degree=1,
@@ -290,7 +291,7 @@ class Chain:
             else:
                 rXform.matrix_constraint(source_transform=end_jnt, constrain_transform=f"{end_ctrl.ctrl_name}_CNST_GRP", keep_offset=False)
 
-            rSpline.matrix_spline_from_transforms(
+            spline.matrix_spline_from_transforms(
                 transforms=[start_ctrl.ctrl_name, mid_ctrl.ctrl_name, end_ctrl.ctrl_name],
                 transforms_to_pin=seg_jnt_list,
                 degree=2,
