@@ -25,7 +25,7 @@ class HybridSpine(rModule.RigModule):
         side: str,
         part: str,
         base_guide: str,
-        hip_pivot_guide: str, 
+        hip_pivot_guide: str,
         chest_pivot_guide: str,
         upper_chest_pivot_guide: str,
         spine_end_guide: str,
@@ -35,8 +35,19 @@ class HybridSpine(rModule.RigModule):
         mid_tangent: float = 0.2,
         end_tangent: float = 0.15,
     ):
-        super().__init__(side=side, part=part, guide_list=[base_guide, hip_pivot_guide, chest_pivot_guide, upper_chest_pivot_guide, spine_end_guide], ctrl_scale=ctrl_scale)
-        
+        super().__init__(
+            side=side,
+            part=part,
+            guide_list=[
+                base_guide,
+                hip_pivot_guide,
+                chest_pivot_guide,
+                upper_chest_pivot_guide,
+                spine_end_guide,
+            ],
+            ctrl_scale=ctrl_scale,
+        )
+
         self.joint_num: int = joint_num
         self.__dict__.update(locals())
 
@@ -70,7 +81,7 @@ class HybridSpine(rModule.RigModule):
         end_jnt = self.spine_end_guide
 
         # Build FK controls
-        hip_ctrl : Control = rCtrl.Control(
+        hip_ctrl: Control = rCtrl.Control(
             name="hip",
             parent=self.control_grp,
             shape="circle",
@@ -174,7 +185,9 @@ class HybridSpine(rModule.RigModule):
         self.chest_top_ctrl = chest_top_ctrl
 
         # Create transforms to make a spline to drive the mid control position
-        spine_start: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_startPoint")
+        spine_start: str = mc.group(
+            empty=True, parent=self.module_grp, name=f"{self.part}_startPoint"
+        )
         rXform.match_pose(node=spine_start, translate=base_jnt, rotate=base_jnt)
         rXform.matrix_constraint(hip_ctrl.ctrl, spine_start)
         spine_mid: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midPoint")
@@ -185,19 +198,24 @@ class HybridSpine(rModule.RigModule):
         rXform.matrix_constraint(chest_top_ctrl.ctrl, spine_end)
 
         # Twist for mid joint
-        # Put the end joint into the space of the start joint
-        twist_space: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_twistSpace")
-        mult_matrix = mc.createNode("multMatrix", name=f"{self.part}_TwistRelativeMatrix")
-        mc.connectAttr(f"{spine_end}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
-        mc.connectAttr(f"{twist_space}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]")
-        # Retrieve the rotation from the resulting matrix
-        decompose_matrix = mc.createNode("decomposeMatrix", name=f"{self.part}_Twist_DCM")
-        mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
+        # Retrieve the rotation from the top and bottom matrices
+        start_decompose_matrix = mc.createNode("decomposeMatrix", name=f"{self.part}_TwistStart_DCM")
+        mc.connectAttr(f"{spine_start}.matrix", f"{start_decompose_matrix}.inputMatrix")
+        end_decompose_matrix = mc.createNode("decomposeMatrix", name=f"{self.part}_TwistEnd_DCM")
+        mc.connectAttr(f"{spine_end}.matrix", f"{end_decompose_matrix}.inputMatrix")
+
         # Create a quaternion from only the Y (down the chain axis) and W (scalar component)
         # The resulting quaternion is the twist part of a swing twist decomposition.
+        # Slerp to the rotation halfway between the two twist quaternions.
+        slerp = mc.createNode("quatSlerp", name=f"{self.part}_Twist_Slerp")
+        mc.connectAttr(f"{start_decompose_matrix}.outputQuatY", f"{slerp}.input1QuatY")
+        mc.connectAttr(f"{start_decompose_matrix}.outputQuatW", f"{slerp}.input1QuatW")
+        mc.connectAttr(f"{end_decompose_matrix}.outputQuatY", f"{slerp}.input2QuatY")
+        mc.connectAttr(f"{end_decompose_matrix}.outputQuatW", f"{slerp}.input2QuatW")
+        mc.setAttr(f"{slerp}.inputT", 0.5)
+
         quat_to_euler = mc.createNode("quatToEuler", name=f"{self.part}_Twist_QTE")
-        mc.connectAttr(f"{decompose_matrix}.outputQuatY", f"{quat_to_euler}.inputQuatY")
-        mc.connectAttr(f"{decompose_matrix}.outputQuatW", f"{quat_to_euler}.inputQuatW")
+        mc.connectAttr(f"{slerp}.outputQuat", f"{quat_to_euler}.inputQuat")
         # Make sure the rotate order is set so that the Y is the twist axis
         mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1)
         # Use the resulting twist value
@@ -321,12 +339,17 @@ class HybridSpine(rModule.RigModule):
         )
 
     def skeleton(self):
+        cog_chain = rChain.Chain(
+            transform_list=[self.joint_drivers[0]], side=self.side, suffix="JNT", name="COG",
+        )
+        cog_chain.create_from_transforms(parent=self.skel, pad=False)
+
         spine_chain = rChain.Chain(
-            transform_list=self.joint_drivers, side=self.side, suffix="JNT", name=self.part
+            transform_list=self.joint_drivers[1:], side=self.side, suffix="JNT", name=self.part
         )
         spine_chain.create_from_transforms(parent=self.skel)
-        self.bind_joints = spine_chain.joints
-        self.tag_bind_joints(self.bind_joints[:-1])
+        self.bind_joints = cog_chain.joints + spine_chain.joints
+        self.tag_bind_joints(self.bind_joints)
 
     def compatibility_transforms(self) -> None:
         # These are needed until we refactor the modules to actually be modular instead of having hardcoded connections between each other.
@@ -345,9 +368,7 @@ class HybridSpine(rModule.RigModule):
 
         # Rename Joint for Skinning and Parenting.
         mc.rename(self.bind_joints[-1], "chest_M_JNT")
-        mc.rename(
-            self.bind_joints[0],
-        )
+        self.bind_joints[-1] = "chest_M_JNT"
         pass
 
     def add_plugs(self):
@@ -356,9 +377,9 @@ class HybridSpine(rModule.RigModule):
             rAttr.Attribute(
                 node=self.part_grp,
                 type="plug",
-                value=["COG_M_JNT"],
+                value=["root_M_JNT", self.bind_joints[0]],
                 name="skeletonPlugs",
-                children_name=[self.bind_joints[0]],
+                children_name=[self.bind_joints[0], self.bind_joints[1]],
             )
 
             # add parentConstraint rig plugs
