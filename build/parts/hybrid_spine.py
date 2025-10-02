@@ -275,8 +275,8 @@ class HybridSpine(rModule.RigModule):
 
     def output_rig(self):
         # Get spine length
-        start: om2.MPoint = om2.MPoint(mc.xform(self.guide_list[0], q=True, ws=True, t=True))
-        end: om2.MPoint = om2.MPoint(mc.xform(self.guide_list[2], q=True, ws=True, t=True))
+        start: om2.MPoint = om2.MPoint(mc.xform(self.base_guide, q=True, ws=True, t=True))
+        end: om2.MPoint = om2.MPoint(mc.xform(self.upper_chest_pivot_guide, q=True, ws=True, t=True))
         length: float = start.distanceTo(end)
 
         # Create the transforms to drive the actual spine curve/spline (two control points for each control, start mid and end)
