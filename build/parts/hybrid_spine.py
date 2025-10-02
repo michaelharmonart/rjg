@@ -334,7 +334,7 @@ class HybridSpine(rModule.RigModule):
             stretch=False,
             parent=self.module_grp,
             primary_axis=(0, 1, 0),
-            secondary_axis=(0, 0, 1),
+            secondary_axis=(1, 0, 0),
             degree=3,
         )
 
