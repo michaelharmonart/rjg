@@ -107,7 +107,7 @@ class Clavicle(rModule.RigModule):
                                name=self.base_name + '_stretch_DST')
         mdn = mc.createNode('multiplyDivide',
                               name=self.base_name + '_stretch_MDN')
-        mdl = mc.createNode('multDoubleLinear',
+        mdl = mc.createNode('multDL',
                               name=self.base_name + '_stretch_MDL')
         bta = mc.createNode('blendTwoAttr',
                               name=self.base_name + '_stretch_BTA')

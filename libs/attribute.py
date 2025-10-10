@@ -1,4 +1,5 @@
 import maya.cmds as mc
+import maya.api.OpenMaya as om2
 from importlib import reload
 
 class Attribute:
@@ -26,6 +27,12 @@ class Attribute:
                 mc.error("Must define type when adding attributes.")
             self.add_attr()
 
+    def is_proxy(self) -> bool:
+        sel: om2.MSelectionList = om2.MSelectionList()
+        sel.add(self.attr)
+        plug: om2.MPlug = sel.getPlug(0)
+        return plug.isProxy
+
     def add_attr(self):
         self.attr = self.node + '.' + self.name
         type_dict = {'string' : self.add_string,
@@ -34,6 +41,7 @@ class Attribute:
                      'enum' : self.add_enum,
                      'separator' : self.add_separator,
                      'double3' : self.add_double3,
+                     'color' : self.add_color,
                      'plug' : self.add_plug}
         type_dict[self.type]()
 
@@ -47,10 +55,13 @@ class Attribute:
         mc.setAttr(self.attr, self.value, type='string')
 
     def add_bool(self):
-        try:
-            mc.addAttr(self.node, attributeType='bool', defaultValue=self.value, keyable=self.keyable, longName=self.name)
-        except Exception as e:
-            pass
+        mc.addAttr(
+            self.node,
+            attributeType="bool",
+            defaultValue=self.value if self.value else 0,
+            keyable=self.keyable if self.keyable else True,
+            longName=self.name,
+        )
 
     def add_double(self):
         if not self.value:
@@ -72,6 +83,36 @@ class Attribute:
             mc.addAttr(self.node, parent=self.name, attributeType='double', hasMinValue=self.hasMinValue, hasMaxValue=self.hasMaxValue, defaultValue=self.value, keyable=self.keyable, longName=self.name + child)
             
         for child in self.children_name:    
+            child_attr = self.attr + child
+            if self.hasMinValue:
+                mc.addAttr(child_attr, edit=True, min=self.min)
+            if self.hasMaxValue:
+                mc.addAttr(child_attr, edit=True, max=self.max)
+            mc.setAttr(child_attr, cb=True)
+
+    def add_color(self):
+        mc.addAttr(
+            self.node,
+            attributeType="float3",
+            hasMinValue=self.hasMinValue,
+            hasMaxValue=self.hasMaxValue,
+            keyable=self.keyable,
+            longName=self.name,
+            usedAsColor=True,
+        )
+        for child in self.children_name:
+            mc.addAttr(
+                self.node,
+                parent=self.name,
+                attributeType="float",
+                hasMinValue=self.hasMinValue,
+                hasMaxValue=self.hasMaxValue,
+                defaultValue=self.value,
+                keyable=self.keyable,
+                longName=self.name + child,
+            )
+
+        for child in self.children_name:
             child_attr = self.attr + child
             if self.hasMinValue:
                 mc.addAttr(child_attr, edit=True, min=self.min)
@@ -136,9 +177,18 @@ class Attribute:
         old_attr = self.attr
         self.get_attr()
         self.node = self.transfer_to
-        self.add_attr()
-        if connect:
-            mc.connectAttr(self.attr, old_attr)
+        if self.is_proxy() and connect:
+            sel: om2.MSelectionList = om2.MSelectionList()
+            sel.add(old_attr)
+            plug: om2.MPlug = sel.getPlug(0)
+            source: om2.MPlug = plug.source()
+            source_node_name = om2.MFnDependencyNode(source.node()).name()
+            source_attr_name = source.partialName()
+            mc.addAttr(self.transfer_to, longName=self.name, proxy=f"{source_node_name}.{source_attr_name}")
+        else:
+            self.add_attr()
+            if connect:
+                mc.connectAttr(self.attr, old_attr)
 
     def get_attr(self):
         if 'stretch' in self.attr or 'squash' in self.attr:
@@ -163,6 +213,8 @@ class Attribute:
             self.value = mc.getAttr(self.attr)
         if not self.keyable:
             self.keyable = mc.getAttr(self.attr, keyable=True)
+
+
         
         
 

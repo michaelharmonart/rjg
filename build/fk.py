@@ -44,7 +44,7 @@ class Fk:
     Builds up to three layers of controls for each joint: fk, gimbal, and offset. Innermost will be the constraint target for joints.
     '''
     def build_fk_controls(self):
-        self.fk_ctrls = []
+        self.fk_ctrls: list[rCtrl.Control] = []
         self.gim_ctrls = []
         self.ofst_ctrls = []
 
@@ -53,7 +53,7 @@ class Fk:
             if pose == self.guide_list[0]:
                 par = None
             fk = rCtrl.Control(parent=par, shape=self.fk_shape, side=None, suffix='CTRL', name=self.base_name + "_" + num + "_fk", axis='y', group_type='main', 
-                       rig_type='fk', translate=pose, rotate=pose, ctrl_scale=self.ctrl_scale)
+                       rig_type='primary', translate=pose, rotate=pose, ctrl_scale=self.ctrl_scale)
             par = fk.ctrl
             self.fk_ctrls.append(fk)
             fk.tag_as_controller()

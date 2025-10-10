@@ -61,18 +61,22 @@ class Ik:
             #self.pv_guide = rGuide.clean_pv_guide(guide_list=self.guide_list, name=self.base_name, offset_pv=self.offset_pv)
 
     def build_ik_controls(self):
+        self.ik_ctrls: list[rCtrl.Control] = []
         attr_util = rAttr.Attribute(add=False)
         self.ik_ctrl_grp = mc.group(empty=True, name=self.base_name + "_IK_CTRL_GRP")
         self.base_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_BASE", axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
+        self.ik_ctrls.append(self.base_ctrl)
         attr_util.lock_and_hide(node=self.base_ctrl.ctrl, translate=False, rotate=False)
         self.base_ctrl.tag_as_controller()
         
         self.main_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_MAIN", axis='y', group_type='main', rig_type='primary', translate=self.guide_list[-1], ctrl_scale=self.ctrl_scale)
+        self.ik_ctrls.append(self.main_ctrl)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
         self.main_ctrl.tag_as_controller()
 
         if self.pv_guide:
             self.pv_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='locator_3D', side=None, suffix='CTRL', name=self.base_name +"_IK_PV", axis='y', group_type='main', rig_type='pv', translate=self.pv_guide, ctrl_scale=self.ctrl_scale)
+            self.ik_ctrls.append(self.pv_ctrl)
             attr_util.lock_and_hide(node=self.pv_ctrl.ctrl, translate=False)
             self.pv_ctrl.tag_as_controller()
 
@@ -89,6 +93,7 @@ class Ik:
         if constrain:
             mc.parentConstraint(self.base_ctrl.ctrl, self.ik_joints[0], mo=True)
             mc.parentConstraint(self.main_ctrl.ctrl, self.ikh, mo=True)
+            mc.orientConstraint(self.main_ctrl.ctrl, self.ik_joints[-1], maintainOffset=True)
 
         if self.pv_guide:
             mc.poleVectorConstraint(self.pv_ctrl.ctrl, self.ikh)
@@ -105,7 +110,7 @@ class Ik:
 
             dist = mc.createNode('distanceBetween', name=self.base_name + "_stretch_DIST")
             mdn = mc.createNode('multiplyDivide', name=self.base_name + "_stretch_MDN")
-            mdl = mc.createNode('multDoubleLinear', name=self.base_name + "_stretch_MDL")
+            mdl = mc.createNode('multDL', name=self.base_name + "_stretch_MDL")
             stretch_cond = mc.createNode('condition', name=self.base_name + "_stretch_COND")
             squash_cond = mc.createNode('condition', name=self.base_name + "_squash_COND")
             stretch_bta = mc.createNode('blendTwoAttr', name=self.base_name + "_stretch_switch_BTA")

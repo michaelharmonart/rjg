@@ -5,18 +5,20 @@ import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
+import rjg.libs.control.ctrl as rCtrl
 reload(rModule)
 reload(rAttr)
 reload(rChain)
 reload(rFk)
 
 class Tail(rModule.RigModule, rFk.Fk):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=1, model_path=None, guide_path=None, pad='auto', remove_last=True, fk_shape='circle'):
+    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=1, model_path=None, guide_path=None, pad='auto', remove_last=True, fk_shape='circle', IK_Spline = False):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
 
         self.__dict__.update(locals())
         self.gimbal = None
         self.offset = None
+        self.IK_Spline = IK_Spline
 
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -30,6 +32,9 @@ class Tail(rModule.RigModule, rFk.Fk):
         self.output_rig()
         self.skeleton()
         self.add_plugs()
+
+        if self.IK_Spline:
+            self.build_ik_spline()
 
     def control_rig(self):
         self.build_fk_controls()
@@ -59,3 +64,6 @@ class Tail(rModule.RigModule, rFk.Fk):
         #tail_M_01_fk_CTRL_SDK_GRP
 
         rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
+
+    def build_ik_spline(self):
+        pass

@@ -54,7 +54,7 @@ class Spine(rModule.RigModule, rSpline.Spline):
             else:
                 shape = 'circle'
             fk_ctrl = rCtrl.Control(parent=par, shape=shape, side=self.side, suffix='CTRL',
-                                     name=ctrl_name, axis='y', group_type='main', rig_type='fk', 
+                                     name=ctrl_name, axis='y', group_type='main', rig_type='primary', 
                                      translate=jnt, rotate=jnt, ctrl_scale=self.ctrl_scale*14)
             fk_ctrl.tag_as_controller()
             self.attr_util.lock_and_hide(node=fk_ctrl.ctrl, translate=False, rotate=False, visibility=False)
@@ -78,6 +78,7 @@ class Spine(rModule.RigModule, rSpline.Spline):
         mc.matchTransform(tip_jnt, self.spline_joints[-1])
         mc.parentConstraint(self.base_driver, base_jnt, maintainOffset=True)
         mc.parentConstraint(self.tip_driver, tip_jnt, maintainOffset=True)
+        print(self.fk_ctrl_list[-1].ctrl)
         mc.parentConstraint(self.fk_ctrl_list[-1].ctrl, self.tip_ctrl.top, maintainOffset=True)
 
         if self.mid_ctrl:

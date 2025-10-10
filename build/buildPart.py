@@ -16,13 +16,22 @@ import rjg.build.parts.head as rHead
 import rjg.build.parts.metaFinger as rMetaFinger
 import rjg.build.parts.fingerAttr as rFingerAttr
 import rjg.build.parts.tail as rTail
+import rjg.build.parts.splinetail as rSplineTail
 import rjg.build.parts.floatBone as rFloatBone
 import rjg.build.parts.hinge as rHinge
 import rjg.build.parts.arbit as rArbit
 import rjg.build.parts.arbit2 as rArbit2
+import rjg.build.parts.toe as rToe
 import rjg.build.parts.lookEyes as rLookEyes
 import rjg.build.parts.unreal_corrective_bones as rUeCorr
 import rjg.build.parts.ear as rEar
+import rjg.build.parts.wing as rWing
+import rjg.build.parts.scapula as rScapula
+import rjg.build.parts.winghand as rWingHand
+import rjg.build.parts.dragonleg as rDragonLeg
+
+from rjg.build.parts.hybrid_spine import HybridSpine
+
 reload(rAttr)
 reload(rRoot)
 reload(rHip)
@@ -38,14 +47,19 @@ reload(rHead)
 reload(rMetaFinger)
 reload(rFingerAttr)
 reload(rTail)
+reload(rSplineTail)
 reload(rFloatBone)
 reload(rHinge)
 reload(rArbit)
 reload(rArbit2)
+reload(rToe)
 reload(rLookEyes)
 reload(rUeCorr)
 reload(rEar)
-
+reload(rWing)
+reload(rScapula)
+reload(rWingHand)
+reload(rDragonLeg)
 '''
 Wrapper for all part modules
 '''
@@ -65,13 +79,19 @@ MODULE_DICT = {
                'meta_finger': rMetaFinger.MetaFinger,
                'finger_attr': rFingerAttr.FingerAttr,
                'tail': rTail.Tail,
+               'splinetail': rSplineTail.SplineTail,
                'float_bone' : rFloatBone.FloatBone,
                'hinge' : rHinge.Hinge,
                'arbitrary' : rArbit.Arbitrary,
                'arbitrary2' : rArbit2.Arbitrary2,
+               'Toe' : rToe.Toe,
                'look_eyes' : rLookEyes.LookEyes,
                'UeCorrective' : rUeCorr.Unreal_Correctives,
-               'ear' : rEar.Ear
+               'ear' : rEar.Ear,
+               'wing' : rWing.Wing,
+               'scapula' : rScapula.Scapula,
+               'winghand' : rWingHand.WingHand,
+               'dragonleg' : rDragonLeg.DragonLeg
                }
 
 

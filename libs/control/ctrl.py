@@ -14,8 +14,26 @@ reload(rAttr)
 reload(rXform)
 
 class Control(rDraw.Draw, rGroup.Group):
-    def __init__(self, ctrl=None, parent=None, shape='circle', side='M', suffix='CTRL', name='default', axis='y', 
-                 group_type='main', rig_type='primary', ctrl_scale=1, translate=(0, 0, 0), rotate=(0, 0, 0), scale=(1, 1, 1)):
+    def __init__(
+        self,
+        ctrl=None,
+        parent=None,
+        shape="circle",
+        side="M",
+        suffix="CTRL",
+        name="default",
+        axis="y",
+        rotate_order: int | None = None,
+        group_type="main",
+        rig_type="primary",
+        ctrl_scale=1,
+        translate=(0, 0, 0),
+        rotate=(0, 0, 0),
+        scale=(1, 1, 1),
+        color_rgb=None,
+        shape_translate: str | tuple[float, float, float] | None = None,
+        shape_rotate: str | tuple[float, float, float] | None = None,
+    ):
         self.group_dict = {
                            "main": ["CNST", "SDK", "OFF"],
                            "offset": ["CNST", "OFF"],
@@ -26,6 +44,7 @@ class Control(rDraw.Draw, rGroup.Group):
         self.rotate = rotate
         self.scale = scale
         self.fail = False
+        self.color_rgb = color_rgb
 
         self.ctrl = ctrl
         if not self.ctrl:
@@ -42,7 +61,7 @@ class Control(rDraw.Draw, rGroup.Group):
             else:
                 self.ctrl_name = "{}_{}".format(name, suffix)
 
-            self.create()
+            self.create(shape_translate=shape_translate, shape_rotate=shape_rotate, rotate_order=rotate_order)
 
         else:
             try:
@@ -52,8 +71,23 @@ class Control(rDraw.Draw, rGroup.Group):
     '''
     creates a control, adds padding, and sets SRT position, tags control with information
     '''
-    def create(self):
+
+    def create(
+        self,
+        shape_translate: str | tuple[float, float, float] | None = None,
+        shape_rotate: str | tuple[float, float, float] | None = None,
+        rotate_order: int | None = None,
+    ):
         self.create_curve(name=self.ctrl_name, shape=self.shape, axis=self.axis, scale=self.ctrl_scale)
+        self.ctrl = self.curve
+        
+        if self.color_rgb:
+            shapes = mc.listRelatives(self.ctrl, shapes=True, fullPath=True) or []
+            for shape in shapes:
+                mc.setAttr(shape + ".overrideEnabled", 1)
+                mc.setAttr(shape + ".overrideRGBColors", 1)
+                mc.setAttr(shape + ".overrideColorRGB", *self.color_rgb)
+
         self.ctrl = self.curve
 
         if isinstance(self.group_type, str):
@@ -74,7 +108,13 @@ class Control(rDraw.Draw, rGroup.Group):
         rXform.match_pose(node=self.top, translate=self.translate, rotate=self.rotate, scale=self.scale)
         mc.setAttr(self.ctrl_name + '.v', keyable=False, cb=True)
 
+        if shape_translate or shape_rotate:
+            rXform.match_pose(node=self.curve, translate=shape_translate, rotate=shape_rotate)
+            rXform.freeze_and_zero(transform=self.curve)
+
         mc.setAttr(self.ctrl_name + '.rotateOrder', k=True)
+        if rotate_order:
+            mc.setAttr(f"{self.ctrl_name}.rotateOrder", rotate_order)
 
         if self.parent:
             mc.parent(self.top, self.parent)
@@ -95,6 +135,8 @@ class Control(rDraw.Draw, rGroup.Group):
         self.group_list = self.control_dict['rig_groups']
         self.rig_type = self.control_dict['rig_type']
         self.ctrl_scale = self.control_dict['ctrl_scale']
+
+        self.color_rgb = self.control_dict.get('color_rgb', None)
 
         if self.side:
             self.ctrl_name = '{}_{}_{}'.format(self.name, self.side, self.suffix)
@@ -117,7 +159,8 @@ class Control(rDraw.Draw, rGroup.Group):
                              "axis" : self.axis,
                              "rig_groups" : self.group_list,
                              "rig_type" : self.rig_type,
-                             "ctrl_scale" : self.ctrl_scale
+                             "ctrl_scale" : self.ctrl_scale,
+                             "color_rgb": self.color_rgb
                             }
         tag_string = str(self.control_dict)
 

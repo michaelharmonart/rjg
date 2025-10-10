@@ -1,3 +1,4 @@
+from typing import Any
 import maya.cmds as mc
 from importlib import reload
 
@@ -6,11 +7,13 @@ import rjg.libs.common as rCommon
 import rjg.libs.attribute as rAttr
 import rjg.libs.transform as rXform
 import rjg.libs.math as rMath
+import rjg.libs.spline as spline
 reload(rCtrl)
 reload(rCommon)
 reload(rAttr)
 reload(rXform)
 reload(rMath)
+reload(spline)
 
 '''
 Class used to create joint chains from a list of transforms.
@@ -189,11 +192,120 @@ class Chain:
             t_percent = t_val - t_i
             if reverse:
                 t_percent = 1 - t_percent
-            mdl = mc.createNode('multDoubleLinear', name=jnt + '_twist_MDL')
+            mdl = mc.createNode('multDL', name=jnt + '_twist_MDL')
             mc.connectAttr(twist_loc + '.rotateY', mdl + '.input1')
             mc.setAttr(mdl + '.input2', t_percent)
             mc.connectAttr(mdl + '.output', jnt + '.rotateY')
             t_val += t_i
+        pass
+
+    def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None):
+        if mirror:
+            mirror = -1
+        else:
+            mirror = 1
+        rig_grp = mc.group(empty=True, name=f"{self.name}_Bend_GRP")
+        ctrl_grp = mc.group(empty=True, name=f"{self.name}_Bend_CTRL_GRP")
+        prev_end_ctrl = None
+        segments = self.joints[:-1]
+        for index, joint in enumerate(segments):
+            
+            segment_ctl = mc.group(empty=True, name=f"{joint}_Bend_CTRL_GRP", parent=ctrl_grp)
+            segment_grp = mc.group(empty=True, name=f"{joint}_Bend_GRP", parent=rig_grp)
+            rXform.matrix_constraint(source_transform=joint, constrain_transform=segment_grp, keep_offset=False)
+            rXform.matrix_constraint(source_transform=joint, constrain_transform=segment_ctl, keep_offset=False)
+            start_jnt = joint
+            end_jnt = self.joints[index + 1]
+
+            start_pos = mc.xform(joint, q=True, ws=True, t=True)
+            end_pos: Any = mc.xform(end_jnt, q=True, ws=True, t=True)
+            mid_pos = [(start_pos[axis] + end_pos[axis]) / float(2) for axis in range(3)]
+            seg_jnt_list = self.split_jnt_dict[joint]
+
+            if prev_end_ctrl:
+                start_ctrl = prev_end_ctrl
+                mc.parent(f"{start_ctrl.ctrl_name}_CNST_GRP", segment_ctl)
+            else:
+                start_ctrl = rCtrl.Control(parent=segment_ctl, shape='square', side=None, suffix='CTRL', name=start_jnt.replace('JNT', 'Start'), axis='y', group_type='main', 
+                                 rig_type='bendy', translate=start_pos, rotate=joint, ctrl_scale=ctrl_scale*0.5)
+            mid_ctrl = rCtrl.Control(parent=segment_ctl, shape='square', side=None, suffix='CTRL', name=start_jnt.replace('JNT', 'Mid'), axis='y', group_type='main', 
+                                 rig_type='bendy', translate=mid_pos, rotate=joint, ctrl_scale=ctrl_scale*0.5)
+            end_ctrl = rCtrl.Control(
+                parent=segment_ctl,
+                shape="square",
+                side=None,
+                suffix="CTRL",
+                name=end_jnt.replace("JNT", "End"),
+                axis="y",
+                group_type="main",
+                rig_type="bendy",
+                translate=end_pos,
+                rotate=joint,
+                ctrl_scale=ctrl_scale * 0.5,
+            )
+            attr_util = rAttr.Attribute(add=False)
+            start_ctrl.tag_as_controller()
+            mid_ctrl.tag_as_controller()
+            end_ctrl.tag_as_controller()
+            attr_util.lock_and_hide(node=start_ctrl.ctrl, translate=False, rotate=False, scale=False)
+            attr_util.lock_and_hide(node=mid_ctrl.ctrl, translate=False, rotate=False, scale=False)
+            attr_util.lock_and_hide(node=end_ctrl.ctrl, translate=False, rotate=False, scale=False)
+
+            # Twist for mid joint
+            end_jnt_twist = mc.group(empty=True, parent=segment_grp, name=f"{end_jnt}_Twist")
+            rXform.match_pose(end_jnt_twist, translate=end_jnt, rotate=start_jnt)
+            rXform.matrix_constraint(end_jnt, end_jnt_twist)
+            mult_matrix = mc.createNode('multMatrix', name=f"{joint}_MMX") # Put the end joint into the space of the start joint
+            mc.connectAttr(f"{end_jnt_twist}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
+            mc.connectAttr(f"{start_jnt}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]") # Retrieve the rotation from the resulting matrix
+            decompose_matrix = mc.createNode('decomposeMatrix', name=f"{joint}_DCM") 
+            mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
+            # Create a quaternion from only the Y (down the chain axis) and W (scalar component)
+            # The resulting quaternion is the twist part of a swing twist decomposition. 
+            quat_to_euler = mc.createNode('quatToEuler', name=f"{joint}_QTE")
+            mc.connectAttr(f"{decompose_matrix}.outputQuatY", f"{quat_to_euler}.inputQuatY")
+            mc.connectAttr(f"{decompose_matrix}.outputQuatW", f"{quat_to_euler}.inputQuatW")
+            mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1) # Make sure the rotate order is set so that the Y is the twist axis
+            # Use the resulting twist value
+            twist_mult = mc.createNode("multiply", name=f"{joint}_MLT")
+            mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{twist_mult}.input[0]")
+            mc.setAttr(f"{twist_mult}.input[1]", 0.5)
+            mc.connectAttr(f"{twist_mult}.output", f"{mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
+
+           
+
+            spline.matrix_spline_from_transforms(
+                transforms=[start_ctrl.ctrl_name, end_ctrl.ctrl_name],
+                transforms_to_pin=[f"{mid_ctrl.ctrl_name}_CNST_GRP"],
+                degree=1,
+                primary_axis=(0, 1 * mirror, 0),
+                secondary_axis=(1, 0, 0),
+                twist=False,
+                name=f"{joint}_Mid",
+            )
+
+            # Handle End Control (follow the next segment, or if this is the last segment then only use the twist)
+            if index == len(segments) - 1:
+                # Twist for end joint
+                mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{end_ctrl.ctrl_name}_CNST_GRP.rotateY")
+            else:
+                rXform.matrix_constraint(source_transform=end_jnt, constrain_transform=f"{end_ctrl.ctrl_name}_CNST_GRP", keep_offset=False)
+
+            spline.matrix_spline_from_transforms(
+                transforms=[start_ctrl.ctrl_name, mid_ctrl.ctrl_name, end_ctrl.ctrl_name],
+                transforms_to_pin=seg_jnt_list,
+                degree=2,
+                spline_group=segment_grp,
+                name=f"{joint}",
+                primary_axis=(0, 1 * mirror, 0),
+                secondary_axis=(1, 0, 0),
+                padded=False,
+                stretch=False,
+            )
+            prev_end_ctrl = end_ctrl
+        return {'control':ctrl_grp, 'module':rig_grp}
+        
+
 
     def bend_chain(self, bone, ctrl_scale, spans=16, mirror=True, global_scale=None):
         if mirror:
@@ -253,7 +365,7 @@ class Chain:
             d = mc.getAttr(dist + '.distance')
 
             if global_scale:
-                mdl = mc.createNode('multDoubleLinear', name=jnt.replace('JNT', 'MDL'))
+                mdl = mc.createNode('multDL', name=jnt.replace('JNT', 'MDL'))
                 mc.connectAttr(global_scale, mdl + '.input1')
                 mc.connectAttr(mdl + '.output', mdn + '.input2X')
                 mc.setAttr(mdl + '.input2', d)
@@ -399,7 +511,7 @@ def stretch_segment(jnt, start, end, stretch_driver=None, global_scale=None):
     d = mc.getAttr(dist + '.distance')
 
     if global_scale:
-        mdl = mc.createNode('multDoubleLinear', name=jnt.replace('JNT', 'MDL'))
+        mdl = mc.createNode('multDL', name=jnt.replace('JNT', 'MDL'))
         mc.connectAttr(global_scale, mdl + '.input1')
         mc.connectAttr(mdl + '.output', mdn + '.input2X')
         mc.setAttr(mdl + '.input2', d)

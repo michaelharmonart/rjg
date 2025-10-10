@@ -1,4 +1,6 @@
+import ast
 import maya.cmds as mc
+import maya.api.OpenMaya as om2
 from importlib import reload
 
 import rjg.libs.control.ctrl as rCtrl
@@ -57,100 +59,188 @@ def add_color_attrs(x, y, z, utScale):
     type_dict = get_ctrl_types()
     side_dict = get_ctrl_sides()
 
-    if mc.objExists('global_M_CTRL'):
-        par = ('global_M_CTRL')
+    if mc.objExists("global_M_CTRL"):
+        par = "global_M_CTRL"
     else:
-        par = 'RIG'
+        par = "RIG"
 
-    c_ctrl = rCtrl.Control(parent=par, shape='rgb_circles', side=None, name='color', suffix='CTRL', axis='y', group_type=None, rig_type='global', ctrl_scale=utScale, translate=(x, y, z))
+    c_ctrl = rCtrl.Control(
+        parent=par,
+        shape="rgb_circles",
+        side=None,
+        name="color",
+        suffix="CTRL",
+        axis="y",
+        group_type=None,
+        rig_type="global",
+        ctrl_scale=utScale,
+        translate=(x, y, z),
+    )
     attr_util.lock_and_hide(node=c_ctrl.ctrl)
     c_ctrl.tag_as_controller()
 
     c_shapes = mc.listRelatives(c_ctrl.ctrl, shapes=True)
     for shape in c_shapes:
-        mc.setAttr(shape + '.overrideEnabled', 1)
-        mc.setAttr(shape + '.overrideRGBColors', 1)
-    mc.setAttr(c_shapes[1] + '.overrideColorRGB', 1, 0, 0)
-    mc.setAttr(c_shapes[2] + '.overrideColorRGB', 0, 1, 0)
-    mc.setAttr(c_shapes[0] + '.overrideColorRGB', 0, 0, 1)
+        mc.setAttr(shape + ".overrideEnabled", 1)
+        mc.setAttr(shape + ".overrideRGBColors", 1)
+    mc.setAttr(c_shapes[1] + ".overrideColorRGB", 1, 0, 0)
+    mc.setAttr(c_shapes[2] + ".overrideColorRGB", 0, 1, 0)
+    mc.setAttr(c_shapes[0] + ".overrideColorRGB", 0, 0, 1)
 
-    c_view = rAttr.Attribute(node = c_ctrl.ctrl, type='enum', value=0, enum_list=['Side', 'Set'], keyable=False, name='colorView')
-    mc.setAttr(c_view.attr, cb=True)
-
+    ctrl_side_color_map = {}
+    ctrl_side_show_on_top_map = {}
+    ctrl_side_thickness_map = {}
     for side, ctrl_list in side_dict.items():
         # TODO: longName
-        if side == 'M':
-            name = 'middle'
-        elif side == 'L':
-            name = 'left'
-        elif side == 'R':
-            name = 'right'
-        elif side == 'P':
-            name = 'prop'
-        elif side == 'F':
-            name = 'floatBone'
+        if side == "M":
+            name = "middle"
+        elif side == "L":
+            name = "left"
+        elif side == "R":
+            name = "right"
+        elif side == "P":
+            name = "prop"
+        elif side == "F":
+            name = "floatBone"
         else:
-            name = 'unknown'
+            name = "unknown"
             print(side, ctrl_list)
             continue
-        rAttr.Attribute(node=c_ctrl.ctrl, type='separator', name=name)
-        color = rAttr.Attribute(node=c_ctrl.ctrl, type='double3', value=0, keyable=False, min=0, max=1, name=name + 'Color', children_name='RGB')
+        rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name=name)
+        color = rAttr.Attribute(
+            node=c_ctrl.ctrl,
+            type="color",
+            value=0,
+            keyable=False,
+            min=0,
+            max=1,
+            name=name + "Color",
+            children_name="RGB",
+        )
         mc.setAttr(color.attr, cb=True)
+        show_on_top = rAttr.Attribute(node=c_ctrl.ctrl, type="bool", name=f"{name}ShowOnTop", value=0, keyable=False)
+        mc.setAttr(show_on_top.attr, cb=True)
+        thickness = rAttr.Attribute(node=c_ctrl.ctrl, type="double", name=f"{name}Thickness", value=-1, keyable=False)
+        mc.setAttr(thickness.attr, cb=True)
+        mc.setAttr(thickness.attr, -1)
         for ctrl in ctrl_list:
-            cond = mc.createNode('condition', n='{}_CCOND'.format(ctrl))
-            mc.connectAttr(c_view.attr, cond + '.firstTerm')
-            mc.connectAttr(color.attr, cond + '.colorIfTrue')
-            for shape in mc.listRelatives(ctrl, shapes=True, type='nurbsCurve'):
-                mc.setAttr(shape + '.overrideEnabled', 1)
-                mc.setAttr(shape + '.overrideRGBColors', 1)
-                mc.connectAttr(cond + '.outColor', shape + '.overrideColorRGB')
-    
-    rAttr.Attribute(node=c_ctrl.ctrl, type='separator', name='___')
+            ctrl_side_color_map[ctrl] = color.attr
+            ctrl_side_show_on_top_map[ctrl] = show_on_top.attr
+            ctrl_side_thickness_map[ctrl] = thickness.attr
+
+    rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name="___")
     for type, ctrl_list in type_dict.items():
-        rAttr.Attribute(node=c_ctrl.ctrl, type='separator', name=type)
-        color = rAttr.Attribute(node=c_ctrl.ctrl, type='double3', value=0, keyable=False, min=0, max=1, name=type + 'Color', children_name='RGB')
+        rAttr.Attribute(node=c_ctrl.ctrl, type="separator", name=type)
+        color = rAttr.Attribute(
+            node=c_ctrl.ctrl,
+            type="color",
+            value=0,
+            keyable=False,
+            min=0,
+            max=1,
+            name=type + "Color",
+            children_name="RGB",
+        )
         mc.setAttr(color.attr, cb=True)
+        show_on_top = rAttr.Attribute(node=c_ctrl.ctrl, type="bool", name=f"{type}ShowOnTop", value=0, keyable=False)
+        mc.setAttr(show_on_top.attr, cb=True)
+        thickness = rAttr.Attribute(node=c_ctrl.ctrl, type="double", name=f"{type}Thickness", value=-1, keyable=False)
+        mc.setAttr(thickness.attr, cb=True)
+        mc.setAttr(thickness.attr, -1)
         for ctrl in ctrl_list:
-            cond = '{}_CCOND'.format(ctrl)
             try:
-                mc.connectAttr(color.attr, cond + '.colorIfFalse')
-                for shape in mc.listRelatives(ctrl, shapes=True, type='nurbsCurve'):
-                    mc.setAttr(shape + '.overrideEnabled', 1)
-                    mc.setAttr(shape + '.overrideRGBColors', 1)
-                    #mc.connectAttr(color.attr, shape + '.overrideColorRGB')
+                for shape in mc.listRelatives(ctrl, shapes=True, type="nurbsCurve"):
+                    mc.setAttr(shape + ".overrideEnabled", 1)
+                    mc.setAttr(shape + ".overrideRGBColors", 1)
+                    if type == "primary":
+                        mc.connectAttr(ctrl_side_color_map[ctrl], shape + ".overrideColorRGB")
+                        mc.connectAttr(ctrl_side_show_on_top_map[ctrl], shape + ".alwaysDrawOnTop")
+                        mc.connectAttr(ctrl_side_thickness_map[ctrl], shape + ".lineWidth")
+                    else:
+                        mc.connectAttr(color.attr, shape + ".overrideColorRGB")
+                        mc.connectAttr(show_on_top.attr, shape + ".alwaysDrawOnTop")
+                        mc.connectAttr(thickness.attr, shape + ".lineWidth")
             except Exception as e:
                 print(e)
 
     set_color_defaults(c_ctrl.ctrl)
-    mc.setAttr('color_CTRL.v', cb=False)
+    mc.setAttr("color_CTRL.v", cb=False)
     return c_ctrl.ctrl
+
 
 def set_color_defaults(ctrl):
     color_dict = {
-        'gimbal'    : (0.00, 0.45, 0.00),
-        'root'      : (0.00, 1.00, 0.00),
-        'global'    : (1.00, 0.00, 1.00),
-        'pivot'     : (1.00, 0.25, 0.00),
-        'primary'   : (1.00, 1.00, 0.00),
-        'bendy'     : (1.00, 0.20, 0.40),
-        'tangent'   : (0.85, 0.15, 0.00),
-        'offset'    : (0.75, 0.00, 0.00),
-        'pv'        : (0.00, 1.00, 1.00),
-        'fk'        : (0.00, 0.00, 1.00),
-        'secondary' : (1.00, 0.20, 0.20),
+        "gimbal": (0.00, 0.45, 0.00),
+        "root": (0.00, 0.30, 0.50),
+        "global": (0.00, 0.50, 0.50),
+        "cog": (0.00, 0.30, 0.50),
+        "pivot": (1.00, 0.25, 0.00),
+        "primary": (0.882, 0.683, 0.081),
+        "bendy": (1.00, 0.20, 0.40),
+        "tangent": (0.85, 0.15, 0.00),
+        "offset": (0.75, 0.00, 0.00),
+        "pv": (0.00, 1.00, 1.00),
+        "fk": (0.00, 0.00, 1.00),
+        "secondary": (1.00, 0.20, 0.20),
         # 'l_eye'     : (0.10, 0.10, 0.70),
         # 'r_eye'     : (0.70, 0.10, 0.10),
         # 'c_eye'     : (0.70, 0.70, 0.10),
-        'middle'    : (1.00, 0.00, 1.00),
-        'left'      : (0.00, 0.00, 1.00),
-        'right'     : (1.00, 0.00, 0.00),
-        'prop'      : (1.00, 1.00, 1.00),
+        "middle": (1.000, 0.587, 0.073),
+        "left": (0.073, 0.085, 1.000),
+        "right": (1.000, 0.073, 0.073),
+        "prop": (1.00, 1.00, 1.00),
+    }
+    show_on_top_dict = {
+        "gimbal": False,
+        "root": False,
+        "global": False,
+        "cog": False,
+        "pivot": False,
+        "primary": False,
+        "bendy": False,
+        "tangent": False,
+        "offset": False,
+        "pv": False,
+        "fk": False,
+        "secondary": False,
+        "middle": False,
+        "left": False,
+        "right": False,
+        "prop": False,
+    }
+
+    thickness_dict = {
+        "gimbal": -1,
+        "root": -1,
+        "global": -1,
+        "cog": -1,
+        "pivot": -1,
+        "primary": -1,
+        "bendy": -1,
+        "tangent": -1,
+        "offset": -1,
+        "pv": -1,
+        "fk": -1,
+        "secondary": -1,
+        "middle": -1,
+        "left": -1,
+        "right": -1,
+        "prop": -1,
     }
 
     for type, value in color_dict.items():
-        color = '{}.{}Color'.format(ctrl, type)
+        color = "{}.{}Color".format(ctrl, type)
         if mc.objExists(color):
-            mc.setAttr(color , *value)
+            mc.setAttr(color, *value)
+    for type, show in show_on_top_dict.items():
+        attribute = f"{ctrl}.{type}ShowOnTop"
+        if mc.objExists(attribute):
+            mc.setAttr(attribute, 1 if show else 0)
+    for type, value in thickness_dict.items():
+        attribute = f"{ctrl}.{type}Thickness"
+        if mc.objExists(attribute):
+            mc.setAttr(attribute, value)
+
 
 def add_display_type(node, value, name, target):
     dt = rAttr.Attribute(node=node, type='enum', value=value, enum_list=['Normal', 'Template', 'Reference'], keyable=False, name=name)
@@ -455,7 +545,8 @@ def add_switch_ctrl(x, y, z, utScale, quad=False, character=None):
     for part in mc.listRelatives('RIG'):
         if mc.objExists(part + '.switchRigPlugs'):
             switch_name = mc.getAttr(part + '.ikFkSwitch')
-            if 'arm' in part or 'hand' in part or 'finger' in part or 'spine' in part:
+            
+            if any(name in part for name in ("arm", "hand", "finger", "spine")):
                 default_val = 1
             else:
                 default_val = 0
@@ -466,6 +557,14 @@ def add_switch_ctrl(x, y, z, utScale, quad=False, character=None):
             else:
                 switch_attr = rAttr.Attribute(node=s_ctrl.ctrl, type='double', value=default_val, keyable=True, min=0, max=1, name=switch_name)
             mc.connectAttr(switch_attr.attr, part + '.switch')
+
+            # Create proxy attributes for IK FK switching on all relevant controls.
+            if mc.objExists(part + '.ikFKSwitchControls'):
+                switch_controls_str: str = mc.getAttr(part + '.ikFKSwitchControls')
+                
+                switch_controls: list[str] = ast.literal_eval(switch_controls_str)
+                for control in switch_controls:
+                    mc.addAttr(control, longName=switch_name, proxy=switch_attr.attr)
 
     if character == 'Rayden':
         rev = mc.createNode('reverse', n='cbow_rev')
@@ -510,9 +609,13 @@ def final(vis_ctrl=True, color_ctrl=True, switch_ctrl=True, constrain_model=Fals
     if polish:
         polish_rig()
 
-    mc.rename('neck_M_01_fk_CTRL', 'neck_01_FK_M_CTRL')
-    mc.rename('neck_M_02_fk_CTRL', 'neck_02_FK_M_CTRL')
-    mc.rename('neck_M_03_fk_CTRL', 'neck_03_FK_M_CTRL')
+    try:
+        mc.rename('neck_M_01_fk_CTRL', 'neck_01_FK_M_CTRL')
+        mc.rename('neck_M_02_fk_CTRL', 'neck_02_FK_M_CTRL')
+        mc.rename('neck_M_03_fk_CTRL', 'neck_03_FK_M_CTRL')
+    except:
+        print('neck rename didnt work')
+        pass
 
     try:
         mc.delete('*xgm*')
