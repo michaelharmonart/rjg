@@ -209,6 +209,58 @@ def skin_sculpt_jnts():
     dir = f'{groups}/bobo/character/Rigs/Bobo/SkinFiles'
     rWeightNgIO.read_skin("Bobo_UBM", dir, 'Bobo_CurveNet')
 
+def build_basic_control(name='Main', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=(0, 0, 0), rotation=(0, 0, 0)):
+    """
+    Builds a basic control with an offset group. The offset group holds the transform.
+    Uses RGB override color instead of color index.
+
+    Args:
+        name (str): Control name.
+        shape (str): Shape type (currently just 'circle' supported).
+        size (float): Size of the control.
+        color_rgb (tuple): RGB color override.
+        position (tuple): World position (x, y, z).
+        rotation (tuple): World rotation (x, y, z).
+
+    Returns:
+        ctrl (str): The name of the control.
+        offset_grp (str): The name of the offset group.
+    """
+    # Create the control
+    ctrl = mc.circle(name=f'{name}_CTRL', normal=[0, 1, 0], radius=size, ch=False)[0]
+
+    # Create offset group
+    offset_grp = mc.group(empty=True, name=f"{name}_GRP")
+    mc.parent(ctrl, offset_grp)
+
+    # Apply world-space transform to the group
+    mc.xform(offset_grp, ws=True, translation=position, rotation=rotation)
+
+    # Set control color using RGB
+    mc.setAttr(f"{ctrl}.overrideEnabled", 1)
+    mc.setAttr(f"{ctrl}.overrideRGBColors", 1)
+    mc.setAttr(f"{ctrl}.overrideColorRGB", color_rgb[0], color_rgb[1], color_rgb[2], type="double3")
+
+    #build_basic_control(name='name', size=10, color_rgb=(1,1,0), position=(0,0,0), rotation=(0,0,0))
+
+def create_display_layer(layer_name, objects, color_index, is_reference=False):
+    if not mc.objExists(layer_name):
+        mc.createDisplayLayer(name=layer_name, number=1, nr=True)
+    
+    # Adding objects to the layer
+    mc.editDisplayLayerMembers(layer_name, objects)
+    
+    # Set the display type for reference layers
+    if is_reference:
+        mc.setAttr(f"{layer_name}.displayType", 2)  # Reference display type
+
+    # Remove color for the RIG layer (if the layer is RIG_Display)
+        # Set the color for all other layers (unless it's RIG_Display)
+        mc.setAttr(f"{layer_name}.color", color_index)
+
+    # Set general visibility and layer settings
+    mc.setAttr(f"{layer_name}.visibility", 1)
+
 
 
 def Clean_up_SculptJoints():
@@ -219,6 +271,37 @@ def Clean_up_SculptJoints():
     mc.parent(Control_grp, 'RIG')
     mc.parent(joint_grp, 'SKEL')
     mc.parent(NUll_jnt, 'SKEL')
+    
+    pos = mc.xform('breath_guide', q=True, ws=True, t=True)
+    build_basic_control(name='Breath', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=pos, rotation=(0, 0, 0))
+    # Add breath attribute
+    mc.addAttr("Breath_CTRL", ln="breath", at="double", dv=0)
+    mc.setAttr("Breath_CTRL.breath", e=True, keyable=True)
+
+    # Create multiplyDivide node
+    md_node = mc.shadingNode("multiplyDivide", asUtility=True, name="multiplyDivide30")
+
+    # Connect breath attribute to multiplyDivide input
+    mc.connectAttr("breath_guide.breath", f"{md_node}.input1X", force=True)
+
+    # Set multiply factor
+    mc.setAttr(f"{md_node}.input2X", 0.1)
+
+    # Connect multiplyDivide output to blendshape weight
+    mc.connectAttr(f"{md_node}.outputX", "pose_blendhapes.Breath", force=True)
+    mc.parent('Breath_GRP', 'chest_M_01_CTRL')
+
+    ctrl = "Breath_CTRL"
+    for attr in ["translateX", "translateY", "translateZ",
+                "rotateX", "rotateY", "rotateZ",
+                "scaleX", "scaleY", "scaleZ"]:
+        if mc.objExists(f"{ctrl}.{attr}"):
+            mc.setAttr(f"{ctrl}.{attr}", lock=True, keyable=False, channelBox=False)
+
+
+
+
+
     
     skin_sculpt_jnts()
     rename_group_objects(Control_grp)

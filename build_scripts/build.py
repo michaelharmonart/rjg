@@ -74,7 +74,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         neckList = ['Neck', 'Neck1', 'Head']
         neckik = True
     # Building Parts // setting up the diffrent changes per character
-    if character in ['Gretchen', 'Sharkguy', 'Susaka']:
+    if character in ['Gretchen', 'Sharkguy',]:
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
@@ -350,6 +350,30 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.joint('upperarm_twist_02_r_R_Bind_JNT_R_JNT', n='upperarm_twistCor_02_r')
         mc.joint('upperarm_twist_01_l_L_Bind_JNT_L_JNT', n='upperarm_twistCor_01_l')
         mc.joint('upperarm_twist_01_r_R_Bind_JNT_R_JNT', n='upperarm_twistCor_01_r')
+
+        if character == 'Susaka':
+            pj_list = [
+                'foot_r', 'foot_L', 'spine_M_01_JNT', 'spine_M_01_JNT'
+            ]
+            pc_list = [
+
+            ]
+            ag_list = [
+                'R_ShoeTounge', 'L_ShoeTounge', 'SideBag_04', 'BackBag'
+            ]
+
+            # zip them together so each index lines up
+            for ag, pj, pc in zip(ag_list, pj_list, pc_list):
+                arb = rBuild.build_module(
+                    module_type='arbitrary',
+                    side='M',
+                    part=ag,
+                    guide_list=mc.getAttr(ag + '.translate'),
+                    ctrl_scale=1,
+                    par_jnt=pj,
+                    par_ctrl=pc
+                )
+
 
     #Pulling out guides for Later
     if character in ['Susaka', 'Drummer', 'NPC', 'Fisherman']:
@@ -899,7 +923,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             print('couldnt create driver joints')
 
 
-
+        '''
         # Import UE Pose Interp Poses
         if character == 'Susaka':
             POSE_FILE = r"G:/bobo/character/Rigs/Susaka/Poses/Poses_01.json"
@@ -907,7 +931,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             from UEPoseImport import CleanImport
             CleanImport(POSE_FILE)
         #mc.delete("UE_Correctives")
-
+        '''
 
         
         #Fixing/Reskinning Facial Geo 
@@ -1123,7 +1147,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             if mc.objExists(attr):
                 try:
                     mc.setAttr(attr, 1)
-                    print(f"Set {attr} = 1")
                 except Exception as e:
                     print(f"Failed to set {attr}: {e}")
             else:

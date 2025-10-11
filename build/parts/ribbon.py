@@ -329,3 +329,4 @@ def build_ribbon(
     mc.parent(ribbon_surface, ribbon_offset)
     if mc.objExists('ROOT'):
         mc.parent(ribbon_offset, 'RIG')
+    mc.hide(ribbon_offset)
