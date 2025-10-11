@@ -45,8 +45,26 @@ class UEteeth(UEface):
         index = 1
         guides = []
 
+        for type in ['top', 'bot']:
+            for guide in [f'{type}Teeth_M_Sub_01',f'{type}Teeth_L_Sub_02',f'{type}Teeth_R_Sub_02',f'{type}Teeth_L_Sub_03',f'{type}Teeth_R_Sub_03',]:
+                UEface.Simple_joint_and_Control(
+                    guide=guide,
+                    orient=True,
+                    CTRL_Size=.2,
+                    JNT_Size=0.5,
+                    bind = False
+                )
+                mc.parent(f'{guide}_JNT', f'{type.capitalize()}Teeth_JNT')
+                side = guide.split('_')[1]
+                mc.parent(f'{guide}_{side}_CTRL_CNST_GRP', f'{type.capitalize()}Teeth_M_CTRL')
+
+
+
+
+
+
         while True:
-            guide_name = f'Tounge_{index:02d}'  # formats as 01, 02, 03, etc.
+            guide_name = f'Tongue_{index:02d}'  # formats as 01, 02, 03, etc.
             if mc.objExists(guide_name):
                 guides.append(guide_name)
                 UEface.Simple_joint_and_Control(

@@ -47,7 +47,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     ## Setting parameters for individual Characters (splitting off groups)
     not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else True
-    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', "BoboQuad", 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy']) else True
+    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy']) else True
 
     body_mesh = f'{character}_UBM'
 
@@ -74,7 +74,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         neckList = ['Neck', 'Neck1', 'Head']
         neckik = True
     # Building Parts // setting up the diffrent changes per character
-    if character == 'Gretchen':
+    if character in ['Gretchen', 'Sharkguy', 'Susaka']:
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
@@ -189,7 +189,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mouth = UEmouth('Mouth_guides', ctrl_scale=1)
         mouth.build()
         from rjg.build.parts.UEteeth import UEteeth
-        teeth = UEteeth('Tounge_M_guides', ctrl_scale=1)
+        teeth = UEteeth('Tongue_M_guides', ctrl_scale=1)
         teeth.build()
         from rjg.build.parts.UEfaceconnect import UEfaceconnect
         faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1)
@@ -499,7 +499,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.warning(e)
         else:
            try:
-               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil', 'FloofGeo'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
+               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil', 'FloofGeo', 'eyecover'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
                from Bobo_Build_Scripts import Clean_Fur
                Clean_Fur()
            except Exception as e:
@@ -529,7 +529,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 pass
         else:
             try:
-                rc.Gretchen_misc_pvis(body_mesh, ['Bandanna','Shirt','Boots','Hair', 'Glasses', 'Pants', 'banddanna2','knot1','knot2', 'knot', 'boots', 'loopleather', 'beltLeather', 'pockets', 'metalclip', 'pantsCreased1', 'beltloops', 'button1', 'shirt1', 'hair', 'bun', 'eyebrows', 'eylashes', 'earings', 'Righteye', 'Lefteye'])
+                rc.Gretchen_misc_pvis(body_mesh, ['Bandanna','Shirt','Boots','Hair', 'Glasses', 'Pants', 'banddanna2','knot1','knot2', 'knot', 'boots', 'loopleather', 'beltLeather', 'pockets', 'metalclip', 'pantsCreased1', 'beltloops', 'button1', 'shirt1', 'hair', 'bun', 'eyebrows', 'topeyelashes', 'bottomlash', 'earings', 'Righteye', 'Lefteye'])
             except:
                 pass
 
@@ -921,7 +921,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.skinCluster('Eye_L_JNT', 'LeftEye', mi=1, tsb=True)
                 mc.skinCluster('Eye_R_JNT', 'RightEye', mi=1, tsb=True)
                 mc.skinCluster('BotTeeth_JNT', 'BotTeeth', mi=1, tsb=True)
-                mc.skinCluster('Tounge_01_JNT', 'Tounge_02_JNT', 'Tounge_03_JNT', 'Tounge_04_JNT', 'Tounge_05_JNT', 'Tounge', mi=1, tsb=True)
+                mc.skinCluster('Tongue_01_JNT', 'Tongue_02_JNT', 'Tongue_03_JNT', 'Tongue_04_JNT', 'Tongue_05_JNT', 'Tounge', mi=1, tsb=True)
                 mc.skinCluster('TopTeeth_JNT', 'TopTeeth', mi=1, tsb=True)
                 print('Reskinned')
             except Exception as e:
@@ -1130,8 +1130,15 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 print(f"{attr} does not exist on {sc}")
     except Exception as e:
         print(f"Failed")
-
-
+    try:
+        if character == 'Bobo':
+            mc.connectAttr('Options_ctrl.Body_Fur_Vis', "FloofGeo.visibility")
+    except:
+        pass
+    try:
+        mc.delete('UE_Correctives')
+    except:
+        pass
 
 
 

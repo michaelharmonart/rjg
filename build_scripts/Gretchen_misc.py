@@ -48,7 +48,7 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     
     geo = ['bandanna', 'loopleather1', 'buckle2', 'buckle', 'beltloops', 'side_pocket', 'button', 
             'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
-            'LeftPupil', 'eyelashes', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
+            'LeftPupil', 'topeyelashes', 'bottomlash', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
             'topteeth', 'tounge']
 
 
