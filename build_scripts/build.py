@@ -74,7 +74,29 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         neckList = ['Neck', 'Neck1', 'Head']
         neckik = True
     # Building Parts // setting up the diffrent changes per character
-    if character in ['Gretchen', 'Sharkguy',]:
+    if character in ['Susaka']:
+        hip = rBuild.build_module(
+            module_type="hip",
+            side="M",
+            part="COG",
+            guide_list=["Hips"],
+            ctrl_scale=50,
+            cog_shape="quad_arrow",
+            waist_shape="circle",
+            generate_waist=False,
+        )
+        spine = rBuild.HybridSpine(
+            side="M",
+            part="spine",
+            base_guide="Hips",
+            hip_pivot_guide="HipPivot",
+            chest_pivot_guide="Spine",
+            upper_chest_pivot_guide="Spine1",
+            spine_end_guide="Spine2",
+            ctrl_scale=1.5,
+            joint_num=7
+        )
+    elif character in ['Gretchen', 'Sharkguy',]:
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
@@ -262,7 +284,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         pc_list = [
             'clavicle_L_CTRL', 'clavicle_L_CTRL', 'clavicle_L_CTRL', 'clavicle_L_CTRL', 
             'arm_L_02_fk_CTRL', 'arm_R_02_fk_CTRL', 'fingerRing_R_01_fk_CTRL',
-            'waist_M_CTRL', 'global_M_CTRL', 'neck_02_FK_M_CTRL', 'tail_M_06_fk_CTRL'
+            'waist_M_CTRL', 'global_M_CTRL', 'head_M_01_CTRL', 'tail_M_06_fk_CTRL'
         ]
         ag_list = [
             'pauldren_F', 'pauldren_B', 'pauldren_1', 'pauldren_2',

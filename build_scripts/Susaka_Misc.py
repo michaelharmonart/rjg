@@ -88,7 +88,7 @@ def ribbons():
     Belt = ['Belt_M01', 'Belt_M02', 'Belt_M03', 'Belt_M04', 'Belt_M05', 'Belt_M06', 'Belt_M07', 'Belt_M08', 'Belt_M09', 'Belt_M10', 'Belt_M11', 'Belt_M12', 'Belt_M13', 'Belt_M14', 'Belt_M15',]
 
 
-    chest_control = 'chest_M_01_CTRL' #'chest_M_CTRL'
+    chest_control ='chest_M_CTRL'  #'chest_M_01_CTRL' #
     sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build/parts')
     from ribbon import build_ribbon
     build_ribbon(guide_list=L_Strap,
@@ -161,15 +161,4 @@ def ribbons():
                 parent='neck_01_FK_M_CTRL',
                 parent_list=[],
                 parent_joint='spine_05')
-    build_ribbon(guide_list=Belt,
-                fromrig=False,
-                Control_List=['Belt_M02', 'Belt_M04', 'Belt_M06', 'Belt_M08', 'Belt_M10','Belt_M12','Belt_M14', ],
-                axis='y',
-                ribbon_width=0.5,
-                prefix='Belt',
-                parent_type='single',
-                parent='spine_02_FK_M_CTRL',
-                parent_list=[],
-                parent_joint='spine_01')
-    
 
