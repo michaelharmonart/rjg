@@ -46,7 +46,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     reload(rCtrlIO)
     
     ## Setting parameters for individual Characters (splitting off groups)
-    not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else True
+    not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Fisherman'] else True
     bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy']) else True
 
     body_mesh = f'{character}_UBM'
@@ -74,7 +74,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         neckList = ['Neck', 'Neck1', 'Head']
         neckik = True
     # Building Parts // setting up the diffrent changes per character
-    if character in ['Susaka']:
+    if character in ['Susaka', 'Domingo', 'Luciana']:
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
@@ -217,11 +217,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1)
         faceconnect.build()
 
-    if character == 'Luciana':
+    '''if character == 'Luciana':
         for side in ['L', 'R']:
             from rjg.build.parts.UEwing import UEwing
             UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=1)
-            UEwing.build_wing()
+            UEwing.build_wing()'''
 
     # previs face rig
     if not not_previs and not bony and character != 'Jett' and character != 'Blitz' and character != 'Bobo' and character != 'Susaka' and character != 'Drummer' and character !='Luciana' and character !='Domingo' and character != 'Fisherman': 
@@ -253,7 +253,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         
         ffs = ['Index', 'Middle', 'Ring', 'Pinky']
         #Fix Bobo's 3 fingered-ness
-        if character in ['Bobo', 'Luciana', 'Sharkguy']:
+        if character in ['Bobo', 'Sharkguy']:
             ffs = ffs[:-1]
         for f in ffs:
             finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape)
@@ -269,11 +269,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         for toe in ['Innertoe', 'Middletoe', 'Outertoe']:
             for side in ['L', 'R']:
                 toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=10, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT')
-        
-
-
-
-
+    if character == 'Domingo':
+        for toe in ['Innertoe', 'Middletoe', 'Outertoe']:
+            for side in ['L', 'R']:
+                toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=3, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT')
     if character == 'Sharkguy':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail01', 'Tail02', 'Tail03', 'Tail04', 'Tail05', 'Tail06', 'TailFin01', 'TailFin02', 'TailFin03'], ctrl_scale=10, pad=2)
         #fin = rBuild.build_module(module_type='biped_limb', side='M', part='fin', guide_list=['Fin01', 'Fin02', 'Fin03'], ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
@@ -622,6 +621,23 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.hide('pinInput1')
         mc.parent('icepick', 'MODEL')
         mc.parent('holster', 'MODEL')
+
+    if character == 'Domingo':
+        import rjg.build_scripts.Domingo_Misc as rc
+        reload(rc)
+        if not_previs:
+           try: 
+                rc.Domingo_extras(body_mesh, extras)
+           except Exception as e:
+                mc.warning(e)
+    if character == 'Luciana':
+        import rjg.build_scripts.Luciana_Misc as rc
+        reload(rc)
+        if not_previs:
+           try: 
+                rc.Luciana_extras(body_mesh, extras)
+           except Exception as e:
+                mc.warning(e)
 
     # initialize skin clusters as ngST layers
     if not bony:

@@ -103,8 +103,8 @@ class RigBuildUI(QtWidgets.QDialog):
                 "gp" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Guides.mb",
                 "ep" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Extras.mb",
                 "cp" : None, 
-                "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_11.json", 
-                "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose.pose",
+                "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_13.json", 
+                "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose3.pose",
                 "im" : f"{groups}/bobo/character/Rigs/Rig_Icon/Gretchen.jpg",
             },
             "Susaka" : {
