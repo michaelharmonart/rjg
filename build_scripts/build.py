@@ -238,7 +238,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
 
     #Mirrored Base Rig Parts
-    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy'] else 'lollipop'
+    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen'] else 'lollipop'
     for fs in ['Left', 'Right']:    
         arm = rBuild.build_module(module_type='biped_limb', side=fs[0], part='arm', guide_list=[fs + piece for piece in ['Arm', 'ForeArm', 'Hand']], offset_pv=50, ctrl_scale=5, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
         clavicle = rBuild.build_module(module_type='clavicle', side=fs[0], part='clavicle', guide_list=[fs + piece for piece in ['Shoulder', 'Arm']], local_orient=False, ctrl_scale=9) 
@@ -260,6 +260,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             fingers.append(finger)
         thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(4)], ctrl_scale=1, fk_shape=fing_shape)
         fingers.append(thumb) 
+
+        if character == "Gretchen":
+            Glute = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}_Glute', guide_list=mc.getAttr(f'{fs}_Glute' + '.translate'), ctrl_scale=1, par_jnt='COG_M_JNT', par_ctrl='hip_M_CTRL')
+            Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='chest_top_M_CTRL')
 
     #Bobo Specifics
     if character == 'Bobo':
@@ -1168,6 +1172,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')'''
 
     mc.select(clear=True)
+
+    if character == "Gretchen" and face:
+        mc.deformerWeights("FaceProject_weights.xml", im=True,  deformer='main_blendshapes', path=f'{groups}/bobo/character/Rigs/Gretchen/Weights/')
+
 
     if character == 'Luciana':
         mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )

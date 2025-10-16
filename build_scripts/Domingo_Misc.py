@@ -38,7 +38,7 @@ def Domingo_extras(skin_src, skin_trg_grp):
     sk_g = []
 
     geo = [
-        'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'irises', 'buckle'
+        'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle'
     ]
 
     #rUtil.create_pxWrap('Shirt', 'Pants', 'Gretchen_UBM')
@@ -66,7 +66,7 @@ def Domingo_misc_pvis(skin_src, skin_trg_grp):
 
     sk_g = []
     geo = [
-        'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'irises', 'buckle'
+        'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle'
     ]
     for g in geo:
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]
