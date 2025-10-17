@@ -73,7 +73,7 @@ def get_production(selected_production, conn: DB):
     if production == 'Bobo':
         gotten_list = asset_list  #this is where we get the list from shot grid
     elif production == 'DraggonKisser':
-        gotten_list = ['Dragon', 'Chicken']  #this is where we get the list from shot grid
+        gotten_list = ['Luciana', 'Domingo']  #this is where we get the list from shot grid
     elif production == 'Custom':
         try:
             custom_list_location = f"{groups}/bobo/character/Rigs/Custom_rigs_list/CustomRig_List.txt"

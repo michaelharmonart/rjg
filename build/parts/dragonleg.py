@@ -151,15 +151,15 @@ class DragonLeg(rModule.RigModule):
         ikh1, eff1 = mc.ikHandle(sj=f'Leg_{self.side}_01_IK', ee=f'Leg_{self.side}_03_IK', sol=f"ikRPsolver", n=f"{self.side}_leg_IK1")
         ikh2, eff2 = mc.ikHandle(sj=f'Leg_{self.side}_02_IK', ee=f'Leg_{self.side}_04_IK', sol=f"ikRPsolver", n=f"{self.side}_leg_IK2")
         pos = mc.xform(f'{sidelong}UpLeg', q=True, ws=True, t=True)
-        ctrl, offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Hip', shape='circle', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
+        ctrl, offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Hip', shape='cube', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.parentConstraint(ctrl, f'Leg_{self.side}_01_IK', mo=True)
 
         pos = mc.xform(f'{sidelong}Knee', q=True, ws=True, t=True)
-        huckctrl, huckoffset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Huck', shape='circle', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
+        huckctrl, huckoffset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Huck', shape='ZTArrows', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.parentConstraint(huckctrl, ikh1, mo=True)
 
         pos = mc.xform(f'{sidelong}Foot', q=True, ws=True, t=True)
-        footctrl, footoffset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Foot', shape='circle', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
+        footctrl, footoffset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Foot', shape='ZTArrows', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.parentConstraint(footctrl, ikh2, mo=True)
         mc.orientConstraint(footctrl, f'Leg_{self.side}_04_IK', mo=True)
         pos = mc.xform(f'{sidelong}ToeBase', q=True, ws=True, t=True)
@@ -168,11 +168,11 @@ class DragonLeg(rModule.RigModule):
         mc.parent(huckoffset_grp, rootctrl)
 
         pos = mc.xform(f'{sidelong}IKAim01', q=True, ws=True, t=True)
-        IKAim01ctrl, IKAim01offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_IKAim01', shape='circle', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
+        IKAim01ctrl, IKAim01offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_IKAim01', shape='locator_3D', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.poleVectorConstraint(IKAim01ctrl, ikh1)
 
         pos = mc.xform(f'{sidelong}IKAim02', q=True, ws=True, t=True)
-        IKAim02ctrl, IKAim02offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_IKAim02', shape='circle', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
+        IKAim02ctrl, IKAim02offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_IKAim02', shape='locator_3D', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.poleVectorConstraint(IKAim02ctrl, ikh2)
 
         #Foot Roll and Bank
@@ -199,7 +199,7 @@ class DragonLeg(rModule.RigModule):
         #mc.parent(f'{side}_inner_bank', rootctrl)
 
         pos = mc.xform(f'{sidelong}Options', q=True, ws=True, t=True)
-        ctrl, offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_FootRoll', shape='circle', size=7.5, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
+        ctrl, offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_FootRoll', shape='ZTArrows', size=7.5, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.addAttr(ctrl, longName="FullRoll_Switch", attributeType="bool", defaultValue=False, keyable=True)
         Roll_Reverse = mc.shadingNode("reverse", asUtility=True, n=f"{self.side}Rol_rev")
         mc.connectAttr(f'{ctrl}.FullRoll_Switch', f'{Roll_Reverse}.inputX')
@@ -215,12 +215,12 @@ class DragonLeg(rModule.RigModule):
             mod = 1
         if self.side == 'R':
             mod = -1
-        mc.setAttr(f'{bankin}.inputMax', mod * -20)
-        mc.setAttr(f'{bankout}.inputMax', mod * 20)
-        mc.setAttr(f'{rollheel}.inputMax', -20)
-        mc.setAttr(f'{rollmid}.inputMax', 20)
-        mc.setAttr(f'{rollend}.inputMin', 20)
-        mc.setAttr(f'{rollend}.inputMax', 40)
+        mc.setAttr(f'{bankin}.inputMax', mod * -200)
+        mc.setAttr(f'{bankout}.inputMax', mod * 200)
+        mc.setAttr(f'{rollheel}.inputMax', -200)
+        mc.setAttr(f'{rollmid}.inputMax', 200)
+        mc.setAttr(f'{rollend}.inputMin', 200)
+        mc.setAttr(f'{rollend}.inputMax', 400)
         mc.setAttr(f'{bankin}.outputMax', mod * 90)
         mc.setAttr(f'{bankout}.outputMax', mod * -90)
         mc.setAttr(f'{rollheel}.outputMax', -90)
@@ -276,7 +276,7 @@ class DragonLeg(rModule.RigModule):
             sidelong = 'Right' 
         ctrlnames = f'{self.side}_CTRL'
         pos = mc.xform(f'{sidelong}Options', q=True, ws=True, t=True)
-        ctrl, offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Options', shape='circle', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
+        ctrl, offset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Options', shape='ZTgear', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.addAttr(ctrl, longName="FK_IK_Switch", attributeType="bool", defaultValue=False, keyable=True)
         mc.addAttr(ctrl, longName="IKStretch", attributeType="bool", defaultValue=False, keyable=True)
         mc.addAttr(ctrl, longName="Aim_01", at="enum", en="FootRoot:CTRL:World:Root", keyable=True)
@@ -440,8 +440,8 @@ class DragonLeg(rModule.RigModule):
             mc.setAttr(f"{cond2}.colorIfFalseR", 0)
             mc.connectAttr(f"{cond2}.outColorR", f'{self.side}_IKAim{aim}_{grpname}_parentConstraint1.{weights[1]}')
 
-            if mc.objExists('global_M_CTRL'):
-                pc = mc.parentConstraint('global_M_CTRL', f'{self.side}_IKAim{aim}_{grpname}', mo=True)
+            if mc.objExists('root_02_M_CTRL'):
+                pc = mc.parentConstraint('root_02_M_CTRL', f'{self.side}_IKAim{aim}_{grpname}', mo=True)
                 weights = mc.parentConstraint(pc[0], q=True, wal=True)
                 cond3 = mc.createNode("condition", n=f"{self.side}{aim}world_cond")
                 mc.connectAttr(f'{self.side}_Options_{ctrlnames}.Aim_{aim}', f"{cond3}.firstTerm")
@@ -459,7 +459,7 @@ class DragonLeg(rModule.RigModule):
         driven_list = [f'{self.side}_Hip_{grpname}', f'Leg_{self.side}_01_{grpname}']
         #rAttr.Attribute(node=self.part_grp, type='plug', value=['waist_M_CTRL'], name='pacRigPlugs', children_name=driven_list)
         target_list = ['ROOT',
-                       'global_M_CTRL',
+                       'root_02_M_CTRL',
                        'root_02_M_CTRL',
                        'COG_M_CTRL',
                        'leg_'+ self.side +'_IK_BASE_CTRL',
@@ -475,7 +475,7 @@ class DragonLeg(rModule.RigModule):
         
         pc = mc.parentConstraint(
             f'{self.side}_Hip_{grpname}',
-            'global_M_CTRL',
+            'root_02_M_CTRL',
             'COG_M_CTRL',
             f'{self.side}_FootRoot_{grpname}',
             mo=True
