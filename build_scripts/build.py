@@ -405,6 +405,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.parent("UE_Correctives", w=True)
     if character in ['Bobo', 'Bobo_quad']:
         mc.parent("CurveNet_Guide_Group", w=True)
+        mc.parent('breath_guide', w=True)
     if character == 'Sharkguy':
         mc.parent("Extras_Guides", w=True)
     
@@ -548,7 +549,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.warning(e)
         else:
            try:
-               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil', 'FloofGeo', 'eyecover'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
+               rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil', 'FloofGeo', 'eyecover', 'FloofRoot'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
                from Bobo_Build_Scripts import Clean_Fur
                Clean_Fur()
            except Exception as e:
@@ -1202,6 +1203,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     try:
         if character == 'Bobo':
             mc.connectAttr('Options_ctrl.Body_Fur_Vis', "FloofGeo.visibility")
+            mc.delete('breath_guide')
     except:
         pass
     try:

@@ -271,6 +271,8 @@ def Clean_up_SculptJoints():
     mc.parent(Control_grp, 'RIG')
     mc.parent(joint_grp, 'SKEL')
     mc.parent(NUll_jnt, 'SKEL')
+
+    print('here')
     
     pos = mc.xform('breath_guide', q=True, ws=True, t=True)
     build_basic_control(name='Breath', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=pos, rotation=(0, 0, 0))
@@ -282,7 +284,7 @@ def Clean_up_SculptJoints():
     md_node = mc.shadingNode("multiplyDivide", asUtility=True, name="multiplyDivide30")
 
     # Connect breath attribute to multiplyDivide input
-    mc.connectAttr("breath_guide.breath", f"{md_node}.input1X", force=True)
+    mc.connectAttr("Breath_CTRL.breath", f"{md_node}.input1X", force=True)
 
     # Set multiply factor
     mc.setAttr(f"{md_node}.input2X", 0.1)

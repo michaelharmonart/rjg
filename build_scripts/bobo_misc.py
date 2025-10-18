@@ -33,7 +33,7 @@ def bobo_extras(skin_src, skin_trg_grp):
 
     sk_g = []
 
-    geo = ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'TempBrows', 'FloofGeo', 'eyecover']
+    geo = ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'TempBrows', 'FloofGeo', 'eyecover', 'FloofRoot']
 
 
     rUtil.create_pxWrap('BellyFur', 'Bobo_UBM',)
