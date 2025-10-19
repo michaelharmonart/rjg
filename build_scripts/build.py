@@ -46,7 +46,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     reload(rCtrlIO)
     
     ## Setting parameters for individual Characters (splitting off groups)
-    not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Fisherman'] else True
+    not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'NPC', 'Fisherman'] else True
     bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy']) else True
 
     body_mesh = f'{character}_UBM'
@@ -68,13 +68,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         body_mesh = mc.listRelatives('dungeonmonster_FINAL_GEO', children=True)
 
     if character == 'Luciana':
-        neckList = ['Neck', 'Neck1', 'Neck2','Neck3','Neck4', 'Head']
+        neckList = ['Neck', 'Neck1', 'Neck2','Neck3','Neck4', 'Neck5', 'Head']
         neckik = False
     else:
         neckList = ['Neck', 'Neck1', 'Head']
         neckik = True
     # Building Parts // setting up the diffrent changes per character
-    if character in ['Susaka', 'Domingo', 'Luciana']:
+    if character in ['Susaka', 'Domingo', 'Luciana', 'Drummer']:
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
@@ -116,6 +116,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             upper_chest_pivot_guide="Spine1",
             spine_end_guide="Spine2",
             ctrl_scale=1.5,
+            joint_num=7
         )
     else:
         chest = rBuild.build_module(module_type='chest', side='M', part='chest', guide_list=['Spine2'], ctrl_scale=70, chest_shape='circle', spinejnt_count = 4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
@@ -184,7 +185,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2, IK_Spline=True)
         #jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
         
-    if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy']:
+    if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy', 'Drummer']:
         for side in ['L', 'R']:
             from rjg.build.parts.UEeye import UEeye
             eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1)
@@ -217,12 +218,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1)
         faceconnect.build()
 
-    '''if character == 'Luciana':
+    if character == 'Luciana':
         for side in ['L', 'R']:
+            import rjg.build.parts.UEwing
+            reload(rjg.build.parts.UEwing)
             from rjg.build.parts.UEwing import UEwing
-            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=1)
-            UEwing.build_wing()'''
-
+            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=100)
+            UEwing.build_wing()
     # previs face rig
     if not not_previs and not bony and character != 'Jett' and character != 'Blitz' and character != 'Bobo' and character != 'Susaka' and character != 'Drummer' and character !='Luciana' and character !='Domingo' and character != 'Fisherman': 
         arbit_guides = mc.listRelatives('FaceGuides', children=True)
@@ -238,7 +240,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
 
     #Mirrored Base Rig Parts
-    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen'] else 'lollipop'
+    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer'] else 'lollipop'
     for fs in ['Left', 'Right']:    
         arm = rBuild.build_module(module_type='biped_limb', side=fs[0], part='arm', guide_list=[fs + piece for piece in ['Arm', 'ForeArm', 'Hand']], offset_pv=50, ctrl_scale=5, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
         clavicle = rBuild.build_module(module_type='clavicle', side=fs[0], part='clavicle', guide_list=[fs + piece for piece in ['Shoulder', 'Arm']], local_orient=False, ctrl_scale=9) 
@@ -401,7 +403,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     #Pulling out guides for Later
-    if character in ['Susaka', 'Drummer', 'NPC', 'Fisherman']:
+    if character in ['Susaka', 'NPC', 'Fisherman']: #'Drummer'
         mc.parent("UE_Correctives", w=True)
     if character in ['Bobo', 'Bobo_quad']:
         mc.parent("CurveNet_Guide_Group", w=True)
@@ -871,7 +873,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         rUEJnt.unrealJntRename()
 
     #New UE Corrective Fixes
-    if character in ['Susaka', 'Drummer', 'NPC', 'Fisherman']:
+    if character in ['Susaka', 'NPC', 'Fisherman']: #Drumkmer
         #Rebuild Skeleton to supoort UE name Scheme and Correctives
         import rjg.post.unrealJntRename as rUEJnt
         rUEJnt.unrealJntRename()
@@ -1027,6 +1029,17 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if mc.objExists('switch_CTRL'):
             mc.addAttr('switch_CTRL', longName='Neck_M_IKFK', attributeType='bool', keyable=True)
             mc.connectAttr('switch_CTRL.Neck_M_IKFK', 'neck_M.switch', force=True)
+        bindjoints = mc.select(mc.listRelatives("SKEL", ad=True, type="joint"))
+        mc.select(f'{character}_UBM')
+        mc.skinCluster(f'{character}_UBM', edit=True, unbind=True)
+        skc = mc.skinCluster('root_M_JNT', f'{character}_UBM', tsb=False, skinMethod=1, bindMethod=0)[0]
+        mc.setAttr(skc + '.dqsSupportNonRigid', 1)
+        if sp:
+            sp_div = sp.split('/')
+            dir = '/'.join(sp_div[:-1])
+            rWeightNgIO.read_skin(f'{character}_UBM', dir, sp_div[-1][:-5])
+
+
     #Fixing/Reskinning Facial Geo for Robin, Rayden, Jett and Blitz
     if not not_previs and not bony and character != 'Bobo' and character != 'Gretchen' and character != 'BoboQuad' and character !='Susaka' and character != 'Drummer' and character != 'NPC' and character != 'Fisherman':
         try:

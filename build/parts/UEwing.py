@@ -63,15 +63,15 @@ class UEwing(UEface):
                 ctrl_name = f"{prefix}_Main_Feather_aim_{i:02}"
                 ctrl, offset = UEface.build_basic_control(
                     name=ctrl_name,
-                    shape='circle',
-                    size=1.0,
+                    shape='ZTsphere',
+                    size=10.0,
                     color_rgb=(1, 1, 0),
                     position=pos,
                     rotation=(0, 0, 0)
                 )
             
                 # Parent cluster to control
-                mc.parentConstraint(ctrl, cluster_handle,)
+                mc.parentConstraint(ctrl, cluster_handle, mo=True)
 
                 close_offset = mc.group(empty=True, name=f'{prefix}Aim_{i:02}_ArmClose_offset')
                 mc.xform(close_offset, ws=True, t=pos,)
@@ -179,8 +179,8 @@ class UEwing(UEface):
             joints.append(jnt)
             if up_controls == True:
                 rot = mc.xform(jnt, q=True, ws=False, rotation=True)
-                size = .2 if feathertype != "Main" else .5
-                upctr, upgrp = UEface.build_basic_control(name=f'{prefix}_{feathertype}AimUp{i+1:02}', shape='circle', size=size, color_rgb=(1, 1, 0), position=pos, rotation=tangent)
+                size = 1 if feathertype != "Main" else 5
+                upctr, upgrp = UEface.build_basic_control(name=f'{prefix}_{feathertype}AimUp{i+1:02}', shape='ZTpoint', size=size, color_rgb=(1, 1, 0), position=pos, rotation=tangent)
                 mc.parentConstraint(jnt, upgrp, mo=True)
                 upgrps.append(upgrp)
                 upctrs.append(upctr)
@@ -246,7 +246,7 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}{sub}Feather_{num}_base',
                 scale=True,
                 check_side=True,
-                CTRL_Size=0.2,
+                CTRL_Size=2,
                 JNT_Size=0.5
             )
             midjnt, midctrl, midctrl_offset =UEface.Simple_joint_and_Control(
@@ -256,7 +256,7 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}{sub}Feather_{num}_mid',
                 scale=True,
                 check_side=True,
-                CTRL_Size=0.2,
+                CTRL_Size=2,
                 JNT_Size=0.5
             )
             eejnt, eectrl, eectrl_offset =UEface.Simple_joint_and_Control(
@@ -266,7 +266,7 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}{sub}Feather_{num}_ee',
                 scale=True,
                 check_side=True,
-                CTRL_Size=0.2,
+                CTRL_Size=2,
                 JNT_Size=0.5
             )
             pre_jnt = None
@@ -378,7 +378,7 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}MainFeather_{num}_base',
                 scale=True,
                 check_side=True,
-                CTRL_Size=0.2,
+                CTRL_Size=2,
                 JNT_Size=0.5
             )
             midjnt, midctrl, midctrl_offset =UEface.Simple_joint_and_Control(
@@ -388,7 +388,7 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}MainFeather_{num}_mid',
                 scale=True,
                 check_side=True,
-                CTRL_Size=0.2,
+                CTRL_Size=2,
                 JNT_Size=0.5
             )
             eejnt, eectrl, eectrl_offset =UEface.Simple_joint_and_Control(
@@ -398,7 +398,7 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}MainFeather_{num}_ee',
                 scale=True,
                 check_side=True,
-                CTRL_Size=0.2,
+                CTRL_Size=2,
                 JNT_Size=0.5
             )
             pre_jnt = None
@@ -479,7 +479,7 @@ class UEwing(UEface):
 
         #arm Logic
         FKIKSwitch_pos = mc.xform(f'{prefix}_Close', q=True, ws=True, t=True)
-        FKIKSwitch_CTL, FKIKSwitch_GRP = UEface.build_basic_control(name=f'{prefix}_FKIKSwitch', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=FKIKSwitch_pos, rotation=(0, 0, 0))
+        FKIKSwitch_CTL, FKIKSwitch_GRP = UEface.build_basic_control(name=f'{prefix}_FKIKSwitch', shape='ZTgear', size=5.0, color_rgb=(1, 1, 0), position=FKIKSwitch_pos, rotation=(0, 0, 0))
         mc.addAttr(FKIKSwitch_CTL, longName="FK_IK", attributeType="bool", keyable=True)
         rev_node = mc.createNode("reverse", name=f"{prefix}IKReverse")
         mc.connectAttr(f'{FKIKSwitch_CTL}.FK_IK', f'{rev_node}.inputX')
@@ -523,9 +523,9 @@ class UEwing(UEface):
                 scale=True,
                 check_side=False,
                 CTRL_Color=(0, 0, 1),
-                CTRL_Size=0.5,
+                CTRL_Size=3,
                 JNT_Size=0.5,
-                #bind=False
+                bind=False
             )
             rot = mc.xform(guide, q=True, ws=True, ro=True)
             trans = mc.xform(guide, q=True, ws=True, t=True)
@@ -548,11 +548,11 @@ class UEwing(UEface):
         for num in ['01', '02', '03', '04']:
             if num != '01':
                 mc.parentConstraint(f'{prefix}_{num}_bind_jnt', f'{prefix}_Main_Feather_aim_{num}_{grpname}', mo=True)
-            mc.parentConstraint(f'{prefix}_{num}_FK_JNT', f'{prefix}_{num}_bind_jnt' )
+            mc.parentConstraint(f'{prefix}_{num}_FK_JNT', f'{prefix}_{num}_bind_jnt', mo=True )
         for cont in [f'{prefix}_Close', f'{prefix}_FeatherShaper', f'{prefix}_Span']:
             rot = mc.xform(cont, q=True, ws=True, ro=True)
             trans = mc.xform(cont, q=True, ws=True, t=True)
-            UEface.build_basic_control(name=f'{cont}', shape='circle', size=2.0, position=trans, rotation=rot)
+            UEface.build_basic_control(name=f'{cont}', shape='ZTarrow', size=10.0, position=trans, rotation=rot)
         mc.parent(f'{prefix}_FeatherShaper_{grpname}', f'{prefix}_Span_{ctrlname}')
         mc.parent(f'{prefix}_Span_{grpname}', f'{prefix}_04_FK_{ctrlname}')
 
@@ -579,7 +579,7 @@ class UEwing(UEface):
             pre_jnt = joint_name
 
         pv_pos = mc.xform(f'{prefix}_IK_Aim', q=True, ws=True, t=True)
-        ikaimCTL, ikaimGRP = UEface.build_basic_control(name=f'{prefix}_IK_Aim', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=pv_pos, rotation=(0, 0, 0))
+        ikaimCTL, ikaimGRP = UEface.build_basic_control(name=f'{prefix}_IK_Aim', shape='locator_3D', size=20.0, color_rgb=(1, 1, 0), position=pv_pos, rotation=(0, 0, 0))
         
         ikhandel  = mc.ikHandle(
             name=f"{prefix}_ikHandle",
@@ -592,22 +592,23 @@ class UEwing(UEface):
         mc.poleVectorConstraint(ikaimCTL, ikhandel)
         IK_Root_pos = mc.xform(f'{prefix}_01_guide', q=True, ws=True, t=True)
         IK_Root_CTL, IK_Root_GRP = UEface.build_basic_control(name=f'{prefix}_IK_Root', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=IK_Root_pos, rotation=(0, 0, 0))
-        mc.parentConstraint(IK_Root_CTL, f"{prefix}_01_IK_jnt")
+        mc.parentConstraint(IK_Root_CTL, f"{prefix}_01_IK_jnt", mo=True)
 
         IK_EE_pos = mc.xform(f'{prefix}_03_guide', q=True, ws=True, t=True)
-        IK_EE_CTL, IK_EE_GRP = UEface.build_basic_control(name=f'{prefix}_IK_EE', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=IK_EE_pos, rotation=(0, 0, 0))
-        mc.parentConstraint(IK_EE_CTL, ikhandel)
+        IK_EE_rot = mc.xform(f'{prefix}_03_guide', q=True, ws=True, rotation=True)
+        IK_EE_CTL, IK_EE_GRP = UEface.build_basic_control(name=f'{prefix}_IK_EE', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=IK_EE_pos, rotation=IK_EE_rot)
+        mc.parentConstraint(IK_EE_CTL, ikhandel, mo=True)
 
         IK_04_pos = mc.xform(f'{prefix}_04_guide', q=True, ws=True, t=True)
         IK_04_CTL, IK_04_GRP = UEface.build_basic_control(name=f'{prefix}_IK_04', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=IK_04_pos, rotation=(0, 0, 0))
-        mc.parentConstraint(IK_04_CTL, f"{prefix}_04_IK_jnt")
+        mc.parentConstraint(IK_04_CTL, f"{prefix}_04_IK_jnt", mo=True)
         mc.parent(IK_04_GRP, IK_EE_CTL)
         for num in ['01', '02', '03', '04']:
             mc.parentConstraint(f'{prefix}_{num}_IK_jnt', f'{prefix}_{num}_bind_jnt', mo=True)
             mc.connectAttr(f'{FKIKSwitch_CTL}.FK_IK', f'{prefix}_{num}_bind_jnt_parentConstraint1.{prefix}_{num}_FK_JNTW0')
             mc.connectAttr(f'{rev_node}.outputX', f'{prefix}_{num}_bind_jnt_parentConstraint1.{prefix}_{num}_IK_jntW1')
         mc.pointConstraint( f'{prefix}_01_bind_jnt', FKIKSwitch_GRP, mo=True)
-        mc.orientConstraint(f'{prefix}_IK_EE_{ctrlname}', f'{prefix}_03_IK_jnt')
+        mc.orientConstraint(f'{prefix}_IK_EE_{ctrlname}', f'{prefix}_03_IK_jnt', mo=True)
         ##End
 
 
@@ -800,7 +801,7 @@ class UEwing(UEface):
                 overwrite=False,
                 scale=True,
                 check_side=True,
-                CTRL_Size=0.2,
+                CTRL_Size=10,
                 JNT_Size=0.5)
         
 
