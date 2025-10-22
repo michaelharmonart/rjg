@@ -219,10 +219,7 @@ class HybridSpine(rModule.RigModule):
         # Make sure the rotate order is set so that the Y is the twist axis
         mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1)
         # Use the resulting twist value
-        twist_mult = mc.createNode("multiply", name=f"{self.part}_Twist_Mid_MLT")
-        mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{twist_mult}.input[0]")
-        mc.setAttr(f"{twist_mult}.input[1]", 0.5)
-        mc.connectAttr(f"{twist_mult}.output", f"{spine_mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
+        mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{spine_mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
 
         # Create the spline to drive the mid control position. (3 control points, quadratic)
         spline.matrix_spline_from_transforms(
