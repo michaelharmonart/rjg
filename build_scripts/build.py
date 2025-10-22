@@ -88,7 +88,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         spine = rBuild.HybridSpine(
             side="M",
             part="spine",
-            base_guide="Hips",
+            base_guide="SpineBase",
             hip_pivot_guide="HipPivot",
             chest_pivot_guide="Spine",
             upper_chest_pivot_guide="Spine1",
