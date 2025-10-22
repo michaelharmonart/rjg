@@ -320,7 +320,6 @@ class HybridSpine(rModule.RigModule):
             name=f"{self.part}_Spline",
             transforms=[
                 spine_start_driver,
-                spine_start_tangent,
                 spine_mid_tangent1,
                 spine_mid_tangent2,
                 spine_end_tangent,
