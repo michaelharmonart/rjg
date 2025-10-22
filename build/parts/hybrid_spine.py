@@ -76,9 +76,17 @@ class HybridSpine(rModule.RigModule):
         # Get Guides
         base_jnt = self.base_guide
         hip_pivot_jnt = self.hip_pivot_guide
-        chest_jnt = self.chest_pivot_guide
+        chest_pivot_jnt = self.chest_pivot_guide
         chest_top_jnt = self.upper_chest_pivot_guide
         end_jnt = self.spine_end_guide
+
+        # Get Spine Linear Length
+        start: om2.MPoint = om2.MPoint(mc.xform(base_jnt, q=True, ws=True, t=True))
+        mid: om2.MPoint = om2.MPoint(mc.xform(chest_pivot_jnt, q=True, ws=True, t=True))
+        end: om2.MPoint = om2.MPoint(mc.xform(chest_top_jnt, q=True, ws=True, t=True))
+        section1_length: float = start.distanceTo(mid)
+        section2_length: float = mid.distanceTo(end)
+        total_length: float = section1_length + section2_length
 
         # Build FK controls
         hip_ctrl: Control = rCtrl.Control(
@@ -123,8 +131,8 @@ class HybridSpine(rModule.RigModule):
             axis="y",
             group_type="main",
             rig_type="primary",
-            translate=chest_jnt,
-            rotate=chest_jnt,
+            translate=chest_pivot_jnt,
+            rotate=chest_pivot_jnt,
             ctrl_scale=self.ctrl_scale * 12,
             rotate_order=1,
         )
@@ -139,8 +147,8 @@ class HybridSpine(rModule.RigModule):
             axis="y",
             group_type="main",
             rig_type="primary",
-            translate=chest_jnt,
-            rotate=chest_jnt,
+            translate=chest_pivot_jnt,
+            rotate=chest_pivot_jnt,
             ctrl_scale=self.ctrl_scale * 14,
             shape_translate=end_jnt,
             shape_rotate=chest_top_jnt,
@@ -157,8 +165,8 @@ class HybridSpine(rModule.RigModule):
             axis="y",
             group_type="main",
             rig_type="primary",
-            translate=chest_jnt,
-            rotate=chest_jnt,
+            translate=chest_pivot_jnt,
+            rotate=chest_pivot_jnt,
             ctrl_scale=self.ctrl_scale * 14,
             shape_translate=chest_top_jnt,
             shape_rotate=chest_top_jnt,
@@ -190,9 +198,21 @@ class HybridSpine(rModule.RigModule):
         )
         rXform.match_pose(node=spine_start, translate=base_jnt, rotate=base_jnt)
         rXform.matrix_constraint(hip_ctrl.ctrl, spine_start)
-        spine_mid: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midPoint")
-        rXform.match_pose(node=spine_mid, translate=chest_jnt, rotate=chest_jnt)
-        rXform.matrix_constraint(base_ctrl.ctrl, spine_mid)
+
+        start_matrix = om2.MMatrix(mc.xform(base_jnt, query=True, worldSpace=True, matrix=True))
+        offset_point: om2.MPoint = om2.MPoint(0, total_length / 3, 0) * start_matrix
+        spine_start_tangent: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midStart")
+        rXform.match_pose(node=spine_start_tangent, translate=chest_pivot_jnt, rotate=base_jnt)
+        mc.xform(spine_start_tangent, translation=(offset_point.x, offset_point.y, offset_point.z), worldSpace=True)
+        rXform.matrix_constraint(base_ctrl.ctrl, spine_start_tangent)
+
+        end_matrix = om2.MMatrix(mc.xform(chest_top_jnt, query=True, worldSpace=True, matrix=True))
+        offset_point: om2.MPoint = om2.MPoint(0, - total_length / 3, 0) * end_matrix
+        spine_end_tangent: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midEnd")
+        rXform.match_pose(node=spine_end_tangent, translate=chest_pivot_jnt, rotate=chest_top_jnt)
+        mc.xform(spine_end_tangent, translation=(offset_point.x, offset_point.y, offset_point.z), worldSpace=True)
+        rXform.matrix_constraint(chest_top_ctrl.ctrl, spine_end_tangent)
+
         spine_end: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_endPoint")
         rXform.match_pose(node=spine_end, translate=chest_top_jnt, rotate=chest_top_jnt)
         rXform.matrix_constraint(chest_top_ctrl.ctrl, spine_end)
@@ -224,13 +244,13 @@ class HybridSpine(rModule.RigModule):
         # Create the spline to drive the mid control position. (3 control points, quadratic)
         spline.matrix_spline_from_transforms(
             name=f"{self.part}_Mid",
-            transforms=[spine_start, spine_mid, spine_end],
+            transforms=[spine_start, spine_start_tangent, spine_end_tangent, spine_end],
             transforms_to_pin=[spine_mid_ctrl.top],
             twist=False,
             stretch=False,
             primary_axis=(0, 1, 0),
             arc_length=False,
-            degree=2,
+            degree=3,
             parent=self.module_grp,
         )
 
