@@ -25,13 +25,13 @@ class HybridSpine(rModule.RigModule):
         part: str,
         base_guide: str,
         hip_pivot_guide: str,
+        mid_guide: str,
         chest_pivot_guide: str,
         upper_chest_pivot_guide: str,
         spine_end_guide: str,
         ctrl_scale: float = 1,
         joint_num: int = 5,
         mid_tangent: float = 1/3,
-        end_tangent: float = 0.15,
         bend_tangent: float = 1/3,
     ):
         """
@@ -43,6 +43,7 @@ class HybridSpine(rModule.RigModule):
             part (str): Name of the rig part (e.g. "spine", "torso").
             base_guide (str): Base guide transform. This is should be the base of the spine.
             hip_pivot_guide (str): Hip pivot guide transform. This is the point the hips will swivel from.
+            mid_guide (str): Spine Mid guide transform. This is the point the spine mid control will be placed according to.
             chest_pivot_guide (str): Chest pivot guide transform. This should be at the midpoint of the spine. 
                 It is the guide that the main chest control pivot will rotate from.
             upper_chest_pivot_guide (str): Upper chest pivot guide transform. This is the top of the part of the spine that will bend.
@@ -50,8 +51,6 @@ class HybridSpine(rModule.RigModule):
             ctrl_scale (float, optional): Scale multiplier for controls. Defaults to 1.
             joint_num (int, optional): Number of spine joints. Defaults to 5.
             mid_tangent (float, optional): The distance between the two spline control points controlled by the mid control, 
-                relative to the spine length.
-            end_tangent (float, optional): The distance between the last two control points, controlled by the end control, 
                 relative to the spine length.
             bend_tangent (float, optional): The distance from the chest_pivot_guide to the 
                spline control point that drivers the mid control, relative to the spine length.
@@ -80,7 +79,6 @@ class HybridSpine(rModule.RigModule):
 
         self.base_name = self.part + "_" + self.side
         self.mid_tangent: float = mid_tangent
-        self.end_tangent: float = end_tangent
         self.bend_tangent: float = bend_tangent
         self.create_module()
 
@@ -224,9 +222,9 @@ class HybridSpine(rModule.RigModule):
 
         offset_translation: om2.MVector = ((start - mid) * self.bend_tangent) + om2.MVector(mid)
         spine_start_tangent: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_midStart")
-        rXform.match_pose(node=spine_start_tangent, translate=chest_pivot_jnt, rotate=base_jnt)
+        rXform.match_pose(node=spine_start_tangent, translate=chest_pivot_jnt, rotate=hip_ctrl.ctrl)
         mc.xform(spine_start_tangent, translation=(offset_translation.x, offset_translation.y, offset_translation.z), worldSpace=True)
-        rXform.matrix_constraint(base_ctrl.ctrl, spine_start_tangent)
+        rXform.matrix_constraint(hip_ctrl.ctrl, spine_start_tangent)
 
         offset_translation: om2.MVector = ((end - mid) * self.bend_tangent ) + om2.MVector(mid)
         spine_end_tangent: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_midEnd")
@@ -286,7 +284,9 @@ class HybridSpine(rModule.RigModule):
                     empty=True, name=f"{self.part}_Tweak_{i:02}", parent=self.module_grp
                 )
                 self.tweak_transforms.append(tweak_point)
-                if i == self.joint_num - 1:
+                if i == 0:
+                    self.joint_drivers.append(spine_start)
+                elif i == self.joint_num - 1:
                     self.joint_drivers.append(chest_top_ctrl.ctrl)
                 else:
                     self.joint_drivers.append(tweak_point)
@@ -341,12 +341,6 @@ class HybridSpine(rModule.RigModule):
         spine_end_driver: str = mc.spaceLocator(name=f"{self.part}_endDriver")[0]
         mc.parent(spine_end_driver, self.module_grp)
         rXform.matrix_constraint(self.chest_top_ctrl.ctrl, spine_end_driver, keep_offset=False)
-        spine_end_tangent: str = mc.spaceLocator(name=f"{self.part}_endTangent")[0]
-        mc.parent(spine_end_tangent, spine_end_driver)
-        rXform.match_pose(
-            node=spine_end_tangent, translate=spine_end_driver, rotate=spine_end_driver
-        )
-        mc.move(0, -self.end_tangent * length, 0, spine_end_tangent, objectSpace=True)
 
         spline.matrix_spline_from_transforms(
             name=f"{self.part}_Spline",
@@ -354,7 +348,6 @@ class HybridSpine(rModule.RigModule):
                 spine_start_driver,
                 spine_mid_tangent1,
                 spine_mid_tangent2,
-                spine_end_tangent,
                 spine_end_driver,
             ],
             transforms_to_pin=self.tweak_transforms,

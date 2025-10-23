@@ -74,7 +74,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         neckList = ['Neck', 'Neck1', 'Head']
         neckik = True
     # Building Parts // setting up the diffrent changes per character
-    if character in ['Susaka', 'Domingo', 'Luciana', 'Drummer']:
+    if character == 'Gretchen':
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
@@ -90,11 +90,35 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             part="spine",
             base_guide="SpineBase",
             hip_pivot_guide="HipPivot",
-            chest_pivot_guide="Spine",
+            mid_guide="Spine",
+            chest_pivot_guide="ChestPivot",
             upper_chest_pivot_guide="Spine1",
             spine_end_guide="Spine2",
             ctrl_scale=1.5,
             bend_tangent=0.1,
+            joint_num=7,
+        )
+    elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer']:
+        hip = rBuild.build_module(
+            module_type="hip",
+            side="M",
+            part="COG",
+            guide_list=["Hips"],
+            ctrl_scale=50,
+            cog_shape="quad_arrow",
+            waist_shape="circle",
+            generate_waist=False,
+        )
+        spine = rBuild.HybridSpine(
+            side="M",
+            part="spine",
+            base_guide="Hips",
+            hip_pivot_guide="HipPivot",
+            mid_guide="Spine",
+            chest_pivot_guide="Spine",
+            upper_chest_pivot_guide="Spine1",
+            spine_end_guide="Spine2",
+            ctrl_scale=1.5,
             joint_num=7,
         )
     else:
