@@ -1,16 +1,15 @@
-from rjg.libs.control.ctrl import Control, tag_as_controller
-
-
-import maya.cmds as mc
-import maya.api.OpenMaya as om2
 from importlib import reload
 
-import rjg.build.rigModule as rModule
+import maya.api.OpenMaya as om2
+import maya.cmds as mc
+
 import rjg.build.chain as rChain
-import rjg.libs.spline as spline
-import rjg.libs.control.ctrl as rCtrl
+import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
+import rjg.libs.control.ctrl as rCtrl
+import rjg.libs.spline as spline
 import rjg.libs.transform as rXform
+from rjg.libs.control.ctrl import Control, tag_as_controller
 
 reload(rModule)
 reload(rChain)
