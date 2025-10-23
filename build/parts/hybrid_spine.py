@@ -31,10 +31,32 @@ class HybridSpine(rModule.RigModule):
         spine_end_guide: str,
         ctrl_scale: float = 1,
         joint_num: int = 5,
-        base_tangent: float = 0.15,
-        mid_tangent: float = 0.2,
+        mid_tangent: float = 1/3,
         end_tangent: float = 0.15,
+        bend_tangent: float = 1/3,
     ):
+        """
+        Builds a hybrid FK/IK spline-based spine rig with bend and twist.
+        Creates hip, base, mid, chest, and upper chest controls; spline-driven deformation; and tweak controls.
+        
+        Args:
+            side (str): Side of the rig (e.g. "M", "L", "R").
+            part (str): Name of the rig part (e.g. "spine", "torso").
+            base_guide (str): Base guide transform. This is should be the base of the spine.
+            hip_pivot_guide (str): Hip pivot guide transform. This is the point the hips will swivel from.
+            chest_pivot_guide (str): Chest pivot guide transform. This should be at the midpoint of the spine. 
+                It is the guide that the main chest control pivot will rotate from.
+            upper_chest_pivot_guide (str): Upper chest pivot guide transform. This is the top of the part of the spine that will bend.
+            spine_end_guide (str): End guide transform. This is where the main chest/spine control will be placed visually.
+            ctrl_scale (float, optional): Scale multiplier for controls. Defaults to 1.
+            joint_num (int, optional): Number of spine joints. Defaults to 5.
+            mid_tangent (float, optional): The distance between the two spline control points controlled by the mid control, 
+                relative to the spine length.
+            end_tangent (float, optional): The distance between the last two control points, controlled by the end control, 
+                relative to the spine length.
+            bend_tangent (float, optional): The distance from the base and end of the spine to the two spline control points 
+                that drive the mid control, relative to the spine length.
+        """
         super().__init__(
             side=side,
             part=part,
@@ -58,7 +80,6 @@ class HybridSpine(rModule.RigModule):
         self.spine_end_guide: str = spine_end_guide
 
         self.base_name = self.part + "_" + self.side
-        self.base_tangent: float = base_tangent
         self.mid_tangent: float = mid_tangent
         self.end_tangent: float = end_tangent
         self.create_module()
@@ -86,7 +107,8 @@ class HybridSpine(rModule.RigModule):
         end: om2.MPoint = om2.MPoint(mc.xform(chest_top_jnt, q=True, ws=True, t=True))
         section1_length: float = start.distanceTo(mid)
         section2_length: float = mid.distanceTo(end)
-        total_length: float = section1_length + section2_length
+        spine_linear_length: float = section1_length + section2_length
+        self.spine_linear_length: float = spine_linear_length
 
         # Build FK controls
         hip_ctrl: Control = rCtrl.Control(
@@ -200,18 +222,18 @@ class HybridSpine(rModule.RigModule):
         rXform.matrix_constraint(hip_ctrl.ctrl, spine_start)
 
         start_matrix = om2.MMatrix(mc.xform(base_jnt, query=True, worldSpace=True, matrix=True))
-        offset_point: om2.MPoint = om2.MPoint(0, total_length / 3, 0) * start_matrix
+        offset_point: om2.MPoint = om2.MPoint(0, spine_linear_length / 3, 0) * start_matrix
         spine_start_tangent: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midStart")
         rXform.match_pose(node=spine_start_tangent, translate=chest_pivot_jnt, rotate=base_jnt)
         mc.xform(spine_start_tangent, translation=(offset_point.x, offset_point.y, offset_point.z), worldSpace=True)
         rXform.matrix_constraint(base_ctrl.ctrl, spine_start_tangent)
 
         end_matrix = om2.MMatrix(mc.xform(chest_top_jnt, query=True, worldSpace=True, matrix=True))
-        offset_point: om2.MPoint = om2.MPoint(0, - total_length / 3, 0) * end_matrix
+        offset_point: om2.MPoint = om2.MPoint(0, - spine_linear_length / 3, 0) * end_matrix
         spine_end_tangent: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midEnd")
         rXform.match_pose(node=spine_end_tangent, translate=chest_pivot_jnt, rotate=chest_top_jnt)
         mc.xform(spine_end_tangent, translation=(offset_point.x, offset_point.y, offset_point.z), worldSpace=True)
-        rXform.matrix_constraint(chest_top_ctrl.ctrl, spine_end_tangent)
+        rXform.matrix_constraint(ik_chest_ctrl.ctrl, spine_end_tangent)
 
         spine_end: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_endPoint")
         rXform.match_pose(node=spine_end, translate=chest_top_jnt, rotate=chest_top_jnt)
@@ -291,22 +313,13 @@ class HybridSpine(rModule.RigModule):
                 self.joint_drivers.append(tweak_ctrl.ctrl)
 
     def output_rig(self):
-        # Get spine length
-        start: om2.MPoint = om2.MPoint(mc.xform(self.base_guide, q=True, ws=True, t=True))
-        end: om2.MPoint = om2.MPoint(mc.xform(self.upper_chest_pivot_guide, q=True, ws=True, t=True))
-        length: float = start.distanceTo(end)
+        length = self.spine_linear_length
 
         # Create the transforms to drive the actual spine curve/spline (two control points for each control, start mid and end)
         spine_start_driver: str = mc.spaceLocator(name=f"{self.part}_startDriver")[0]
         mc.parent(spine_start_driver, self.module_grp)
         rXform.match_pose(spine_start_driver, self.base_guide, rotate=self.base_guide)
         rXform.matrix_constraint(self.hip_ctrl.ctrl, spine_start_driver, keep_offset=True)
-        spine_start_tangent = mc.spaceLocator(name=f"{self.part}_startTangent")[0]
-        mc.parent(spine_start_tangent, spine_start_driver)
-        rXform.match_pose(
-            node=spine_start_tangent, translate=spine_start_driver, rotate=spine_start_driver
-        )
-        mc.move(0, self.base_tangent * length, 0, spine_start_tangent, objectSpace=True)
 
         spine_mid_driver: str = mc.group(
             empty=True, parent=self.module_grp, name=f"{self.part}_midPointDriver"
