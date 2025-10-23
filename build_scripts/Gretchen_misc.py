@@ -52,10 +52,10 @@ def Gretchen_extras(skin_src, skin_trg_grp):
             'topteeth', 'tounge']
 
 
-    classic_sk = ['gloves']
+    classic_sk = []
 
     #rUtil.create_pxWrap('shirt1', 'pantsCreased1', 'boots', 'Gretchen_UBM')
-    rUtil.create_pxWrap('shirt1', 'pants', 'boots', 'front_pockets', 'backpockets', 'Gretchen_UBM')
+    rUtil.create_pxWrap('shirt1', 'pants', 'boots', 'front_pockets', 'backpockets', 'gloves', 'Gretchen_UBM')
     #rUtil.create_pxWrap('VestFluff', 'Clothes')
     #mc.parent('Fingernails', 'Rayden_EXTRAS')
 

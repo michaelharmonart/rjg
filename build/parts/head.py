@@ -11,11 +11,12 @@ reload(rChain)
 reload(rCtrl)
 
 class Head(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, model_path=None, guide_path=None, head_shape='circle'):
+    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, model_path=None, guide_path=None, head_shape='circle', longneck = False):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.__dict__.update(locals())
 
         self.base_name = self.part + '_' + self.side
+        self.longneck = longneck
 
         self.create_module()
 
@@ -52,16 +53,26 @@ class Head(rModule.RigModule):
 
     def add_plugs(self):
         rAttr.Attribute(node=self.part_grp, type='plug', value=['mc.ls("neck_' + self.side + '_??_JNT")[-1]'], name='skeletonPlugs', children_name=[self.bind_joints[0]])
-
-        target_list = ['ROOT', 
-                       'global_M_CTRL',
-                       'root_02_M_CTRL',
-                       'COG_M_CTRL',
-                       'chest_M_01_CTRL',
-                       'chest_M_02_CTRL',
-                       #'neck_02_FK_M_CTRL',
-                       'neck_M_03_JNT',
-                       '6']
+        if not self.longneck:
+            target_list = ['ROOT', 
+                        'global_M_CTRL',
+                        'root_02_M_CTRL',
+                        'COG_M_CTRL',
+                        'chest_M_01_CTRL',
+                        'chest_M_02_CTRL',
+                        #'neck_02_FK_M_CTRL',
+                        'neck_M_03_JNT',
+                        '6']
+        else:
+            target_list = ['ROOT', 
+                        'global_M_CTRL',
+                        'root_02_M_CTRL',
+                        'COG_M_CTRL',
+                        'chest_M_01_CTRL',
+                        'chest_M_02_CTRL',
+                        #'neck_02_FK_M_CTRL',
+                        'neck_M_05_JNT',
+                        '6']
         name_list = ['world', 'global', 'root', 'cog', 'chest_01', 'chest_02', 'neck', 'default_value']
         point_names = ['point' + name.title() for name in name_list]
         orient_names = ['orient' + name.title() for name in name_list]

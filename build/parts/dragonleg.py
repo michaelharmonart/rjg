@@ -470,13 +470,13 @@ class DragonLeg(rModule.RigModule):
 
         mc.parent(f'Leg_{self.side}_01_bindJNT', 'COG_M_JNT')
         mc.parent(f'leg_{self.side}', 'RIG')
-        mc.parentConstraint('COG_M_CTRL', f'Leg_{self.side}_01_{grpname}', mo=True)
-        mc.parentConstraint('COG_M_CTRL', f'{self.side}_Hip_{grpname}' ,mo=True)
+        mc.parentConstraint('hip_M_CTRL', f'Leg_{self.side}_01_{grpname}', mo=True)
+        mc.parentConstraint('hip_M_CTRL', f'{self.side}_Hip_{grpname}' ,mo=True)
         
         pc = mc.parentConstraint(
             f'{self.side}_Hip_{grpname}',
             'root_02_M_CTRL',
-            'COG_M_CTRL',
+            'hip_M_CTRL',
             f'{self.side}_FootRoot_{grpname}',
             mo=True
         )
