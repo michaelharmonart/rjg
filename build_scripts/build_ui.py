@@ -102,9 +102,9 @@ class RigBuildUI(QtWidgets.QDialog):
                 "mp" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Model.mb",
                 "gp" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Guides.mb",
                 "ep" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Extras.mb",
-                "cp" : None, 
-                "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_11.json", 
-                "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose.pose",
+                "cp" : f"{groups}/bobo/character/Rigs/Gretchen/Controls/Gretchen_control_curves.json",
+                "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_16.json", 
+                "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose3.pose",
                 "im" : f"{groups}/bobo/character/Rigs/Rig_Icon/Gretchen.jpg",
             },
             "Susaka" : {
@@ -129,10 +129,10 @@ class RigBuildUI(QtWidgets.QDialog):
                 "mp" : f"{groups}/bobo/character/Rigs/Luciana/Luciana_Model.mb",
                 "gp" : f"{groups}/bobo/character/Rigs/Luciana/Luciana_Guides.mb",
                 "ep" : f"{groups}/bobo/character/Rigs/Luciana/Luciana_Extras.mb",
-                "cp" : None, 
-                "sp" : None,#f"{groups}/bobo/character/Rigs/Drummer/SkinFiles/Drummer_Skin.json",  
+                "cp" : f"{groups}/bobo/character/Rigs/Luciana/Controls/Luciana_control_curves.json", 
+                "sp" : f"{groups}/bobo/character/Rigs/Luciana/Skin_Files/Luciana_Weights.json",  
                 "pp" : None,
-                "im" : None, #f"{groups}/Bobo/character/Rigs/Rig_Icon/Bee.jpg",
+                "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/dragon.png",
             },
 
             "NPC" : {
@@ -152,7 +152,7 @@ class RigBuildUI(QtWidgets.QDialog):
                 "cp" : None, 
                 "sp" : f"{groups}/bobo/character/Rigs/Domingo/SkinFiles/Domingo_Skin.json",  
                 "pp" : None,
-                "im" : f"{groups}/bobo/character/Rigs/Rig_Icon/Bee.jpg",
+                "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/chicken.png",
             },
 
             "Fisherman" : {

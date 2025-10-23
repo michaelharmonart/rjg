@@ -51,6 +51,7 @@ def build_basic_control(name='Main', shape='circle', size=5.0, color_rgb=(1, 1, 
     mc.setAttr(f"{ctrl}.overrideColorRGB", color_rgb[0], color_rgb[1], color_rgb[2], type="double3")
 
     #build_basic_control(name='name', size=10, color_rgb=(1,1,0), position=(0,0,0), rotation=(0,0,0))
+    return ctrl, offset
 
 def create_display_layer(layer_name, objects, color_index, is_reference=False):
     if not mc.objExists(layer_name):

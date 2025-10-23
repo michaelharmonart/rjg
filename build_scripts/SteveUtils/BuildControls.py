@@ -61,7 +61,7 @@ def create_export_window():
     # Character selection dropdown
     mc.text(label="Select Character:")
     char_menu = mc.optionMenu()
-    for character in ["Bobo", "Gretchen", "Luciana", "Domingo", "Susaka", "Drummer"]:
+    for character in ["Bobo", "Gretchen", "Luciana", "Domingo", "Susaka", "Drummer", 'Sharkguy']:
         mc.menuItem(label=character)
 
     # Buttons

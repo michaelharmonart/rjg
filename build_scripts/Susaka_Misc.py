@@ -83,8 +83,12 @@ def ribbons():
     HoodBack = ['HoodBack_01_M', 'HoodBack_02_M', 'HoodBack_03_M', 'HoodBack_04_M', 'HoodBack_05_M', 'HoodBack_06_M']
     HoodFront = ['HoodFront_01_L', 'HoodFront_02_L', 'HoodFront_03_L', 'HoodFront_04_L', 'HoodFront_05_L', 'HoodFront_06_L', 'HoodFront_07_L', 'HoodFront_08_M', 'HoodFront_07_R', 'HoodFront_06_R', 'HoodFront_05_R', 'HoodFront_04_R', 'HoodFront_03_R', 'HoodFront_02_R', 'HoodFront_01_R']
     HoodMid = ['HoodMid_01_L', 'HoodMid_02_L', 'HoodMid_03_L', 'HoodMid_04_L', 'HoodMid_05_L', 'HoodMid_06_L', 'HoodMid_07_L', 'HoodMid_08_M', 'HoodMid_07_R', 'HoodMid_06_R', 'HoodMid_05_R', 'HoodMid_04_R', 'HoodMid_03_R', 'HoodMid_02_R', 'HoodMid_01_R']
-    Scarf = ['Scarf_Top01_M', 'Scarf_Top04_L', 'Scarf_Top06_L', 'Scarf_Top02_L', 'Scarf_Top05_L', 'Scarf_Top03_L', 'Scarf_Top11_L', 'Scarf_Top09_L', 'Scarf_Top10_L', 'Scarf_Top13_M', 'Scarf_Top10_R', 'Scarf_Top09_R', 'Scarf_Top11_R', 'Scarf_Top03_R', 'Scarf_Top05_R', 'Scarf_Top02_R', 'Scarf_Top06_R', 'Scarf_Top04_R', 'Scarf_Top01_M']
+    Scarf = ['Scarf_Top01_M', 'Scarf_Top04_L', 'Scarf_Top06_L', 'Scarf_Top02_L', 'Scarf_Top05_L', 'Scarf_Top03_L', 'Scarf_Top11_L', 'Scarf_Top09_L', 'Scarf_Top10_L', 'Scarf_Top13_M', 'Scarf_Top10_R', 'Scarf_Top09_R', 'Scarf_Top11_R', 'Scarf_Top03_R', 'Scarf_Top05_R', 'Scarf_Top02_R', 'Scarf_Top06_R', 'Scarf_Top04_R', 'Scarf_Top02_M']
     SideBag = ['SideBag_01', 'SideBag_02', 'SideBag_03', 'SideBag_04', 'SideBag_05', 'SideBag_06']
+    Belt = ['Belt_M01', 'Belt_M02', 'Belt_M03', 'Belt_M04', 'Belt_M05', 'Belt_M06', 'Belt_M07', 'Belt_M08', 'Belt_M09', 'Belt_M10', 'Belt_M11', 'Belt_M12', 'Belt_M13', 'Belt_M14', 'Belt_M15',]
+
+
+    chest_control ='chest_M_CTRL'  #'chest_M_01_CTRL' #
     sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build/parts')
     from ribbon import build_ribbon
     build_ribbon(guide_list=L_Strap,
@@ -94,7 +98,7 @@ def ribbons():
                 ribbon_width=0.5,
                 prefix='L_Strap',
                 parent_type='single',
-                parent='chest_M_01_CTRL',
+                parent=chest_control,
                 parent_list=[],
                 parent_joint='spine_05')
     build_ribbon(guide_list=R_Strap,
@@ -104,7 +108,7 @@ def ribbons():
                 ribbon_width=0.5,
                 prefix='R_Strap',
                 parent_type='single',
-                parent='chest_M_01_CTRL',
+                parent=chest_control,
                 parent_list=[],
                 parent_joint='spine_05')
     build_ribbon(guide_list=Collar,
@@ -114,10 +118,10 @@ def ribbons():
                 ribbon_width=0.5,
                 prefix='Collar',
                 parent_type='list',
-                parent='chest_M_01_CTRL',
+                parent=chest_control,
                 parent_list=['clavicle_L_CTRL', 'chest_M_02_CTRL', 'clavicle_R_CTRL'],
                 parent_joint='spine_05')
-    """build_ribbon(guide_list=Scarf,
+    build_ribbon(guide_list=Scarf,
                 fromrig=False,
                 Control_List=['Scarf_Top01_M', 'Scarf_Top03_L', 'Scarf_Top13_M', 'Scarf_Top03_R'],
                 axis='x',
@@ -126,7 +130,35 @@ def ribbons():
                 parent_type='single',
                 parent='neck_01_FK_M_CTRL',
                 parent_list=[],
-                parent_joint='spine_05')"""
-    
-    
+                parent_joint='spine_05')
+    build_ribbon(guide_list=HoodFront,
+                fromrig=False,
+                Control_List=['HoodFront_01_R', 'HoodFront_01_L', 'HoodFront_04_R', 'HoodFront_04_L', 'HoodFront_08_M'],
+                axis='x',
+                ribbon_width=0.5,
+                prefix='HF',
+                parent_type='single',
+                parent='neck_01_FK_M_CTRL',
+                parent_list=[],
+                parent_joint='spine_05')
+    build_ribbon(guide_list=HoodMid,
+                fromrig=False,
+                Control_List=['HoodMid_01_L', 'HoodMid_01_R', 'HoodMid_04_R', 'HoodMid_04_L', 'HoodMid_08_M'],
+                axis='x',
+                ribbon_width=0.5,
+                prefix='HM',
+                parent_type='single',
+                parent='neck_01_FK_M_CTRL',
+                parent_list=[],
+                parent_joint='spine_05')
+    build_ribbon(guide_list=HoodBack,
+                fromrig=False,
+                Control_List=['HoodBack_01_M', 'HoodBack_04_M', 'HoodBack_06_M'],
+                axis='x',
+                ribbon_width=0.5,
+                prefix='HB',
+                parent_type='single',
+                parent='neck_01_FK_M_CTRL',
+                parent_list=[],
+                parent_joint='spine_05')
 

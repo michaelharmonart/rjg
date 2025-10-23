@@ -113,9 +113,9 @@ class UEfaceconnect(UEface):
         mc.parent('Cheek_L_Puff_L_CTRL_CNST_GRP', 'Cheek_R_Puff_R_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
         mc.parent('Nose_Master_Master_CTRL_CNST_GRP', 'head_M_01_CTRL')
         mc.parent('Jaw_M_root_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
-        mc.parent('TopTeeth_JNT', 'BotTeeth_JNT', 'Tounge_01_JNT', 'head_M_JNT')
+        mc.parent('TopTeeth_JNT', 'BotTeeth_JNT', 'Tongue_01_JNT', 'head_M_JNT')
         mc.parent('TopTeeth_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
-        mc.parent('BotTeeth_M_CTRL_CNST_GRP', 'Tounge_01_01_CTRL_CNST_GRP', 'Jaw_M_root_M_CTRL')
+        mc.parent('BotTeeth_M_CTRL_CNST_GRP', 'Tongue_01_01_CTRL_CNST_GRP', 'Jaw_M_root_M_CTRL')
         mc.parent('LowerLip_M_M_CTRL_CNST_GRP', 'UpperLip_M_M_CTRL_CNST_GRP', 'Major_Mouth_R_CornerLip_Mouth_CTRL_CNST_GRP', 'Major_Mouth_L_CornerLip_Mouth_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
         mc.parentConstraint('Jaw_M_root_M_CTRL', 'LowerLip_M_M_CTRL_CNST_GRP', mo=True)
         pos = mc.xform('Mouth_M_center', q=True, ws=True, t=True)
@@ -139,10 +139,31 @@ class UEfaceconnect(UEface):
         mc.parentConstraint('neck_M_02_fk_CTRL', 'Jaw_M_larynx_M_CTRL_CNST_GRP', mo=True)
         mc.parent('Jaw_M_larynx_M_CTRL_CNST_GRP', 'RIG')
         
-        
-        if character:
-            pass
+        # === 1️⃣ Define your control variables ===
+        look_ctrl = "Look_M_M_CTRL"          # the one user animates
+        look_offset = "Look_M_M_CTRL_SDK_GRP"  # the group above it
+        head_ctrl = "head_M_01_CTRL"
+        root_ctrl = "global_M_CTRL"
 
+        # === 2️⃣ Add the space switch attribute ===
+        attr_name = "spaceSwitch"
+
+        if not mc.attributeQuery(attr_name, node=look_ctrl, exists=True):
+            mc.addAttr(look_ctrl, longName=attr_name, attributeType="bool", keyable=True)
+
+        # === 3️⃣ Create the parent constraint (Head + Root → Look Offset) ===
+        constraint_name = mc.parentConstraint(head_ctrl, root_ctrl, look_offset, maintainOffset=True)[0]
+
+        # === 4️⃣ Create the reverse node ===
+        rev = mc.createNode("reverse", name=f"{look_ctrl}_spaceSwitch_REV")
+
+        # === 5️⃣ Hook up the connections ===
+        # Connect the look control's attr to head weight and reverse input
+        mc.connectAttr(f"{look_ctrl}.{attr_name}", f"{rev}.inputX", f=True)
+        mc.connectAttr(f"{look_ctrl}.{attr_name}", f"{constraint_name}.{head_ctrl}W0", f=True)
+
+        # Connect reverse output to the root weight
+        mc.connectAttr(f"{rev}.outputX", f"{constraint_name}.{root_ctrl}W1", f=True)
 
 
 

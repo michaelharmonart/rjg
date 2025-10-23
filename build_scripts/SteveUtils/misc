@@ -465,3 +465,68 @@ try:
 except RuntimeError as e:
     if 'listen() has already been called' not in str(e):
         raise  # Only suppress the specific error, re-raise others
+
+
+#Reorder by name script
+
+import maya.cmds as mc
+
+def reorder_selected_by_name():
+    sel = mc.ls(selection=True, long=True)
+    if not sel:
+        mc.warning("No objects selected.")
+        return
+
+    # Get parent of the first selected object
+    parent = mc.listRelatives(sel[0], parent=True, fullPath=True)
+    parent = parent[0] if parent else None
+
+    # Sort selection by name
+    sorted_sel = sorted(sel, key=lambda x: x.split('|')[-1].lower())
+
+    # Reorder under parent
+    for obj in sorted_sel:
+        mc.reorder(obj, back=True)
+
+    mc.select(sorted_sel)
+    print("Reordered selection alphabetically.")
+
+# Run it
+reorder_selected_by_name()
+
+
+#NUm to Letters
+
+import maya.cmds as mc
+import re
+import string
+
+def replace_number_with_letter():
+    sel = mc.ls(selection=True)
+    if not sel:
+        mc.warning("No objects selected.")
+        return
+
+    letters = string.ascii_uppercase  # A–Z
+
+    for obj in sel:
+        short_name = obj.split('|')[-1]
+        match = re.search(r'(\d+)', short_name)
+        if not match:
+            continue
+
+        num = int(match.group(1))
+        if 1 <= num <= 26:
+            letter = letters[num - 1]
+        else:
+            mc.warning(f"{obj}: Number {num} out of A–Z range.")
+            continue
+
+        new_name = re.sub(r'\d+', letter, short_name)
+        renamed = mc.rename(obj, new_name)
+        print(f"Renamed: {obj} → {renamed}")
+
+    print("✅ Done renaming selected objects.")
+
+# Run it
+replace_number_with_letter()

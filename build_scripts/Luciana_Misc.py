@@ -1,6 +1,7 @@
 import maya.cmds as mc
 import rjg.post.dataIO.ng_weights as rWeightNgIO
 import rjg.libs.util as rUtil
+import sys
 
 from importlib import reload
 import platform, time
@@ -10,22 +11,25 @@ groups = 'G:' if platform.system() == 'Windows' else '/groups'
 reload(rUtil)
 
 manual_skins = [
-    #'Hand_Claws',
-    #'Temp_Brows',
-    #'R_Eye',
-    #'L_Eye',
-    #'Tounge',
-    #'Top_Teeth',
-    #'Bot_Teeth',
+    #'Eyeball',
+    #'Cornea',
+    #'Hat',
+    #'Shirt',
+    #'Boots',
+    #'Hair',
+    #'Belt',
+    #'Tongue',
+    #'TopTeeth',
+    #'BottomTeeth',
 ]
 
 def write_clothes():
     for ms in manual_skins:
-        rWeightNgIO.write_skin(ms, groups + '/dungeons/character/Rigging/Rigs/Rayden/Skin/BOBO', name=ms, force=True)
+        rWeightNgIO.write_skin(ms, groups + '/dungeons/character/Rigging/Rigs/Rayden/Skin/Gretchen', name=ms, force=True)
         print("saved:", ms)
         time.sleep(0.5)
 
-def bobo_extras(skin_src, skin_trg_grp):
+def Luciana_extras(skin_src, skin_trg_grp):
     bind_joints = [jnt.split('.')[0] for jnt in mc.ls('*.bindJoint')]
     geo = mc.ls(mc.select(skin_trg_grp, hierarchy=True), selection=True)
     mc.select(skin_trg_grp, hierarchy=True)
@@ -33,11 +37,11 @@ def bobo_extras(skin_src, skin_trg_grp):
 
     sk_g = []
 
-    geo = ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'TempBrows', 'FloofGeo', 'eyecover', 'FloofRoot']
+    geo = [
+        'feathers', 'corneas', 'eyes', 'irises', 'tongue', 'topteeth', 'botteeth', 'facefins', 'backspines', 'hornrings', 'tailfeathers'
+    ]
 
-
-    rUtil.create_pxWrap('BellyFur', 'Bobo_UBM',)
-    print('Create Fur Proxy Wrap')
+    #rUtil.create_pxWrap('Shirt', 'Pants', 'Gretchen_UBM')
     #rUtil.create_pxWrap('VestFluff', 'Clothes')
     #mc.parent('Fingernails', 'Rayden_EXTRAS')
 
@@ -45,7 +49,7 @@ def bobo_extras(skin_src, skin_trg_grp):
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]
         sk_g.append(sk)
 
-    #mc.skinCluster('head_M_JNT', 'Hair', tsb=True, skinMethod=1, n='hairSkc') #skin the hair to only the head joint in order to avoid weird stretching
+    mc.skinCluster('head_M_JNT', 'Hair', tsb=True, skinMethod=1, n='hairSkc') #skin the hair to only the head joint in order to avoid weird stretching
         
     for g in sk_g:
         pass
@@ -54,17 +58,20 @@ def bobo_extras(skin_src, skin_trg_grp):
 
    
 
-def bobo_misc_pvis(skin_src, skin_trg_grp):
+def Luciana_misc_pvis(skin_src, skin_trg_grp):
     bind_joints = [jnt.split('.')[0] for jnt in mc.ls('*.bindJoint')]
     geo = mc.ls(mc.select(skin_trg_grp, hierarchy=True), selection=True)
     mc.select(skin_trg_grp, hierarchy=True)
     geo = mc.ls(selection=True, type='mesh')
 
     sk_g = []
-
+    geo = [
+        'feathers', 'corneas', 'eyes', 'irises', 'tongue', 'topteeth', 'botteeth', 'facefins', 'backspines', 'hornrings', 'tailfeathers'
+    ]
     for g in geo:
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]
         sk_g.append(sk)
 
     for g in sk_g:
         mc.copySkinWeights(ss='skinCluster1', ds=g, surfaceAssociation='closestPoint', noMirror=True, )
+
