@@ -94,7 +94,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             upper_chest_pivot_guide="Spine1",
             spine_end_guide="Spine2",
             ctrl_scale=1.5,
-            bend_tangent=0.4,
+            bend_tangent=0.1,
             joint_num=6,
         )
     else:

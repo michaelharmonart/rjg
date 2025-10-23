@@ -53,8 +53,8 @@ class HybridSpine(rModule.RigModule):
                 relative to the spine length.
             end_tangent (float, optional): The distance between the last two control points, controlled by the end control, 
                 relative to the spine length.
-            bend_tangent (float, optional): The distance from the base and end of the spine to the two spline control points 
-                that drive the mid control, relative to the spine length.
+            bend_tangent (float, optional): The distance from the chest_pivot_guide to the 
+               spline control point that drivers the mid control, relative to the spine length.
         """
         super().__init__(
             side=side,
@@ -222,18 +222,16 @@ class HybridSpine(rModule.RigModule):
         rXform.match_pose(node=spine_start, translate=base_jnt, rotate=base_jnt)
         rXform.matrix_constraint(hip_ctrl.ctrl, spine_start)
 
-        start_matrix = om2.MMatrix(mc.xform(base_jnt, query=True, worldSpace=True, matrix=True))
-        offset_point: om2.MPoint = om2.MPoint(0, spine_linear_length * self.bend_tangent, 0) * start_matrix
+        offset_translation: om2.MVector = ((start - mid) * self.bend_tangent) + om2.MVector(mid)
         spine_start_tangent: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_midStart")
         rXform.match_pose(node=spine_start_tangent, translate=chest_pivot_jnt, rotate=base_jnt)
-        mc.xform(spine_start_tangent, translation=(offset_point.x, offset_point.y, offset_point.z), worldSpace=True)
+        mc.xform(spine_start_tangent, translation=(offset_translation.x, offset_translation.y, offset_translation.z), worldSpace=True)
         rXform.matrix_constraint(base_ctrl.ctrl, spine_start_tangent)
 
-        end_matrix = om2.MMatrix(mc.xform(chest_top_jnt, query=True, worldSpace=True, matrix=True))
-        offset_point: om2.MPoint = om2.MPoint(0, - spine_linear_length * self.bend_tangent, 0) * end_matrix
+        offset_translation: om2.MVector = ((end - mid) * self.bend_tangent ) + om2.MVector(mid)
         spine_end_tangent: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_midEnd")
         rXform.match_pose(node=spine_end_tangent, translate=chest_pivot_jnt, rotate=chest_top_jnt)
-        mc.xform(spine_end_tangent, translation=(offset_point.x, offset_point.y, offset_point.z), worldSpace=True)
+        mc.xform(spine_end_tangent, translation=(offset_translation.x, offset_translation.y, offset_translation.z), worldSpace=True)
         rXform.matrix_constraint(ik_chest_ctrl.ctrl, spine_end_tangent)
 
         spine_end: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_endPoint")
