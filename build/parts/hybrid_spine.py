@@ -82,6 +82,7 @@ class HybridSpine(rModule.RigModule):
         self.base_name = self.part + "_" + self.side
         self.mid_tangent: float = mid_tangent
         self.end_tangent: float = end_tangent
+        self.bend_tangent: float = bend_tangent
         self.create_module()
 
     def create_module(self):
@@ -215,27 +216,28 @@ class HybridSpine(rModule.RigModule):
         self.chest_top_ctrl = chest_top_ctrl
 
         # Create transforms to make a spline to drive the mid control position
+        mid_driver_spline = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_Mid_Driver_Spline")
         spine_start: str = mc.group(
-            empty=True, parent=self.module_grp, name=f"{self.part}_startPoint"
+            empty=True, parent=mid_driver_spline, name=f"{self.part}_startPoint"
         )
         rXform.match_pose(node=spine_start, translate=base_jnt, rotate=base_jnt)
         rXform.matrix_constraint(hip_ctrl.ctrl, spine_start)
 
         start_matrix = om2.MMatrix(mc.xform(base_jnt, query=True, worldSpace=True, matrix=True))
-        offset_point: om2.MPoint = om2.MPoint(0, spine_linear_length / 3, 0) * start_matrix
-        spine_start_tangent: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midStart")
+        offset_point: om2.MPoint = om2.MPoint(0, spine_linear_length * self.bend_tangent, 0) * start_matrix
+        spine_start_tangent: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_midStart")
         rXform.match_pose(node=spine_start_tangent, translate=chest_pivot_jnt, rotate=base_jnt)
         mc.xform(spine_start_tangent, translation=(offset_point.x, offset_point.y, offset_point.z), worldSpace=True)
         rXform.matrix_constraint(base_ctrl.ctrl, spine_start_tangent)
 
         end_matrix = om2.MMatrix(mc.xform(chest_top_jnt, query=True, worldSpace=True, matrix=True))
-        offset_point: om2.MPoint = om2.MPoint(0, - spine_linear_length / 3, 0) * end_matrix
-        spine_end_tangent: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_midEnd")
+        offset_point: om2.MPoint = om2.MPoint(0, - spine_linear_length * self.bend_tangent, 0) * end_matrix
+        spine_end_tangent: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_midEnd")
         rXform.match_pose(node=spine_end_tangent, translate=chest_pivot_jnt, rotate=chest_top_jnt)
         mc.xform(spine_end_tangent, translation=(offset_point.x, offset_point.y, offset_point.z), worldSpace=True)
         rXform.matrix_constraint(ik_chest_ctrl.ctrl, spine_end_tangent)
 
-        spine_end: str = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_endPoint")
+        spine_end: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_endPoint")
         rXform.match_pose(node=spine_end, translate=chest_top_jnt, rotate=chest_top_jnt)
         rXform.matrix_constraint(chest_top_ctrl.ctrl, spine_end)
 
@@ -375,7 +377,7 @@ class HybridSpine(rModule.RigModule):
         spine_chain = rChain.Chain(
             transform_list=self.joint_drivers[1:], side=self.side, suffix="JNT", name=self.part
         )
-        spine_chain.create_from_transforms(parent=self.skel)
+        spine_chain.create_from_transforms(parent=self.skel, scale_constraint=True, connect_scale=False)
         mc.parent(spine_chain.joints[0], cog_chain.joints[0], relative=True)
         self.bind_joints = cog_chain.joints + spine_chain.joints
         self.tag_bind_joints(self.bind_joints)

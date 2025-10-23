@@ -94,6 +94,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             upper_chest_pivot_guide="Spine1",
             spine_end_guide="Spine2",
             ctrl_scale=1.5,
+            bend_tangent=0.4,
+            joint_num=6,
         )
     else:
         chest = rBuild.build_module(module_type='chest', side='M', part='chest', guide_list=['Spine2'], ctrl_scale=70, chest_shape='circle', spinejnt_count = 4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
