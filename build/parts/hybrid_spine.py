@@ -10,6 +10,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.spline as spline
 import rjg.libs.transform as rXform
 from rjg.libs.control.ctrl import Control, tag_as_controller
+from rjg.libs.maya_api import node
 
 reload(rModule)
 reload(rChain)
@@ -261,7 +262,7 @@ class HybridSpine(rModule.RigModule):
         mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{spine_mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
 
         # Create the spline to drive the mid control position. (3 control points, quadratic)
-        spline.matrix_spline_from_transforms(
+        mid_spline = spline.matrix_spline_from_transforms(
             name=f"{self.part}_Mid",
             transforms=[spine_start, spine_start_tangent, spine_end_tangent, spine_end],
             transforms_to_pin=[spine_mid_ctrl.top],
@@ -272,6 +273,17 @@ class HybridSpine(rModule.RigModule):
             degree=3,
             parent=self.module_grp,
         )
+
+        # Create spine length compensation
+        maintain_length = rAttr.Attribute(node=chest_ctrl.ctrl, type='bool', keyable=True, name='maintainLength', value=1)
+        #curve_info_node: str = mc.createNode("curveInfo", name=f"{self.part}_CurveInfo")
+        #curve_shape: str = mc.listRelatives(mid_spline.curve, shapes=True, noIntermediate=True)[0]
+        #mc.connectAttr(f"{curve_shape}.local", f"{curve_info_node}.inputCurve")
+        #base_length: float = mc.getAttr(f"{curve_info_node}.arcLength")
+        #length_offset_node = node.SubtractNode(name=f"{self.part}_LengthOffset")
+        #mc.setAttr(length_offset_node.input1, base_length)
+        #mc.connectAttr(f"{curve_info_node}.arcLength", length_offset_node.input2)
+        #mc.connectAttr(length_offset_node.output, f"{chest_top_ctrl.ctrl_name}_SDK_GRP.translateY")
 
         self.tweak_ctrls: list[Control] = []
         self.tweak_transforms: list[str] = []
