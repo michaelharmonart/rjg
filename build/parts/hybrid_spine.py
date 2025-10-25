@@ -32,28 +32,28 @@ class HybridSpine(rModule.RigModule):
         spine_end_guide: str,
         ctrl_scale: float = 1,
         joint_num: int = 5,
-        mid_tangent: float = 1/3,
-        bend_tangent: float = 1/3,
+        mid_tangent: float = 1 / 3,
+        bend_tangent: float = 1 / 3,
     ):
         """
         Builds a hybrid FK/IK spline-based spine rig with bend and twist.
         Creates hip, base, mid, chest, and upper chest controls; spline-driven deformation; and tweak controls.
-        
+
         Args:
             side (str): Side of the rig (e.g. "M", "L", "R").
             part (str): Name of the rig part (e.g. "spine", "torso").
             base_guide (str): Base guide transform. This is should be the base of the spine.
             hip_pivot_guide (str): Hip pivot guide transform. This is the point the hips will swivel from.
             mid_guide (str): Spine Mid guide transform. This is the point the spine mid control will be placed according to.
-            chest_pivot_guide (str): Chest pivot guide transform. This should be at the midpoint of the spine. 
+            chest_pivot_guide (str): Chest pivot guide transform. This should be at the midpoint of the spine.
                 It is the guide that the main chest control pivot will rotate from.
             upper_chest_pivot_guide (str): Upper chest pivot guide transform. This is the top of the part of the spine that will bend.
             spine_end_guide (str): End guide transform. This is where the main chest/spine control will be placed visually.
             ctrl_scale (float, optional): Scale multiplier for controls. Defaults to 1.
             joint_num (int, optional): Number of spine joints. Defaults to 5.
-            mid_tangent (float, optional): The distance between the two spline control points controlled by the mid control, 
+            mid_tangent (float, optional): The distance between the two spline control points controlled by the mid control,
                 relative to the spine length.
-            bend_tangent (float, optional): The distance from the chest_pivot_guide to the 
+            bend_tangent (float, optional): The distance from the chest_pivot_guide to the
                spline control point that drivers the mid control, relative to the spine length.
         """
         super().__init__(
@@ -214,7 +214,9 @@ class HybridSpine(rModule.RigModule):
         self.chest_top_ctrl = chest_top_ctrl
 
         # Create transforms to make a spline to drive the mid control position
-        mid_driver_spline = mc.group(empty=True, parent=self.module_grp, name=f"{self.part}_Mid_Driver_Spline")
+        mid_driver_spline = mc.group(
+            empty=True, parent=self.module_grp, name=f"{self.part}_Mid_Driver_Spline"
+        )
         spine_start: str = mc.group(
             empty=True, parent=mid_driver_spline, name=f"{self.part}_startPoint"
         )
@@ -222,24 +224,40 @@ class HybridSpine(rModule.RigModule):
         rXform.matrix_constraint(hip_ctrl.ctrl, spine_start)
 
         offset_translation: om2.MVector = ((start - mid) * self.bend_tangent) + om2.MVector(mid)
-        spine_start_tangent: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_midStart")
+        spine_start_tangent: str = mc.group(
+            empty=True, parent=mid_driver_spline, name=f"{self.part}_midStart"
+        )
         rXform.match_pose(node=spine_start_tangent, translate=chest_pivot_jnt, rotate=hip_ctrl.ctrl)
-        mc.xform(spine_start_tangent, translation=(offset_translation.x, offset_translation.y, offset_translation.z), worldSpace=True)
+        mc.xform(
+            spine_start_tangent,
+            translation=(offset_translation.x, offset_translation.y, offset_translation.z),
+            worldSpace=True,
+        )
         rXform.matrix_constraint(hip_ctrl.ctrl, spine_start_tangent)
 
-        offset_translation: om2.MVector = ((end - mid) * self.bend_tangent ) + om2.MVector(mid)
-        spine_end_tangent: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_midEnd")
+        offset_translation: om2.MVector = ((end - mid) * self.bend_tangent) + om2.MVector(mid)
+        spine_end_tangent: str = mc.group(
+            empty=True, parent=mid_driver_spline, name=f"{self.part}_midEnd"
+        )
         rXform.match_pose(node=spine_end_tangent, translate=chest_pivot_jnt, rotate=chest_top_jnt)
-        mc.xform(spine_end_tangent, translation=(offset_translation.x, offset_translation.y, offset_translation.z), worldSpace=True)
+        mc.xform(
+            spine_end_tangent,
+            translation=(offset_translation.x, offset_translation.y, offset_translation.z),
+            worldSpace=True,
+        )
         rXform.matrix_constraint(ik_chest_ctrl.ctrl, spine_end_tangent)
 
-        spine_end: str = mc.group(empty=True, parent=mid_driver_spline, name=f"{self.part}_endPoint")
+        spine_end: str = mc.group(
+            empty=True, parent=mid_driver_spline, name=f"{self.part}_endPoint"
+        )
         rXform.match_pose(node=spine_end, translate=chest_top_jnt, rotate=chest_top_jnt)
         rXform.matrix_constraint(chest_top_ctrl.ctrl, spine_end)
 
         # Twist for mid joint
         # Retrieve the rotation from the top and bottom matrices
-        start_decompose_matrix = mc.createNode("decomposeMatrix", name=f"{self.part}_TwistStart_DCM")
+        start_decompose_matrix = mc.createNode(
+            "decomposeMatrix", name=f"{self.part}_TwistStart_DCM"
+        )
         mc.connectAttr(f"{spine_start}.matrix", f"{start_decompose_matrix}.inputMatrix")
         end_decompose_matrix = mc.createNode("decomposeMatrix", name=f"{self.part}_TwistEnd_DCM")
         mc.connectAttr(f"{spine_end}.matrix", f"{end_decompose_matrix}.inputMatrix")
@@ -259,7 +277,9 @@ class HybridSpine(rModule.RigModule):
         # Make sure the rotate order is set so that the Y is the twist axis
         mc.setAttr(f"{quat_to_euler}.inputRotateOrder", 1)
         # Use the resulting twist value
-        mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{spine_mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
+        mc.connectAttr(
+            f"{quat_to_euler}.outputRotateY", f"{spine_mid_ctrl.ctrl_name}_SDK_GRP.rotateY"
+        )
 
         # Create the spline to drive the mid control position. (3 control points, quadratic)
         mid_spline = spline.matrix_spline_from_transforms(
@@ -275,15 +295,23 @@ class HybridSpine(rModule.RigModule):
         )
 
         # Create spine length compensation
-        maintain_length = rAttr.Attribute(node=chest_ctrl.ctrl, type='bool', keyable=True, name='maintainLength', value=1)
-        #curve_info_node: str = mc.createNode("curveInfo", name=f"{self.part}_CurveInfo")
-        #curve_shape: str = mc.listRelatives(mid_spline.curve, shapes=True, noIntermediate=True)[0]
-        #mc.connectAttr(f"{curve_shape}.local", f"{curve_info_node}.inputCurve")
-        #base_length: float = mc.getAttr(f"{curve_info_node}.arcLength")
-        #length_offset_node = node.SubtractNode(name=f"{self.part}_LengthOffset")
-        #mc.setAttr(length_offset_node.input1, base_length)
-        #mc.connectAttr(f"{curve_info_node}.arcLength", length_offset_node.input2)
-        #mc.connectAttr(length_offset_node.output, f"{chest_top_ctrl.ctrl_name}_SDK_GRP.translateY")
+        maintain_length = rAttr.Attribute(
+            node=chest_ctrl.ctrl,
+            type="double",
+            keyable=True,
+            name="maintainLength",
+            value=1,
+            min=0,
+            max=1,
+        )
+        # curve_info_node: str = mc.createNode("curveInfo", name=f"{self.part}_CurveInfo")
+        # curve_shape: str = mc.listRelatives(mid_spline.curve, shapes=True, noIntermediate=True)[0]
+        # mc.connectAttr(f"{curve_shape}.local", f"{curve_info_node}.inputCurve")
+        # base_length: float = mc.getAttr(f"{curve_info_node}.arcLength")
+        # length_offset_node = node.SubtractNode(name=f"{self.part}_LengthOffset")
+        # mc.setAttr(length_offset_node.input1, base_length)
+        # mc.connectAttr(f"{curve_info_node}.arcLength", length_offset_node.input2)
+        # mc.connectAttr(length_offset_node.output, f"{chest_top_ctrl.ctrl_name}_SDK_GRP.translateY")
 
         self.tweak_ctrls: list[Control] = []
         self.tweak_transforms: list[str] = []
@@ -373,13 +401,18 @@ class HybridSpine(rModule.RigModule):
 
     def skeleton(self):
         cog_chain = rChain.Chain(
-            transform_list=[self.joint_drivers[0]], side=self.side, suffix="JNT", name="COG",
+            transform_list=[self.joint_drivers[0]],
+            side=self.side,
+            suffix="JNT",
+            name="COG",
         )
         cog_chain.create_from_transforms(parent=self.skel, pad=False)
         spine_chain = rChain.Chain(
             transform_list=self.joint_drivers[1:], side=self.side, suffix="JNT", name=self.part
         )
-        spine_chain.create_from_transforms(parent=self.skel, scale_constraint=True, connect_scale=False)
+        spine_chain.create_from_transforms(
+            parent=self.skel, scale_constraint=True, connect_scale=False
+        )
         mc.parent(spine_chain.joints[0], cog_chain.joints[0], relative=True)
         self.bind_joints = cog_chain.joints + spine_chain.joints
         self.tag_bind_joints(self.bind_joints)
