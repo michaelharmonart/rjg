@@ -3,6 +3,7 @@ from importlib import reload
 import maya.api.OpenMaya as om2
 import maya.cmds as mc
 
+from libs.spline.matrix_spline import bound_curve_from_matrix_spline
 import rjg.build.chain as rChain
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
@@ -294,6 +295,68 @@ class HybridSpine(rModule.RigModule):
             parent=self.module_grp,
         )
 
+        # The underlying spline isn't going to stay the same length as the spine is rotated,
+        # so we need to compensate by offsetting the chest_top control based on the length discrepancy.
+        # These rotation nodes recreate the spine hierarchy with only rotation, meaning intentional spine
+        # length changes from the animator won't be factored into the length correction.
+        length_group = mc.group(empty=True, name=f"{self.part}_Length", parent=self.module_grp)
+        rotation_group = mc.group(empty=True, name=f"{self.part}_Rotation", parent=length_group)
+        torso_rotation = mc.group(
+            empty=True, name=f"{self.part}_torso_rotation", parent=rotation_group
+        )
+        rXform.match_pose(torso_rotation, translate=base_ctrl.ctrl, rotate=base_ctrl.ctrl)
+        mc.connectAttr(f"{base_ctrl.ctrl}.rotate", f"{torso_rotation}.rotate")
+        mc.connectAttr(f"{base_ctrl.ctrl}.rotateOrder", f"{torso_rotation}.rotateOrder")
+        hip_rotation = mc.group(empty=True, name=f"{self.part}_hip_rotation", parent=torso_rotation)
+        rXform.match_pose(hip_rotation, translate=hip_ctrl.ctrl, rotate=hip_ctrl.ctrl)
+        mc.connectAttr(f"{hip_ctrl.ctrl}.rotate", f"{hip_rotation}.rotate")
+        mc.connectAttr(f"{hip_ctrl.ctrl}.rotateOrder", f"{hip_rotation}.rotateOrder")
+        chest_rotation = mc.group(
+            empty=True, name=f"{self.part}_chest_rotation", parent=torso_rotation
+        )
+        rXform.match_pose(chest_rotation, translate=chest_ctrl.ctrl, rotate=chest_ctrl.ctrl)
+        mc.connectAttr(f"{chest_ctrl.ctrl}.rotate", f"{chest_rotation}.rotate")
+        mc.connectAttr(f"{chest_ctrl.ctrl}.rotateOrder", f"{chest_rotation}.rotateOrder")
+        ik_chest_rotation = mc.group(
+            empty=True, name=f"{self.part}_ik_chest_rotation", parent=chest_rotation
+        )
+        rXform.match_pose(
+            ik_chest_rotation, translate=ik_chest_ctrl.ctrl, rotate=ik_chest_ctrl.ctrl
+        )
+        mc.connectAttr(f"{chest_top_ctrl.ctrl}.rotate", f"{ik_chest_rotation}.rotate")
+
+        length_start: str = mc.group(
+            empty=True, parent=length_group, name=f"{self.part}_length_start"
+        )
+        rXform.match_pose(node=length_start, translate=spine_start, rotate=spine_start)
+        rXform.matrix_constraint(hip_rotation, length_start, keep_offset=True)
+        length_start_tangent: str = mc.group(
+            empty=True, parent=length_group, name=f"{self.part}_length_mid_start"
+        )
+        rXform.match_pose(
+            node=length_start_tangent, translate=spine_start_tangent, rotate=spine_start_tangent
+        )
+        rXform.matrix_constraint(hip_rotation, length_start_tangent, keep_offset=True)
+        length_end_tangent: str = mc.group(
+            empty=True, parent=length_group, name=f"{self.part}_length_mid_end"
+        )
+        rXform.match_pose(
+            node=length_end_tangent, translate=spine_end_tangent, rotate=spine_end_tangent
+        )
+        rXform.matrix_constraint(ik_chest_rotation, length_end_tangent, keep_offset=True)
+        length_end: str = mc.group(empty=True, parent=length_group, name=f"{self.part}_length_end")
+        rXform.match_pose(node=length_end, translate=spine_end, rotate=spine_end)
+        rXform.matrix_constraint(ik_chest_rotation, length_end, keep_offset=True)
+
+        # Create spine length spline
+        cv_transforms = [length_start, length_start_tangent, length_end_tangent, length_end]
+        length_spline = spline.MatrixSpline(
+            cv_transforms=cv_transforms, degree=3, periodic=False, name=f"{self.part}_length_spline"
+        )
+        length_spline.curve = bound_curve_from_matrix_spline(
+            matrix_spline=length_spline, curve_parent=length_group
+        )
+
         # Create spine length compensation
         maintain_length = rAttr.Attribute(
             node=chest_ctrl.ctrl,
@@ -304,19 +367,25 @@ class HybridSpine(rModule.RigModule):
             min=0,
             max=1,
         )
-        # curve_info_node: str = mc.createNode("curveInfo", name=f"{self.part}_CurveInfo")
-        # curve_shape: str = mc.listRelatives(mid_spline.curve, shapes=True, noIntermediate=True)[0]
-        # mc.connectAttr(f"{curve_shape}.local", f"{curve_info_node}.inputCurve")
-        # base_length: float = mc.getAttr(f"{curve_info_node}.arcLength")
-        # length_offset_node = node.SubtractNode(name=f"{self.part}_LengthOffset")
-        # mc.setAttr(length_offset_node.input1, base_length)
-        # mc.connectAttr(f"{curve_info_node}.arcLength", length_offset_node.input2)
-        # mc.connectAttr(length_offset_node.output, f"{chest_top_ctrl.ctrl_name}_SDK_GRP.translateY")
+        curve_info_node: str = mc.createNode("curveInfo", name=f"{self.part}_CurveInfo")
+        curve_shape: str = mc.listRelatives(length_spline.curve, shapes=True, noIntermediate=True)[
+            0
+        ]
+        mc.connectAttr(f"{curve_shape}.local", f"{curve_info_node}.inputCurve")
+        base_length: float = mc.getAttr(f"{curve_info_node}.arcLength")
+        length_offset_node = node.SubtractNode(name=f"{self.part}_LengthOffset")
+        mc.setAttr(length_offset_node.input1, base_length)
+        mc.connectAttr(f"{curve_info_node}.arcLength", length_offset_node.input2)
+        scale_node = node.MultiplyNode(name=f"{self.part}_LengthCompensateEnable")
+        mc.connectAttr(length_offset_node.output, scale_node.input[0])
+        mc.connectAttr(maintain_length.attr, scale_node.input[1])
+        mc.connectAttr(scale_node.output, f"{chest_top_ctrl.ctrl_name}_SDK_GRP.translateY")
 
+        # Create spine tweak controls for mid joints
         self.tweak_ctrls: list[Control] = []
         self.tweak_transforms: list[str] = []
         self.joint_drivers: list[str] = []
-        # Create spine tweak controls for mid joints
+
         for i in range(self.joint_num):
             # Skip making controls for the first and last tweak points
             if i == 0 or i == self.joint_num - 1:
