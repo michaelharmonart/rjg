@@ -1,18 +1,21 @@
+import platform
+import sys
+from importlib import reload
+
 import maya.cmds as mc
 import maya.mel as mel
-import sys, platform
-from importlib import reload
 
 groups = 'G:' if platform.system() == 'Windows' else '/groups'
 mc.scriptEditorInfo(suppressWarnings=True,suppressInfo=True)
 
 import rjg.build.buildPart as rBuild
-import rjg.post.finalize as rFinal
 import rjg.build.prop as rProp
 import rjg.libs.file as rFile
 import rjg.libs.util as rUtil
 import rjg.post.dataIO.controls as rCtrlIO
+import rjg.post.finalize as rFinal
 import rjg.post.usd as rUSD
+
 reload(rUtil)
 reload(rProp)
 reload(rBuild)
@@ -21,8 +24,8 @@ reload(rFile)
 reload(rUSD)
 
 import pipe.m.space_switch as spsw
-
 from ngSkinTools2.api import plugin
+
 
 def ensure_ng_initialized():
     if not plugin.is_plugin_loaded():
@@ -36,10 +39,15 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     import rjg.build_scripts
     reload(rjg.build_scripts)
     
+    import rjg.libs.util as rUtil
+    import rjg.post.dataIO.controls as rCtrlIO
     import rjg.post.dataIO.ng_weights as rWeightNgIO
     import rjg.post.dataIO.weights as rWeightIO
-    import rjg.post.dataIO.controls as rCtrlIO
-    import rjg.libs.util as rUtil
+    from rjg.build.parts.driverjoints import create_driver_joints
+    from rjg.build_scripts.Bobo_Build_Scripts import Clean_up_SculptJoints
+    from rjg.build_scripts.SteveUtils.CurveNetAtHome import create_curve_net_joints
+    from rjg.build_scripts.SteveUtils.importskins import import_weights
+    from rjg.build_scripts.UnrealCorrectives import BuildCorrectives, build_parents
     reload(rUtil)
     reload(rWeightNgIO)
     reload(rWeightIO)
@@ -315,8 +323,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             )
 
         try:
-            sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build/parts')
-            from driverjoints import create_driver_joints
             driver_controls = ['Major_Mouth_M_LowerLip_01_Mouth_CTRL', 'Major_Mouth_R_LowerLip_03_Mouth_CTRL', 'Major_Mouth_R_UpperLip_03_Mouth_CTRL', 'Major_Mouth_R_CornerLip_Mouth_CTRL', 'Major_Mouth_L_LowerLip_03_Mouth_CTRL', 'Major_Mouth_L_UpperLip_03_Mouth_CTRL', 'Major_Mouth_M_UpperLip_01_Mouth_CTRL', 'Major_Mouth_L_CornerLip_Mouth_CTRL', 'Eye_L_Upper_Major_L_CTRL', 'Eye_L_Lower_Major_L_CTRL', 'Eye_R_Lower_Major_R_CTRL', 'Eye_R_Upper_Major_R_CTRL', 'Brow_R_01_Major_R_CTRL', 'Brow_R_02_Major_R_CTRL', 'Brow_R_Inner_R_CTRL', 'Brow_R_Outer_R_CTRL', 'Brow_R_Master_R_CTRL', 'Brow_L_02_Major_L_CTRL', 'Brow_L_01_Major_L_CTRL', 'Brow_L_Inner_L_CTRL', 'Brow_L_Outer_L_CTRL', 'Brow_L_Master_L_CTRL', 'Jaw_M_root_M_CTRL']
             create_driver_joints(default_mult=10.0, ctrl_suffix="_CTRL", joint_suffix="_Driver", controls=driver_controls, parent='head')
         except:
@@ -884,10 +890,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         import rjg.post.unrealJntRename as rUEJnt
         rUEJnt.unrealJntRename()
         # Build UE Correctives 
-        import sys
-        sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts')
-        from UnrealCorrectives import BuildCorrectives
-        from UnrealCorrectives import build_parents 
         CorrGuides2 = ["upperarm_twistCor_01", "lowerarm_correctiveRoot", "upperarm_correctiveRoot", "thigh_correctiveRoot", "calf_correctiveRoot"]
         CorrParrent2 = ["upperarm_l", "lowerarm_l", "upperarm_l", "thigh_l", "calf_l"]
         build_parents(CorrGuides2, CorrParrent2)
@@ -955,8 +957,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         for g in geo:
             sk = mc.skinCluster('root', g, tsb=False, skinMethod=1, n=f'clothingSkc{g}')[0]
             mc.copySkinWeights(ss='skinCluster11', ds=f'clothingSkc{g}', surfaceAssociation='closestPoint', noMirror=True, )
-        sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts/SteveUtils')
-        from importskins import import_weights
         if character == 'Susaka':
             for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Hood', 'Scarf', 'Collar', 'TempHair', 'RoboArm' ]:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
@@ -966,8 +966,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
         try:
-            sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build/parts')
-            from driverjoints import create_driver_joints
             driver_controls = ['Major_Mouth_M_LowerLip_01_Mouth_CTRL', 'Major_Mouth_R_LowerLip_03_Mouth_CTRL', 'Major_Mouth_R_UpperLip_03_Mouth_CTRL', 'Major_Mouth_R_CornerLip_Mouth_CTRL', 'Major_Mouth_L_LowerLip_03_Mouth_CTRL', 'Major_Mouth_L_UpperLip_03_Mouth_CTRL', 'Major_Mouth_M_UpperLip_01_Mouth_CTRL', 'Major_Mouth_L_CornerLip_Mouth_CTRL', 'Eye_L_Upper_Major_L_CTRL', 'Eye_L_Lower_Major_L_CTRL', 'Eye_R_Lower_Major_R_CTRL', 'Eye_R_Upper_Major_R_CTRL', 'Brow_R_01_Major_R_CTRL', 'Brow_R_02_Major_R_CTRL', 'Brow_R_Inner_R_CTRL', 'Brow_R_Outer_R_CTRL', 'Brow_R_Master_R_CTRL', 'Brow_L_02_Major_L_CTRL', 'Brow_L_01_Major_L_CTRL', 'Brow_L_Inner_L_CTRL', 'Brow_L_Outer_L_CTRL', 'Brow_L_Master_L_CTRL', 'Jaw_M_root_M_CTRL']
             create_driver_joints(default_mult=10.0, ctrl_suffix="_CTRL", joint_suffix="_Driver", controls=driver_controls, parent='head')
         except:
@@ -1007,8 +1005,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     if character == 'Sharkguy':
         import sys
-        sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts')
-        from Sharkguy_Build_Scripts import ribbons
+
+        from rjg.build_scipts.Sharkguy_Build_Scripts import ribbons
         ribbons()
         bindjoints = mc.select(mc.listRelatives("SKEL", ad=True, type="joint"))
         mc.select(f'{character}_UBM')
@@ -1024,8 +1022,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             sk = mc.skinCluster('root_M_JNT', g, tsb=False, skinMethod=1, n=f'clothingSkc{g}')[0]
             mc.copySkinWeights(ss='skinCluster11', ds=f'clothingSkc{g}', surfaceAssociation='closestPoint', noMirror=True, )
         mc.delete("Extras_Guides")
-        sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts/SteveUtils')
-        from importskins import import_weights
         for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'MouthGEO', 'RopesGEO', 'ShirtGEO', 'SwordGEO', 'PauldrenGEO', 'ChestGEO', 'RGautletGEO', 'BeltGEO', 'PantsGEO', 'LGautletGEO', 'OtherEyeBitGEO', 'EyesGEO']:
             import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
         mc.parentConstraint('neck_02_FK_M_CTRL', 'Fin01_M_M_CTRL_CNST_GRP', mo=True)
@@ -1161,15 +1157,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.setAttr(f"{deformer2}.smoothingIterations", 2)
             mc.setAttr(f"{deformer2}.smoothingStep", .5)
             mc.deformerWeights("BoboDeltaMush.xml", im=True,  deformer=deformer2, path=f'{groups}/bobo/character/Rigs/Bobo/SkinFiles/')
-            sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts/SteveUtils')
             #Add Sculpt points
-            sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts')
             if face:
-                from CurveNetAtHome import create_curve_net_joints
                 create_curve_net_joints('Body', 'Bobo_UBM') 
                 skin_clusters = "curve_net_skin_cluster"
-                sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts')
-                from Bobo_Build_Scripts import Clean_up_SculptJoints
                 mc.deformerWeights("ProjectFace.xml", im=True,  deformer='main_blendshapes', path=f'{groups}/bobo/character/Rigs/Bobo/SkinFiles/')
     
                 Clean_up_SculptJoints()
