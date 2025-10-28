@@ -44,8 +44,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     import rjg.post.dataIO.ng_weights as rWeightNgIO
     import rjg.post.dataIO.weights as rWeightIO
     from rjg.build.parts.driverjoints import create_driver_joints
-    from rjg.build_scripts.Bobo_Build_Scripts import Clean_up_SculptJoints
-    from rjg.build_scripts.SteveUtils.CurveNetAtHome import create_curve_net_joints
+    from rjg.build_scripts import Bobo_Build_Scripts
+    from rjg.build_scripts.SteveUtils import CurveNetAtHome
     from rjg.build_scripts.SteveUtils.importskins import import_weights
     from rjg.build_scripts.UnrealCorrectives import BuildCorrectives, build_parents
     reload(rUtil)
@@ -557,15 +557,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if not_previs:
            try: 
                 rc.bobo_extras(body_mesh, extras)
-                from Bobo_Build_Scripts import Clean_Fur
-                Clean_Fur()
+                Bobo_Build_Scripts.Clean_Fur()
            except Exception as e:
                 mc.warning(e)
         else:
            try:
                rc.bobo_misc_pvis(body_mesh, ['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea', 'LeftPupil', 'RightPupil', 'FloofGeo', 'eyecover', 'FloofRoot'])  #['Tounge', 'BotTeeth', 'HandClaws', 'TopTeeth', 'FootClaws', 'LeftEye', 'LeftCornea', 'RightEye', 'RightCornea',]
-               from Bobo_Build_Scripts import Clean_Fur
-               Clean_Fur()
+               Bobo_Build_Scripts.Clean_Fur()
            except Exception as e:
                 mc.warning(e)
             
@@ -1159,24 +1157,21 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.deformerWeights("BoboDeltaMush.xml", im=True,  deformer=deformer2, path=f'{groups}/bobo/character/Rigs/Bobo/SkinFiles/')
             #Add Sculpt points
             if face:
-                create_curve_net_joints('Body', 'Bobo_UBM') 
+                CurveNetAtHome.create_curve_net_joints('Body', 'Bobo_UBM') 
                 skin_clusters = "curve_net_skin_cluster"
                 mc.deformerWeights("ProjectFace.xml", im=True,  deformer='main_blendshapes', path=f'{groups}/bobo/character/Rigs/Bobo/SkinFiles/')
     
-                Clean_up_SculptJoints()
+                Bobo_Build_Scripts.Clean_up_SculptJoints()
             mc.delete('CurveNet_Guide_Group')
-            from Bobo_Build_Scripts import clean_claws
-            clean_claws()
-            from Bobo_Build_Scripts import Clean_Fur
-            Clean_Fur()
+            Bobo_Build_Scripts.clean_claws()
+            Bobo_Build_Scripts.Clean_Fur()
 
         except Exception as e:
             print(e)
         #Fix Cog Rotate Order for Bobo to xzy
         if character == 'Bobo':
             mc.setAttr('COG_M_CTRL.rotateOrder', 3)
-            from Bobo_Build_Scripts import fix_position
-            fix_position()
+            Bobo_Build_Scripts.fix_position()
 
         '''from importskins import import_weights
         for g in ['HeadFur', 'BellyFur', 'ArmsFur']:
