@@ -1145,7 +1145,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     if character == 'Bobo' and not_previs:
         try:
-            import sys
+            last_deformer = rUtil.get_last_deformer('Bobo_UBM')
             #Add Delta Mush
             deformer = mc.deltaMush('Bobo_UBM')[0]
             mc.setAttr(f"{deformer}.smoothingIterations", 20)
@@ -1165,6 +1165,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.delete('CurveNet_Guide_Group')
             Bobo_Build_Scripts.clean_claws()
             Bobo_Build_Scripts.Clean_Fur()
+
+            deformer_output_attr: str = f"{last_deformer}.outputGeometry[0]"
+            destination_mesh_attr: str = mc.listConnections(deformer_output_attr, source=False, destination=True, plugs=True)[0]
+            uv_pin_bypass: rUtil.BypassNodes = rUtil.create_mesh_connection_bypass(deformer_output_attr, destination_mesh_attr, name="curve_net_pin")
+            
 
         except Exception as e:
             print(e)

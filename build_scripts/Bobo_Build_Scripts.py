@@ -205,9 +205,10 @@ def make_sets():
         mc.group(part_list, name=f'{part}_vis_group')
         mc.connectAttr(f'Options_ctrl.{part}_Sculpt', f'{part}_vis_group.visibility', force=True)
 
-def skin_sculpt_jnts():
+def skin_sculpt_jnts() -> str | None:
     dir = f'{groups}/bobo/character/Rigs/Bobo/SkinFiles'
     rWeightNgIO.read_skin("Bobo_UBM", dir, 'Bobo_CurveNet')
+    return rUtil.get_last_deformer("Bobo_UBM")
 
 def build_basic_control(name='Main', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=(0, 0, 0), rotation=(0, 0, 0)):
     """

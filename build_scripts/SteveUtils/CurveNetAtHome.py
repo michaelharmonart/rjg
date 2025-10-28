@@ -1,6 +1,8 @@
 import maya.cmds as mc
 import re
 
+from rjg.libs.util import create_deformer_bypass_nodes
+
 def uv_pin (
         object_to_pin: str, 
         surface: str, 
@@ -409,6 +411,7 @@ def create_curve_net_joints(GuidePrefix, SourceGeo):
         mc.rename(skin_cluster_name, new_name)
         print(f"Renamed existing skin cluster to {new_name}")
 
+
     if not mc.objExists('curve_net_null_joint'):
         NULL_Joint = mc.joint(name='curve_net_null_joint', p=(0, 0, 0))
         mc.setAttr(f"{NULL_Joint}.radius", 0.1)  # Set a small radius for visibility
@@ -431,7 +434,7 @@ def create_curve_net_joints(GuidePrefix, SourceGeo):
         dest_attr = f"curve_net_skin_cluster.bindPreMatrix[{i}]"
         mc.connectAttr(src_attr, dest_attr, force=True)
 
-
+    create_deformer_bypass_nodes(skin_cluster, name="curve_net")
 
 
     
