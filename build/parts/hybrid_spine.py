@@ -3,7 +3,7 @@ from importlib import reload
 import maya.api.OpenMaya as om2
 import maya.cmds as mc
 
-from libs.spline.matrix_spline import bound_curve_from_matrix_spline
+from rjg.libs.spline.matrix_spline import bound_curve_from_matrix_spline
 import rjg.build.chain as rChain
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
