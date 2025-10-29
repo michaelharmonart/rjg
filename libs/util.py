@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import maya.cmds as mc
 import maya.mel as mel
 import rjg.libs.control.ctrl as rCtrl
@@ -110,3 +111,82 @@ def import_poseInterpolator(path):
 def inplace_symlink(path):
     temp = f"{path}\\tmp"
     os.symlink(path, temp)
+
+def get_last_deformer(shape: str) -> str | None:
+    """Return the last deformer in the geometry’s deformation chain."""
+    deformers = mc.deformableShape(shape, chain=True) or []
+    if deformers:
+        return deformers[-1]
+    return None
+
+
+@dataclass
+class BypassNodes():
+    pre_node: str
+    def_node: str | None
+    post_node: str
+
+def create_mesh_connection_bypass(source: str, destination: str, name: str) -> BypassNodes:
+    # Disconnect
+    mc.disconnectAttr(source, destination)
+
+    # Create bypass nodes
+    pre_node: str = mc.createNode("groupParts", name=f"{name}_PRE")
+    post_node: str = mc.createNode("groupParts", name=f"{name}_POST")
+
+    # Rebuild connections
+    mc.connectAttr(source, f"{pre_node}.inputGeometry")
+    mc.connectAttr(f"{pre_node}.outputGeometry", f"{post_node}.inputGeometry")
+    mc.connectAttr(f"{post_node}.outputGeometry", destination)
+
+    # Add toggle attribute
+    mc.addAttr(pre_node, longName="bypassed", attributeType="bool")
+
+    return BypassNodes(pre_node=pre_node, def_node=None, post_node=post_node)
+
+
+
+def create_deformer_bypass_nodes(deformer: str, name: str) -> BypassNodes:
+    """
+    Wraps a deformer with groupPart nodes to make it easy to bypass it at any time 
+    by connecting the PRE outputGeometry to the POST inputGeometry.
+    Re-enabling is done by connecting the DEF outputGeometry to the POST inputGeometry.
+
+    Args:
+        deformer (str): Name of the deformer node to wrap with bypass nodes.
+        name (str): Base name used when naming the created groupParts nodes.
+
+    Returns:
+        BypassNodes: An object containing the names of the created bypass nodes.
+
+    Visualization:    
+    ┌───────┐   ┌────────────┐  ┌────────┐
+    │  PRE  ┼──►│  Deformer  ┼──►  POST  │
+    └───────┘   └─────┬──────┘  └────────┘
+                  ┌───▼───┐               
+                  │  DEF  │               
+                  └───────┘               
+    """
+    deformer_input_attr: str = f"{deformer}.input[0].inputGeometry"
+    deformer_output_attr: str = f"{deformer}.outputGeometry[0]"
+
+    # Get existing connections
+    source_mesh_attr: str = mc.listConnections(deformer_input_attr, source=True, destination=False, plugs=True)[0]
+    destination_mesh_attr: str = mc.listConnections(deformer_output_attr, source=False, destination=True, plugs=True)[0]
+    
+    # Create bypass nodes
+    pre_node: str = mc.createNode("groupParts", name=f"{name}_PRE")
+    def_node: str = mc.createNode("groupParts", name=f"{name}_DEF")
+    post_node: str = mc.createNode("groupParts", name=f"{name}_POST")
+    
+    # Rebuild connections
+    mc.connectAttr(source_mesh_attr, f"{pre_node}.inputGeometry")
+    mc.connectAttr(f"{pre_node}.outputGeometry", deformer_input_attr, force=True)
+    mc.connectAttr(deformer_output_attr, f"{post_node}.inputGeometry")
+    mc.connectAttr(f"{post_node}.outputGeometry", destination_mesh_attr, force=True)
+    mc.connectAttr(deformer_output_attr, f"{def_node}.inputGeometry")
+
+    # Add toggle attribute
+    mc.addAttr(def_node, longName="bypassed", attributeType="bool")
+
+    return BypassNodes(pre_node=pre_node, def_node=def_node, post_node=post_node)

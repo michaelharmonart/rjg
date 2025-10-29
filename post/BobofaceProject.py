@@ -79,8 +79,18 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
 
     # project the face rig as an always-on blendShape
     #mc.xform(f_skel, t=[0, tY, 0])
+    f_shape: str = mc.listRelatives(f_model, shapes=True, noIntermediate=True, children=True)[0]
+    shape_input_attr: str = f"{f_shape}.inMesh"
+    shape_connection_attr: str = mc.listConnections(shape_input_attr, source=True, destination=False, plugs=True)[0]
     mc.blendShape(f_model, body, name='main_blendshapes', w=[(0, 1.0)], foc=True)
-
+    # Bypass shape node for face mesh
+    mc.connectAttr(shape_connection_attr, shape_input_attr, force=True)
+    # Bypass shape node for extras
+    shape_output_attr = f"{f_shape}.worldMesh[0]"
+    outbound_connections = mc.listConnections(shape_output_attr, source=False, destination=True, plugs=True)
+    if outbound_connections is not None:
+        for connection in outbound_connections:
+            mc.connectAttr(shape_connection_attr, connection, force=True)
     try:
         mc.select(f_extras, hi=True)
         f_ex_list = mc.ls(selection=True, type='transform')
