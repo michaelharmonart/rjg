@@ -104,7 +104,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             spine_end_guide="Spine2",
             ctrl_scale=1.5,
             bend_tangent=0.1,
-            joint_num=9,
+            joint_num=7,
         )
     elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer']:
         hip = rBuild.build_module(
@@ -1226,7 +1226,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     if character == 'Domingo':
         for side in ['L', 'R']:
-            mc.ParentConstraint(f'arm_{side}_05_JNT', f'Tarm_{side}_04_{side}_{side}_CTRL_CNST_GRP')
+            mc.parentConstraint(f'arm_{side}_05_JNT', f'Tarm_{side}_04_{side}_{side}_CTRL_CNST_GRP', mo=True)
 
 
 
