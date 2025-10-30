@@ -230,6 +230,7 @@ class UEwing(UEface):
         UEwing.build_ik_spline_with_controls(aim_joints=aim_joints, prefix=prefix, sub=True, FeatherType=sub)
         rot_offset_list = []
         base_offsets = []
+        def_jnts = []
         for guide in subguides:
             num = guide.split("_")[-2]
             ee_guide = f'{prefix}_{sub}Feather_{num}_ee_guide'
@@ -307,7 +308,18 @@ class UEwing(UEface):
             base_offsets.append(basectrl_offset)
             mc.delete(mid_guide)
             #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_{sub}Feather_{num}_GEO', tsb=True )
-            
+            def_jnts.append(eejnt)
+            def_jnts.append(midjnt)
+            def_jnts.append(basejnt)
+
+            if guide == subguides[-1]:
+                try:
+                    side = prefix.split("_")[-1]
+                    print(f'{side}{sub}GEO')
+                    mc.skinCluster(*def_jnts, f'{side}{sub}GEO', toSelectedBones=True)
+                except Exception as e:
+                    print(e)
+                
             mc.select(clear=True)
             mc.select(main_surf[0])
             mc.select(basectrl_offset, add=True)
@@ -362,6 +374,7 @@ class UEwing(UEface):
 
         rot_offset_list = []
         base_offsets = []
+        def_jnts = []
         for guide in mainguides:
             num = guide.split("_")[-2]
             ee_guide = f'{prefix}_MainFeather_{num}_ee_guide'
@@ -436,9 +449,20 @@ class UEwing(UEface):
                     pre_ctrl = ctrl
                     mc.parent(jnt,root_joint)
                     mc.parent(offset,feather_grp)
-            base_offsets.append(basectrl_offset)
+            def_jnts.append(eejnt)
+            def_jnts.append(midjnt)
+            def_jnts.append(basejnt)
             mc.delete(mid_guide)
             #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_MainFeather_{num}_GEO', tsb=True)
+            if guide == mainguides[-1]:
+                try:
+                    side = prefix.split("_")[-1]
+                    print(f'{side}MainFeathers')
+                    mc.skinCluster(*def_jnts, f'{side}MainFeathers', toSelectedBones=True)
+                except Exception as e:
+                    print(e)
+
+
             
             mc.select(clear=True)
             mc.select(main_surf[0])
