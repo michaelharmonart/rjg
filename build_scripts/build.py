@@ -1224,6 +1224,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     except:
         pass
 
+    if character == 'Domingo':
+        for side in ['L', 'R']:
+            mc.ParentConstraint(f'arm_{side}_05_JNT', f'Tarm_{side}_04_{side}_{side}_CTRL_CNST_GRP')
+
 
 
 def create_groom_bust(model):
