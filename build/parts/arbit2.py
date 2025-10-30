@@ -31,7 +31,10 @@ class Arbitrary2(rModule.RigModule):
 
     def control_rig(self):
         Gtranslate = mc.getAttr(self.guide_list + '.translate')
-        Grotate = mc.getAttr(self.guide_list + '.rotate')
+        if mc.objectType(self.guide_list) == 'joint':
+            Grotate = mc.getAttr(self.guide_list + '.jointOrient')
+        else:
+            Grotate = mc.getAttr(self.guide_list + '.rotate')
 
         self.arbit_ctrl = rCtrl.Control(parent=self.control_grp, shape='circle', side=self.side, suffix='CTRL', name=self.base_name, axis='z', group_type='main', rig_type='primary', translate=Gtranslate[0], rotate=Grotate[0], ctrl_scale=self.ctrl_scale)
         self.arbit_ctrl.tag_as_controller()

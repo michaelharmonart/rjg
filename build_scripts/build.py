@@ -104,7 +104,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             spine_end_guide="Spine2",
             ctrl_scale=1.5,
             bend_tangent=0.1,
-            joint_num=7,
+            joint_num=9,
         )
     elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer']:
         hip = rBuild.build_module(
@@ -277,7 +277,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         if character == "Gretchen":
             Glute = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}_Glute', guide_list=mc.getAttr(f'{fs}_Glute' + '.translate'), ctrl_scale=1, par_jnt='COG_M_JNT', par_ctrl='hip_M_CTRL')
-            Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='chest_top_M_CTRL')
+            Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='spine_Tweak_05_M_CTRL')
 
     #Bobo Specifics
     if character == 'Bobo':
@@ -293,6 +293,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=3, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT')
         for side in ['L', 'R']:
             backtoe = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_Backtoe', guide_list=f'{side}_Backtoe', ctrl_scale=3, par_jnt=f'foot_{side}_01_JNT', par_ctrl=f'foot_{side}_01_switch_JNT')
+            for num in ['01', '02', '03','04', '06', '07', '08',]:
+                armshape = rBuild.build_module(module_type='arbitrary2', side=side, part=f'Tarm_{side}_{num}', guide_list=f'Tarm_{side}_{num}', ctrl_scale=5, par_jnt=f'arm_{side}_{num}_JNT', par_ctrl=f'arm_{side}_{num}_JNT')
+        
     if character == 'Sharkguy':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail01', 'Tail02', 'Tail03', 'Tail04', 'Tail05', 'Tail06', 'TailFin01', 'TailFin02', 'TailFin03'], ctrl_scale=10, pad=2)
         #fin = rBuild.build_module(module_type='biped_limb', side='M', part='fin', guide_list=['Fin01', 'Fin02', 'Fin03'], ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
