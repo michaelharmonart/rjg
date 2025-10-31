@@ -135,21 +135,12 @@ class RigBuildUI(QtWidgets.QDialog):
                 "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/dragon.png",
             },
 
-            "NPC" : {
-                "mp" : f"{groups}/Bobo/character/Rigs/NPC/NPC_Model.mb",
-                "gp" : f"{groups}/Bobo/character/Rigs/NPC/NPC_Guides.mb",
-                "ep" : f"{groups}/Bobo/character/Rigs/NPC/NPC_Extras.mb",
-                "cp" : None, 
-                "sp" : f"{groups}/bobo/character/Rigs/NPC/SkinFiles/NPC_Skin.json",  
-                "pp" : None,
-                "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/Bee.jpg",
-            },
 
             "Domingo" : {
                 "mp" : f"{groups}/bobo/character/Rigs/Domingo/Domingo_Model.mb",
                 "gp" : f"{groups}/bobo/character/Rigs/Domingo/Domingo_Guides.mb",
                 "ep" : f"{groups}/bobo/character/Rigs/Domingo/Domingo_Extras.mb",
-                "cp" : None, 
+                "cp" : f"{groups}/bobo/character/Rigs/Domingo/Controls/Domingo_control_curves.json",
                 "sp" : f"{groups}/bobo/character/Rigs/Domingo/SkinFiles/Domingo_Skin.json",  
                 "pp" : None,
                 "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/chicken.png",

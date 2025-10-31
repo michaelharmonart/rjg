@@ -295,6 +295,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             backtoe = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_Backtoe', guide_list=f'{side}_Backtoe', ctrl_scale=3, par_jnt=f'foot_{side}_01_JNT', par_ctrl=f'foot_{side}_01_switch_JNT')
             for num in ['01', '02', '03','04', '06', '07', '08',]:
                 armshape = rBuild.build_module(module_type='arbitrary2', side=side, part=f'Tarm_{side}_{num}', guide_list=f'Tarm_{side}_{num}', ctrl_scale=5, par_jnt=f'arm_{side}_{num}_JNT', par_ctrl=f'arm_{side}_{num}_JNT')
+            from rjg.build.parts.DomingoCorrectives import Build_Correctives
+            Build_Correctives(side=side)
         
     if character == 'Sharkguy':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail01', 'Tail02', 'Tail03', 'Tail04', 'Tail05', 'Tail06', 'TailFin01', 'TailFin02', 'TailFin03'], ctrl_scale=10, pad=2)
