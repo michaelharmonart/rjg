@@ -19,6 +19,7 @@ def Build_Correctives(side='L'):
     f'{SideLong}ArmPit',
     f'{SideLong}Pec',
     f'{SideLong}Scap',
+    f'{SideLong}Bicep',
     f'{SideLong}ElbowIn',
     f'{SideLong}WristIn',
     f'{SideLong}WristHigh',
@@ -30,14 +31,15 @@ def Build_Correctives(side='L'):
     ]
     
     parlist = [
-    f"foot_{SideShort}_01_JNT",   # AnkleFrontBack
-    f"foot_{SideShort}_01_JNT",   # LeftAnkleFront
-    f"leg_{SideShort}_04_JNT",    # LeftKneeFront
-    f"leg_{SideShort}_04_JNT",    # LeftKneeBack
-    f"clavicle_{SideShort}_01_JNT", # LeftTrap
-    f"clavicle_{SideShort}_01_JNT", # LeftArmPit
-    f"clavicle_{SideShort}_01_JNT", # LeftPec
-    f"clavicle_{SideShort}_01_JNT", # LeftScap
+    f"leg_{SideShort}_08_JNT",   # AnkleFrontBack
+    f"leg_{SideShort}_08_JNT",   # LeftAnkleFront 
+    f"leg_{SideShort}_05_JNT",    # LeftKneeFront
+    f"leg_{SideShort}_05_JNT",    # LeftKneeBack
+    f"chest_M_JNT", # LeftTrap
+    f"chest_M_JNT", # LeftArmPit
+    f"chest_M_JNT", # LeftPec
+    f"chest_M_JNT", # LeftScap
+    f"clavicle_{SideShort}_01_JNT", # LeftBicep
     f"arm_{SideShort}_04_JNT",    # LeftElbowIn
     f"arm_{SideShort}_08_JNT",    # LeftWristIn
     f"arm_{SideShort}_08_JNT",    # LeftWristHigh
@@ -52,9 +54,21 @@ def Build_Correctives(side='L'):
         # Remove SideLong from the start of the string
         base_name = guide.replace(SideLong, "", 1)  # only replace the first occurrence
         # Build the new joint name
-        joint_name = f"{base_name}_{SideShort}_JNT"
+        basejoint_name = f"{base_name}_{SideShort}_Base_JNT"
         pos = mc.xform(guide, q=True, ws=True, t=True)
-        rot = mc.xform(guide, q=True, ws=True, ro=True)
-        mc.joint(p=pos, o=rot, name=joint_name)
-        mc.parent(joint_name, param)
+        rot = mc.getAttr(f"{guide}.jointOrient")[0]
+
+
+        mc.joint(p=pos, name=basejoint_name)
+        mc.xform(basejoint_name, ws=True, ro=rot)
+        mc.makeIdentity(basejoint_name, apply=True, translate=False, rotate=True)
+        mc.parent(basejoint_name, param)
+
+        joint_name = f"{base_name}_{SideShort}_JNT"
+        mc.joint(p=pos, name=joint_name)
+        mc.xform(joint_name, ws=True, ro=rot)
+        mc.makeIdentity(joint_name, apply=True, translate=False, rotate=True)
+        mc.parent(joint_name, basejoint_name)
+
+
         rig_module.tag_bind_joints(joint_name)
