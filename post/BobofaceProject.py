@@ -188,9 +188,13 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
     'L_subLowerLip_04_grp', 'R_subLowerLip_03_grp', 'L_subLowerLip_05_grp',
     'L_subLowerLip_09_grp', 'L_subLowerLip_07_grp'
 ]
-    eye_sub = ['L_SubEye02_grp', 'L_SubEye03_grp', 'L_SubEye04_grp', 'L_SubEye05_grp', 'L_SubEye06_grp', 'L_SubEye07_grp', 'L_SubEye08_grp', 'L_SubEye01_grp', 'R_SubEye02_grp', 'R_SubEye01_grp', 'R_SubEye08_grp', 'R_SubEye07_grp', 'R_SubEye06_grp', 'R_SubEye05_grp', 'R_SubEye04_grp', 'R_SubEye03_grp']
+    eye_sub = ['L_SubEye07_grp', 'R_SubEye04_grp', 'L_SubEye06_grp', 'L_SubEye03_grp', 'L_SubEye08_grp', 'L_SubEye02_grp', 'R_SubEye01_grp', 'L_SubEye05_grp', 'R_SubEye06_grp', 'R_SubEye07_grp', 'R_SubEye08_grp', 'R_SubEye02_grp', 'L_SubEye01_grp', 'R_SubEye05_grp', 'L_SubEye04_grp', 'R_SubEye03_grp']
 
-    setup_proximity_pins(eye_sub, 'ProximityHelper_clone')
+    for grp in eye_sub:
+        for attr in ['translate', 'rotate' , 'scale']:
+            mc.disconnectAttr(f'{grp}.{attr}', f'{grp}_clone.{attr}')
+
+    setup_proximity_pins(eye_sub, 'ProxPinHelper')
     #setup_proximity_pins(right_eye, 'ProximityHelper_clone')
     setup_proximity_pins(Upper_mouth, 'ProximityHelper3_clone')
     setup_proximity_pins(Lower_Lip, 'ProximityHelper2_clone')

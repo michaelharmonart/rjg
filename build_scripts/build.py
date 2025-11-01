@@ -744,24 +744,31 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if pp and not_previs and not bony:
         import rjg.libs.util as rUtil
         rUtil.import_poseInterpolator(pp)
+        if character == 'Gretchen':
+            #mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenShirtPoses6.shp', at = True, name = 'Shirt_Edits')
+            #mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenPantsPoses.shp', at = True, name = 'Pants_Edits')
 
-        mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenShirtPoses.shp', at = True, name = 'Shirt_Edits')
-        mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenPantsPoses.shp', at = True, name = 'Pants_Edits')
-
-        pose_edit_shapes = mc.listAttr('Pose_Edits' + '.w', m=True)
-        pants_edit_shapes = mc.listAttr('Pants_Edits' + '.w', m=True)
-        shirt_edit_shapes = mc.listAttr('Shirt_Edits' + '.w', m=True)
+            #pose_edit_shapes = mc.listAttr('Pose_Edits' + '.w', m=True)
+            #pants_edit_shapes = mc.listAttr('Pants_Edits' + '.w', m=True)
+            #shirt_edit_shapes = mc.listAttr('Shirt_Edits' + '.w', m=True)
 
 
-        for shapes in pose_edit_shapes:
-            for edits in pants_edit_shapes:
-                if shapes == edits:
-                    mc.connectAttr('Pose_Edits.' + shapes, 'Pants_Edits.' + edits)
+            #for shapes in pose_edit_shapes:
+            #    for edits in pants_edit_shapes:
+            #        if shapes == edits:
+            #            mc.connectAttr('Pose_Edits.' + shapes, 'Pants_Edits.' + edits)
 
-        for shapes in pose_edit_shapes:
-            for edits in shirt_edit_shapes:
-                if shapes == edits:
-                    mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
+            #for shapes in pose_edit_shapes:
+            #    for edits in shirt_edit_shapes:
+            #        if shapes == edits:
+            #            mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
+
+            shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='clothingSkc')[0]
+            pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='clothingSkc')[0]
+            rWeightNgIO.init_skc(shirt_skin)
+            rWeightNgIO.init_skc(pants_skin)
+            rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
+            rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Pantzs_Weights")
 
         
     if character == 'Rayden':

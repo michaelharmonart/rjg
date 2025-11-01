@@ -301,6 +301,12 @@ def Clean_up_SculptJoints():
         if mc.objExists(f"{ctrl}.{attr}"):
             mc.setAttr(f"{ctrl}.{attr}", lock=True, keyable=False, channelBox=False)
 
+    try:        
+        mc.setAttr("proximityWrap4.falloffScale", 100)
+        mc.setAttr("proximityWrap4.smoothInfluences", 1)
+    except:
+        pass
+
 
 
 
