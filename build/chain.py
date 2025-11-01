@@ -1,3 +1,4 @@
+import ast
 from typing import Any
 import maya.cmds as mc
 from importlib import reload
@@ -39,6 +40,8 @@ class Chain:
 
         # place joints at each position in the transform list
         self.joints = []
+        split_dict: dict[str, list[str]] = {}
+        joint_mapping: dict[str, str] = {}
         for i, pose in enumerate(pose_dict):
             # create the name of the joint
             if pad:
@@ -58,6 +61,21 @@ class Chain:
             # place the joint in its worldspace position
             rXform.set_pose(jnt, pose_dict[pose])
             self.joints.append(jnt)
+            joint_mapping[pose] = jnt
+
+            # Transfer split_joints attribute if it exists on the source transform
+            if mc.objExists(f"{pose}.split_joints"):
+                if not mc.attributeQuery("split_joints", node=jnt, exists=True):
+                    mc.addAttr(jnt, longName="split_joints", dataType="string")
+                value = mc.getAttr(f"{pose}.split_joints")
+                evaluated_list =  ast.literal_eval(value)
+                split_dict[pose] = evaluated_list
+                mc.setAttr(f"{jnt}.split_joints", value, type="string")
+
+        # Switch out the split_joints attribute with a list of the corresponding new joints
+        for original_joint in split_dict.keys():
+            remapped_split_list: list[str] = [joint_mapping[item] for item in split_dict[original_joint]]
+            mc.setAttr(f"{joint_mapping[original_joint]}.split_joints", repr(remapped_split_list), type="string")
 
         # if there is another part of main skeleton to be parent, parent now
         if parent:
@@ -138,6 +156,9 @@ class Chain:
         for bone in self.joints[:-1]:
             split_jnts = self.split_bone(bone=bone, segments=segments)
             self.split_jnt_dict[bone] = split_jnts
+            for joint in [bone, split_jnts[0]]:
+                mc.addAttr(joint, longName="split_joints", dataType="string")
+                mc.setAttr(f'{joint}.split_joints', repr(split_jnts), type="string")
 
     def split_bone(self, bone=None, segments=4):
         pad = len(str(segments)) + 1
