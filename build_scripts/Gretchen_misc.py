@@ -47,7 +47,7 @@ def Gretchen_extras(skin_src, skin_trg_grp):
             'topteeth', 'tounge', 'boots']
 
 
-    classic_sk = ['pants', 'shirt', 'gloves']
+    classic_sk = ['gloves'] #'pants', 'shirt1', ]
 
     #rUtil.create_pxWrap('shirt1', 'pantsCreased1', 'boots', 'Gretchen_UBM')
     rUtil.create_pxWrap('front_pockets', 'backpockets', 'side_pocket', 'pants')
@@ -67,23 +67,14 @@ def Gretchen_extras(skin_src, skin_trg_grp):
         mc.copySkinWeights(ss='skinCluster1', ds=g, surfaceAssociation='closestPoint', noMirror=True, )
         #rUtil.create_pxWrap([g, 'Rayden_UBM'])
 
-    mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenShirtPoses.shp', at = True, name = 'Shirt_Edits')
-    mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenPantsPoses.shp', at = True, name = 'Pants_Edits')
+    #if character == 'Fisherman':
+    #        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', ]:
+    #            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Susaka/SkinFiles')
 
-    pose_edit_shapes = mc.listAttr('Pose_Edits' + '.w', m=True)
-    pants_edit_shapes = mc.listAttr('Pants_Edits' + '.w', m=True)
-    shirt_edit_shapes = mc.listAttr('Shirt_Edits' + '.w', m=True)
-
-
-    for shapes in pose_edit_shapes:
-        for edits in pants_edit_shapes:
-            if shapes == edits:
-                mc.connectAttr('Pose_Edits.' + shapes, 'Pants_Edits.' + edits)
-
-    for shapes in pose_edit_shapes:
-        for edits in shirt_edit_shapes:
-            if shapes == edits:
-                mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
+    #shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='clothingSkc')[0]
+    #rWeightNgIO.init_skc(shirt_skin)
+    #rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
+    #rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
 
 
    
