@@ -1,3 +1,4 @@
+import ast
 import os
 from typing import Any
 
@@ -19,6 +20,8 @@ from maya.api.OpenMaya import (
     MPointArray,
     MSelectionList,
 )
+
+from rjg.libs.common import get_shapes
 
 try:
     from ngSkinTools2 import api as ng
@@ -171,6 +174,16 @@ def skin_mesh(
         raise RuntimeError(f"{geometry} has no shape node!")
 
     return skin_cluster
+
+
+def get_mesh_influences(shape: str, skin_cluster: str | None = None) -> list[str]:
+    if not skin_cluster:
+        skin_cluster: str | None = get_skin_cluster(shape)
+        if not skin_cluster:
+            raise RuntimeError(f"No skinCluster on {shape}")
+
+    influences: list[str] = cmds.skinCluster(skin_cluster, query=True, influence=True)
+    return influences
 
 
 def get_mesh_points(
@@ -619,7 +632,7 @@ def split_weights(
     world positions and distributing the original joint's influence accordingly.
 
     Args:
-        mesh: The transform node of the skinned mesh.
+        mesh: The shape node of the skinned mesh.
         joint_split_dict (dict[str, list[str]]): A mapping of original joint names to a list of split joints
             that will receive the redistributed weights. Each key-value pair is one redistribution group.
         degree: Degree of the spline used for spatial weight interpolation. Defaults to 2.
@@ -628,7 +641,7 @@ def split_weights(
             (Warning!!! This is very slow)
     """
     # get the shape node
-    mesh_shape: str = cmds.listRelatives(mesh, shapes=True)[0]
+    mesh_shape: str = mesh
 
     # get the skinCluster and weights
     skin_cluster: str | None = get_skin_cluster(mesh)
@@ -696,6 +709,31 @@ def split_weights(
         set_weights(
             shape=mesh_shape, new_weights=new_weights, skin_cluster=skin_cluster, normalize=True
         )
+
+
+def auto_split_all_weights(mesh_group: str, degree: int = 2, add_ng_layer: bool = False) -> None:
+    meshes: list[str] = cmds.listRelatives(
+        mesh_group, allDescendents=True, type="mesh", noIntermediate=True
+    )
+    for mesh in meshes:
+        split_dict: dict[str, list[str]] = {}
+        skin_cluster: str | None = get_skin_cluster(mesh)
+        if skin_cluster is None:
+            continue
+        influences: list[str] = get_mesh_influences(shape=mesh)
+        for influence in influences:
+            if cmds.objExists(f"{influence}.split_joints"):
+                value = cmds.getAttr(f"{influence}.split_joints")
+                evaluated = ast.literal_eval(value)
+                if not isinstance(evaluated, list):
+                    raise RuntimeError(
+                        f"{evaluated} should be a list of influences to split weights with."
+                    )
+                if len(evaluated) > degree + 1:
+                    split_dict[influence] = evaluated
+        if split_dict:
+            split_weights(mesh, joint_split_dict=split_dict, degree=degree, add_ng_layer=False)
+            print(f"Finished splitting {mesh} weights.")
 
 
 def visualize_weights_on_mesh(
