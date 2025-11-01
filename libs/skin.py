@@ -722,11 +722,12 @@ def auto_split_all_weights(mesh_group: str, degree: int = 2, add_ng_layer: bool 
         mesh_group, allDescendents=True, type="mesh", noIntermediate=True
     )
     for mesh in meshes:
-        split_dict: dict[str, list[str]] = {}
+        
         skin_clusters: list[str] | None = get_skin_clusters(mesh)
         if skin_clusters is None:
             continue
         for skin_cluster in skin_clusters:
+            split_dict: dict[str, list[str]] = {}
             influences: list[str] = get_mesh_influences(shape=mesh, skin_cluster=skin_cluster)
             for influence in influences:
                 if cmds.objExists(f"{influence}.split_joints"):
