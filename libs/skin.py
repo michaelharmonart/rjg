@@ -1,0 +1,838 @@
+import os
+from typing import Any
+
+import maya.cmds as cmds
+from maya.api import OpenMaya as om2
+from maya.api import OpenMayaAnim as oma
+from maya.api.OpenMaya import (
+    MColor,
+    MDagPath,
+    MDagPathArray,
+    MFnMesh,
+    MFnNurbsCurve,
+    MFnNurbsCurveData,
+    MFnNurbsSurface,
+    MFnSingleIndexedComponent,
+    MIntArray,
+    MObject,
+    MPoint,
+    MPointArray,
+    MSelectionList,
+)
+
+try:
+    from ngSkinTools2 import api as ng
+    from ngSkinTools2.api import plugin
+    from ngSkinTools2.api.layers import Layer
+    from ngSkinTools2.api.transfer import VertexTransferMode
+
+    HAS_NG = True
+except ImportError:
+    HAS_NG = False
+
+
+from rjg.libs import color, spline
+from rjg.libs.math import remap
+
+
+def get_skin_cluster(mesh: str) -> str | None:
+    history = cmds.listHistory(mesh, pdo=True) or []
+    skin_clusters = cmds.ls(history, type="skinCluster")
+    return skin_clusters[0] if skin_clusters else None
+
+
+def ensure_ng_initialized() -> None:
+    if not plugin.is_plugin_loaded():
+        plugin.load_plugin()
+
+
+def init_layers(shape: str) -> ng.Layers:
+    skin_cluster = ng.target_info.get_related_skin_cluster(shape)
+    layers = ng.layers.init_layers(skin_cluster)
+    base_layer: Layer = layers.add("Base Weights")
+    return layers
+
+
+def get_or_create_ng_layer(skin_cluster: str, layer_name: str) -> Layer:
+    """
+    Gets or creates an ngSkinTools2 layer with the given name on the specified shape.
+
+    Args:
+        skin_cluster(str): The name of the skinCluster node.
+        layer_name (str): The name of the layer to create or retrieve.
+
+    Returns:
+        ngSkinTools2.api.layers.Layer: The existing or newly created layer object.
+    """
+
+    layers: ng.Layers = ng.Layers(skin_cluster)
+
+    # Check for existing layer
+    for layer in layers.list():
+        if layer.name == layer_name:
+            return layer
+
+    # Create and return new layer
+    new_layer = layers.add(layer_name)
+    return new_layer
+
+
+def apply_ng_skin_weights(weights_file: str, geometry: str) -> None:
+    """
+    Applies an ngSkinTools JSON weights file to the specified geometry.
+    Args:
+        weights_file: The JSON weights file to read.
+        geometry: The transform, shape, or skinCluster Node to apply to.
+    """
+    # shapes: list[str] = cmds.listRelatives(geometry, children=True, shapes=True) or []
+    # if not shapes:
+    #    raise RuntimeError(f"No shape nodes found on surface: {geometry}")
+    # shape: str = shapes[0]
+    ensure_ng_initialized()
+    config = ng.influenceMapping.InfluenceMappingConfig()
+    config.use_distance_matching = False
+    config.use_name_matching = True
+
+    if not os.path.isfile(path=weights_file):
+        raise RuntimeError(f"{weights_file} doesn't exist, unable to load weights.")
+
+    # Run the import
+    ng.import_json(
+        target=geometry,
+        file=weights_file,
+        vertex_transfer_mode=ng.transfer.VertexTransferMode.vertexId,
+        influences_mapping_config=config,
+    )
+
+
+def write_ng_skin_weights(filepath: str, geometry: str, force: bool = False) -> None:
+    """
+    Writes a ngSkinTools JSON file representing the weights of the given geometry.
+
+    Args:
+        filepath: The path and filename and extension to save under.
+        geometry: The transform, shape, or skinCluster Node the weights are on.
+        force: If True, will automatically overwrite any existing file at the filepath specified.
+
+    """
+
+    # If the file exists, only write it if force = True, or after asking for confirmation.
+    if os.path.isfile(path=filepath):
+        if force:
+            pass
+        else:
+            confirm: str = cmds.confirmDialog(
+                title="File Overwrite",
+                message=f"{filepath} already exists and will be overwritten, are you sure you want to write the file?",
+                button=["Yes", "No"],
+                defaultButton="Yes",
+                cancelButton="No",
+                dismissString="No",
+            )
+            if confirm == "Yes":
+                pass
+            else:
+                return
+
+    ng.export_json(target=geometry, file=filepath)
+
+    return
+
+
+def skin_mesh(
+    bind_joints: list[str], geometry: str, name: str | None = None, dual_quaternion: bool = False
+) -> str:
+    """
+    Creates a skinCluster on the given geometry using the specified bind joints.
+
+    Args:
+        bind_joints (list[str]): A list of joint names to bind the geometry to.
+        geometry (str): The name of the geometry to be skinned.
+        name (str | None, optional): The name to assign to the skinCluster.
+            If None, a name will be auto-generated based on the geometry name.
+        dual_quaternion (bool, optional): Whether to use dual quaternion skinning.
+            Defaults to False (classic linear skinning).
+
+    Returns:
+        str: The name of the created skinCluster node.
+    """
+    if not name:
+        name: str = f"{geometry}_SC"
+
+    shape_list: list[str] = cmds.listRelatives(
+        geometry, shapes=True, noIntermediate=True, children=True
+    )
+    if shape_list:
+        shape = shape_list[0]
+        skin_cluster = cmds.skinCluster(
+            bind_joints, shape, skinMethod=1 if dual_quaternion else 0, name=name
+        )
+    else:
+        raise RuntimeError(f"{geometry} has no shape node!")
+
+    return skin_cluster
+
+
+def get_mesh_points(
+    fn_mesh: om2.MFnMesh, vertex_indices: list[int] | None = None
+) -> om2.MPointArray:
+    if vertex_indices is None:
+        mesh_points: om2.MPointArray = fn_mesh.getPoints(space=om2.MSpace.kWorld)
+        vertex_indices = list(range(len(mesh_points)))
+    else:
+        mesh_points: om2.MPointArray = om2.MPointArray()
+        all_points: om2.MPointArray = fn_mesh.getPoints(space=om2.MSpace.kWorld)
+        for idx in vertex_indices:
+            mesh_points.append(all_points[idx])
+    return mesh_points
+
+
+def get_mesh_spline_weights(
+    mesh_shape: str,
+    cv_transforms: list[str],
+    degree: int = 2,
+    periodic: bool = False,
+    vertex_indices: list[int] | None = None,
+    debug_curve: bool = False,
+) -> list[list[tuple[Any, float]]]:
+    """
+    Calculates spline-based weights for each vertex on a mesh relative to a temporary NURBS curve
+    defined by a set of CV transforms.
+
+    The function builds a curve from the given transforms, projects each mesh vertex onto the curve
+    to compute the closest parameter value, then calculates De Boor-style basis weights using the
+    curve's knot vector and degree.
+
+    Args:
+        mesh_shape (str): The name of the mesh shape node (not the transform).
+        cv_transforms (list[str]): A list of transform names representing the CVs of the curve.
+        degree (int, optional): Degree of the spline curve. Defaults to 2.
+        periodic: If True will generate a periodic curve for getting spline weights.
+        vertex_indices: A list of vertex indices to output weights for.
+        debug_curve: If True a curve node will be created for debug purposes.
+    Returns:
+        list[list[tuple[Any, float]]]: A list of weights per vertex. Each entry is a list of tuples,
+        where each tuple contains a CV transform and its corresponding influence weight on the vertex.
+    """
+    # Create a curve for checking the closest point
+    cv_positions: MPointArray = []
+    for transform in cv_transforms:
+        position: tuple[float, float, float] = cmds.xform(
+            transform, query=True, worldSpace=True, translation=True
+        )
+        position_tuple: tuple[float, float, float] = tuple(position)
+        cv_positions.append(MPoint(*position_tuple))
+
+    if periodic:
+        extended_cv_positions: MPointArray = MPointArray(cv_positions) + cv_positions[:degree]
+        extended_cv_transforms: list[str] = list(cv_transforms) + cv_transforms[:degree]
+    else:
+        extended_cv_positions: MPointArray = MPointArray(cv_positions)
+        extended_cv_transforms: list[str] = list(cv_transforms)
+    knots: list[float] = spline.generate_knots(
+        len(extended_cv_positions), degree=degree, periodic=periodic
+    )
+    maya_knots: list[float] = knots[1:-1]
+
+    fn_data: MFnNurbsCurveData = om2.MFnNurbsCurveData()
+    data_obj: MObject = fn_data.create()
+    fn_curve: MFnNurbsCurve = om2.MFnNurbsCurve()
+    curve_obj: MFnNurbsCurve = fn_curve.create(
+        extended_cv_positions,
+        om2.MDoubleArray(maya_knots),
+        degree,
+        om2.MFnNurbsCurve.kOpen if not periodic else om2.MFnNurbsCurve.kPeriodic,
+        False,  # create2D
+        False,  # not rational
+        data_obj,
+    )
+
+    if debug_curve:
+        curve_transform: str = cmds.curve(
+            name=f"{mesh_shape}_SplineWeightsDebugCurve",
+            point=[
+                (cv_position.x, cv_position.y, cv_position.z)
+                for cv_position in extended_cv_positions
+            ],
+            periodic=periodic,
+            knot=maya_knots,
+            degree=degree,
+            worldSpace=True,
+        )
+
+    # get the MDagPaths
+    msel: om2.MSelectionList = om2.MSelectionList()
+    msel.add(mesh_shape)
+    mesh_dag: om2.MDagPath = msel.getDagPath(0)
+
+    # make the function set and get the points
+    fn_mesh: om2.MFnMesh = om2.MFnMesh(mesh_dag)
+
+    # get the points in world space
+
+    mesh_points: MPointArray = get_mesh_points(fn_mesh=fn_mesh, vertex_indices=vertex_indices)
+
+    # iterate over the points and get the closest parameter
+    parameters: list[float] = []
+    for i, point in enumerate(mesh_points):
+        parameter: float = fn_curve.closestPoint(point, space=om2.MSpace.kObject)[1]
+        parameters.append(parameter)
+
+    spline_weights_per_vertex: list[list[tuple[Any, float]]] = spline.get_weights_along_spline(
+        cvs=extended_cv_transforms, parameters=parameters, degree=degree, knots=knots
+    )
+
+    return spline_weights_per_vertex
+
+
+def get_mesh_surface_weights(
+    mesh_shape: str,
+    surface_shape: str,
+    influence_transforms: list[str],
+    degree: int = 2,
+    vertex_indices: list[int] | None = None,
+) -> list[list[tuple[Any, float]]]:
+    """
+    Calculates weights for each vertex on a mesh relative to a given NURBS surface.
+
+    The function projects each mesh vertex onto the surface to compute the closest parameter value,
+    then calculates De Boor basis weights using the parameter.
+
+    Args:
+        mesh_shape (str): The name of the mesh shape node (not the transform).
+        surface_shape (str): The name of the NUBRS surface shape node to use for weights splitting.
+        influence_transforms (list[str]): A list of transform names that the weights need to be split along.
+        degree (int, optional): Degree of the spline curve. Defaults to 2.
+        vertex_indices: A list of vertex indices to output weights for.
+        debug_curve: If True a curve node will be created for debug purposes.
+    Returns:
+        list[list[tuple[Any, float]]]: A list of weights per vertex. Each entry is a list of tuples,
+        where each tuple contains a influence transform and its corresponding influence weight on the vertex.
+    """
+    msel: MSelectionList = MSelectionList()
+    msel.add(mesh_shape)
+    msel.add(surface_shape)
+    mesh_dag: MDagPath = msel.getDagPath(0)
+    surface_dag: MDagPath = msel.getDagPath(1)
+
+    # make the function sets and data on the surface
+    fn_mesh: om2.MFnMesh = om2.MFnMesh(mesh_dag)
+    fn_surface = MFnNurbsSurface(surface_dag)
+    surface_uv_spans: int = cmds.getAttr(f"{surface_shape}.spansUV")[0][0]
+    surface_u_range: tuple[float, float] = cmds.getAttr(f"{surface_shape}.minMaxRangeU")[0]
+    surface_v_range: tuple[float, float] = cmds.getAttr(f"{surface_shape}.minMaxRangeV")[0]
+
+    # get the points in world space
+    mesh_points: MPointArray = get_mesh_points(fn_mesh=fn_mesh, vertex_indices=vertex_indices)
+
+    # iterate over the points and get the closest parameter
+    parameters: list[float] = []
+    for i, point in enumerate(mesh_points):
+        parameter: float = fn_surface.closestPoint(point, space=om2.MSpace.kObject)[2]
+        new_parameter = remap(
+            input=parameter,
+            input_range=(surface_v_range),
+            output_range=(0, len(influence_transforms)),
+        )
+        parameters.append(new_parameter)
+
+    spline_weights_per_vertex: list[list[tuple[Any, float]]] = spline.get_weights_along_spline(
+        cvs=influence_transforms, parameters=parameters, degree=degree
+    )
+
+    return spline_weights_per_vertex
+
+
+def get_weights_of_influence(skin_cluster: str, joint: str) -> dict[int, float]:
+    sel: MSelectionList = om2.MSelectionList()
+    sel.add(skin_cluster)
+    sel.add(joint)
+    skin_cluster_mob: MObject = sel.getDependNode(0)
+    joint_dag: om2.MDagPath = sel.getDagPath(1)
+    mfn_skin_cluster: oma.MFnSkinCluster = oma.MFnSkinCluster(skin_cluster_mob)
+
+    components: MSelectionList
+    weights: list[float]
+    components, weights = mfn_skin_cluster.getPointsAffectedByInfluence(joint_dag)
+
+    index_weights: dict[int, float] = {}
+    affected_indices: list[int] = []
+    for i in range(components.length()):
+        dag_path, component = components.getComponent(i)
+        fn_comp: MFnSingleIndexedComponent = om2.MFnSingleIndexedComponent(component)
+        indices: list[int] = fn_comp.getElements()
+        affected_indices.extend(indices)
+    for index, weight in zip(affected_indices, weights):
+        index_weights[index] = weight
+
+    return index_weights
+
+
+def get_weights(shape: str, skin_cluster: str | None = None) -> dict[int, dict[str, float]]:
+    """
+    Retrieves skinCluster weights for all vertices of the given mesh shape.
+
+    This function returns the non-zero skin weights per vertex, mapped to their
+    associated influence (joint) names. It uses the Maya API to efficiently extract
+    weights from the skinCluster deformer attached to the mesh.
+
+    Args:
+        shape (str): The name of the mesh shape node to query. Must have a skinCluster.
+        skin_cluster: Optional specification of which skinCluster node.
+
+    Returns:
+        dict[int, dict[str, float]: A dictionary mapping each vertex index to a list of
+        (joint_name, weight) dictionaries, including only non-zero weights.
+    """
+    if not skin_cluster:
+        skin_cluster: str | None = get_skin_cluster(shape)
+        if not skin_cluster:
+            raise RuntimeError(f"No skinCluster on {shape}")
+
+    sel: MSelectionList = om2.MSelectionList()
+    sel.add(shape)
+    sel.add(skin_cluster)
+    shape_dag: om2.MDagPath = sel.getDagPath(0)
+    skin_cluster_mob: MObject = sel.getDependNode(1)
+    mfn_skin_cluster: oma.MFnSkinCluster = oma.MFnSkinCluster(skin_cluster_mob)
+
+    influence_paths = mfn_skin_cluster.influenceObjects()
+    influence_map = {
+        mfn_skin_cluster.indexForInfluenceObject(path): om2.MFnDependencyNode(path.node()).name()
+        for path in influence_paths
+    }
+
+    # Create vertex component
+    num_verts: int = om2.MFnMesh(shape_dag).numVertices
+    fn_comp: MFnSingleIndexedComponent = om2.MFnSingleIndexedComponent()
+    vtx_components = fn_comp.create(om2.MFn.kMeshVertComponent)
+    fn_comp.addElements(list(range(num_verts)))
+
+    flat_weights: list[float]
+    influence_count: int
+    flat_weights, influence_count = mfn_skin_cluster.getWeights(shape_dag, vtx_components)
+
+    weights_dict: dict[int, dict[str, float]] = {}
+    for vtx_id in range(num_verts):
+        start_index: int = vtx_id * influence_count
+        vtx_weights: dict[int, float] = {}
+        for i in range(influence_count):
+            weight_value = flat_weights[start_index + i]
+            if weight_value > 1e-6:
+                influence_name = influence_map.get(i)
+                if influence_name:
+                    vtx_weights[influence_name] = weight_value
+        if vtx_weights:
+            weights_dict[vtx_id] = vtx_weights
+
+    return weights_dict
+
+
+def set_weights(
+    shape: str,
+    new_weights: dict[int, dict[str, float]],
+    skin_cluster: str | None = None,
+    normalize=True,
+) -> None:
+    """
+    Sets skinCluster weights for all vertices of the given mesh shape.
+
+    Args:
+        shape (str): The name of the mesh shape node to query. Must have a skinCluster.
+        new_weights (dict): Dictionary of vertex weights: {vtx_index: {influence_name: weight}}.
+        skin_cluster: Optional specification of which skinCluster node.
+        normalize: When True, the given weights will additionally be normalized.
+    """
+    if not skin_cluster:
+        skin_cluster: str | None = get_skin_cluster(shape)
+        if not skin_cluster:
+            raise RuntimeError(f"No skinCluster on {shape}")
+
+    # Ensure all influences in new_weights exist on the skinCluster
+    all_influences_in_data: set[str] = set(
+        influence_name
+        for vtx_weights in new_weights.values()
+        for influence_name in vtx_weights.keys()
+    )
+
+    existing_influences = set(cmds.skinCluster(skin_cluster, query=True, influence=True) or [])
+
+    # Add missing influences to the skinCluster
+    influences_to_add: list[str] = sorted(all_influences_in_data - existing_influences)
+    cmds.skinCluster(skin_cluster, edit=True, addInfluence=influences_to_add, weight=0.0)
+
+    # Get the actual MFnSkinCluster to apply weights with
+    sel: MSelectionList = om2.MSelectionList()
+    sel.add(shape)
+    sel.add(skin_cluster)
+    shape_dag: om2.MDagPath = sel.getDagPath(0)
+    skin_cluster_mob: MObject = sel.getDependNode(1)
+    mfn_skin_cluster: oma.MFnSkinCluster = oma.MFnSkinCluster(skin_cluster_mob)
+
+    # Get influence indices
+    influence_paths: MDagPathArray = mfn_skin_cluster.influenceObjects()
+    influence_indices: dict[str, int] = {
+        om2.MFnDependencyNode(path.node()).name(): mfn_skin_cluster.indexForInfluenceObject(path)
+        for path in influence_paths
+    }
+
+    ordered_influences: list[tuple[str, int]] = sorted(
+        influence_indices.items(), key=lambda item: item[1]
+    )
+    ordered_influence_names = [name for name, index in ordered_influences]
+    ordered_indices_only = [index for name, index in ordered_influences]
+    num_influences: int = len(ordered_influence_names)
+
+    influence_indices_array: MIntArray = om2.MIntArray()
+    for index in ordered_indices_only:
+        influence_indices_array.append(index)
+
+    # Create vertex component
+    num_verts: int = om2.MFnMesh(shape_dag).numVertices
+    fn_comp: MFnSingleIndexedComponent = om2.MFnSingleIndexedComponent()
+    vtx_components = fn_comp.create(om2.MFn.kMeshVertComponent)
+    fn_comp.addElements(list(range(num_verts)))
+
+    # Allocate list for weights
+    weights_flat: list[float] = [0.0] * (num_verts * num_influences)
+
+    # Fill weights list from new_weights dict
+    for vtx_id, vtx_weights in new_weights.items():
+        base_index = vtx_id * num_influences
+        for influence_name, weight in vtx_weights.items():
+            influence_index = influence_indices[influence_name]
+            weights_flat[base_index + influence_index] = weight
+
+    weights_array = om2.MDoubleArray(weights_flat)
+
+    if not mfn_skin_cluster.object().hasFn(om2.MFn.kSkinClusterFilter):
+        raise RuntimeError(f"Selected node {skin_cluster} is not a skinCluster")
+
+    # Set weights
+    mfn_skin_cluster.setWeights(
+        shape_dag,
+        vtx_components,
+        influence_indices_array,
+        weights_array,
+        normalize=normalize,
+        returnOldWeights=False,
+    )
+
+
+def set_ng_layer_weights(
+    shape: str,
+    new_weights: dict[int, dict[str, float]],
+    layer_name: str = "Generated Weights",
+    skin_cluster: str | None = None,
+    normalize: bool = True,
+) -> None:
+    """
+    Applies split weights to a new ngSkinTools2 layer.
+    WARNING: This function is EXTREMELY slow for large amounts of influences
+    (internally calls the Ng API for each influence in loop).
+
+    Args:
+        shape (str): Name of the mesh shape (must be bound to a skinCluster with ngSkinTools2).
+        new_weights (dict): Vertex weights as {vtx_index: {influence_name: weight}}.
+        layer_name (str): Name for the new layer.
+        normalize (bool): Whether to normalize weights per vertex.
+    """
+    ensure_ng_initialized()
+    if not skin_cluster:
+        skin_cluster: str | None = get_skin_cluster(shape)
+        if not skin_cluster:
+            raise RuntimeError(f"No skinCluster on {shape}")
+
+    normalize_value: int = cmds.getAttr(f"{skin_cluster}.normalizeWeights")
+    cmds.setAttr(f"{skin_cluster}.normalizeWeights", 0)
+
+    sel: om2.MSelectionList = om2.MSelectionList()
+    sel.add(shape)
+    sel.add(skin_cluster)
+    shape_dag: om2.MDagPath = sel.getDagPath(0)
+    skin_cluster_mob: om2.MObject = sel.getDependNode(1)
+    mfn_skin_cluster: oma.MFnSkinCluster = oma.MFnSkinCluster(skin_cluster_mob)
+
+    # Get influence indices
+    influence_paths: MDagPathArray = mfn_skin_cluster.influenceObjects()
+    influence_indices: dict[str, int] = {
+        om2.MFnDependencyNode(path.node()).name(): mfn_skin_cluster.indexForInfluenceObject(path)
+        for path in influence_paths
+    }
+    if not ng.get_layers_enabled(skin_cluster):
+        init_layers(shape)
+    layers: ng.Layers = ng.Layers(skin_cluster)
+
+    # Ensure all influences in new_weights exist on the skinCluster
+    all_influences_in_data: set[str] = set(
+        influence_name
+        for vtx_weights in new_weights.values()
+        for influence_name in vtx_weights.keys()
+    )
+
+    existing_influences = set(cmds.skinCluster(skin_cluster, query=True, influence=True) or [])
+
+    # Add missing influences to the skinCluster
+    for influence in sorted(all_influences_in_data - existing_influences):
+        if not cmds.objExists(influence):
+            raise RuntimeError(f"Influence '{influence}' does not exist in the scene.")
+        cmds.skinCluster(skin_cluster, edit=True, addInfluence=influence, weight=0.0)
+
+    num_verts: int = om2.MFnMesh(shape_dag).numVertices
+
+    # Organize weights by influence rather than vertex
+    weights_by_influence: dict[str, dict[int, float]] = {}
+    for vertex in new_weights.keys():
+        influence_weights: dict[str, float] = new_weights[vertex]
+        for influence, weight in influence_weights.items():
+            if influence in weights_by_influence:
+                weights_by_influence[influence][vertex] = weight
+            else:
+                weights_by_influence[influence] = {vertex: weight}
+
+    # Create and select new layer
+    new_layer: Layer = get_or_create_ng_layer(skin_cluster=skin_cluster, layer_name=layer_name)
+
+    # Build vertex weight arrays
+    for influence, id in influence_indices.items():
+        weights_list: list[float] = [
+            weights_by_influence.get(influence, {}).get(i, 0) for i in range(num_verts)
+        ]
+        new_layer.set_weights(id, weights_list)
+
+    cmds.setAttr(f"{skin_cluster}.normalizeWeights", normalize_value)
+
+
+def split_weights(
+    mesh: str,
+    joint_split_dict: dict[str, list[str]],
+    degree: int = 2,
+    periodic: bool = False,
+    add_ng_layer: bool = True,
+) -> None:
+    """
+    Redistributes skin weights from specified original joints to sets of split joints using spline-based falloff.
+
+    This function is designed to reassign weights from a set of original joints (e.g., proxy drivers)
+    across multiple split joints (e.g., spline-based deformation chains like ribbons or bendy limbs).
+    The redistribution is done by computing falloff weights along a spline built from the split joints'
+    world positions and distributing the original joint's influence accordingly.
+
+    Args:
+        mesh: The transform node of the skinned mesh.
+        joint_split_dict (dict[str, list[str]]): A mapping of original joint names to a list of split joints
+            that will receive the redistributed weights. Each key-value pair is one redistribution group.
+        degree: Degree of the spline used for spatial weight interpolation. Defaults to 2.
+        periodic: If True the curve generated to split the weights will be a periodic one.
+        add_ng_layer: If True, the new weights are added to a new ngSkinTools2 layer called "Split Weights"
+            (Warning!!! This is very slow)
+    """
+    # get the shape node
+    mesh_shape: str = cmds.listRelatives(mesh, shapes=True)[0]
+
+    # get the skinCluster and weights
+    skin_cluster: str | None = get_skin_cluster(mesh)
+    original_weights: dict[int, dict[str, float]] = get_weights(
+        shape=mesh_shape, skin_cluster=skin_cluster
+    )
+
+    # Copy the original weights for modification.
+    new_weights: dict[int, dict[str, float]] = {
+        vtx: weights.copy() for vtx, weights in original_weights.items()
+    }
+
+    # Organize weights by influence rather than vertex
+    weights_by_influence: dict[str, dict[int, float]] = {}
+    for vertex, influence_weights in original_weights.items():
+        for influence, weight in influence_weights.items():
+            if influence in weights_by_influence:
+                weights_by_influence[influence][vertex] = weight
+            else:
+                weights_by_influence[influence] = {vertex: weight}
+
+    # Process each original joint → split joints mapping
+    for original_joint, split_joints_list in joint_split_dict.items():
+        vertex_weights: dict[int, float] = {}
+        if original_joint in weights_by_influence:
+            vertex_weights: dict[int, float] = weights_by_influence[original_joint]
+
+        # Filter for vertices actually influenced by this joint (less inputs for the spline weight algorithm)
+        influenced_vertex_weights: list[tuple[int, float]] = []
+        influenced_vertices: list[int] = []
+        for vertex, weight in vertex_weights.items():
+            if weight > 0:
+                influenced_vertex_weights.append((vertex, weight))
+                influenced_vertices.append(vertex)
+
+        # Get spline-based weights for each influenced vertex
+        spline_weights: list[list[tuple[Any, float]]] = get_mesh_spline_weights(
+            mesh_shape=mesh_shape,
+            cv_transforms=split_joints_list,
+            degree=degree,
+            periodic=periodic,
+            vertex_indices=influenced_vertices,
+        )
+
+        # Redistribute the weights
+        for i, (vertex, original_weight) in enumerate(influenced_vertex_weights):
+            # Remove original joint weight
+            new_weights[vertex][original_joint] = 0.0
+
+            # Add redistributed weights to split joints
+            for influence, spline_weight in spline_weights[i]:
+                if influence not in new_weights[vertex]:
+                    new_weights[vertex][influence] = 0.0
+                new_weights[vertex][influence] += spline_weight * original_weight
+
+    if add_ng_layer:
+        set_ng_layer_weights(
+            shape=mesh_shape,
+            new_weights=new_weights,
+            skin_cluster=skin_cluster,
+            normalize=True,
+            layer_name="Split Weights",
+        )
+    else:
+        set_weights(
+            shape=mesh_shape, new_weights=new_weights, skin_cluster=skin_cluster, normalize=True
+        )
+
+
+def visualize_weights_on_mesh(
+    mesh_shape: str,
+    weights_per_vertex: list[list[tuple[Any, float]]],
+    influence_colors: dict[Any, om2.MColor],
+) -> None:
+    """
+    Helper to assign weighted vertex colors to a mesh.
+    """
+
+    # make sure the target shape can show vertex colors
+    cmds.setAttr(f"{mesh_shape}.displayColors", 1)
+    cmds.setAttr(f"{mesh_shape}.displayColorChannel", "Diffuse", type="string")
+
+    # get the MDagPaths
+    msel: om2.MSelectionList = om2.MSelectionList()
+    msel.add(mesh_shape)
+    mesh_dag: om2.MDagPath = msel.getDagPath(0)
+
+    # make the function set and get the points
+    fn_mesh: om2.MFnMesh = om2.MFnMesh(mesh_dag)
+
+    # get the points in world space
+    mesh_points: om2.MPointArray = fn_mesh.getPoints(space=om2.MSpace.kWorld)
+
+    vertex_colors: list[om2.MColor] = []
+    vertex_indices: list[int] = []
+
+    # iterate over the points and assign colors
+    for i, point in enumerate(mesh_points):
+        point_color: om2.MColor = om2.MColor([0, 0, 0])
+        weights: list[tuple[Any, float]] = weights_per_vertex[i]
+        for transform, weight in weights:
+            point_color += influence_colors[transform] * weight
+        point_color_tuple: tuple[float, float, float, float] = tuple(point_color.getColor())
+        point_color_rgb = color.oklab_to_linear_srgb(color=point_color_tuple)
+        point_color = om2.MColor(point_color_rgb)
+        vertex_colors.append(point_color)
+        vertex_indices.append(i)
+        # fn_mesh.setVertexColor(point_color, i)
+
+    # Set all vertex colors at once
+    fn_mesh.setVertexColors(vertex_colors, vertex_indices)
+
+
+def visualize_split_weights(mesh: str, cv_transforms: list[str], degree: int = 2) -> None:
+    """
+    Visualizes spline-based weights as vertex colors on a mesh.
+
+    The function assigns a unique color to each CV based on its hashed position. Then, for each vertex
+    on the mesh, it computes the weighted color by blending CV colors using the spline-based weights.
+    These vertex colors are set on the mesh and can be used to visually verify how influence weights
+    fall off across the mesh.
+
+    Args:
+        mesh (str): The mesh transform node to visualize on.
+        cv_transforms (list[str]): A list of transform names representing the CVs of the curve.
+        degree (int, optional): Degree of the spline curve. Defaults to 2.
+
+    Returns:
+        None
+    """
+
+    # get the shape node
+    mesh_shape: str = cmds.listRelatives(mesh, shapes=True)[0]
+    cv_positions: list[list[float, float, float]] = []
+    cv_colors: dict[str, om2.MColor] = {}
+    color_spread: float = 30
+    for index, transform in enumerate(cv_transforms):
+        position: list[float, float, float] = cmds.xform(
+            transform, query=True, worldSpace=True, translation=True
+        )
+        cv_positions.append(position)
+        position_tuple: tuple[float, float, float] = tuple(position)
+
+        lab_color: om2.MColor = om2.MColor(
+            color.lch_to_lab(color=(0.7, 0.2, (index * color_spread) % 360))
+        )
+        cv_colors[transform] = lab_color
+
+    # get the shape nodes
+    mesh_shape: str = cmds.listRelatives(mesh, shapes=True)[0]
+
+    spline_weights_per_vertex: list[list[tuple[Any, float]]] = get_mesh_spline_weights(
+        mesh_shape=mesh_shape, cv_transforms=cv_transforms, degree=degree
+    )
+    visualize_weights_on_mesh(
+        mesh_shape=mesh_shape,
+        weights_per_vertex=spline_weights_per_vertex,
+        influence_colors=cv_colors,
+    )
+    return
+
+
+def visualize_surface_split_weights(
+    mesh: str, surface: str, num_influences: int = 9, degree: int = 2
+) -> None:
+    """
+    Visualizes nurbs surface based weights as vertex colors on a mesh.
+
+    The function assigns a unique color to each CV based on its hashed position. Then, for each vertex
+    on the mesh, it computes the weighted color by blending CV colors using the spline-based weights.
+    These vertex colors are set on the mesh and can be used to visually verify how influence weights
+    fall off across the mesh.
+
+    Args:
+        mesh (str): The mesh transform node to visualize on.
+        surface (str): The NURBS surface to use for getting UV values.
+        num_influences (int): The number of imaginary "influences" to split weights along.
+        degree (int, optional): Degree of the spline curve. Defaults to 2.
+
+    Returns:
+        None
+    """
+    # get the shape nodes
+    mesh_shape: str = cmds.listRelatives(mesh, shapes=True)[0]
+    surface_shape: str = cmds.listRelatives(surface, shapes=True)[0]
+
+    influences = range(num_influences)
+    influence_colors: dict[str, MColor] = {}
+
+    color_spread: float = 30
+    for index, influence in enumerate(influences):
+        lab_color: MColor = MColor(color.lch_to_lab(color=(0.7, 0.2, (index * color_spread) % 360)))
+        influence_colors[influence] = lab_color
+
+    surface_weights_per_vertex: list[list[tuple[Any, float]]] = get_mesh_surface_weights(
+        mesh_shape=mesh_shape,
+        surface_shape=surface_shape,
+        influence_transforms=influences,
+        degree=degree,
+    )
+
+    visualize_weights_on_mesh(
+        mesh_shape=mesh_shape,
+        weights_per_vertex=surface_weights_per_vertex,
+        influence_colors=influence_colors,
+    )
+    return
