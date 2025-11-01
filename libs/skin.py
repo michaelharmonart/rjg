@@ -43,6 +43,10 @@ def get_skin_cluster(mesh: str) -> str | None:
     skin_clusters = cmds.ls(history, type="skinCluster")
     return skin_clusters[0] if skin_clusters else None
 
+def get_skin_clusters(mesh: str) -> list[str] | None:
+    history = cmds.listHistory(mesh, pdo=True) or []
+    skin_clusters = cmds.ls(history, type="skinCluster")
+    return skin_clusters if skin_clusters else None
 
 def ensure_ng_initialized() -> None:
     if not plugin.is_plugin_loaded():
@@ -619,6 +623,7 @@ def set_ng_layer_weights(
 def split_weights(
     mesh: str,
     joint_split_dict: dict[str, list[str]],
+    skin_cluster: str | None = None,
     degree: int = 2,
     periodic: bool = False,
     add_ng_layer: bool = True,
@@ -644,7 +649,8 @@ def split_weights(
     mesh_shape: str = mesh
 
     # get the skinCluster and weights
-    skin_cluster: str | None = get_skin_cluster(mesh)
+    if skin_cluster is None:
+        skin_cluster: str | None = get_skin_cluster(mesh)
     original_weights: dict[int, dict[str, float]] = get_weights(
         shape=mesh_shape, skin_cluster=skin_cluster
     )
@@ -716,24 +722,26 @@ def auto_split_all_weights(mesh_group: str, degree: int = 2, add_ng_layer: bool 
         mesh_group, allDescendents=True, type="mesh", noIntermediate=True
     )
     for mesh in meshes:
-        split_dict: dict[str, list[str]] = {}
-        skin_cluster: str | None = get_skin_cluster(mesh)
-        if skin_cluster is None:
+        
+        skin_clusters: list[str] | None = get_skin_clusters(mesh)
+        if skin_clusters is None:
             continue
-        influences: list[str] = get_mesh_influences(shape=mesh)
-        for influence in influences:
-            if cmds.objExists(f"{influence}.split_joints"):
-                value = cmds.getAttr(f"{influence}.split_joints")
-                evaluated = ast.literal_eval(value)
-                if not isinstance(evaluated, list):
-                    raise RuntimeError(
-                        f"{evaluated} should be a list of influences to split weights with."
-                    )
-                if len(evaluated) > degree + 1:
-                    split_dict[influence] = evaluated
-        if split_dict:
-            split_weights(mesh, joint_split_dict=split_dict, degree=degree, add_ng_layer=False)
-            print(f"Finished splitting {mesh} weights.")
+        for skin_cluster in skin_clusters:
+            split_dict: dict[str, list[str]] = {}
+            influences: list[str] = get_mesh_influences(shape=mesh, skin_cluster=skin_cluster)
+            for influence in influences:
+                if cmds.objExists(f"{influence}.split_joints"):
+                    value = cmds.getAttr(f"{influence}.split_joints")
+                    evaluated = ast.literal_eval(value)
+                    if not isinstance(evaluated, list):
+                        raise RuntimeError(
+                            f"{evaluated} should be a list of influences to split weights with."
+                        )
+                    if len(evaluated) > degree + 1:
+                        split_dict[influence] = evaluated
+            if split_dict:
+                split_weights(mesh, joint_split_dict=split_dict, skin_cluster=skin_cluster, degree=degree, add_ng_layer=False)
+                print(f"Finished splitting {skin_cluster} weights on {mesh}.")
 
 
 def visualize_weights_on_mesh(
