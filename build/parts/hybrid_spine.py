@@ -35,6 +35,7 @@ class HybridSpine(rModule.RigModule):
         joint_num: int = 5,
         mid_tangent: float = 1 / 3,
         bend_tangent: float = 1 / 3,
+        split_weights: bool = False,
     ):
         """
         Builds a hybrid FK/IK spline-based spine rig with bend and twist.
@@ -56,6 +57,8 @@ class HybridSpine(rModule.RigModule):
                 relative to the spine length.
             bend_tangent (float, optional): The distance from the chest_pivot_guide to the
                spline control point that drivers the mid control, relative to the spine length.
+            split_weights (bool): If True, the first joint in the spine will be given an attribute for 
+                automatic spline weight splitting at the end of the rig build.
         """
         super().__init__(
             side=side,
@@ -82,6 +85,7 @@ class HybridSpine(rModule.RigModule):
         self.base_name = self.part + "_" + self.side
         self.mid_tangent: float = mid_tangent
         self.bend_tangent: float = bend_tangent
+        self.split_weights: bool = split_weights
         self.create_module()
 
     def create_module(self):
@@ -485,6 +489,12 @@ class HybridSpine(rModule.RigModule):
         mc.parent(spine_chain.joints[0], cog_chain.joints[0], relative=True)
         self.bind_joints = cog_chain.joints + spine_chain.joints
         self.tag_bind_joints(self.bind_joints)
+
+        if self.split_weights:
+            split_joint: str = self.bind_joints[0]
+            split_joints: list[str] = self.bind_joints
+            mc.addAttr(split_joint, longName="split_joints", dataType="string")
+            mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
 
     def compatibility_transforms(self) -> None:
         # These are needed until we refactor the modules to actually be modular instead of having hardcoded connections between each other.

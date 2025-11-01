@@ -181,9 +181,10 @@ class SplineTail(rModule.RigModule, rFk.Fk):
                 lastjnt = bindjnt
             else:
                 lastjnt = bindjnt
-
-                
-
+        split_joint: str = bind_joints[0]
+        split_joints: list[str] = bind_joints
+        mc.addAttr(split_joint, longName="split_joints", dataType="string")
+        mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
 
         self.tag_bind_joints(bind_joints)
 
