@@ -106,7 +106,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             bend_tangent=0.1,
             joint_num=7,
         )
-    elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer']:
+    elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer', 'SharkGuy']:
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
@@ -128,6 +128,29 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             spine_end_guide="Spine2",
             ctrl_scale=1.5,
             joint_num=7,
+        )
+    elif character == 'Sharkguy':
+        hip = rBuild.build_module(
+            module_type="hip",
+            side="M",
+            part="COG",
+            guide_list=["Hips"],
+            ctrl_scale=50,
+            cog_shape="quad_arrow",
+            waist_shape="circle",
+            generate_waist=False,
+        )
+        spine = rBuild.HybridSpine(
+            side="M",
+            part="spine",
+            base_guide="Hips",
+            hip_pivot_guide="HipPivot",
+            mid_guide="Spine",
+            chest_pivot_guide="Spine",
+            upper_chest_pivot_guide="Spine1",
+            spine_end_guide="Spine2",
+            ctrl_scale=1.5,
+            joint_num=5,
         )
     else:
         chest = rBuild.build_module(module_type='chest', side='M', part='chest', guide_list=['Spine2'], ctrl_scale=70, chest_shape='circle', spinejnt_count = 4 if character not in ['Jett', 'Blitz', 'Susaka', 'Drummer', 'NPC', 'Luciana', 'Fisherman'] else 6)
@@ -585,7 +608,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.parent('root_root_JNT', 'SKEL')
         mc.parent('root_M_JNT', 'faceRoot_JNT', 'root_root_JNT')
 
-    if character == 'Gretchen':
+
         import rjg.build_scripts.Gretchen_misc as rc
         reload(rc)
 
@@ -721,6 +744,25 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if pp and not_previs and not bony:
         import rjg.libs.util as rUtil
         rUtil.import_poseInterpolator(pp)
+
+        mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenShirtPoses.shp', at = True, name = 'Shirt_Edits')
+        mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenPantsPoses.shp', at = True, name = 'Pants_Edits')
+
+        pose_edit_shapes = mc.listAttr('Pose_Edits' + '.w', m=True)
+        pants_edit_shapes = mc.listAttr('Pants_Edits' + '.w', m=True)
+        shirt_edit_shapes = mc.listAttr('Shirt_Edits' + '.w', m=True)
+
+
+        for shapes in pose_edit_shapes:
+            for edits in pants_edit_shapes:
+                if shapes == edits:
+                    mc.connectAttr('Pose_Edits.' + shapes, 'Pants_Edits.' + edits)
+
+        for shapes in pose_edit_shapes:
+            for edits in shirt_edit_shapes:
+                if shapes == edits:
+                    mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
+
         
     if character == 'Rayden':
         mc.connectAttr('cbow_rev.outputX', 'S_Crossbow:crossbow.visibility')
@@ -1009,7 +1051,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Sharkguy':
         import sys
 
-        from rjg.build_scipts.Sharkguy_Build_Scripts import ribbons
+        from rjg.build_scripts.Sharkguy_Build_Scripts import ribbons
         ribbons()
         bindjoints = mc.select(mc.listRelatives("SKEL", ad=True, type="joint"))
         mc.select(f'{character}_UBM')
@@ -1229,6 +1271,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Domingo':
         for side in ['L', 'R']:
             mc.parentConstraint(f'arm_{side}_05_JNT', f'Tarm_{side}_04_{side}_{side}_CTRL_CNST_GRP', mo=True)
+
 
 
 

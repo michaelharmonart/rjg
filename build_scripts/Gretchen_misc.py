@@ -36,28 +36,22 @@ def Gretchen_extras(skin_src, skin_trg_grp):
 
     sk_g = []
     
-    #geo = ['belt', 'buckle', 'loopleather', 'buckle2', 'beltloops', 'frontpockets', 'sidepocket', 'backpockets', 
-    #       'button', 'button3', 'thread1', 'thread', 'honey_pin', 'hinge', 'frame', 'glasses', 
-    #       'lenses', 'topteeth', 'tounge', 'bottomteeth', 'RightEye', 'RightPupil', 'RightCornea', 'LeftEye', 'LeftCornea', 
-    #       'LeftPupil', 'earrrings', 'eyelashes', 'eyebrows', 'hair', 'bandanna']
-    
     #geo = ['bandanna', 'loopleather2', 'buckle2', 'buckle', 'beltloops', 'front_pockets', 'side_pocket', 'backpockets', 'button', 
     #       'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
     #       'LeftPupil', 'eyelashes', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
     #       'topteeth', 'tounge']
     
-    geo = ['bandanna', 'loopleather1', 'buckle2', 'buckle', 'beltloops', 'side_pocket', 'button', 
+    geo = ['bandanna', 'loopleather1', 'buckle2', 'buckle', 'beltloops', 'button', 
             'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
             'LeftPupil', 'topeyelashes', 'bottomlash', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
-            'topteeth', 'tounge']
+            'topteeth', 'tounge', 'boots']
 
 
-    classic_sk = []
+    classic_sk = ['pants', 'shirt', 'gloves']
 
     #rUtil.create_pxWrap('shirt1', 'pantsCreased1', 'boots', 'Gretchen_UBM')
-    rUtil.create_pxWrap('shirt1', 'pants', 'boots', 'front_pockets', 'backpockets', 'gloves', 'Gretchen_UBM')
+    rUtil.create_pxWrap('front_pockets', 'backpockets', 'side_pocket', 'pants')
     #rUtil.create_pxWrap('VestFluff', 'Clothes')
-    #mc.parent('Fingernails', 'Rayden_EXTRAS')
 
     for g in geo:
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]
@@ -72,6 +66,25 @@ def Gretchen_extras(skin_src, skin_trg_grp):
         #pass
         mc.copySkinWeights(ss='skinCluster1', ds=g, surfaceAssociation='closestPoint', noMirror=True, )
         #rUtil.create_pxWrap([g, 'Rayden_UBM'])
+
+    mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenShirtPoses.shp', at = True, name = 'Shirt_Edits')
+    mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenPantsPoses.shp', at = True, name = 'Pants_Edits')
+
+    pose_edit_shapes = mc.listAttr('Pose_Edits' + '.w', m=True)
+    pants_edit_shapes = mc.listAttr('Pants_Edits' + '.w', m=True)
+    shirt_edit_shapes = mc.listAttr('Shirt_Edits' + '.w', m=True)
+
+
+    for shapes in pose_edit_shapes:
+        for edits in pants_edit_shapes:
+            if shapes == edits:
+                mc.connectAttr('Pose_Edits.' + shapes, 'Pants_Edits.' + edits)
+
+    for shapes in pose_edit_shapes:
+        for edits in shirt_edit_shapes:
+            if shapes == edits:
+                mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
+
 
    
 
