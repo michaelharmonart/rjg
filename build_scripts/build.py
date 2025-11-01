@@ -31,6 +31,7 @@ def ensure_ng_initialized():
     if not plugin.is_plugin_loaded():
         plugin.load_plugin()
 
+from rjg.libs.skin import auto_split_all_weights
 
 
 ### Build Begins ###
@@ -1279,7 +1280,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         for side in ['L', 'R']:
             mc.parentConstraint(f'arm_{side}_05_JNT', f'Tarm_{side}_04_{side}_{side}_CTRL_CNST_GRP', mo=True)
 
-
+    #Skin Splitting 
+    
+    if character in ["Bobo"]:
+        auto_split_all_weights("MODEL")
 
 
 def create_groom_bust(model):
