@@ -1282,9 +1282,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     #Skin Splitting 
     
-    if character in ["Bobo"]:
-        auto_split_all_weights("MODEL")
-
+    if character in ['Bobo', 'Luciana']:
+        auto_split_all_weights('MODEL')
+        
 
 def create_groom_bust(model):
     mc.select(f'{model}.f[0:2041]',

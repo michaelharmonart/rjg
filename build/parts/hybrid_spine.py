@@ -493,7 +493,7 @@ class HybridSpine(rModule.RigModule):
         if self.split_weights:
             split_joint: str = self.bind_joints[0]
             split_joints: list[str] = self.bind_joints
-            mc.addAttr(self.bind_joints[0], longName="split_joints", dataType="string")
+            mc.addAttr(split_joint, longName="split_joints", dataType="string")
             mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
 
     def compatibility_transforms(self) -> None:
