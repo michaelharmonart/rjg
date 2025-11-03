@@ -58,7 +58,7 @@ def get_maya_main_window():
     return wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
 
 # --- Production Options ---
-Productions = ['Select Production', 'Bobo', 'DragonKisser', 'Custom']
+Productions = ['Select Production', 'bobo', 'DragonKisser', 'Custom']
 
 # --- Dummy DB connection class (replace with your real one) ---
 
@@ -66,7 +66,7 @@ Productions = ['Select Production', 'Bobo', 'DragonKisser', 'Custom']
 def get_production(selected_production, conn: DB):
     asset_list = conn.get_asset_name_list(sorted=True)
     production = selected_production
-    if production == 'Bobo':
+    if production == 'bobo':
         gotten_list = asset_list
     elif production == 'DragonKisser':
         gotten_list = ['Luciana', 'Domingo', 'Lute']
@@ -150,7 +150,7 @@ class RiggedModelPublishUI(QtWidgets.QDialog):
         asset = self.asset_dropdown.currentText()
         production = self.production_dropdown.currentText()
         update_anim = self.export_checkbox.isChecked()
-        if production == 'Bobo':
+        if production == 'bobo':
             production_path = 'bobo'
         if production == 'DragonKisser':
             production_path = 'dragonkisser'

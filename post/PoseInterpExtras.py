@@ -38,6 +38,10 @@ def get_node_type(nodename='node', input_channel=None):
         output = f'output{axis}'
         extras = [f'input2{axis}']
 
+    elif nodetype == 'addDL':
+        terminal = False
+        output = f'output'
+
     # Other utility types
     else:
         terminal = False
@@ -286,6 +290,10 @@ def rebuild_graph_from_json(filepath=r"G:/bobo/character/Rigs/Domingo/Poses/pose
 #   🔹  Mirror Util
 # ==============================================================
 
+#import maya.cmds as mc
+#import json
+#import re
+
 def mirror_side_name(name):
     """Flip _L ↔ _R in any given name."""
     if "_L" in name:
@@ -294,8 +302,9 @@ def mirror_side_name(name):
         return name.replace("_R", "_L")
     return name
 
-def mirror_graph_from_json(json_path):
-    """Rebuilds the mirrored network in Maya from an existing JSON file."""
+
+def mirror_graph_from_json(json_path, modX=-1, modY=-1, modZ=-1):
+    """Rebuilds a mirrored network in Maya from a JSON file, reading extras correctly."""
     with open(json_path, 'r') as f:
         data = json.load(f)
 
@@ -309,25 +318,54 @@ def mirror_graph_from_json(json_path):
                 src_attr = f"{mirrored_interp}.{output_attr}"
                 dest_node = mirror_side_name(conn["to"].split('.')[0])
                 dest_attr = conn["to"].split('.')[1]
+                node_type = conn["nodeType"]
 
                 # ensure destination node exists
                 if not mc.objExists(dest_node):
-                    node_type = conn["nodeType"]
                     mc.createNode(node_type, name=dest_node)
 
-                # build connection
                 dest_full = f"{dest_node}.{dest_attr}"
+
+                # --- Handle extras properly ---
+                extras_data = conn.get("extras", {})
+                if isinstance(extras_data, dict):
+                    # If extras are stored as key:value pairs, apply them
+                    for extra_attr, value in extras_data.items():
+                        full_attr = f"{dest_node}.{extra_attr}"
+                        if mc.objExists(full_attr):
+                            try:
+                                mc.setAttr(full_attr, value)
+                            except:
+                                pass
+                elif isinstance(extras_data, list):
+                    # If extras are just attribute names, mark them keyable
+                    for extra_attr in extras_data:
+                        full_attr = f"{dest_node}.{extra_attr}"
+                        if mc.objExists(full_attr):
+                            try:
+                                mc.setAttr(full_attr, keyable=True)
+                            except:
+                                pass
+
+                # build main connection
                 if mc.objExists(src_attr) and mc.objExists(dest_full):
                     try:
                         mc.connectAttr(src_attr, dest_full, f=True)
                     except:
                         pass
 
-                # recursively build downstream
-                build_downstream_recursive(conn.get("downstream", []), mirrored=True)
+                # recursively connect downstream
+                build_downstream_recursive(
+                    conn.get("downstream", []),
+                    mirrored=True,
+                    modX=modX,
+                    modY=modY,
+                    modZ=modZ
+                )
 
-def build_downstream_recursive(downstream_list, mirrored=False):
-    """Recursively connect downstream nodes."""
+
+def build_downstream_recursive(downstream_list, mirrored=False, modX=-1, modY=1, modZ=1):
+    """Recursively connect downstream nodes and handle terminal translation mirroring."""
     for conn in downstream_list:
         src_node = mirror_side_name(conn["from"].split('.')[0]) if mirrored else conn["from"].split('.')[0]
         src_attr = conn["from"].split('.')[1]
@@ -335,19 +373,67 @@ def build_downstream_recursive(downstream_list, mirrored=False):
         dest_attr = conn["to"].split('.')[1]
         node_type = conn["nodeType"]
 
-        # ensure node exists
+        # ensure destination node exists
         if not mc.objExists(dest_node):
             mc.createNode(node_type, name=dest_node)
 
         src_full = f"{src_node}.{src_attr}"
         dest_full = f"{dest_node}.{dest_attr}"
 
-        if mc.objExists(src_full) and mc.objExists(dest_full):
+        # --- Apply extras if available ---
+        extras_data = conn.get("extras", {})
+        if isinstance(extras_data, dict):
+            for extra_attr, value in extras_data.items():
+                full_attr = f"{dest_node}.{extra_attr}"
+                if mc.objExists(full_attr):
+                    try:
+                        mc.setAttr(full_attr, value)
+                    except:
+                        pass
+
+        # --- Handle terminal joint translation mirroring ---
+        if conn["terminal"] and node_type == "joint" and dest_attr.startswith("translate"):
+            axis = dest_attr[-1].upper()
+            mult_node = f"{dest_node}_mirrorMult_{axis}"
+
+            if not mc.objExists(mult_node):
+                mult_node = mc.createNode("multiplyDivide", name=mult_node)
+
+            input1 = f"input1{axis}"
+            input2 = f"input2{axis}"
+            output_attr = f"output{axis}"
+
             try:
-                mc.connectAttr(src_full, dest_full, f=True)
+                mc.connectAttr(src_full, f"{mult_node}.{input1}", f=True)
             except:
                 pass
 
-        # recurse deeper
+            mult_value = {"X": modX, "Y": modY, "Z": modZ}[axis]
+            mc.setAttr(f"{mult_node}.{input2}", mult_value)
+
+            try:
+                mc.connectAttr(f"{mult_node}.{output_attr}", dest_full, f=True)
+            except:
+                pass
+
+        else:
+            # Normal connection
+            if mc.objExists(src_full) and mc.objExists(dest_full):
+                try:
+                    mc.connectAttr(src_full, dest_full, f=True)
+                except:
+                    pass
+
+        # --- Recursive call ---
         if conn.get("downstream"):
-            build_downstream_recursive(conn["downstream"], mirrored=mirrored)
+            build_downstream_recursive(
+                conn["downstream"],
+                mirrored=mirrored,
+                modX=modX,
+                modY=modY,
+                modZ=modZ
+            )
+
+
+# Example usage:
+#mirror_graph_from_json(r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator_data.json", modX=-1, modY=-1, modZ=-1)
