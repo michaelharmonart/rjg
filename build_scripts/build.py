@@ -1290,8 +1290,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     #Skin Splitting 
     
-    if character in ['Bobo', 'Luciana', 'Domingo']:
+    if character in ['Bobo', 'Luciana']:
         auto_split_all_weights('MODEL')
+    if character == 'Domingo':
+        auto_split_all_weights('tail')
         
 
 def create_groom_bust(model):
