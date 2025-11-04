@@ -220,7 +220,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character in ["Luciana"]:
         tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 13)], ctrl_scale=10, pad=2, IK_Spline=True)
         #jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
-        
+    
+    if character == 'Domingo':
+        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2, IK_Spline=True)
+
+
     if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy', 'Drummer']:
         for side in ['L', 'R']:
             from rjg.build.parts.UEeye import UEeye
@@ -1080,6 +1084,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.parentConstraint('neck_02_FK_M_CTRL', 'Fin01_M_M_CTRL_CNST_GRP', mo=True)
 
 
+    if character == 'Domingo':
+        #for g in ['tail']:
+        import_weights(geo='tail', path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+
     if character == 'Luciana':
         if mc.objExists('switch_CTRL'):
             mc.addAttr('switch_CTRL', longName='Neck_M_IKFK', attributeType='bool', keyable=True)
@@ -1282,7 +1290,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     #Skin Splitting 
     
-    if character in ['Bobo', 'Luciana']:
+    if character in ['Bobo', 'Luciana', 'Domingo']:
         auto_split_all_weights('MODEL')
         
 
