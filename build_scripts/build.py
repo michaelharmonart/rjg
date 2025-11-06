@@ -613,6 +613,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.parent('root_root_JNT', 'SKEL')
         mc.parent('root_M_JNT', 'faceRoot_JNT', 'root_root_JNT')
 
+        deformer = mc.deltaMush('shirt1')[0]
+        mc.setAttr(f"{deformer}.envelope", .5)
+        
+        deformer = mc.deltaMush('pants')[0]
+        mc.setAttr(f"{deformer}.envelope", .5)
+
 
         import rjg.build_scripts.Gretchen_misc as rc
         reload(rc)

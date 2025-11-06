@@ -304,6 +304,11 @@ def Clean_up_SculptJoints():
     try:        
         mc.setAttr("proximityWrap4.falloffScale", 100)
         mc.setAttr("proximityWrap4.smoothInfluences", 1)
+        for side in ['L', 'R']:
+            mc.delete(f'{side}_NLFold_grp_parentConstraint')
+            mc.disconnectAttr(f'{side}_NLFold_grp_parentConstraint1_clone.constraintTranslate', f'{side}_NLFold_grp.translate')
+            mc.disconnectAttr(f'{side}_NLFold_grp_parentConstraint1_clone.constraintRotate', f'{side}_NLFold_grp.rotate')
+            mc.parentConstraint(f'{side}_Lip_Corner_jnt_ctrl', f'{side}_NLFold_grp', mo=True)
     except:
         pass
 
