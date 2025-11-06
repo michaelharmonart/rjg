@@ -17,14 +17,33 @@ reload(rFk)
 
 
 class Foot(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, local_orient=False, model_path=None, guide_path=None, in_piv=None, out_piv=None, heel_piv=None, toe_piv=None):
+    def __init__(
+        self,
+        side=None,
+        part=None,
+        guide_list=None,
+        ctrl_scale=None,
+        local_orient=False,
+        model_path=None,
+        guide_path=None,
+        in_piv=None,
+        out_piv=None,
+        heel_piv=None,
+        toe_piv=None,
+        toe_roll_threshold: float = 0,
+    ):
         super(Foot, self).__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
-        self.__dict__.update(locals())
+        self.in_piv = in_piv
+        self.out_piv = out_piv
+        self.heel_piv = heel_piv
+        self.toe_piv = toe_piv
+        self.toe_roll_threshold: float = toe_roll_threshold
 
         if not self.toe_piv:
             self.toe_piv = self.guide_list[-1]
             
         self.create_module()
+        
 
     def create_module(self):
         super().create_module()
@@ -97,7 +116,7 @@ class Foot(rModule.RigModule):
 
         roll = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=0, keyable=True, name='roll')
         roll_max = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=30, min=0, keyable=True, name='rollMax')
-        #toe_roll = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=0, keyable=True, name='toeRoll')
+        toe_roll_max = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=self.toe_roll_threshold, keyable=True, name='toeRollMax')
         #heel_roll = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=0, keyable=True, name='heelRoll')
         bank = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=0, keyable=True, name='bank')
 
@@ -134,10 +153,24 @@ class Foot(rModule.RigModule):
         mc.connectAttr(roll_cnd + '.outColorG', toe_adl + '.input1')
         mc.connectAttr(toe_adl + '.output', toe_mdl + '.input1')
 
+        # handle rolling along ball of the foot.
+        # for example, when a boot or shoe has a slightly upturned front and it needs to roll down to hit
+        # the ground so that it has a proper pivot for the peel.
+        ball_roll_cnd = mc.createNode('condition', name=self.base_name + '_ballRoll_CND')
+        ball_roll_subtract = mc.createNode('subtract', name=self.base_name + '_ballRoll_SUB')
+        mc.connectAttr(roll.attr, ball_roll_cnd + '.firstTerm')
+        mc.connectAttr(roll.attr, ball_roll_cnd + '.colorIfFalseR')
+        mc.connectAttr(toe_roll_max.attr, ball_roll_cnd + '.secondTerm')
+        mc.connectAttr(toe_roll_max.attr, ball_roll_cnd + '.colorIfTrueR')
+        mc.setAttr(ball_roll_cnd + '.operation', 2)
+        mc.connectAttr(roll_cnd2 + '.outColorR', ball_roll_subtract + '.input1')
+        mc.connectAttr(ball_roll_cnd + '.outColorR', ball_roll_subtract + '.input2')
+        
+
         mc.connectAttr(roll.attr, roll_cnd2 + '.firstTerm')
         mc.connectAttr(roll.attr, roll_cnd2 + '.colorIfTrueR')
         mc.connectAttr(roll_cnd2 + '.outColorR', roll_mdl2 + '.input1')
-        mc.connectAttr(roll_mdl2 + '.output', self.toe_ctrl.group_list[1] + '.rotateX')
+        mc.connectAttr(ball_roll_subtract + '.output', self.toe_ctrl.group_list[1] + '.rotateX')
 
         mc.connectAttr(roll_cnd + '.outColorR', ball_cnd3 + '.firstTerm')
         mc.connectAttr(roll_cnd + '.outColorR', ball_cnd3 + '.colorIfFalseR')
