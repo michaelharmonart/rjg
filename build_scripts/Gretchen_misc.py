@@ -44,10 +44,10 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     geo = ['bandanna', 'loopleather1', 'buckle2', 'buckle', 'beltloops', 'button', 
             'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
             'LeftPupil', 'topeyelashes', 'bottomlash', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
-            'topteeth', 'tounge', 'boots']
+            'topteeth', 'tounge', 'boots', 'gloves']
 
 
-    classic_sk = ['gloves'] #'pants', 'shirt1', ]
+    classic_sk = [] #'pants', 'shirt1', ]
 
     #rUtil.create_pxWrap('shirt1', 'pantsCreased1', 'boots', 'Gretchen_UBM')
     rUtil.create_pxWrap('front_pockets', 'backpockets', 'side_pocket', 'pants')

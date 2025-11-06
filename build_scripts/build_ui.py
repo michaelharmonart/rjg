@@ -99,11 +99,11 @@ class RigBuildUI(QtWidgets.QDialog):
                 "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/Bobo.jpg",
             },
             "Gretchen" : {
-                "mp" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Model.mb",
+                "mp" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Model_Stick_Fig.mb",
                 "gp" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Guides.mb",
                 "ep" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Extras.mb",
                 "cp" : f"{groups}/bobo/character/Rigs/Gretchen/Controls/Gretchen_control_curves.json",
-                "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_16.json", 
+                "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_18.json", 
                 "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose10.pose",
                 "im" : f"{groups}/bobo/character/Rigs/Rig_Icon/Gretchen.jpg",
             },
