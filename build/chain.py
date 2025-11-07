@@ -220,7 +220,7 @@ class Chain:
             t_val += t_i
         pass
 
-    def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None):
+    def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None, sec_axis=(1, 0, 0)):
         if mirror:
             mirror = -1
         else:
@@ -300,7 +300,7 @@ class Chain:
                 transforms_to_pin=[f"{mid_ctrl.ctrl_name}_CNST_GRP"],
                 degree=1,
                 primary_axis=(0, 1 * mirror, 0),
-                secondary_axis=(1, 0, 0),
+                secondary_axis=sec_axis,
                 twist=False,
                 name=f"{joint}_Mid",
             )
@@ -319,7 +319,7 @@ class Chain:
                 spline_group=segment_grp,
                 name=f"{joint}",
                 primary_axis=(0, 1 * mirror, 0),
-                secondary_axis=(1, 0, 0),
+                secondary_axis=sec_axis,
                 padded=False,
                 stretch=False,
             )

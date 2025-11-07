@@ -294,13 +294,18 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         fingers = []
         
         ffs = ['Index', 'Middle', 'Ring', 'Pinky']
+        #BendyFingers
+        if character in ['Domingo', 'Sharkguy', 'Bobo']:
+            bendbo = True
+        else:
+            bendbo = False
         #Fix Bobo's 3 fingered-ness
         if character in ['Bobo', 'Sharkguy']:
             ffs = ffs[:-1]
         for f in ffs:
-            finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape)
+            finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
             fingers.append(finger)
-        thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(4)], ctrl_scale=1, fk_shape=fing_shape)
+        thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(5 if character == 'Domingo' else 4)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
         fingers.append(thumb) 
 
         if character == "Gretchen":
@@ -1091,8 +1096,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Domingo':
-        #for g in ['tail']:
-        import_weights(geo='tail', path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+        for g in ['tail', 'vest']:
+            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
 
     if character == 'Luciana':
         if mc.objExists('switch_CTRL'):
@@ -1296,10 +1301,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     #Skin Splitting 
     
-    if character in ['Bobo', 'Luciana']:
+    if character in ['Bobo', 'Luciana', 'Domingo']:
         auto_split_all_weights('MODEL')
-    if character == 'Domingo':
-        auto_split_all_weights('tail')
+    #if character == 'Domingo':
+    #    auto_split_all_weights('tail')
         
 
 def create_groom_bust(model):

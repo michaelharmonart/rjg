@@ -142,7 +142,7 @@ class RigBuildUI(QtWidgets.QDialog):
                 "ep" : f"{groups}/bobo/character/Rigs/Domingo/Domingo_Extras.mb",
                 "cp" : f"{groups}/bobo/character/Rigs/Domingo/Controls/Domingo_control_curves.json",
                 "sp" : f"{groups}/bobo/character/Rigs/Domingo/SkinFiles/Domingo_Skin.json",  
-                "pp" : None,
+                "pp" : f"{groups}/bobo/character/Rigs/Domingo/Poses/Domingo_Poses.pose",
                 "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/chicken.png",
             },
 
