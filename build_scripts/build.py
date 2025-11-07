@@ -289,8 +289,31 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
         else:    
             leg = rBuild.build_module(module_type='biped_limb', side=fs[0], part='leg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Foot']], offset_pv=50, ctrl_scale=8, bendy=not_previs, twisty=not_previs, stretchy=True, segments=4 if not_previs else 1)
-            foot = rBuild.build_module(module_type='foot', side=fs[0], part='foot', guide_list=[fs + piece for piece in ['Foot', 'ToeBase', 'Toe_End']], ctrl_scale=10, toe_piv=fs+'ToePiv', heel_piv=fs+'HeelPiv', in_piv=fs+'In', out_piv=fs+'Out')
-        
+            if character == "Gretchen":
+                foot = rBuild.build_module(
+                    module_type="foot",
+                    side=fs[0],
+                    part="foot",
+                    guide_list=[fs + piece for piece in ["Foot", "ToeBase", "Toe_End"]],
+                    ctrl_scale=10,
+                    toe_piv=fs + "ToePiv",
+                    heel_piv=fs + "HeelPiv",
+                    in_piv=fs + "In",
+                    out_piv=fs + "Out",
+                    toe_roll_threshold=14,
+                )
+            else:
+                foot = rBuild.build_module(
+                    module_type="foot",
+                    side=fs[0],
+                    part="foot",
+                    guide_list=[fs + piece for piece in ["Foot", "ToeBase", "Toe_End"]],
+                    ctrl_scale=10,
+                    toe_piv=fs + "ToePiv",
+                    heel_piv=fs + "HeelPiv",
+                    in_piv=fs + "In",
+                    out_piv=fs + "Out",
+                )
         fingers = []
         
         ffs = ['Index', 'Middle', 'Ring', 'Pinky']
