@@ -173,3 +173,33 @@ def matrix_constraint(
 def freeze_and_zero(transform: str) -> None:
     mc.makeIdentity(transform, apply=True)
     mc.xform(pivots=(0, 0, 0))
+
+def drive_transform_with_matrix(matrix_attr: str, transform: str, translate: bool = True):
+    """
+    Drive a transforms translate rotate scale and shear with a matrix attribute.
+
+    Args:
+        matrix_attr: The matrix attribute to use as the driver.
+        transform: The transform to be driven.
+        translate: whether to constrain translation.
+    """
+    constraint_name: str = transform.split("|")[-1]
+
+    # Create the decomposed matrix and connect it's inputs
+    decompose_matrix: str = mc.createNode(
+        "decomposeMatrix", name=f"{constraint_name}_DriverMatrixDecompose"
+    )
+    mc.connectAttr(matrix_attr, f"{decompose_matrix}.inputMatrix")
+    mc.connectAttr(f"{transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
+
+    # Prep constrained transform
+    if mc.nodeType(transform) == "joint":
+        mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
+    mc.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")
+
+    # Drive transform with decomposed values
+    mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{transform}.rotate")
+    if translate:
+        mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{transform}.translate")
+    mc.connectAttr(f"{decompose_matrix}.outputScale", f"{transform}.scale")
+    mc.connectAttr(f"{decompose_matrix}.outputShear", f"{transform}.shear")

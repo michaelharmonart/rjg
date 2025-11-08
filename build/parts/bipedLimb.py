@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from unicodedata import mirrored
 from rjg.libs.control.ctrl import Control
 import maya.cmds as mc
 from importlib import reload
@@ -9,7 +10,7 @@ import rjg.build.fk as rFk
 import rjg.build.ik as rIk
 import rjg.libs.attribute as rAttr
 from rjg.libs.space import space_switch
-from rjg.libs.transform import match_pose, matrix_constraint
+from rjg.libs.transform import drive_transform_with_matrix, match_pose, matrix_constraint
 
 reload(rModule)
 reload(rChain)
@@ -157,6 +158,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             mc.parent(blend_chain.joints[0], self.limb_grp)
             self.src_chain = blend_chain
             self.src_joints = blend_chain.joints
+            self.ik_switch_attr: str = blend_chain.switch.attr
 
             # twist
             up_twist = mc.spaceLocator(name=self.base_name + '_up_twist_LOC')[0]
@@ -195,11 +197,11 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
 
         if self.bendy:
             if self.side == 'R':
-                mirror = True
+                self.mirror = True
             else:
-                mirror = False
+                self.mirror = False
             bend = self.src_chain.bend_twist_chain(
-                ctrl_scale=self.ctrl_scale, mirror=mirror, global_scale=self.global_scale.attr
+                ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr
             )
 
             mc.parent(bend["control"], self.control_grp)
@@ -230,9 +232,15 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
 
     def output_swing(self):
         swing_group = mc.group(empty=True, name=f"{self.base_name}_Swing", parent=self.limb_grp)
-        anchor_group = mc.group(empty=True, name=f"{self.base_name}_Anchor", parent=self.limb_grp)
+        anchor_group = mc.group(empty=True, name=f"{self.base_name}_Anchor", parent=swing_group)
         match_pose(node=anchor_group, translate=self.fk_joints[0], rotate=self.fk_joints[0])
         matrix_constraint(self.swing_parent, anchor_group)
+
+        orient_offset = mc.group(
+            empty=True, name=f"{self.base_name}_OrientOffset", parent=anchor_group
+        )
+        mc.orientConstraint(self.orient_input, orient_offset, maintainOffset=True)
+
         parent = anchor_group
         swing_joints: list[str] = []
         for i, joint in enumerate(self.fk_joints):
@@ -241,6 +249,34 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             parent = swing_joint
             match_pose(swing_joint, translate=joint, rotate=joint)
             swing_joints.append(swing_joint)
+        first_joint = swing_joints[0]
+
+        if self.create_fk:
+            # Set up FK
+            driver_matrix = mc.createNode("multMatrix", name=f"{first_joint}_Matrix")
+            mc.connectAttr(f"{self.fk_ctrls[0].ctrl}.matrix", f"{driver_matrix}.matrixIn[0]")
+            mc.connectAttr(f"{orient_offset}.matrix", f"{driver_matrix}.matrixIn[1]")
+            drive_transform_with_matrix(f"{driver_matrix}.matrixSum", first_joint)
+        if self.create_ik:
+            # Set up IK
+            swing_ik_handle: str = mc.ikHandle(
+                name=f"{self.base_name}_Swing_IK",
+                startJoint=swing_joints[0],
+                endEffector=swing_joints[-1],
+                sticky=self.sticky,
+                solver=self.solver,
+            )[0]
+            mc.parent(swing_ik_handle, anchor_group)
+            mc.poleVectorConstraint(self.pv_ctrl.ctrl, swing_ik_handle)
+            matrix_constraint(self.main_ctrl.ctrl, swing_ik_handle, keep_offset=False)
+            invert = mc.createNode("subtract", name=f"{swing_ik_handle}_ikBlend_Invert")
+            mc.setAttr(f"{invert}.input1", 1)
+            mc.connectAttr(self.ik_switch_attr, f"{invert}.input2")
+            mc.connectAttr(f"{invert}.output", f"{swing_ik_handle}.ikBlend")
+
+        # Swing output
+        self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=swing_group)
+        mc.aimConstraint(swing_joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
         pass
 
     def skeleton(self):

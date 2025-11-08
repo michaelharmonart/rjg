@@ -310,6 +310,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 "clavicle": f"clavicle_{side}_02_driver_JNT",
             },
             swing_parent="chest_M_02_CTRL",
+            swing=True,
         )
         
         hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8)
