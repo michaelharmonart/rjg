@@ -322,3 +322,8 @@ def Clean_up_SculptJoints():
     rename_group_objects(joint_grp)
     Fix_Colors()
     make_sets()
+
+
+
+    def large_sculpt():
+        pass

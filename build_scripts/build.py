@@ -384,8 +384,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=3, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT')
         for side in ['L', 'R']:
             backtoe = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_Backtoe', guide_list=f'{side}_Backtoe', ctrl_scale=3, par_jnt=f'foot_{side}_01_JNT', par_ctrl=f'foot_{side}_01_switch_JNT')
-            for num in ['01', '02', '03','04', '06', '07', '08',]:
-                armshape = rBuild.build_module(module_type='arbitrary2', side=side, part=f'Tarm_{side}_{num}', guide_list=f'Tarm_{side}_{num}', ctrl_scale=5, par_jnt=f'arm_{side}_{num}_JNT', par_ctrl=f'arm_{side}_{num}_JNT')
+            #for num in ['01', '02', '03','04', '06', '07', '08',]:
+            #    armshape = rBuild.build_module(module_type='arbitrary2', side=side, part=f'Tarm_{side}_{num}', guide_list=f'Tarm_{side}_{num}', ctrl_scale=5, par_jnt=f'arm_{side}_{num}_JNT', par_ctrl=f'arm_{side}_{num}_JNT')
             from rjg.build.parts.DomingoCorrectives import Build_Correctives
             Build_Correctives(side=side)
         
@@ -1353,9 +1353,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     except:
         pass
 
-    if character == 'Domingo':
-        for side in ['L', 'R']:
-            mc.parentConstraint(f'arm_{side}_05_JNT', f'Tarm_{side}_04_{side}_{side}_CTRL_CNST_GRP', mo=True)
+    #if character == 'Domingo':
+        #for side in ['L', 'R']:
+            #mc.parentConstraint(f'arm_{side}_05_JNT', f'Tarm_{side}_04_{side}_{side}_CTRL_CNST_GRP', mo=True)
 
     #Skin Splitting 
     
