@@ -45,39 +45,48 @@ class Finger(rModule.RigModule, rFk.Fk):
     def add_bendy_twist(self, ctrl_scale=None, mirror=True, global_scale_attr=None):
         """
         Adds a bend-twist chain rig for the finger.
-        This creates Start, Mid, and End bendy controls per segment in the finger chain.
+        This creates Start, Mid, and End bendy controls per segment in the finger chain,
+        skipping the first (metacarpal) joint.
         """
         if not hasattr(self, 'fk_chain') or not self.fk_chain:
             mc.error("Cannot add bendy twist: Chain not built. Run skeleton() first.")
-        if ctrl_scale is None:
-            ctrl_scale = self.ctrl_scale if hasattr(self, 'ctrl_scale') else 1.0
 
-        # We’ll use the existing bind joints as the main chain
+        if ctrl_scale is None:
+            ctrl_scale = getattr(self, 'ctrl_scale', 1.0)
+
+        # Use bind joints as base
         self.fk_chain.joints = self.bind_joints
 
-        # Create the bendy twist chain
+        # Skip first joint (metacarpal) for bendy setup
+        original_joints = list(self.fk_chain.joints)
+        self.fk_chain.joints = original_joints[1:]  # skip metacarpal
+
+        # Build the bendy rig
         rig_dict = self.fk_chain.bend_twist_chain(
             ctrl_scale=ctrl_scale,
-            mirror=mirror,  # you can flip this if you have naming conventions for L/R
+            mirror=mirror,
             global_scale=global_scale_attr,
             sec_axis=(0, 0, 1)
         )
 
-        # rig_dict typically returns control and module groups for organization
+        # Restore full joint list
+        self.fk_chain.joints = original_joints
+
+        # Get groups and parent them properly
         ctrl_grp = rig_dict.get('control')
         module_grp = rig_dict.get('module')
 
-        # parent the bendy groups into your module structure
         if ctrl_grp and mc.objExists(ctrl_grp):
             mc.parent(ctrl_grp, self.control_grp)
         if module_grp and mc.objExists(module_grp):
             mc.parent(module_grp, self.module_grp)
 
-        # Store for future reference
+        # Store for later
         self.bendy_ctrl_grp = ctrl_grp
         self.bendy_module_grp = module_grp
 
         return rig_dict
+
 
     def control_rig(self):
         self.build_fk_controls()
