@@ -287,9 +287,31 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     #Mirrored Base Rig Parts
     fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer'] else 'lollipop'
-    for fs in ['Left', 'Right']:    
-        arm = rBuild.build_module(module_type='biped_limb', side=fs[0], part='arm', guide_list=[fs + piece for piece in ['Arm', 'ForeArm', 'Hand']], offset_pv=50, ctrl_scale=5, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
+    for fs in ["Left", "Right"]:
+        side = fs[0]
         clavicle = rBuild.build_module(module_type='clavicle', side=fs[0], part='clavicle', guide_list=[fs + piece for piece in ['Shoulder', 'Arm']], local_orient=False, ctrl_scale=9) 
+        arm = rBuild.build_module(
+            module_type="biped_limb",
+            side=fs[0],
+            part="arm",
+            guide_list=[fs + piece for piece in ["Arm", "ForeArm", "Hand"]],
+            offset_pv=50,
+            ctrl_scale=5,
+            bendy=not_previs,
+            twisty=not_previs,
+            stretchy=not_previs,
+            segments=4 if not_previs else 1,
+            orient_spaces={
+                "world": "ROOT",
+                "global": "global_M_CTRL",
+                "root": "root_02_M_CTRL",
+                "chest01": "chest_M_01_CTRL",
+                "chest02": "chest_M_02_CTRL",
+                "clavicle": f"clavicle_{side}_02_driver_JNT",
+            },
+            swing_parent="chest_M_02_CTRL",
+        )
+        
         hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8)
         if character == 'Luciana':
             leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])

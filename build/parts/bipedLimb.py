@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from rjg.libs.control.ctrl import Control
 import maya.cmds as mc
 from importlib import reload
 
@@ -6,6 +8,8 @@ import rjg.build.chain as rChain
 import rjg.build.fk as rFk
 import rjg.build.ik as rIk
 import rjg.libs.attribute as rAttr
+from rjg.libs.space import space_switch
+from rjg.libs.transform import match_pose, matrix_constraint
 
 reload(rModule)
 reload(rChain)
@@ -13,18 +17,76 @@ reload(rFk)
 reload(rIk)
 reload(rAttr)
 
+
 class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
-    def __init__(self,side=None,part=None,guide_list=None, ctrl_scale=1,create_ik=True,create_fk=True,stretchy=True,twisty=True,bendy=True,segments=4,
-                 sticky=None, solver=None, pv_guide='auto', offset_pv=0, slide_pv=None, gimbal=True, offset=True, 
-                 pad='auto', fk_shape='circle', gimbal_shape='circle', offset_shape='square', model_path=None, guide_path=None, spinejnt_count = 4):
-        super(BipedLimb, self).__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
+    def __init__(
+        self,
+        side: str = None,
+        part: str = None,
+        guide_list: list[str] = None,
+        ctrl_scale: float = 1,
+        create_ik: bool = True,
+        create_fk: bool = True,
+        stretchy: bool = True,
+        twisty: bool = True,
+        bendy: bool = True,
+        segments: int = 4,
+        sticky=None,
+        solver=None,
+        pv_guide="auto",
+        offset_pv=0,
+        slide_pv=None,
+        gimbal=True,
+        offset=True,
+        pad="auto",
+        fk_shape="circle",
+        gimbal_shape="circle",
+        offset_shape="square",
+        model_path=None,
+        guide_path=None,
+        spinejnt_count=4,
+        swing: bool = False,
+        swing_parent: str | None = None,
+        swing_connection_target: str | None = None,
+        orient_spaces: dict[str, str] | None = None,
+    ):
+        super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
+        self.create_ik = create_ik
+        self.create_fk = create_fk
+        self.stretchy = stretchy
+        self.twisty = twisty
+        self.bendy = bendy
+        self.segments = segments
+        self.sticky = sticky
+        self.solver = solver
+        self.pv_guide = pv_guide
+        self.offset_pv = offset_pv
+        self.slide_pv = slide_pv
+        self.gimbal = gimbal
+        self.offset = offset
+        self.pad = pad
+        self.fk_shape = fk_shape
+        self.gimbal_shape = gimbal_shape
+        self.offset_shape = offset_shape
         self.spinejnt_count = spinejnt_count
-        self.__dict__.update(locals())
+
+        self.swing = swing
+        self.swing_parent = swing_parent
+        self.swing_connection_target = swing_connection_target
+        self.orient_spaces = orient_spaces
+        if swing:
+            if swing_parent is None:
+                self.swing = False
+                raise ValueError(
+                    f"""{self.part} has no swing_parent! output_swing requires a space to be relative to
+                    (in order to avoid cyclical dependencies.)
+                    The space should be something like the chest for the arm."""
+                )
 
         if self.twisty or self.bendy and not self.segments:
             self.segments = 4
 
-        if self.pad == 'auto':
+        if self.pad == "auto":
             self.pad = len(str(len(self.guide_list))) + 1
 
         self.create_module()
@@ -38,7 +100,14 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         self.control_rig()
         self.output_rig()
         self.skeleton()
+        self.create_orient_spaces()
         self.add_plugs()
+
+    def create_inputs(self, group: str) -> None:
+        self.input_group = mc.group(empty=True, name=f"{self.base_name}_INPUTS", parent=group)
+        self.orient_input = mc.group(
+            empty=True, name=f"{self.base_name}_Orient_IN", parent=self.input_group
+        )
 
     def control_rig(self):
         # fk
@@ -52,9 +121,10 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             mc.parent(self.ik_ctrl_grp, self.control_grp)
 
     def output_rig(self):
-        self.limb_grp = mc.group(em=True, parent=self.module_grp,
-                                   name=self.base_name + '_RIG_GRP')
+        self.limb_grp = mc.group(em=True, parent=self.module_grp, name=self.base_name + "_RIG_GRP")
         mc.matchTransform(self.limb_grp, self.guide_list[0])
+
+        self.create_inputs(group=self.limb_grp)
 
         # fk
         if self.create_fk:
@@ -64,7 +134,6 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             self.src_joints = self.fk_joints
             up_twist = self.fk_ctrls[0].ctrl
             lo_twist = self.fk_ctrls[-1].ctrl
-
 
         # ik
         if self.create_ik:
@@ -130,12 +199,49 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             else:
                 mirror = False
             bend = self.src_chain.bend_twist_chain(
-                                                ctrl_scale=self.ctrl_scale,
-                                                mirror=mirror,
-                                                global_scale=self.global_scale.attr)
+                ctrl_scale=self.ctrl_scale, mirror=mirror, global_scale=self.global_scale.attr
+            )
 
-            mc.parent(bend['control'], self.control_grp)
-            mc.parent(bend['module'], self.module_grp)
+            mc.parent(bend["control"], self.control_grp)
+            mc.parent(bend["module"], self.module_grp)
+
+        if self.swing:
+            self.output_swing()
+
+    def create_orient_spaces(self):
+        if self.orient_spaces is not None:
+            targets = []
+            names = []
+            for name, target in self.orient_spaces.items():
+                names.append(name)
+                targets.append(target)
+
+            orient_control: Control = self.fk_ctrls[0]
+            space_switch(
+                node=self.orient_input,
+                driver=orient_control.ctrl,
+                target_list=targets,
+                name_list=names,
+                name="orientSpace",
+                constraint_type="orient",
+                value=3,
+            )
+            mc.orientConstraint(self.orient_input, orient_control.top, maintainOffset=True)
+
+    def output_swing(self):
+        swing_group = mc.group(empty=True, name=f"{self.base_name}_Swing", parent=self.limb_grp)
+        anchor_group = mc.group(empty=True, name=f"{self.base_name}_Anchor", parent=self.limb_grp)
+        match_pose(node=anchor_group, translate=self.fk_joints[0], rotate=self.fk_joints[0])
+        matrix_constraint(self.swing_parent, anchor_group)
+        parent = anchor_group
+        swing_joints: list[str] = []
+        for i, joint in enumerate(self.fk_joints):
+            swing_joint: str = mc.joint(name=f"{self.base_name}_Swing_{i:02d}")
+            mc.parent(swing_joint, parent)
+            parent = swing_joint
+            match_pose(swing_joint, translate=joint, rotate=joint)
+            swing_joints.append(swing_joint)
+        pass
 
     def skeleton(self):
         limb_chain = rChain.Chain(transform_list=self.src_joints,
@@ -193,15 +299,22 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             target_list = ['ROOT', 'global_M_CTRL', 'root_02_M_CTRL', 'COG_M_CTRL', 'waist_M_CTRL', '4']
             name_list = ['world', 'global', 'root', 'COG', 'waist', 'default_value']
             orient_names = ['orient' + name.title() for name in name_list]
-            rAttr.Attribute(node=self.part_grp, type='plug', value=target_list, name=self.fk_ctrls[0].ctrl + '_orient', children_name=orient_names)
+            if self.orient_spaces is None:
+                rAttr.Attribute(
+                    node=self.part_grp,
+                    type="plug",
+                    value=target_list,
+                    name=self.fk_ctrls[0].ctrl + "_orient",
+                    children_name=orient_names,
+                )
         elif self.part == 'arm':
             par = 'clavicle_' + self.side + '_02_JNT'
-            driver_list = ['clavicle_' + self.side + '_02_driver_JNT',
+            driver_list = [
                            'clavicle_' + self.side + '_02_driver_JNT',
                            'clavicle_' + self.side + '_02_driver_JNT',
                            'hand_' + self.side + '_01_ik_JNT',
                            'root_02_M_CTRL']
-            driven_list = [self.limb_grp,
+            driven_list = [
                            self.base_name + '_IK_BASE_CTRL_CNST_GRP',
                            self.base_name + '_up_twist_LOC',
                            self.base_name + '_IK_MAIN_CTRL_CNST_GRP',
@@ -223,7 +336,14 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             target_list = ['ROOT', 'global_M_CTRL', 'root_02_M_CTRL', 'chest_M_01_CTRL', 'chest_M_02_CTRL', 'clavicle_' + self.side + '_02_driver_JNT', '3']
             name_list = ['world', 'global', 'root', 'chest01', 'chest02', 'clavicle', 'default_value']
             orient_names = ['orient' + name.title() for name in name_list]
-            rAttr.Attribute(node=self.part_grp, type='plug', value=target_list, name=self.fk_ctrls[0].ctrl + '_orient', children_name=orient_names)
+            if self.orient_spaces is None:
+                rAttr.Attribute(
+                    node=self.part_grp,
+                    type="plug",
+                    value=target_list,
+                    name=self.fk_ctrls[0].ctrl + "_orient",
+                    children_name=orient_names,
+                )
         elif 'finger' in self.part:
             #print("plugging finger!")
             par = 'hand_' + self.side + '_JNT'
