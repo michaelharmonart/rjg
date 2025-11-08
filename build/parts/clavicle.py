@@ -27,6 +27,12 @@ class Clavicle(rModule.RigModule):
         self.skeleton()
         self.add_plugs()
 
+    def create_inputs(self, group: str) -> None:
+        self.input_group = mc.group(empty=True, name=f"{self.base_name}_INPUTS", parent=group)
+        self.swing_input = mc.group(
+            empty=True, name=f"{self.base_name}_Swing_IN", parent=self.input_group
+        )
+
     def control_rig(self):
         if self.local_orient:
             rotate = self.guide_list[0]
@@ -41,6 +47,7 @@ class Clavicle(rModule.RigModule):
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
 
     def output_rig(self):
+        self.create_inputs(group=self.module_grp)
         # create clavicle chain
         cnst_grp = mc.group(empty=True, parent=self.module_grp,
                              name=self.base_name + '_CNST_GRP')

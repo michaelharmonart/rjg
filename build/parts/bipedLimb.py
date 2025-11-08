@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from unicodedata import mirrored
+
+from maya.api.OpenMaya import MMatrix
 from rjg.libs.control.ctrl import Control
 import maya.cmds as mc
 from importlib import reload
@@ -10,7 +12,14 @@ import rjg.build.fk as rFk
 import rjg.build.ik as rIk
 import rjg.libs.attribute as rAttr
 from rjg.libs.space import space_switch
-from rjg.libs.transform import drive_transform_with_matrix, match_pose, matrix_constraint
+from rjg.libs.transform import (
+    drive_transform_with_matrix,
+    get_matrix_values,
+    get_parent_inverse_matrix,
+    get_world_matrix,
+    match_pose,
+    matrix_constraint,
+)
 
 reload(rModule)
 reload(rChain)
@@ -277,7 +286,27 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         # Swing output
         self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=swing_group)
         mc.aimConstraint(swing_joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
-        pass
+
+        # Connect swing (have to some fancyness to get the rotations into the right space)
+        offset: MMatrix = get_world_matrix(self.swing_output) * get_parent_inverse_matrix(
+            self.swing_connection_target
+        )
+        offset_inverse = get_matrix_values(offset.inverse())
+        connection_matrix = mc.createNode(
+            "multMatrix", name=f"{self.swing_connection_target}_ConnectionMatrix"
+        )
+        mc.setAttr(f"{connection_matrix}.matrixIn[0]", offset_inverse, type="matrix")
+        mc.connectAttr(f"{self.swing_output}.worldMatrix[0]", f"{connection_matrix}.matrixIn[1]")
+        mc.connectAttr(
+            f"{self.swing_connection_target}.parentInverseMatrix[0]", f"{connection_matrix}.matrixIn[2]"
+        )
+        drive_transform_with_matrix(
+            f"{connection_matrix}.matrixSum",
+            self.swing_connection_target,
+            translate=False,
+            scale=False,
+            shear=False,
+        )
 
     def skeleton(self):
         limb_chain = rChain.Chain(transform_list=self.src_joints,

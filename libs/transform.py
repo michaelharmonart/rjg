@@ -1,3 +1,5 @@
+from typing import Any
+from maya.api.OpenMaya import MDagPath, MMatrix, MSelectionList
 import maya.cmds as mc
 from importlib import reload
 from collections import OrderedDict
@@ -89,6 +91,35 @@ def is_identity_matrix(matrix: list[float], epsilon: float = 0.001) -> bool:
         for value, identity in zip(matrix, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
     )
 
+def get_world_matrix(transform: str) -> MMatrix:
+    """
+    Returns the full world matrix of a transform, including rotateAxis, jointOrient, etc.
+    Equivalent to Maya's internal world matrix.
+    """
+    selection = MSelectionList()
+    selection.add(transform)
+    dag_path: MDagPath = selection.getDagPath(0)
+    return dag_path.inclusiveMatrix()
+
+
+def get_parent_inverse_matrix(transform: str) -> MMatrix:
+    """
+    Returns the inverse world matrix of a transform's parent, including rotateAxis, jointOrient, etc.
+    """
+    selection = MSelectionList()
+    selection.add(transform)
+    dag_path: MDagPath = selection.getDagPath(0)
+    if dag_path.length() > 0:
+        dag_path.pop()
+        return dag_path.inclusiveMatrix()
+    else:
+        return MMatrix.kIdentity
+
+
+def get_matrix_values(matrix: MMatrix) -> list[float]:
+    return [matrix[i] for i in range(16)]
+
+
 def matrix_constraint(
     source_transform: str,
     constrain_transform: str,
@@ -174,7 +205,14 @@ def freeze_and_zero(transform: str) -> None:
     mc.makeIdentity(transform, apply=True)
     mc.xform(pivots=(0, 0, 0))
 
-def drive_transform_with_matrix(matrix_attr: str, transform: str, translate: bool = True):
+def drive_transform_with_matrix(
+    matrix_attr: str,
+    transform: str,
+    translate: bool = True,
+    rotate: bool = True,
+    scale: bool = True,
+    shear: bool = True,
+):
     """
     Drive a transforms translate rotate scale and shear with a matrix attribute.
 
@@ -198,8 +236,11 @@ def drive_transform_with_matrix(matrix_attr: str, transform: str, translate: boo
     mc.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")
 
     # Drive transform with decomposed values
-    mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{transform}.rotate")
+    if rotate:
+        mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{transform}.rotate")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{transform}.translate")
-    mc.connectAttr(f"{decompose_matrix}.outputScale", f"{transform}.scale")
-    mc.connectAttr(f"{decompose_matrix}.outputShear", f"{transform}.shear")
+    if scale:
+        mc.connectAttr(f"{decompose_matrix}.outputScale", f"{transform}.scale")
+    if shear:
+        mc.connectAttr(f"{decompose_matrix}.outputShear", f"{transform}.shear")
