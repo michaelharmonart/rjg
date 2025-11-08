@@ -5,6 +5,8 @@ from importlib import reload
 import maya.cmds as mc
 import maya.mel as mel
 
+
+
 groups = 'G:' if platform.system() == 'Windows' else '/groups'
 mc.scriptEditorInfo(suppressWarnings=True,suppressInfo=True)
 
@@ -49,6 +51,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     from rjg.build_scripts.SteveUtils import CurveNetAtHome
     from rjg.build_scripts.SteveUtils.importskins import import_weights
     from rjg.build_scripts.UnrealCorrectives import BuildCorrectives, build_parents
+    from rjg.libs.metadata import create_versioning_script
     reload(rUtil)
     reload(rWeightNgIO)
     reload(rWeightIO)
@@ -69,6 +72,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         extras = rFile.import_hierarchy(ep, parent='MODEL')[0]
     #Fun Camera Thing
     mc.viewFit('perspShape', fitFactor=1, all=True, animate=True)
+
+    # Versioning
+    create_versioning_script(rig_name=character, rig_version=2)
     
     #Fixing Names
     if character == 'Skeleton':
