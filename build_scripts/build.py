@@ -388,7 +388,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             #    armshape = rBuild.build_module(module_type='arbitrary2', side=side, part=f'Tarm_{side}_{num}', guide_list=f'Tarm_{side}_{num}', ctrl_scale=5, par_jnt=f'arm_{side}_{num}_JNT', par_ctrl=f'arm_{side}_{num}_JNT')
             from rjg.build.parts.DomingoCorrectives import Build_Correctives
             Build_Correctives(side=side)
-        
+            import rjg.build.parts.DomingoFeathers
+            reload(rjg.build.parts.DomingoFeathers)
+            from rjg.build.parts.DomingoFeathers import DomingoFeathers
+            DomingoFeathers = DomingoFeathers(f'Wing_{side}_guides',)
+            DomingoFeathers.build_wing()
+        Build_Correctives(side='M')
+    
     if character == 'Sharkguy':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail01', 'Tail02', 'Tail03', 'Tail04', 'Tail05', 'Tail06', 'TailFin01', 'TailFin02', 'TailFin03'], ctrl_scale=10, pad=2)
         #fin = rBuild.build_module(module_type='biped_limb', side='M', part='fin', guide_list=['Fin01', 'Fin02', 'Fin03'], ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
