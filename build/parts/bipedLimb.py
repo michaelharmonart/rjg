@@ -281,7 +281,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             mc.connectAttr(f"{invert}.output", f"{swing_ik_handle}.ikBlend")
 
         # Swing output
-        self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=swing_group)
+        self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=anchor_group)
         mc.aimConstraint(swing_joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
 
         # Connect swing (have to some fancyness to get the rotations into the right space)

@@ -5,6 +5,7 @@ import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 import rjg.build.chain as rChain
 import rjg.libs.control.ctrl as rCtrl
+from rjg.libs.transform import drive_transform_with_matrix, match_pose
 reload(rAttr)
 reload(rModule)
 reload(rChain)
@@ -12,9 +13,19 @@ reload(rCtrl)
 
 
 class Clavicle(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, local_orient=False, model_path=None, guide_path=None):
+    def __init__(
+        self,
+        side=None,
+        part=None,
+        guide_list=None,
+        ctrl_scale=None,
+        local_orient=False,
+        model_path=None,
+        guide_path=None,
+        auto_clavicle: bool = True,
+    ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
-
+        self.auto_clavicle = auto_clavicle
         self.local_orient = local_orient
 
         self.create_module()
@@ -24,6 +35,8 @@ class Clavicle(rModule.RigModule):
 
         self.control_rig()
         self.output_rig()
+        if self.auto_clavicle:
+            self.create_auto_clavicle()
         self.skeleton()
         self.add_plugs()
 
@@ -32,6 +45,7 @@ class Clavicle(rModule.RigModule):
         self.swing_input = mc.group(
             empty=True, name=f"{self.base_name}_Swing_IN", parent=self.input_group
         )
+        match_pose(self.input_group, rotate=self.main_ctrl.ctrl, translate=self.main_ctrl.ctrl)
 
     def control_rig(self):
         if self.local_orient:
@@ -46,8 +60,9 @@ class Clavicle(rModule.RigModule):
         attr_util = rAttr.Attribute(add=False)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
 
+
     def output_rig(self):
-        self.create_inputs(group=self.module_grp)
+        
         # create clavicle chain
         cnst_grp = mc.group(empty=True, parent=self.module_grp,
                              name=self.base_name + '_CNST_GRP')
@@ -137,6 +152,21 @@ class Clavicle(rModule.RigModule):
                          bta + '.attributesBlender')
         # connect final output
         mc.connectAttr(bta + '.output', self.clav_chain.joints[0] + '.scaleY')
+
+    def create_auto_clavicle(self) -> None:
+        self.create_inputs(group=self.module_grp)
+        auto_clav_attr = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=1, keyable=True, name='autoClavicle')
+        auto_clav_multiplier = mc.createNode("multiply", name=f"{self.base_name}_Swing_Multiplier")
+        mc.setAttr(f"{auto_clav_multiplier}.input[0]", 0.5)
+        mc.connectAttr(auto_clav_attr.attr, f"{auto_clav_multiplier}.input[1]")
+
+        matrix_blend = mc.createNode("blendMatrix", name=f"{self.base_name}_Swing_Blend")
+        mc.connectAttr(f"{self.swing_input}.matrix", f"{matrix_blend}.target[0].targetMatrix")
+
+        mc.connectAttr(f"{auto_clav_multiplier}.output", f"{matrix_blend}.target[0].weight")
+        drive_transform_with_matrix(f"{matrix_blend}.outputMatrix", self.main_ctrl.group_list[1])
+        
+        pass
 
     def skeleton(self):
         bind_chain = rChain.Chain(transform_list=self.clav_chain.joints,
