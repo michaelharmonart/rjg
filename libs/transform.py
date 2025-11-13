@@ -1,7 +1,5 @@
-from typing import Any
-from maya.api.OpenMaya import MDagPath, MMatrix, MSelectionList
+from maya.api.OpenMaya import MDagPath, MFnTransform, MMatrix, MSelectionList, MTransformationMatrix
 import maya.cmds as mc
-from importlib import reload
 from collections import OrderedDict
 
 '''
@@ -90,6 +88,17 @@ def is_identity_matrix(matrix: list[float], epsilon: float = 0.001) -> bool:
         abs(value - identity) < epsilon
         for value, identity in zip(matrix, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
     )
+
+def get_local_matrix(transform: str) -> MMatrix:
+    """
+    Returns the local matrix of a transform.
+    """
+    selection = MSelectionList()
+    selection.add(transform)
+    dag_path: MDagPath = selection.getDagPath(0)
+    mfn_transform: MFnTransform = MFnTransform(dag_path)
+    transformation: MTransformationMatrix = mfn_transform.transformation()
+    return transformation.asMatrix()
 
 def get_world_matrix(transform: str) -> MMatrix:
     """
