@@ -51,7 +51,6 @@ def build_basic_control(name='Main', shape='circle', size=5.0, color_rgb=(1, 1, 
     mc.setAttr(f"{ctrl}.overrideColorRGB", color_rgb[0], color_rgb[1], color_rgb[2], type="double3")
 
     #build_basic_control(name='name', size=10, color_rgb=(1,1,0), position=(0,0,0), rotation=(0,0,0))
-    return ctrl, offset_grp
 
 def create_display_layer(layer_name, objects, color_index, is_reference=False):
     if not mc.objExists(layer_name):
@@ -738,6 +737,63 @@ def build_chain_fkik_rig(rig_prefix='chain', rig_size=1.0, auto_skin=False, clea
         mc.delete(sorted_guides)
     print("✔ Chain FK/IK rig created with FK/IK switch.")
 
+def build_pivotroll_rig(rig_prefix, rig_size):
+    defaultdist = 3
+    defaultheight = 10
+    prejnt = None
+    for pivot in ('parent', 'front', 'back', 'left', 'right', 'child'):
+        if pivot == 'front':
+            pos = (0, 0, rig_size*defaultdist)
+        elif pivot == 'back':
+            pos = (0, 0, -rig_size*defaultdist)
+        elif pivot == 'left':
+            pos =  (rig_size*defaultdist,0,0)
+        elif pivot == 'right':
+            pos = (-rig_size*defaultdist,0,0)
+        else:
+            pos = (0,0,0)
+        mc.select(clear=True)
+        jnt = mc.joint(p=pos, name = f'{rig_prefix}_{pivot}_pivot')
+        if prejnt is not None:
+            mc.parent(jnt, prejnt)
+            prejnt = jnt
+        else:
+            mc.parent(jnt, f'{rig_prefix}_Offset_CTRL')
+            prejnt = jnt
+            mc.hide(jnt)
+    mc.parentConstraint(jnt, f'{rig_prefix}_Main_GRP')
+    build_basic_control(name=f'{rig_prefix}_roll', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=(0, defaultheight*rig_size, 0), rotation=(0, 0, 0))
+    mc.addAttr(f'{rig_prefix}_roll_CTRL', ln="RollMult", at="double", k=True, defaultValue = 1)
+    for pivot in ( 'front', 'back', 'left', 'right'):
+        remap = mc.shadingNode("remapValue", asUtility=True, name=f"{rig_prefix}_{pivot}_remap")
+        multnode = mc.shadingNode("multiplyDivide", asUtility=True, name=f"{rig_prefix}_{pivot}_mult")
+        if pivot in ('left', 'right'):
+            outattr = 'translateX'
+            inattr = 'rotateZ'
+        if pivot in ('front', 'back'): #('front', 'back')
+            outattr = 'translateZ'
+            inattr = 'rotateX'
+        inmod = 1
+        outmod = 1
+        if pivot == 'back':
+            inmod = -1
+            outmod = -1
+        if pivot == 'left':
+            outmod = -1
+        if pivot == 'right':
+            inmod = -1
+        mc.setAttr(f'{remap}.inputMax',  inmod*defaultheight*rig_size)
+        mc.setAttr(f'{remap}.outputMax',  outmod*90)
+        mc.connectAttr(f'{rig_prefix}_roll_CTRL.{outattr}', f'{multnode}.input1X')
+        mc.connectAttr(f'{rig_prefix}_roll_CTRL.RollMult', f'{multnode}.input2X')
+        mc.connectAttr(f'{multnode}.outputX', f'{remap}.inputValue')
+        mc.connectAttr(f'{remap}.outValue',  f'{rig_prefix}_{pivot}_pivot.{inattr}')
+    mc.parent(f'{rig_prefix}_roll_GRP', f'{rig_prefix}_Offset_CTRL')
+
+
+
+
+
 
 
 def build_simple_prop_rig(
@@ -820,6 +876,7 @@ def build_simple_prop_rig(
     skel_grp = mc.group(em=True, name='SKEL', parent=root_grp)
 
     # Create the root joint under SKEL
+    mc.select(clear=True)
     root_joint = mc.joint(name='root_jnt')
     mc.parent(root_joint, skel_grp)
     mc.makeIdentity(root_joint, apply=True, t=1, r=1, s=1, n=0)  # Freeze transforms
@@ -845,6 +902,9 @@ def build_simple_prop_rig(
             MainControlPos = get_model_center('MODEL')
             MainControlRot = [0, 0, 0]  # Usually we assume neutral rotation for center placement
     elif pivot == 'roll':
+         MainControlPos = [0, 0, 0]
+         MainControlRot = [0, 0, 0]
+    elif pivot == 'pivotroll':
          MainControlPos = [0, 0, 0]
          MainControlRot = [0, 0, 0]
     elif pivot == 'simplechain':
@@ -962,7 +1022,8 @@ def build_simple_prop_rig(
         build_chain_fkik_rig(rig_prefix, rig_size, auto_skin, clear_guide)
     if pivot == 'cluster':
         build_simplecluster_rig(rig_prefix, rig_size, auto_skin, clear_guide)
-
+    if pivot == "pivotroll":
+        build_pivotroll_rig(rig_prefix, rig_size)
 
 class SimplePropAutoRiggerUI(QDialog):
     def __init__(self, parent=get_maya_main_window()):
@@ -984,7 +1045,7 @@ class SimplePropAutoRiggerUI(QDialog):
         self.rig_size_input.setMinimum(0.0)
 
         self.pivot_dropdown = QtWidgets.QComboBox()
-        self.pivot_dropdown.addItems(["center", "guide", "origin", "roll", "simplechain", "chain", "cluster"])
+        self.pivot_dropdown.addItems(["center", "guide", "origin", "pivotroll", "roll", "simplechain", "chain", "cluster"])
 
         self.auto_skin_checkbox = QtWidgets.QCheckBox("Auto Skin")
         self.clear_cache_checkbox = QtWidgets.QCheckBox("Clear Cache")
@@ -1049,7 +1110,3 @@ def show_simple_prop_rigger():
     simple_prop_rigger_win.show()
 
 show_simple_prop_rigger()
-
-
-
-#build_simple_prop_rig(geo_grp_name='test_grp', pivot='center', rig_size = 2, zootools = True, rig_prefix='Cubes', auto_skin=True, clear_cache=True, clear_guide=True )
