@@ -36,15 +36,11 @@ def Gretchen_extras(skin_src, skin_trg_grp):
 
     sk_g = []
     
-    #geo = ['bandanna', 'loopleather2', 'buckle2', 'buckle', 'beltloops', 'front_pockets', 'side_pocket', 'backpockets', 'button', 
-    #       'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
-    #       'LeftPupil', 'eyelashes', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
-    #       'topteeth', 'tounge']
-    
-    geo = ['bandanna', 'loopleather1', 'buckle2', 'buckle', 'beltloops', 'button', 
-            'button3', 'thread1', 'thread', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
+    geo = ['bandanna', 'loopleather1', 'buckle2', 'buckle', 'beltloops', 'honey_pin', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 
             'LeftPupil', 'topeyelashes', 'bottomlash', 'eyebrows', 'hair', 'belt', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth', 
-            'topteeth', 'tounge', 'boots', 'gloves']
+            'topteeth', 'tounge', 'gloves', 'button3','button', 'thread1', 'thread']
+    
+    buttons = ['button3','button', 'thread1', 'thread']
 
 
     classic_sk = [] #'pants', 'shirt1', ]
@@ -67,14 +63,29 @@ def Gretchen_extras(skin_src, skin_trg_grp):
         mc.copySkinWeights(ss='skinCluster1', ds=g, surfaceAssociation='closestPoint', noMirror=True, )
         #rUtil.create_pxWrap([g, 'Rayden_UBM'])
 
+    
+
     #if character == 'Fisherman':
     #        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', ]:
     #            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Susaka/SkinFiles')
 
-    #shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='clothingSkc')[0]
-    #rWeightNgIO.init_skc(shirt_skin)
-    #rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
-    #rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
+
+
+    shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='shirtSkc')[0]
+    pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='pantsSkc')[0]
+    shoes_skin = mc.skinCluster(bind_joints, 'boots', tsb=True, skinMethod=1, n='shoesSkc')[0]
+    gloves_skin = mc.skinCluster(bind_joints, 'gloves', tsb=True, skinMethod=1, n='glovesSkc')[0]
+    #WeightNgIO.init_skc(shirt_skin)
+    #rWeightNgIO.init_skc(pants_skin)
+    #rWeightNgIO.init_skc(shoes_skin)
+    #rWeightNgIO.init_skc(gloves_skin)
+    rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights_01")
+    rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Pants_Weights")
+    rWeightNgIO.read_skin("boots", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shoes_Weights")
+    rWeightNgIO.read_skin("gloves", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Gloves_Weights")
+
+    for g in buttons:
+        mc.copySkinWeights(ss=shirt_skin, ds=g, surfaceAssociation='closestPoint', noMirror=True, )
 
 
    

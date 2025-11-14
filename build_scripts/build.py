@@ -361,8 +361,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if character in ['Bobo', 'Sharkguy']:
             ffs = ffs[:-1]
         for f in ffs:
-            finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
-            fingers.append(finger)
+            if character != 'Domingo':
+                finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
+                fingers.append(finger)
+            else:
+                finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
+                fingers.append(finger)
+
         thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(5 if character == 'Domingo' else 4)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
         fingers.append(thumb) 
 
@@ -844,11 +849,14 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             #            mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
 
             shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='clothingSkc')[0]
-            pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='clothingSkc')[0]
-            rWeightNgIO.init_skc(shirt_skin)
-            rWeightNgIO.init_skc(pants_skin)
-            rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
-            rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Pants_Weights")
+            #pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='clothingSkc')[0]
+            #shoes_skin = mc.skinCluster(bind_joints, 'boots', tsb=True, skinMethod=1, n='clothingSkc')[0]
+            #rWeightNgIO.init_skc(shirt_skin)
+            #rWeightNgIO.init_skc(pants_skin)
+            #rWeightNgIO.init_skc(shoes_skin)
+            #rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
+            #rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Pants_Weights")
+            #rWeightNgIO.read_skin("boots", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shoes_Weights")
 
         
     if character == 'Rayden':

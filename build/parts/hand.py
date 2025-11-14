@@ -12,10 +12,11 @@ reload(rCtrl)
 
 
 class Hand(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, local_orient=False, model_path=None, guide_path=None):
+    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, local_orient=False, model_path=None, guide_path=None, expression_control=True):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         
         self.base_name = self.part + '_' + self.side
+        self.expression_control = expression_control
 
         self.local_orient = local_orient
 
@@ -41,7 +42,27 @@ class Hand(rModule.RigModule):
         
         for c in [self.hand_01, self.hand_02, self.hand_local, self.hand_fk]:
             c.tag_as_controller()
-        
+
+        if self.expression_control:
+            self.hand_express = rCtrl.Control(parent=self.control_grp, shape="square", side=None, suffix='CTRL', name=f'{self.base_name}_express', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
+            self.hand_express.tag_as_controller()
+            mc.addAttr(self.hand_express.ctrl, longName='Falloff', attributeType='float', min=0.0, max=10.0, defaultValue=5.0, keyable=True)
+            #mc.createNode('multilpyDivide', name=f"{self.hand_express.ctrl}_MD1")
+            #mc.setAttr(f"{self.hand_express.ctrl}_MD1.input2X", .1)
+            #mc.createNode('multilpyDivide', name=f"{self.hand_express.ctrl}_MD2")
+            #mc.connectAttr(f"{self.hand_express.ctrl}_MD1.outputX", f"{self.hand_express.ctrl}_MD2.input2X")
+            #mc.connectAttr(f"{self.hand_express.ctrl}_MD1.outputX", f"{self.hand_express.ctrl}_MD2.input2Y")
+            #mc.connectAttr(f'{self.hand_express.ctrl}.Falloff', f"{self.hand_express.ctrl}_MD1.input1X")
+            mc.createNode('remapValue', name=f"{self.hand_express.ctrl}_HIGHER")
+            mc.setAttr(f"{self.hand_express.ctrl}_HIGHER.inputMax", 7.5)
+            mc.createNode('remapValue', name=f"{self.hand_express.ctrl}_LOWER")
+            mc.setAttr(f"{self.hand_express.ctrl}_LOWER.inputMax", 10)
+            mc.setAttr(f"{self.hand_express.ctrl}_LOWER.inputMin", 2.5)
+            mc.connectAttr(f'{self.hand_express.ctrl}.Falloff', f"{self.hand_express.ctrl}_HIGHER.inputValue")
+            mc.connectAttr(f'{self.hand_express.ctrl}.Falloff', f"{self.hand_express.ctrl}_LOWER.inputValue")
+            
+
+
     def output_rig(self):
         ik_jnt = mc.joint(self.hand_local.ctrl, name=self.hand_01.ctrl.replace("CTRL", "ik_JNT"))
         fk_jnt = mc.joint(self.hand_local.ctrl, name=self.hand_01.ctrl.replace("CTRL", "JNT"))
@@ -95,3 +116,6 @@ class Hand(rModule.RigModule):
         switch_attr = self.side.lower() + 'ArmIKFK'
         switch_attr = 'arm' + self.side + '_IKFK'
         rAttr.Attribute(node=self.part_grp, type='plug', value=[switch_attr], name='switchRigPlugs', children_name=['ikFkSwitch'])
+
+        if self.expression_control:
+            mc.parentConstraint(f'hand_{self.side}_01_switch_JNT', self.hand_express.top)
