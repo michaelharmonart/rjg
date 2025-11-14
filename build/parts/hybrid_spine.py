@@ -36,6 +36,7 @@ class HybridSpine(rModule.RigModule):
         mid_tangent: float = 1 / 3,
         bend_tangent: float = 1 / 3,
         split_weights: bool = False,
+        chestoffset = True
     ):
         """
         Builds a hybrid FK/IK spline-based spine rig with bend and twist.
@@ -86,6 +87,9 @@ class HybridSpine(rModule.RigModule):
         self.mid_tangent: float = mid_tangent
         self.bend_tangent: float = bend_tangent
         self.split_weights: bool = split_weights
+
+        self.chestoffset: bool = chestoffset
+
         self.create_module()
 
     def create_module(self):
@@ -537,3 +541,6 @@ class HybridSpine(rModule.RigModule):
                 name="pacRigPlugs",
                 children_name=driven_list,
             )
+        if self.chestoffset:
+            pos = mc.xform('ChestMain', q=True, ws=True, t=True)
+            rCtrl.Control(parent='spine_Tweak_05_M_CTRL', shape="square", side=None, suffix='CTRL', name='Chest_Offset', axis='y', group_type='main', rig_type='primary', translate=pos, rotate=(0,0,0), ctrl_scale=1)

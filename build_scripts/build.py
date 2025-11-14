@@ -112,6 +112,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             ctrl_scale=1.5,
             bend_tangent=0.1,
             joint_num=7,
+            chestoffset = True
         )
     elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer', 'SharkGuy']:
         hip = rBuild.build_module(
@@ -318,7 +319,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             arb = rBuild.build_module(module_type='arbitrary', side='M', part=ag, guide_list=mc.getAttr(ag + '.translate'), ctrl_scale=1, par_jnt=pj, par_ctrl=pc)
         jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
-
     #Mirrored Base Rig Parts
     fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo'] else 'lollipop'
     for fs in ['Left', 'Right']:    
@@ -373,8 +373,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         fingers.append(thumb) 
 
         if character == "Gretchen":
+            if fs == 'Left':
+                side = 'L'
+            else:
+                side = 'R'
             Glute = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}_Glute', guide_list=mc.getAttr(f'{fs}_Glute' + '.translate'), ctrl_scale=1, par_jnt='COG_M_JNT', par_ctrl='hip_M_CTRL')
-            Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='spine_Tweak_05_M_CTRL')
+            Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='Chest_Offset_CTRL')
+            GloveFlair = rBuild.build_module(module_type='arbitrary2', side=side, part='GloveFlair', guide_list=f'{fs}Glove', ctrl_scale=5, par_jnt=f'arm_{side}_7_JNT', par_ctrl=f'arm_{side}_7_JNT')
 
     #Bobo Specifics
     if character == 'Bobo':
