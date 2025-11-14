@@ -462,4 +462,4 @@ class DomingoFeathers(UEface):
         for num in ['01', '02', '03', '04']:
             mc.parent(f'Wing_{side}_Main_Feather_aim_{num}_{side}_CTRL_CNST_GRP', module_grp_name)
         mc.hide(f'Wing_{side}_handle_{side}_CTRL_CNST_GRP', f'Wing_{side}_MainFeatherAim_01_jnt', f'Wing_{side}_Main_loft') #f'Wing_{side}_Sub01FeatherAim_01_jnt', f'Wing_{side}_Sub02FeatherAim_01_jnt',
-
+        mc.parent(module_grp_name, 'RIG')

@@ -221,13 +221,47 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
 
-
+    #
+    
     if character in ["Luciana"]:
         tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 13)], ctrl_scale=10, pad=2, IK_Spline=True)
         #jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
     
     if character == 'Domingo':
         tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2, IK_Spline=True)
+        if face:
+            for side in ['L', 'R']:
+                from rjg.build.parts.UEeye import UEeye
+                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1)
+                eye.build()
+                """
+                from rjg.build.parts.UEbrow import UEbrow
+                brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1)
+                brow.build()
+                from rjg.build.parts.UEcheek import UEcheek
+                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1)
+                cheek.build()
+                try:
+                    from rjg.build.parts.UEear import UEear
+                    ear = UEear(f'Ear_{side}_guides', ctrl_scale=1)
+                    ear.build()
+                except:
+                    print('no ear guides found')
+            from rjg.build.parts.UEnose import UEnose
+            nose = UEnose('Nose_guides', ctrl_scale=1)
+            nose.build()
+            from rjg.build.parts.UEjaw import UEjaw
+            jaw = UEjaw('Jaw_M_guides', ctrl_scale=1)
+            jaw.build()
+            from rjg.build.parts.UEmouth import UEmouth
+            mouth = UEmouth('Mouth_guides', ctrl_scale=1)
+            mouth.build()
+            from rjg.build.parts.UEteeth import UEteeth
+            teeth = UEteeth('Tongue_M_guides', ctrl_scale=1)
+            teeth.build()
+            from rjg.build.parts.UEfaceconnect import UEfaceconnect
+            faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1)
+            faceconnect.build() """
 
 
     if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy', 'Drummer']:
@@ -361,14 +395,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if character in ['Bobo', 'Sharkguy']:
             ffs = ffs[:-1]
         for f in ffs:
-            if character != 'Domingo':
-                finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
-                fingers.append(finger)
-            else:
-                finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
+                finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo, create_ik=False)
                 fingers.append(finger)
 
-        thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(5 if character == 'Domingo' else 4)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
+        thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(5 if character == 'Domingo' else 4)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo, create_ik=False)
         fingers.append(thumb) 
 
         if character == "Gretchen":
