@@ -236,7 +236,7 @@ class DomingoFeathers(UEface):
         mc.move(0, 0,-curve_offset, main_curve2, r=True)
         main_surf = mc.loft(main_curve, main_curve2, name=f'{prefix}_Main_loft')
         
-        for feathergrps in ['MainFeather', 'Sub01Feather', 'Sub02Feather']:
+        for feathergrps in ['MainFeather']:
             if feathergrps == 'MainFeather':
                 sub = False
             else:
@@ -331,14 +331,14 @@ class DomingoFeathers(UEface):
                 def_jnts.append(basejnt)
                 mc.delete(mid_guide)
                 #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_MainFeather_{num}_GEO', tsb=True)
-                if feathergrps == 'Sub02Feather':
-                    if guide == mainguides[-1]:
-                        try:
-                            side = prefix.split("_")[-1]
-                            print(f'{side}{feathergrps}')
-                            mc.skinCluster(*def_jnts, f'feathers{side}', toSelectedBones=True)
-                        except Exception as e:
-                            print(e)
+                #if feathergrps == 'Sub02Feather':
+                if guide == mainguides[-1]:
+                    try:
+                        side = prefix.split("_")[-1]
+                        print(f'{side}{feathergrps}')
+                        mc.skinCluster(*def_jnts, f'feathers{side}', toSelectedBones=True)
+                    except Exception as e:
+                        print(e)
 
                 mc.select(clear=True)
                 mc.select(main_surf[0])
@@ -461,5 +461,5 @@ class DomingoFeathers(UEface):
         mc.parent(f'Wing_{side}_Span_{side}_CTRL_CNST_GRP', module_grp_name)
         for num in ['01', '02', '03', '04']:
             mc.parent(f'Wing_{side}_Main_Feather_aim_{num}_{side}_CTRL_CNST_GRP', module_grp_name)
-        mc.hide(f'Wing_{side}_handle_{side}_CTRL_CNST_GRP', f'Wing_{side}_MainFeatherAim_01_jnt', f'Wing_{side}_Sub01FeatherAim_01_jnt', f'Wing_{side}_Sub02FeatherAim_01_jnt', f'Wing_{side}_Main_loft')
+        mc.hide(f'Wing_{side}_handle_{side}_CTRL_CNST_GRP', f'Wing_{side}_MainFeatherAim_01_jnt', f'Wing_{side}_Main_loft') #f'Wing_{side}_Sub01FeatherAim_01_jnt', f'Wing_{side}_Sub02FeatherAim_01_jnt',
 

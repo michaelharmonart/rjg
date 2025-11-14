@@ -286,7 +286,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
 
     #Mirrored Base Rig Parts
-    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer'] else 'lollipop'
+    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo'] else 'lollipop'
     for fs in ['Left', 'Right']:    
         arm = rBuild.build_module(module_type='biped_limb', side=fs[0], part='arm', guide_list=[fs + piece for piece in ['Arm', 'ForeArm', 'Hand']], offset_pv=50, ctrl_scale=5, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
         clavicle = rBuild.build_module(module_type='clavicle', side=fs[0], part='clavicle', guide_list=[fs + piece for piece in ['Shoulder', 'Arm']], local_orient=False, ctrl_scale=9) 
@@ -332,8 +332,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if character in ['Bobo', 'Sharkguy']:
             ffs = ffs[:-1]
         for f in ffs:
-            finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
-            fingers.append(finger)
+            if character != 'Domingo':
+                finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
+                fingers.append(finger)
+            else:
+                finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
+                fingers.append(finger)
+
         thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(5 if character == 'Domingo' else 4)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo)
         fingers.append(thumb) 
 
@@ -815,11 +820,14 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             #            mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
 
             shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='clothingSkc')[0]
-            pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='clothingSkc')[0]
-            rWeightNgIO.init_skc(shirt_skin)
-            rWeightNgIO.init_skc(pants_skin)
-            rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
-            rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Pants_Weights")
+            #pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='clothingSkc')[0]
+            #shoes_skin = mc.skinCluster(bind_joints, 'boots', tsb=True, skinMethod=1, n='clothingSkc')[0]
+            #rWeightNgIO.init_skc(shirt_skin)
+            #rWeightNgIO.init_skc(pants_skin)
+            #rWeightNgIO.init_skc(shoes_skin)
+            #rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
+            #rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Pants_Weights")
+            #rWeightNgIO.read_skin("boots", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shoes_Weights")
 
         
     if character == 'Rayden':

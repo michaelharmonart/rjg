@@ -5,22 +5,29 @@ import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
+import rjg.build.ik as rIk
+
 reload(rModule)
 reload(rAttr)
 reload(rChain)
 reload(rFk)
+reload(rIk)
 
-class Finger(rModule.RigModule, rFk.Fk):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=1, model_path=None, guide_path=None, pad='auto', remove_last=True, fk_shape='circle', par_ctrl=None, bendy=False):
+class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
+    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=1, model_path=None, guide_path=None, pad='auto', remove_last=True, fk_shape='circle', par_ctrl=None, bendy=False, create_ik=True, create_fk=True, expression_control=True):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
 
         self.__dict__.update(locals())
         self.gimbal = None
         self.offset = None
         self.bendy = bendy
+
+        self.create_ik = create_ik
+        self.create_fk = create_fk
+        self.expression_control = expression_control
+        
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
-
         is_right = self.side in ["R", "r", "Right", "right"]
         if is_right:
             self.mirror = True
@@ -28,6 +35,7 @@ class Finger(rModule.RigModule, rFk.Fk):
             self.mirror = False
 
         self.create_module()
+
 
     def create_module(self):
         super().create_module()
@@ -118,7 +126,44 @@ class Finger(rModule.RigModule, rFk.Fk):
         else:
             driver_list = [self.par_ctrl]
             rAttr.Attribute(node=self.part_grp, type='plug', value=[self.par_ctrl], name='skeletonPlugs', children_name=[self.bind_joints[0]])
-
         driven_list = [self.base_name + '_01_fk_CTRL_CNST_GRP']
+        if self.part == 'fingerThumb':
+            rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
+        else:
+            if self.expression_control:
+                if mc.objExists(f'hand_{self.side}_express_CTRL'):
+                    falloff = None
+                    if self.part == 'fingerIndex':
+                        mult1value = 1
+                        mult2value = 0
+                    elif self.part == 'fingerMiddle':
+                        mult1value = 0
+                        mult2value = 0
+                        falloff = 'inner'
+                    elif self.part == 'fingerRing':
+                        mult1value = 0
+                        mult2value = 0 
+                        falloff = 'outer'
+                    elif self.part == 'fingerPinky':
+                        mult1value = 0
+                        mult2value = 1
+                    else:
+                        mult1value = 0
+                        mult2value = 1
+                    mc.parentConstraint(driver_list, driven_list, mo=True)
+                    mc.parentConstraint(f'hand_{self.side}_express_CTRL', driven_list, mo=True)
+                    mc.setAttr(f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_01_switch_JNTW0', mult1value)
+                    mc.setAttr(f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_express_CTRLW1', mult2value)
+                    if falloff == 'inner':
+                        mc.connectAttr( f"hand_{self.side}_express_CTRL_HIGHER.outValue", f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_01_switch_JNTW0')
+                        mc.connectAttr( f"hand_{self.side}_express_CTRL_LOWER.outValue", f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_express_CTRLW1')
+                    elif falloff == 'outer':
+                        mc.connectAttr( f"hand_{self.side}_express_CTRL_LOWER.outValue", f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_01_switch_JNTW0')
+                        mc.connectAttr( f"hand_{self.side}_express_CTRL_HIGHER.outValue", f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_express_CTRLW1')
 
-        rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
+
+
+                else:
+                    rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
+            else:
+                rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)

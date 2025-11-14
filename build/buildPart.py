@@ -6,6 +6,7 @@ import rjg.build.parts.root as rRoot
 import rjg.build.parts.hip as rHip
 import rjg.build.parts.chest as rChest
 import rjg.build.parts.finger as rFinger
+import rjg.build.parts.fingerik as rFingerIK
 import rjg.build.parts.bipedLimb as rBipedLimb
 import rjg.build.parts.clavicle as rClavicle
 import rjg.build.parts.hand as rHand
@@ -37,6 +38,7 @@ reload(rRoot)
 reload(rHip)
 reload(rChest)
 reload(rFinger)
+reload(rFingerIK)
 reload(rBipedLimb)
 reload(rClavicle)
 reload(rHand)
@@ -69,6 +71,7 @@ MODULE_DICT = {
                'hip' : rHip.Hip, 
                'chest' : rChest.Chest, 
                'finger' : rFinger.Finger,
+               'fingerik' : rFingerIK.FingerIK,
                'biped_limb' : rBipedLimb.BipedLimb,
                'clavicle' : rClavicle.Clavicle,
                'hand' : rHand.Hand,
