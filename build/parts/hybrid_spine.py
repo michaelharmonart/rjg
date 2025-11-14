@@ -36,7 +36,7 @@ class HybridSpine(rModule.RigModule):
         mid_tangent: float = 1 / 3,
         bend_tangent: float = 1 / 3,
         split_weights: bool = False,
-        chestoffset = True
+        chestoffset = False
     ):
         """
         Builds a hybrid FK/IK spline-based spine rig with bend and twist.

@@ -236,22 +236,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 from rjg.build.parts.UEeye import UEeye
                 eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1)
                 eye.build()
-                """
                 from rjg.build.parts.UEbrow import UEbrow
                 brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1)
                 brow.build()
                 from rjg.build.parts.UEcheek import UEcheek
-                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1)
+                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1, NL=False)
                 cheek.build()
-                try:
-                    from rjg.build.parts.UEear import UEear
-                    ear = UEear(f'Ear_{side}_guides', ctrl_scale=1)
-                    ear.build()
-                except:
-                    print('no ear guides found')
-            from rjg.build.parts.UEnose import UEnose
-            nose = UEnose('Nose_guides', ctrl_scale=1)
-            nose.build()
+
             from rjg.build.parts.UEjaw import UEjaw
             jaw = UEjaw('Jaw_M_guides', ctrl_scale=1)
             jaw.build()
@@ -261,9 +252,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             from rjg.build.parts.UEteeth import UEteeth
             teeth = UEteeth('Tongue_M_guides', ctrl_scale=1)
             teeth.build()
+            from rjg.build.parts.UEStache import UEstache
+            stache = UEstache('Stache_M_guides', ctrl_scale=1, beard=True)
+            stache.build()
+
             from rjg.build.parts.UEfaceconnect import UEfaceconnect
-            faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1)
-            faceconnect.build() """
+            faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1, custom='Domingo')
+            faceconnect.build() 
 
 
     if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy', 'Drummer']:
