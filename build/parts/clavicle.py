@@ -32,10 +32,10 @@ class Clavicle(rModule.RigModule):
         guide_path=None,
         swing_guide: str | None = None,
         auto_clavicle: bool = True,
-        auto_clav_up: float = 1,
+        auto_clav_up: float = 0.3,
         auto_clav_down: float = 0,
-        auto_clav_forward: float = 0.5,
-        auto_clav_back: float = 0.5,
+        auto_clav_forward: float = 0.25,
+        auto_clav_back: float = 0.25,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.auto_clavicle = auto_clavicle
