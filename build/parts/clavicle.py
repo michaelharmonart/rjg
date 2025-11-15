@@ -6,6 +6,7 @@ import rjg.libs.attribute as rAttr
 import rjg.build.chain as rChain
 import rjg.libs.control.ctrl as rCtrl
 from rjg.libs.transform import drive_transform_with_matrix, match_pose
+from rjg.libs.pose_interpolator import PoseInterpolator
 reload(rAttr)
 reload(rModule)
 reload(rChain)
@@ -155,6 +156,13 @@ class Clavicle(rModule.RigModule):
 
     def create_auto_clavicle(self) -> None:
         self.create_inputs(group=self.module_grp)
+
+        pose_interpolator = PoseInterpolator(
+            name=f"{self.base_name}_poseInterpolator",
+            gaussian_interpolation=True,
+            parent=self.module_grp,
+        )
+
         auto_clav_attr = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=1, keyable=True, name='autoClavicle')
         auto_clav_multiplier = mc.createNode("multiply", name=f"{self.base_name}_Swing_Multiplier")
         mc.setAttr(f"{auto_clav_multiplier}.input[0]", 0.5)
