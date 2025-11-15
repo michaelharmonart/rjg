@@ -5,8 +5,6 @@ from importlib import reload
 import maya.cmds as mc
 import maya.mel as mel
 
-
-
 groups = 'G:' if platform.system() == 'Windows' else '/groups'
 mc.scriptEditorInfo(suppressWarnings=True,suppressInfo=True)
 
@@ -17,6 +15,7 @@ import rjg.libs.util as rUtil
 import rjg.post.dataIO.controls as rCtrlIO
 import rjg.post.finalize as rFinal
 import rjg.post.usd as rUSD
+from rjg.libs.skin import auto_split_all_weights
 
 reload(rUtil)
 reload(rProp)
@@ -33,7 +32,6 @@ def ensure_ng_initialized():
     if not plugin.is_plugin_loaded():
         plugin.load_plugin()
 
-from rjg.libs.skin import auto_split_all_weights
 
 
 ### Build Begins ###
@@ -46,6 +44,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     import rjg.post.dataIO.controls as rCtrlIO
     import rjg.post.dataIO.ng_weights as rWeightNgIO
     import rjg.post.dataIO.weights as rWeightIO
+    from rjg.build.parts.clavicle import Clavicle
     from rjg.build.parts.driverjoints import create_driver_joints
     from rjg.build_scripts import Bobo_Build_Scripts
     from rjg.build_scripts.SteveUtils import CurveNetAtHome
@@ -320,10 +319,51 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
     #Mirrored Base Rig Parts
-    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo'] else 'lollipop'
-    for fs in ['Left', 'Right']:    
-        arm = rBuild.build_module(module_type='biped_limb', side=fs[0], part='arm', guide_list=[fs + piece for piece in ['Arm', 'ForeArm', 'Hand']], offset_pv=50, ctrl_scale=5, bendy=not_previs, twisty=not_previs, stretchy=not_previs, segments=4 if not_previs else 1)
-        clavicle = rBuild.build_module(module_type='clavicle', side=fs[0], part='clavicle', guide_list=[fs + piece for piece in ['Shoulder', 'Arm']], local_orient=False, ctrl_scale=9) 
+    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer'] else 'lollipop'
+    for fs in ["Left", "Right"]:
+        side = fs[0]
+        if character == "Bobo":
+            clavicle: Clavicle = rBuild.build_module(
+                module_type="clavicle",
+                side=fs[0],
+                part="clavicle",
+                guide_list=[fs + piece for piece in ["Shoulder", "Arm"]],
+                local_orient=False,
+                ctrl_scale=9,
+                auto_clav_down = 0.5,
+            )
+        else:
+            clavicle: Clavicle = rBuild.build_module(
+                module_type="clavicle",
+                side=fs[0],
+                part="clavicle",
+                guide_list=[fs + piece for piece in ["Shoulder", "Arm"]],
+                local_orient=False,
+                ctrl_scale=9,
+            )
+        arm = rBuild.build_module(
+            module_type="biped_limb",
+            side=fs[0],
+            part="arm",
+            guide_list=[fs + piece for piece in ["Arm", "ForeArm", "Hand"]],
+            offset_pv=50,
+            ctrl_scale=5,
+            bendy=not_previs,
+            twisty=not_previs,
+            stretchy=not_previs,
+            segments=4 if not_previs else 1,
+            orient_spaces={
+                "world": "ROOT",
+                "global": "global_M_CTRL",
+                "root": "root_02_M_CTRL",
+                "chest01": "chest_M_01_CTRL",
+                "chest02": "chest_M_02_CTRL",
+            },
+            swing_parent="chest_M_02_CTRL",
+            swing=True,
+            swing_connection_target=clavicle.swing_input
+        )
+        
         hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8)
         if character == 'Luciana':
             leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
