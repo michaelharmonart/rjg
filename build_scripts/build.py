@@ -325,7 +325,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 guide_list=[fs + piece for piece in ["Shoulder", "Arm"]],
                 local_orient=False,
                 ctrl_scale=9,
+                auto_clav_up = 1,
                 auto_clav_down = 0.5,
+                auto_clav_forward = 0.5,
+                auto_clav_back = 0.5,
             )
         else:
             clavicle: Clavicle = rBuild.build_module(
