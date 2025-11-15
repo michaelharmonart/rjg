@@ -1209,7 +1209,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Domingo':
-        for g in ['tail', 'vest']:
+        for g in ['tail', 'vest', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye_L_Eye_L_Lower_curve_ribbon',]:
             import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
 
     if character == 'Luciana':

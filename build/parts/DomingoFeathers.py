@@ -326,8 +326,8 @@ class DomingoFeathers(UEface):
                         pre_ctrl = ctrl
                         mc.parent(jnt,root_joint)
                         mc.parent(offset,feather_grp)
-                def_jnts.append(eejnt)
-                def_jnts.append(midjnt)
+                #def_jnts.append(eejnt) #THIS IS THE THING YOU ARE LOOKING FOR WHEN YOU COME BACK TO FIX IT
+                #def_jnts.append(midjnt)
                 def_jnts.append(basejnt)
                 mc.delete(mid_guide)
                 #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_MainFeather_{num}_GEO', tsb=True)
