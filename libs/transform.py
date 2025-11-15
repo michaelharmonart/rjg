@@ -197,14 +197,13 @@ def matrix_constraint(
     mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
     mc.connectAttr(f"{constrain_transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
 
-    # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient (I was up till 2am because of this)
-    if mc.nodeType(constrain_transform) == "joint":
-        mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
-    mc.setAttr(f"{constrain_transform}.rotateAxis", 0, 0, 0, type="float3")
-
     # Drive transform with decomposed values
     if rotate:
         mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{constrain_transform}.rotate")
+        # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient (I was up till 2am because of this)
+        if mc.nodeType(constrain_transform) == "joint":
+            mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
+        mc.setAttr(f"{constrain_transform}.rotateAxis", 0, 0, 0, type="float3")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{constrain_transform}.translate")
     if scale:
@@ -242,14 +241,14 @@ def drive_transform_with_matrix(
     mc.connectAttr(matrix_attr, f"{decompose_matrix}.inputMatrix")
     mc.connectAttr(f"{transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
 
-    # Prep constrained transform
-    if mc.nodeType(transform) == "joint":
-        mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
-    mc.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")
 
     # Drive transform with decomposed values
     if rotate:
         mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{transform}.rotate")
+        # Prep constrained transform
+        if mc.nodeType(transform) == "joint":
+            mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
+        mc.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{transform}.translate")
     if scale:

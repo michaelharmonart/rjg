@@ -30,6 +30,7 @@ class Clavicle(rModule.RigModule):
         local_orient=False,
         model_path=None,
         guide_path=None,
+        swing_guide: str | None = None,
         auto_clavicle: bool = True,
         auto_clav_up: float = 1,
         auto_clav_down: float = 0,
@@ -40,6 +41,10 @@ class Clavicle(rModule.RigModule):
         self.auto_clavicle = auto_clavicle
         self.local_orient = local_orient
         self.mirror = 1 if "L" in self.side else -1
+        if swing_guide is None:
+            self.swing_guide = self.guide_list[-1]
+        else:
+            self.swing_guide = swing_guide
         self.auto_clav_up = auto_clav_up
         self.auto_clav_down = auto_clav_down
         self.auto_clav_forward = auto_clav_forward
@@ -58,10 +63,16 @@ class Clavicle(rModule.RigModule):
 
     def create_inputs(self, group: str) -> None:
         self.input_group = mc.group(empty=True, name=f"{self.base_name}_INPUTS", parent=group)
-        self.swing_input = mc.group(
-            empty=True, name=f"{self.base_name}_Swing_IN", parent=self.input_group
+        self.swing_group = mc.group(
+            empty=True, name=f"{self.base_name}_Swing_GRP", parent=self.input_group
         )
-        match_pose(self.input_group, rotate=self.main_ctrl.ctrl, translate=self.main_ctrl.ctrl)
+        self.swing_input = mc.group(
+            empty=True, name=f"{self.base_name}_Swing_IN", parent=self.swing_group
+        )
+        if self.swing_input is not None:
+            match_pose(self.swing_group, rotate=self.swing_guide, translate=self.swing_guide)
+        else:
+            match_pose(self.swing_group, rotate=self.main_ctrl.ctrl, translate=self.main_ctrl.ctrl)
 
     def control_rig(self):
         if self.local_orient:
@@ -218,15 +229,33 @@ class Clavicle(rModule.RigModule):
             keyable=True,
             name="autoClavicle",
         )
-        auto_clav_multiplier = mc.createNode("multiply", name=f"{self.base_name}_Swing_Multiplier")
-        mc.connectAttr(f"{auto_clav_strength_sum}.output", f"{auto_clav_multiplier}.input[0]")
-        mc.connectAttr(auto_clav_attr.attr, f"{auto_clav_multiplier}.input[1]")
+        auto_clav_multiplier = node.MultiplyNode(name=f"{self.base_name}_Swing_Multiplier")
+        mc.connectAttr(f"{auto_clav_strength_sum}.output", auto_clav_multiplier.input[0])
+        mc.connectAttr(auto_clav_attr.attr, auto_clav_multiplier.input[1])
+        auto_clav_clamp = node.ClampRangeNode(name=f"{self.base_name}_Swing_Mult_Clamp")
+        mc.connectAttr(auto_clav_multiplier.output, auto_clav_clamp.input)
+
+        driven_transform: str = self.main_ctrl.group_list[1]
+        # Create constraint matrix to blend with.
+        swing_matrix = mc.createNode("multMatrix", name=f"{self.base_name}_Swing_Matrix")
+        offset_matrix = (
+            get_world_matrix(driven_transform) * get_world_matrix(self.swing_input).inverse()
+        )
+        mc.setAttr(f"{swing_matrix}.matrixIn[0]", offset_matrix, type="matrix")
+        mc.connectAttr(f"{self.swing_input}.worldMatrix", f"{swing_matrix}.matrixIn[1]")
+        mc.connectAttr(f"{driven_transform}.parentInverseMatrix[0]", f"{swing_matrix}.matrixIn[2]")
 
         matrix_blend = mc.createNode("blendMatrix", name=f"{self.base_name}_Swing_Blend")
-        mc.connectAttr(f"{self.swing_input}.matrix", f"{matrix_blend}.target[0].targetMatrix")
+        mc.connectAttr(f"{swing_matrix}.matrixSum", f"{matrix_blend}.target[0].targetMatrix")
 
-        mc.connectAttr(f"{auto_clav_multiplier}.output", f"{matrix_blend}.target[0].weight")
-        drive_transform_with_matrix(f"{matrix_blend}.outputMatrix", self.main_ctrl.group_list[1])
+        mc.connectAttr(auto_clav_clamp.output, f"{matrix_blend}.target[0].weight")
+        drive_transform_with_matrix(
+            f"{matrix_blend}.outputMatrix",
+            driven_transform,
+            translate=False,
+            shear=False,
+            scale=False,
+        )
         
         pass
 

@@ -4,11 +4,27 @@ rig_name = "{{RIG_NAME}}"
 rig_version = "{{RIG_VERSION}}"
 script_node_name = "{{SCRIPT_NODE}}"
 metadata_node_name = f"{rig_name}_RIG_METADATA"
+
 def get_namespace() -> str:
     script_nodes = mc.ls(type="script", recursive=True)
     for script_node in script_nodes:
         if script_node_name in script_node:
-            return script_node.rsplit(":", 1)[0]
+            if ":" in script_node:
+                return f"{script_node.rsplit(':', 1)[0]}:"
+            else:
+                return ""
+    return ""
+
+def version_attribute(attribute: str, value: float):
+    if mc.objExists(attribute):
+        mc.setAttr(attribute, value)
+        print(f"Versioning: Setting {attribute} to {value}")
+    else:
+        print(f"Versioning: Couldn't find {attribute}")
+
+def update_version(version: float):
+    mc.setAttr(f"{metadata_node_name}.RIG_VERSION", version)
+    print(f"Versioning: {rig_name} updated to version {version}")
 
 if not mc.objExists(metadata_node_name):
     metadata_node = mc.createNode("network", name=metadata_node_name)
@@ -24,3 +40,8 @@ else:
     if rig_version > scene_rig_version:
         rig_namespace: str = get_namespace()
         print(f"{rig_name} is now newer than the version first referenced into this file.")
+        if scene_rig_version < 3:
+            # Auto Clavicle
+            for control in ["clavicle_L_CTRL", "clavicle_R_CTRL"]:
+                version_attribute(f"{rig_namespace}{control}.autoClavicle", 0)
+            update_version(3)
