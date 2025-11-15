@@ -830,7 +830,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if pp and not_previs and not bony:
         import rjg.libs.util as rUtil
         rUtil.import_poseInterpolator(pp)
-        if character == 'Gretchen':
+        #if character == 'Gretchen':
             #mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenShirtPoses6.shp', at = True, name = 'Shirt_Edits')
             #mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenPantsPoses.shp', at = True, name = 'Pants_Edits')
 
@@ -849,7 +849,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             #        if shapes == edits:
             #            mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
 
-            shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='clothingSkc')[0]
+            #shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='clothingSkc')[0]
             #pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='clothingSkc')[0]
             #shoes_skin = mc.skinCluster(bind_joints, 'boots', tsb=True, skinMethod=1, n='clothingSkc')[0]
             #rWeightNgIO.init_skc(shirt_skin)
@@ -1378,6 +1378,19 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         auto_split_all_weights('MODEL')
     #if character == 'Domingo':
     #    auto_split_all_weights('tail')
+
+
+    print("siiiiiigggggghhhhhhhhh")
+    if character == "Gretchen":
+        print("siiiiiigggggghhhhhhhhh")
+        mc.setAttr("head_M_01_CTRL.orientSpace", 0)
+        mc.setAttr("head_M_01_CTRL.rotateOrder", 2)
+        
+        mc.setAttr("COG_M_CTRL.rotateOrder", 2)
+
+        mc.setAttr("neck_01_FK_M_CTRL.rotateOrder",4)
+        mc.setAttr("neck_02_FK_M_CTRL.rotateOrder",4) 
+    
         
 
 def create_groom_bust(model):

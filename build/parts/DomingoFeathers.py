@@ -332,13 +332,6 @@ class DomingoFeathers(UEface):
                 mc.delete(mid_guide)
                 #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_MainFeather_{num}_GEO', tsb=True)
                 #if feathergrps == 'Sub02Feather':
-                if guide == mainguides[-1]:
-                    try:
-                        side = prefix.split("_")[-1]
-                        print(f'{side}{feathergrps}')
-                        mc.skinCluster(*def_jnts, f'feathers{side}', toSelectedBones=True)
-                    except Exception as e:
-                        print(e)
 
                 mc.select(clear=True)
                 mc.select(main_surf[0])
@@ -362,7 +355,13 @@ class DomingoFeathers(UEface):
                     worldUpType="objectrotation", worldUpObject =f'{prefix}_MainAimUp{num}_{ctrlname}'
                     #worldUpType = 'None'
                 )
-
+                if guide == mainguides[-1]:
+                    try:
+                        side = prefix.split("_")[-1]
+                        print(f'{side}{feathergrps}')
+                        mc.skinCluster(*def_jnts, f'feathers{side}', toSelectedBones=True)
+                    except Exception as e:
+                        print(e)
             #for subnum in ['01', '02']:
 
 

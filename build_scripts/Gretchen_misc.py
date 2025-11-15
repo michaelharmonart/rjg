@@ -75,10 +75,10 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='pantsSkc')[0]
     shoes_skin = mc.skinCluster(bind_joints, 'boots', tsb=True, skinMethod=1, n='shoesSkc')[0]
     gloves_skin = mc.skinCluster(bind_joints, 'gloves', tsb=True, skinMethod=1, n='glovesSkc')[0]
-    #WeightNgIO.init_skc(shirt_skin)
-    #rWeightNgIO.init_skc(pants_skin)
-    #rWeightNgIO.init_skc(shoes_skin)
-    #rWeightNgIO.init_skc(gloves_skin)
+    rWeightNgIO.init_skc(shirt_skin)
+    rWeightNgIO.init_skc(pants_skin)
+    rWeightNgIO.init_skc(shoes_skin)
+    rWeightNgIO.init_skc(gloves_skin)
     rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights_01")
     rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Pants_Weights")
     rWeightNgIO.read_skin("boots", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shoes_Weights")
