@@ -1,3 +1,4 @@
+from maya.api.OpenMaya import MEulerRotation, MMatrix, MSpace, MTransformationMatrix
 import maya.cmds as mc
 from importlib import reload
 
@@ -5,6 +6,14 @@ import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 import rjg.build.chain as rChain
 import rjg.libs.control.ctrl as rCtrl
+from rjg.libs.transform import (
+    drive_transform_with_matrix,
+    get_parent_inverse_matrix,
+    get_world_matrix,
+    match_pose,
+)
+from rjg.libs.pose_interpolator import Pose, PoseDriver, PoseInterpolator
+from rjg.libs.maya_api import node
 reload(rAttr)
 reload(rModule)
 reload(rChain)
@@ -12,11 +21,29 @@ reload(rCtrl)
 
 
 class Clavicle(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, local_orient=False, model_path=None, guide_path=None):
+    def __init__(
+        self,
+        side=None,
+        part=None,
+        guide_list=None,
+        ctrl_scale=None,
+        local_orient=False,
+        model_path=None,
+        guide_path=None,
+        auto_clavicle: bool = True,
+        auto_clav_up: float = 1,
+        auto_clav_down: float = 0,
+        auto_clav_forward: float = 0.5,
+        auto_clav_back: float = 0.5,
+    ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
-
+        self.auto_clavicle = auto_clavicle
         self.local_orient = local_orient
-
+        self.mirror = 1 if "L" in self.side else -1
+        self.auto_clav_up = auto_clav_up
+        self.auto_clav_down = auto_clav_down
+        self.auto_clav_forward = auto_clav_forward
+        self.auto_clav_back = auto_clav_back
         self.create_module()
 
     def create_module(self):
@@ -24,8 +51,17 @@ class Clavicle(rModule.RigModule):
 
         self.control_rig()
         self.output_rig()
+        if self.auto_clavicle:
+            self.create_auto_clavicle()
         self.skeleton()
         self.add_plugs()
+
+    def create_inputs(self, group: str) -> None:
+        self.input_group = mc.group(empty=True, name=f"{self.base_name}_INPUTS", parent=group)
+        self.swing_input = mc.group(
+            empty=True, name=f"{self.base_name}_Swing_IN", parent=self.input_group
+        )
+        match_pose(self.input_group, rotate=self.main_ctrl.ctrl, translate=self.main_ctrl.ctrl)
 
     def control_rig(self):
         if self.local_orient:
@@ -40,7 +76,9 @@ class Clavicle(rModule.RigModule):
         attr_util = rAttr.Attribute(add=False)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
 
+
     def output_rig(self):
+        
         # create clavicle chain
         cnst_grp = mc.group(empty=True, parent=self.module_grp,
                              name=self.base_name + '_CNST_GRP')
@@ -130,6 +168,67 @@ class Clavicle(rModule.RigModule):
                          bta + '.attributesBlender')
         # connect final output
         mc.connectAttr(bta + '.output', self.clav_chain.joints[0] + '.scaleY')
+
+    def create_auto_clavicle(self) -> None:
+        self.create_inputs(group=self.module_grp)
+        swing_driver = PoseDriver(transform=self.swing_input)
+        pose_interpolator = PoseInterpolator(
+            name=f"{self.base_name}_poseInterpolator",
+            gaussian_interpolation=True,
+            parent=self.module_grp,
+            drivers=[swing_driver],
+            allow_negative_weights=False,
+        )
+
+        # Define Poses
+        mirror_matrix = MMatrix(((self.mirror, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)))
+        rest_matrix: MMatrix = get_world_matrix(self.swing_input)
+        parent_inverse_matrix = get_parent_inverse_matrix(self.swing_input)
+        def rotate_matrix_with_mirror(rotation_matrix: MTransformationMatrix) -> MMatrix:
+            return rest_matrix * (mirror_matrix * rotation_matrix.asMatrix() * mirror_matrix)
+        auto_clav_strength_sum = mc.createNode("sum", name=f"{pose_interpolator.name}_Sum")
+
+        def connect_pose(pose: Pose, strength: float):
+            index = pose.index
+            strength_node = node.MultiplyNode(name=f"{pose.name}_Strength")
+            mc.connectAttr(f"{pose_interpolator.pose_interpolator}.output[{index}]", strength_node.input[0])
+            mc.setAttr(strength_node.input[1], strength)
+            mc.connectAttr(strength_node.output, f"{auto_clav_strength_sum}.input[{index}]")
+
+        def create_pose(name: str, rotation: tuple[float, float, float], strength: float):
+            pose_transform: MTransformationMatrix = MTransformationMatrix()
+            pose_transform.setRotation(MEulerRotation(*rotation))
+            pose_matrix = rotate_matrix_with_mirror(pose_transform) * parent_inverse_matrix
+            pose = Pose(name=f"swing_{name}", matrices=[pose_matrix], gaussian_falloff=0.5)
+            pose_interpolator.add_pose(pose)
+            connect_pose(pose, strength)
+
+        create_pose(name="up_90", rotation=(0, 0, 90), strength=self.auto_clav_up)
+        create_pose(name="down_90", rotation=(0, 0, -90), strength=self.auto_clav_down)
+        create_pose(name="forward_90", rotation=(0, -90, 0), strength=self.auto_clav_forward)
+        create_pose(name="back_90", rotation=(0, 90, 0), strength=self.auto_clav_back)
+
+        # Set up Auto-Clavicle Attribute and connect it
+        auto_clav_attr = rAttr.Attribute(
+            node=self.main_ctrl.ctrl,
+            type="double",
+            value=1,
+            min=0,
+            max=1,
+            keyable=True,
+            name="autoClavicle",
+        )
+        auto_clav_multiplier = mc.createNode("multiply", name=f"{self.base_name}_Swing_Multiplier")
+        mc.connectAttr(f"{auto_clav_strength_sum}.output", f"{auto_clav_multiplier}.input[0]")
+        mc.connectAttr(auto_clav_attr.attr, f"{auto_clav_multiplier}.input[1]")
+
+        matrix_blend = mc.createNode("blendMatrix", name=f"{self.base_name}_Swing_Blend")
+        mc.connectAttr(f"{self.swing_input}.matrix", f"{matrix_blend}.target[0].targetMatrix")
+
+        mc.connectAttr(f"{auto_clav_multiplier}.output", f"{matrix_blend}.target[0].weight")
+        drive_transform_with_matrix(f"{matrix_blend}.outputMatrix", self.main_ctrl.group_list[1])
+        
+        pass
 
     def skeleton(self):
         bind_chain = rChain.Chain(transform_list=self.clav_chain.joints,

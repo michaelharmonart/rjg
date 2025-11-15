@@ -1,5 +1,5 @@
+from maya.api.OpenMaya import MDagPath, MFnTransform, MMatrix, MSelectionList, MTransformationMatrix
 import maya.cmds as mc
-from importlib import reload
 from collections import OrderedDict
 
 '''
@@ -89,12 +89,51 @@ def is_identity_matrix(matrix: list[float], epsilon: float = 0.001) -> bool:
         for value, identity in zip(matrix, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
     )
 
+def get_local_matrix(transform: str) -> MMatrix:
+    """
+    Returns the local matrix of a transform.
+    """
+    selection = MSelectionList()
+    selection.add(transform)
+    dag_path: MDagPath = selection.getDagPath(0)
+    mfn_transform: MFnTransform = MFnTransform(dag_path)
+    transformation: MTransformationMatrix = mfn_transform.transformation()
+    return transformation.asMatrix()
+
+def get_world_matrix(transform: str) -> MMatrix:
+    """
+    Returns the full world matrix of a transform, including rotateAxis, jointOrient, etc.
+    Equivalent to Maya's internal world matrix.
+    """
+    selection = MSelectionList()
+    selection.add(transform)
+    dag_path: MDagPath = selection.getDagPath(0)
+    return dag_path.inclusiveMatrix()
+
+
+def get_parent_inverse_matrix(transform: str) -> MMatrix:
+    """
+    Returns the inverse world matrix of a transform's parent, including rotateAxis, jointOrient, etc.
+    """
+    selection = MSelectionList()
+    selection.add(transform)
+    dag_path: MDagPath = selection.getDagPath(0)
+    return dag_path.exclusiveMatrixInverse()
+
+
+def get_matrix_values(matrix: MMatrix) -> list[float]:
+    return [matrix[i] for i in range(16)]
+
+
 def matrix_constraint(
     source_transform: str,
     constrain_transform: str,
     keep_offset: bool = True,
     local_space: bool = True,
     translate: bool = True,
+    rotate: bool = True,
+    scale: bool = True,
+    shear: bool = True,
 ) -> None:
     """
     Constrain a transform to another
@@ -158,18 +197,62 @@ def matrix_constraint(
     mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
     mc.connectAttr(f"{constrain_transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
 
-    rotate_attr: str = f"{decompose_matrix}.outputRotate"
     # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient (I was up till 2am because of this)
     if mc.nodeType(constrain_transform) == "joint":
         mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
     mc.setAttr(f"{constrain_transform}.rotateAxis", 0, 0, 0, type="float3")
-    mc.connectAttr(rotate_attr, f"{constrain_transform}.rotate")
+
+    # Drive transform with decomposed values
+    if rotate:
+        mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{constrain_transform}.rotate")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{constrain_transform}.translate")
-    mc.connectAttr(f"{decompose_matrix}.outputScale", f"{constrain_transform}.scale")
-    mc.connectAttr(f"{decompose_matrix}.outputShear", f"{constrain_transform}.shear")
+    if scale:
+        mc.connectAttr(f"{decompose_matrix}.outputScale", f"{constrain_transform}.scale")
+    if shear:
+        mc.connectAttr(f"{decompose_matrix}.outputShear", f"{constrain_transform}.shear")
 
 
 def freeze_and_zero(transform: str) -> None:
     mc.makeIdentity(transform, apply=True)
     mc.xform(pivots=(0, 0, 0))
+
+def drive_transform_with_matrix(
+    matrix_attr: str,
+    transform: str,
+    translate: bool = True,
+    rotate: bool = True,
+    scale: bool = True,
+    shear: bool = True,
+):
+    """
+    Drive a transforms translate rotate scale and shear with a matrix attribute.
+
+    Args:
+        matrix_attr: The matrix attribute to use as the driver.
+        transform: The transform to be driven.
+        translate: whether to constrain translation.
+    """
+    constraint_name: str = transform.split("|")[-1]
+
+    # Create the decomposed matrix and connect it's inputs
+    decompose_matrix: str = mc.createNode(
+        "decomposeMatrix", name=f"{constraint_name}_DriverMatrixDecompose"
+    )
+    mc.connectAttr(matrix_attr, f"{decompose_matrix}.inputMatrix")
+    mc.connectAttr(f"{transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
+
+    # Prep constrained transform
+    if mc.nodeType(transform) == "joint":
+        mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
+    mc.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")
+
+    # Drive transform with decomposed values
+    if rotate:
+        mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{transform}.rotate")
+    if translate:
+        mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{transform}.translate")
+    if scale:
+        mc.connectAttr(f"{decompose_matrix}.outputScale", f"{transform}.scale")
+    if shear:
+        mc.connectAttr(f"{decompose_matrix}.outputShear", f"{transform}.shear")
