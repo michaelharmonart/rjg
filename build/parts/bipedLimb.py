@@ -284,24 +284,13 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=anchor_group)
         mc.aimConstraint(swing_joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
 
-        # Connect swing (have to some fancyness to get the rotations into the right space)
-        offset: MMatrix = (
-            get_world_matrix(self.swing_output)
-            * get_world_matrix(self.swing_connection_target).inverse()
-        )
-        offset_inverse = get_matrix_values(offset.inverse())
-        connection_matrix = mc.createNode(
-            "multMatrix", name=f"{self.swing_connection_target}_ConnectionMatrix"
-        )
-        mc.setAttr(f"{connection_matrix}.matrixIn[0]", offset_inverse, type="matrix")
-        mc.connectAttr(f"{self.swing_output}.matrix", f"{connection_matrix}.matrixIn[1]")
-        mc.setAttr(f"{connection_matrix}.matrixIn[2]", get_matrix_values(offset), type="matrix")
-        drive_transform_with_matrix(
-            f"{connection_matrix}.matrixSum",
+        # Connect swing
+        matrix_constraint(
+            self.swing_output,
             self.swing_connection_target,
             translate=False,
-            scale=False,
             shear=False,
+            scale=False,
         )
 
     def skeleton(self):

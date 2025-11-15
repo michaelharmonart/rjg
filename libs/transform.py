@@ -118,11 +118,7 @@ def get_parent_inverse_matrix(transform: str) -> MMatrix:
     selection = MSelectionList()
     selection.add(transform)
     dag_path: MDagPath = selection.getDagPath(0)
-    if dag_path.length() > 0:
-        dag_path.pop()
-        return dag_path.inclusiveMatrix()
-    else:
-        return MMatrix.kIdentity
+    return dag_path.exclusiveMatrixInverse()
 
 
 def get_matrix_values(matrix: MMatrix) -> list[float]:
@@ -135,6 +131,9 @@ def matrix_constraint(
     keep_offset: bool = True,
     local_space: bool = True,
     translate: bool = True,
+    rotate: bool = True,
+    scale: bool = True,
+    shear: bool = True,
 ) -> None:
     """
     Constrain a transform to another
@@ -198,16 +197,20 @@ def matrix_constraint(
     mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
     mc.connectAttr(f"{constrain_transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
 
-    rotate_attr: str = f"{decompose_matrix}.outputRotate"
     # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient (I was up till 2am because of this)
     if mc.nodeType(constrain_transform) == "joint":
         mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
     mc.setAttr(f"{constrain_transform}.rotateAxis", 0, 0, 0, type="float3")
-    mc.connectAttr(rotate_attr, f"{constrain_transform}.rotate")
+
+    # Drive transform with decomposed values
+    if rotate:
+        mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{constrain_transform}.rotate")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{constrain_transform}.translate")
-    mc.connectAttr(f"{decompose_matrix}.outputScale", f"{constrain_transform}.scale")
-    mc.connectAttr(f"{decompose_matrix}.outputShear", f"{constrain_transform}.shear")
+    if scale:
+        mc.connectAttr(f"{decompose_matrix}.outputScale", f"{constrain_transform}.scale")
+    if shear:
+        mc.connectAttr(f"{decompose_matrix}.outputShear", f"{constrain_transform}.shear")
 
 
 def freeze_and_zero(transform: str) -> None:

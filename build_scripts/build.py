@@ -322,14 +322,25 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer'] else 'lollipop'
     for fs in ["Left", "Right"]:
         side = fs[0]
-        clavicle: Clavicle = rBuild.build_module(
-            module_type="clavicle",
-            side=fs[0],
-            part="clavicle",
-            guide_list=[fs + piece for piece in ["Shoulder", "Arm"]],
-            local_orient=False,
-            ctrl_scale=9,
-        )
+        if character == "Bobo":
+            clavicle: Clavicle = rBuild.build_module(
+                module_type="clavicle",
+                side=fs[0],
+                part="clavicle",
+                guide_list=[fs + piece for piece in ["Shoulder", "Arm"]],
+                local_orient=False,
+                ctrl_scale=9,
+                auto_clav_down = 0.5,
+            )
+        else:
+            clavicle: Clavicle = rBuild.build_module(
+                module_type="clavicle",
+                side=fs[0],
+                part="clavicle",
+                guide_list=[fs + piece for piece in ["Shoulder", "Arm"]],
+                local_orient=False,
+                ctrl_scale=9,
+            )
         arm = rBuild.build_module(
             module_type="biped_limb",
             side=fs[0],
