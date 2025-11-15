@@ -32,7 +32,7 @@ class Clavicle(rModule.RigModule):
         guide_path=None,
         swing_guide: str | None = None,
         auto_clavicle: bool = True,
-        auto_clav_up: float = 0.4,
+        auto_clav_up: float = 0.3,
         auto_clav_down: float = 0,
         auto_clav_forward: float = 0.25,
         auto_clav_back: float = 0.25,
