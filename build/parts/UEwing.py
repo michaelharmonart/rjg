@@ -351,6 +351,8 @@ class UEwing(UEface):
         prefix = UEface.get_prefix_from_group(self.grp_name)
         grp = self.grp_name
         ctrlname, grpname = UEwing.get_namestruc(prefix)
+        parts = prefix.split("_")   # ["wing", "L"]
+        side = parts[-1]
 
         feather_grp = mc.group(em=True, name=f'{prefix}_feather_{grpname}')
         handle_grp = mc.group(em=True, name=f'{prefix}_handle_{grpname}')
