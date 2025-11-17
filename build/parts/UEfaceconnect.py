@@ -9,6 +9,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
+import rjg.build.rigModule as rModule
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -21,6 +22,7 @@ class UEfaceconnect(UEface):
         self.custom = custom
 
     def build(self, character=None):
+        rig_module = rModule.RigModule(side=None, part="UEFace")
         upper_jnt, upper_ctrl, upper_offset = UEface.Simple_joint_and_Control(
             guide='UpperHead_guide',
             overwrite=True,
@@ -45,6 +47,9 @@ class UEfaceconnect(UEface):
         # Select the set and get its members
         mc.select('UE_Face_Bind')
         all_joints = mc.ls(selection=True)
+        if self.custom == 'Domingo':
+            for joint_name in all_joints:
+                rig_module.tag_bind_joints(joint_name)
 
         # Init groups
         nose_jnts = []

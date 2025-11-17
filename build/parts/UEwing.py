@@ -356,7 +356,13 @@ class UEwing(UEface):
         handle_grp = mc.group(em=True, name=f'{prefix}_handle_{grpname}')
         upAim_grp = mc.group(em=True, name=f'{prefix}_upAim_{grpname}')
         mc.select(clear=True)
-        root_joint = mc.joint(name=f'{prefix}_root_jnt')
+        if side == 'L':
+            pos = mc.xform(f'LeftArm', q=True, ws=True, t=True)
+        elif side == 'R':
+            pos = mc.xform(f'RightArm', q=True, ws=True, t=True)
+        else:
+            pos = (0,0,0)
+        root_joint = mc.joint(name=f'{prefix}_root_jnt', p=pos)
         fk_group = mc.group(em=True, name=f'{prefix}_FK_{grpname}')
         ik_group = mc.group(em=True, name=f'{prefix}_IK_{grpname}')
 
@@ -487,12 +493,12 @@ class UEwing(UEface):
                 #worldUpType = 'None'
             )
 
-        sub_groups = UEwing.get_sub_groups(prefix)
-        print(sub_groups)
-        for sub in sub_groups:
-            subrot_offset_list, subbase_offsets, sub_aimjnt_list = UEwing.build_sub_feathers(prefix, sub, main_surf,)
-            rot_offset_list.extend(subrot_offset_list)
-            full_aimjnt_list.extend(sub_aimjnt_list)
+        #sub_groups = UEwing.get_sub_groups(prefix)
+        #print(sub_groups)
+        #for sub in sub_groups:
+        #    subrot_offset_list, subbase_offsets, sub_aimjnt_list = UEwing.build_sub_feathers(prefix, sub, main_surf,)
+        #    rot_offset_list.extend(subrot_offset_list)
+        #    full_aimjnt_list.extend(sub_aimjnt_list)
 
         pre_jnt = None
         pre_ctrl = None

@@ -233,7 +233,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
-                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1)
+                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['eyes', 'pupils', 'corneas'])
                 eye.build()
                 from rjg.build.parts.UEbrow import UEbrow
                 brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1)
@@ -249,7 +249,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mouth = UEmouth('Mouth_guides', ctrl_scale=1)
             mouth.build()
             from rjg.build.parts.UEteeth import UEteeth
-            teeth = UEteeth('Tongue_M_guides', ctrl_scale=1)
+            teeth = UEteeth('Tongue_M_guides', ctrl_scale=1, skin=['tongue', 'topteeth', 'botteeth'])
             teeth.build()
             from rjg.build.parts.UEStache import UEstache
             stache = UEstache('Stache_M_guides', ctrl_scale=1, beard=True)
@@ -801,7 +801,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         reload(rc)
         if not_previs:
            try: 
-                rc.Domingo_extras(body_mesh, extras)
+                rc.Domingo_extras(body_mesh, extras, face)
            except Exception as e:
                 mc.warning(e)
     if character == 'Luciana':
@@ -1212,8 +1212,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Domingo':
-        for g in ['tail', 'vest', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye_L_Eye_L_Lower_curve_ribbon',]:
-            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+        if face:
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye_L_Eye_L_Lower_curve_ribbon',]:
+                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+        else:
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache',]:
+                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
 
     if character == 'Luciana':
         if mc.objExists('switch_CTRL'):
@@ -1417,7 +1421,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     #Skin Splitting 
     
-    if character in ['Bobo', 'Luciana', 'Domingo']:
+    if character in ['Bobo']:
+        auto_split_all_weights('MODEL')
+    if character in ['Luciana', 'Domingo']:
         auto_split_all_weights('MODEL')
     #if character == 'Domingo':
     #    auto_split_all_weights('tail')

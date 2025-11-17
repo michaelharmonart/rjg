@@ -15,8 +15,9 @@ reload (rGuide)
 reload(rXform)
 
 class UEeye(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1,):
+    def __init__(self, grp_name=None, ctrl_scale=1, skin=None):
         super().__init__(part='Eye', grp_name=grp_name, ctrl_scale=ctrl_scale)
+        self.skin = skin
         
     def get_sorted_eyelid_guides(self, prefix):
         prefix = UEface.get_prefix_from_group(self.grp_name)
@@ -700,6 +701,7 @@ class UEeye(UEface):
 
         mc.hide(surfs[0], surfs[1],)
 
+        ees = []
         for type in ['Iris', 'Pupil']:
             Part=type
             pivot=f'Eye_{side}_EyeCenterPivot'
@@ -730,6 +732,7 @@ class UEeye(UEface):
 
                 root_name = f"{side}_{Part}_{num}_root_JNT"
                 end_name  = f"{side}_{Part}_{num}_EE_JNT"
+                ees.append(end_name)
                 mc.select(clear=True)
 
                 if mc.objExists(root_name):
@@ -773,6 +776,15 @@ class UEeye(UEface):
                     mc.parent(roots, parentjnt)
                 except:
                     mc.warning(f"Could not parent roots under {parentjnt}")
+        if self.skin and side == 'R':
+            left_list = [name.replace("R_", "L_", 1) for name in ees]
+            combined = ees + left_list
+            combined.append('Eye_L_JNT')
+            combined.append('Eye_R_JNT')
+            mc.skinCluster(*combined, self.skin[0])
+            mc.skinCluster(*combined, self.skin[1])
+            mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[2])
+
 
 
 
