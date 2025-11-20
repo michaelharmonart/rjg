@@ -11,11 +11,13 @@ reload(rCtrl)
 reload(rAttr)
 
 class Arbitrary2(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, shape='circle', model_path=None, guide_path=None, par_ctrl=None, par_jnt=None):
+    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, shape='circle', model_path=None, guide_path=None, par_ctrl=None, par_jnt=None, scale=False):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
 
         self.par_ctrl = par_ctrl
         self.par_jnt = par_jnt
+        self.scale = scale
+        self.inverse = not self.scale
 
         self.create_module()
 
@@ -45,10 +47,12 @@ class Arbitrary2(rModule.RigModule):
 
         self.arbit_jnt = mc.joint(arbit_jnt_grp, name=self.arbit_ctrl.ctrl.replace('CTRL', 'JNT'))
         mc.parentConstraint(self.arbit_ctrl.ctrl, self.arbit_jnt, mo=True)
+        if self.scale:
+            mc.scaleConstraint(self.arbit_ctrl.ctrl, self.arbit_jnt, mo=True)
 
     def skeleton(self):
         arbit_chain = rChain.Chain(transform_list=[self.arbit_jnt], side=self.side, suffix='JNT', name=self.part)
-        arbit_chain.create_from_transforms(parent=self.skel, pad=False)
+        arbit_chain.create_from_transforms(parent=self.skel, pad=False, connect_scale=self.inverse, scale_constraint=self.scale)
         self.bind_joints = arbit_chain.joints
         self.tag_bind_joints(self.bind_joints)
 

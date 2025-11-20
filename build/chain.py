@@ -32,6 +32,7 @@ class Chain:
     Given a list of transforms, place joints at each transform
     '''
     def create_from_transforms(self, parent_constraint=True, orient_constraint=False, point_constraint=False, scale_constraint=False, connect_scale=True, parent=False, static=False, pad='auto'):
+        #print("scale_constraint =", scale_constraint)
         pose_dict = rXform.read_pose(self.transform_list)
         if pad == 'auto':
             pad = len(str(len(self.transform_list))) + 1

@@ -417,7 +417,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 side = 'R'
             Glute = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}_Glute', guide_list=mc.getAttr(f'{fs}_Glute' + '.translate'), ctrl_scale=1, par_jnt='COG_M_JNT', par_ctrl='hip_M_CTRL')
             Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='Chest_Offset_CTRL')
-            GloveFlair = rBuild.build_module(module_type='arbitrary2', side=side, part='GloveFlair', guide_list=f'{fs}Glove', ctrl_scale=5, par_jnt=f'arm_{side}_7_JNT', par_ctrl=f'arm_{side}_07_JNT')
+            GloveFlair = rBuild.build_module(module_type='arbitrary2', side=side, part='GloveFlair', guide_list=f'{fs}Glove', ctrl_scale=5, par_jnt=f'arm_{side}_7_JNT', par_ctrl=f'arm_{side}_07_JNT', scale=True)
             ArmTwist = rBuild.build_module(module_type='arbitrary2', side=side, part='ArmTwist', guide_list=f'{fs}ArmTwist', ctrl_scale=1, par_jnt=f'clavicle_{side}_02_JNT', par_ctrl=f'clavicle_{side}_02_JNT')
             
             #ArmTwist = rBuild.build_module(module_type='arbitrary', side=side, part=f'{fs}ArmTwist', guide_list=mc.getAttr(f'{fs}ArmTwist' + '.translate'), ctrl_scale=1, par_jnt=f'arm_{side}_01_JNT', par_ctrl=f'arm_{side}_01_JNT')
