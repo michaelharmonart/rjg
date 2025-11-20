@@ -417,7 +417,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 side = 'R'
             Glute = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}_Glute', guide_list=mc.getAttr(f'{fs}_Glute' + '.translate'), ctrl_scale=1, par_jnt='COG_M_JNT', par_ctrl='hip_M_CTRL')
             Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='Chest_Offset_CTRL')
-            GloveFlair = rBuild.build_module(module_type='arbitrary2', side=side, part='GloveFlair', guide_list=f'{fs}Glove', ctrl_scale=5, par_jnt=f'arm_{side}_7_JNT', par_ctrl=f'arm_{side}_7_JNT')
+            GloveFlair = rBuild.build_module(module_type='arbitrary2', side=side, part='GloveFlair', guide_list=f'{fs}Glove', ctrl_scale=5, par_jnt=f'arm_{side}_7_JNT', par_ctrl=f'arm_{side}_07_JNT')
+            ArmTwist = rBuild.build_module(module_type='arbitrary2', side=side, part='ArmTwist', guide_list=f'{fs}ArmTwist', ctrl_scale=1, par_jnt=f'clavicle_{side}_02_JNT', par_ctrl=f'clavicle_{side}_02_JNT')
+            
+            #ArmTwist = rBuild.build_module(module_type='arbitrary', side=side, part=f'{fs}ArmTwist', guide_list=mc.getAttr(f'{fs}ArmTwist' + '.translate'), ctrl_scale=1, par_jnt=f'arm_{side}_01_JNT', par_ctrl=f'arm_{side}_01_JNT')
 
     #Bobo Specifics
     if character == 'Bobo':
@@ -1429,9 +1432,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     #    auto_split_all_weights('tail')
 
 
-    print("siiiiiigggggghhhhhhhhh")
     if character == "Gretchen":
-        print("siiiiiigggggghhhhhhhhh")
         mc.setAttr("head_M_01_CTRL.orientSpace", 0)
         mc.setAttr("head_M_01_CTRL.rotateOrder", 2)
         
@@ -1439,6 +1440,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         mc.setAttr("neck_01_FK_M_CTRL.rotateOrder",4)
         mc.setAttr("neck_02_FK_M_CTRL.rotateOrder",4) 
+
+        mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
+        mc.delete('ArmTwist_L', 'ArmTwist_R')
+        mc.parentConstraint('arm_L_01_JNT', 'ArmTwist_L_JNT', mo = False)
+        mc.parentConstraint('arm_R_01_JNT', 'ArmTwist_R_JNT', mo = False)
     
         
 
