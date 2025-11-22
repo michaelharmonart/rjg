@@ -737,8 +737,23 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         deformer = mc.deltaMush('shirt1')[0]
         mc.setAttr(f"{deformer}.envelope", .5)
         
-        deformer = mc.deltaMush('pants')[0]
+
+        import rjg.build_scripts.Gretchen_misc as rc
+        reload(rc)
+
+
         mc.setAttr(f"{deformer}.envelope", .5)
+
+        mc.select('head_M_01_CTRL', 'Eyes_ctrl')
+        spsw.run()
+        mc.addAttr('Eyes_ctrl.spaceSwitch', e=True, enumName='world:head:')
+        mc.setAttr('Eyes_ctrl.spaceSwitch', 1)
+        mc.parent('Eyes_ctrl_space_switch_GRP', 'RIG')
+
+
+        import rjg.build_scripts.Gretchen_misc as rc
+        reload(rc)
+
 
 
         import rjg.build_scripts.Gretchen_misc as rc

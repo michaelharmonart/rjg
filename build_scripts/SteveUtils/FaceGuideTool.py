@@ -267,7 +267,7 @@ class FaceGuideUI(QtWidgets.QDialog):
 
 
 
-        elif name in ['Jaw_M_Root', "Eye_L_EyeCenterPivot", "Eye_R_EyeCenterPivot",]:
+        elif name in ['Jaw_M_Root', "Eye_L_EyeCenterPivot", "Eye_R_EyeCenterPivot", 'botTeeth', 'topTeeth', 'Mouth_M_center']:
             if not verts:
                 mc.warning("Please select at least one vertex for Jaw_M_guide.")
                 return None
@@ -322,7 +322,7 @@ class FaceGuideUI(QtWidgets.QDialog):
             return obj
 
 
-        elif ("Pupil_00" in resolved_name) or ("Iris_00" in resolved_name):
+        elif ("Pupil_00" in resolved_name) or ("Iris_00" in resolved_name) or ("Tongue_00" in resolved_name):
 
             print("[MULTI-VERT] Triggered for:", resolved_name)
 
