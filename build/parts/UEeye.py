@@ -15,9 +15,10 @@ reload (rGuide)
 reload(rXform)
 
 class UEeye(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, skin=None):
+    def __init__(self, grp_name=None, ctrl_scale=1, skin=None, eyetype='Human'):
         super().__init__(part='Eye', grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.skin = skin
+        self.eyetype = eyetype
         
     def get_sorted_eyelid_guides(self, prefix):
         prefix = UEface.get_prefix_from_group(self.grp_name)
@@ -702,89 +703,167 @@ class UEeye(UEface):
         mc.hide(surfs[0], surfs[1],)
 
         ees = []
-        for type in ['Iris', 'Pupil']:
-            Part=type
-            pivot=f'Eye_{side}_EyeCenterPivot'
-            upvector=f'Eye_{side}_Aim'
-            controlchannel=f'Eye_{side}_Look_{side}_CTRL.{Part}_Size'
-            parentjnt=f'Eye_{side}_JNT'
-            parent=True
+        if self.eyetype == 'Human':
+            for type in ['Iris', 'Pupil']:
+                Part=type
+                pivot=f'Eye_{side}_EyeCenterPivot'
+                upvector=f'Eye_{side}_Aim'
+                controlchannel=f'Eye_{side}_Look_{side}_CTRL.{Part}_Size'
+                parentjnt=f'Eye_{side}_JNT'
+                parent=True
 
-            mc.addAttr(f'Eye_{side}_Look_{side}_CTRL', longName=f'{type}_Size', attributeType='float', keyable=True)
-            guides = mc.ls(f"Eye_{side}_{type}_*", type="transform") or []
+                mc.addAttr(f'Eye_{side}_Look_{side}_CTRL', longName=f'{type}_Size', attributeType='float', keyable=True)
+                guides = mc.ls(f"Eye_{side}_{type}_*", type="transform") or []
 
-            sel = []
-            for i, guide in enumerate(guides, start=1):
-                num = str(i).zfill(2)
-                pos1 = mc.xform(guide, q=True, ws=True, t=True)
-                mc.select(clear=True)
-                jnt = mc.joint(name=f"{side}_{Part}_{num}_EE_JNT", p=pos1, radius=.1)
-                sel.append(jnt)
+                sel = []
+                for i, guide in enumerate(guides, start=1):
+                    num = str(i).zfill(2)
+                    pos1 = mc.xform(guide, q=True, ws=True, t=True)
+                    mc.select(clear=True)
+                    jnt = mc.joint(name=f"{side}_{Part}_{num}_EE_JNT", p=pos1, radius=.1)
+                    sel.append(jnt)
 
 
-            roots = []
+                roots = []
 
-            # get pivot world pos
-            pivot_pos = mc.xform(pivot, q=True, ws=True, t=True)
+                # get pivot world pos
+                pivot_pos = mc.xform(pivot, q=True, ws=True, t=True)
 
-            for i, jnt in enumerate(sel, start=1):
-                num = str(i).zfill(2)
+                for i, jnt in enumerate(sel, start=1):
+                    num = str(i).zfill(2)
 
-                root_name = f"{side}_{Part}_{num}_root_JNT"
-                end_name  = f"{side}_{Part}_{num}_EE_JNT"
-                ees.append(end_name)
-                mc.select(clear=True)
+                    root_name = f"{side}_{Part}_{num}_root_JNT"
+                    end_name  = f"{side}_{Part}_{num}_EE_JNT"
+                    ees.append(end_name)
+                    mc.select(clear=True)
 
-                if mc.objExists(root_name):
-                    mc.warning(f"{root_name} already exists, skipping.")
-                    continue
+                    if mc.objExists(root_name):
+                        mc.warning(f"{root_name} already exists, skipping.")
+                        continue
 
-                # create root at pivot
-                root = mc.joint(name=root_name, p=pivot_pos, radius=.1)
-                mc.select(clear=True)
+                    # create root at pivot
+                    root = mc.joint(name=root_name, p=pivot_pos, radius=.1)
+                    mc.select(clear=True)
 
-                # orient root using aimConstraint (Y points at joint, X stabilized by upvector)
-                aim = mc.aimConstraint(jnt,
-                                    root,
-                                    aimVector=(0, 1, 0),
-                                    upVector=(1, 0, 0),
-                                    worldUpType="object",
-                                    worldUpObject=upvector)
-                mc.delete(aim)
+                    # orient root using aimConstraint (Y points at joint, X stabilized by upvector)
+                    aim = mc.aimConstraint(jnt,
+                                        root,
+                                        aimVector=(0, 1, 0),
+                                        upVector=(1, 0, 0),
+                                        worldUpType="object",
+                                        worldUpObject=upvector)
+                    mc.delete(aim)
 
-                # freeze root rotations
-                mc.makeIdentity(root, apply=True, t=0, r=1, s=0, n=0)
+                    # freeze root rotations
+                    mc.makeIdentity(root, apply=True, t=0, r=1, s=0, n=0)
 
-                # rename selected joint and parent it
-                new_end = mc.rename(jnt, end_name)
-                mc.parent(new_end, root)
+                    # rename selected joint and parent it
+                    new_end = mc.rename(jnt, end_name)
+                    mc.parent(new_end, root)
 
-                # freeze end rotations
-                mc.makeIdentity(new_end, apply=True, t=0, r=1, s=0, n=0)
+                    # freeze end rotations
+                    mc.makeIdentity(new_end, apply=True, t=0, r=1, s=0, n=0)
 
-                # connect control channel
-                try:
-                    mc.connectAttr(controlchannel, f"{root}.rotateZ", f=True)
-                except:
-                    mc.warning(f"Could not connect {controlchannel} to {root}.rotateZ")
+                    # connect control channel
+                    try:
+                        mc.connectAttr(controlchannel, f"{root}.rotateZ", f=True)
+                    except:
+                        mc.warning(f"Could not connect {controlchannel} to {root}.rotateZ")
 
-                roots.append(root)
+                    roots.append(root)
 
-            # parent all new roots under parentjnt
-            if parent and mc.objExists(parentjnt):
-                try:
-                    mc.parent(roots, parentjnt)
-                except:
-                    mc.warning(f"Could not parent roots under {parentjnt}")
+                # parent all new roots under parentjnt
+                if parent and mc.objExists(parentjnt):
+                    try:
+                        mc.parent(roots, parentjnt)
+                    except:
+                        mc.warning(f"Could not parent roots under {parentjnt}")
+        if self.eyetype == 'lizzard':
+            for type in ['Iris',]:
+                Part=type
+                pivot=f'Eye_{side}_EyeCenterPivot'
+                upvector=f'Eye_{side}_Aim'
+                controlchannel=f'Eye_{side}_Look_{side}_CTRL.{Part}_Size'
+                parentjnt=f'Eye_{side}_JNT'
+                parent=True
+
+                mc.addAttr(f'Eye_{side}_Look_{side}_CTRL', longName=f'{type}_Size', attributeType='float', keyable=True)
+                guides = mc.ls(f"Eye_{side}_{type}_*", type="transform") or []
+
+                sel = []
+                for i, guide in enumerate(guides, start=1):
+                    num = str(i).zfill(2)
+                    pos1 = mc.xform(guide, q=True, ws=True, t=True)
+                    mc.select(clear=True)
+                    jnt = mc.joint(name=f"{side}_{Part}_{num}_EE_JNT", p=pos1, radius=.1)
+                    sel.append(jnt)
+
+
+                roots = []
+
+                # get pivot world pos
+                pivot_pos = mc.xform(pivot, q=True, ws=True, t=True)
+
+                for i, jnt in enumerate(sel, start=1):
+                    num = str(i).zfill(2)
+
+                    root_name = f"{side}_{Part}_{num}_root_JNT"
+                    end_name  = f"{side}_{Part}_{num}_EE_JNT"
+                    ees.append(end_name)
+                    mc.select(clear=True)
+
+                    if mc.objExists(root_name):
+                        mc.warning(f"{root_name} already exists, skipping.")
+                        continue
+
+                    # create root at pivot
+                    root = mc.joint(name=root_name, p=pivot_pos, radius=.1)
+                    mc.select(clear=True)
+
+                    # orient root using aimConstraint (Y points at joint, X stabilized by upvector)
+                    aim = mc.aimConstraint(jnt,
+                                        root,
+                                        aimVector=(0, 1, 0),
+                                        upVector=(1, 0, 0),
+                                        worldUpType="object",
+                                        worldUpObject=upvector)
+                    mc.delete(aim)
+
+                    # freeze root rotations
+                    mc.makeIdentity(root, apply=True, t=0, r=1, s=0, n=0)
+
+                    # rename selected joint and parent it
+                    new_end = mc.rename(jnt, end_name)
+                    mc.parent(new_end, root)
+
+                    # freeze end rotations
+                    mc.makeIdentity(new_end, apply=True, t=0, r=1, s=0, n=0)
+
+                    # connect control channel
+                    try:
+                        mc.connectAttr(controlchannel, f"{root}.rotateZ", f=True)
+                    except:
+                        mc.warning(f"Could not connect {controlchannel} to {root}.rotateZ")
+
+                    roots.append(root)
+
+                # parent all new roots under parentjnt
+                if parent and mc.objExists(parentjnt):
+                    try:
+                        mc.parent(roots, parentjnt)
+                    except:
+                        mc.warning(f"Could not parent roots under {parentjnt}")
         if self.skin and side == 'R':
             left_list = [name.replace("R_", "L_", 1) for name in ees]
             combined = ees + left_list
             combined.append('Eye_L_JNT')
             combined.append('Eye_R_JNT')
             mc.skinCluster(*combined, self.skin[0])
-            mc.skinCluster(*combined, self.skin[1])
-            mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[2])
-
+            if self.eyetype == 'human':
+                mc.skinCluster(*combined, self.skin[1])
+                mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[2])
+            if self.eyetype == 'lizzard':
+                mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[1])
 
 
 

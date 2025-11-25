@@ -164,6 +164,16 @@ class RigBuildUI(QtWidgets.QDialog):
                 "sp" : f"{groups}/bobo/character/Rigs/Sharkguy/SkinFiles/Sharkguy_Skin.json",  
                 "pp" : None,
                 "im" : f"{groups}/bobo/character/Rigs/Rig_Icon/Bee.jpg",
+            },
+
+            "RedPanda" : {
+                "mp" : f"{groups}/bobo/character/Rigs/RedPanda/RedPanda_Model.mb",
+                "gp" : f"{groups}/bobo/character/Rigs/RedPanda/RedPanda_Guides.mb",
+                "ep" : None,
+                "cp" : None, 
+                "sp" : None,  
+                "pp" : None,
+                "im" : None,
             }
 
 
@@ -176,7 +186,7 @@ class RigBuildUI(QtWidgets.QDialog):
         
     def create_widgets(self):
         self.char_options = QtWidgets.QComboBox()
-        self.char_options.addItems([ 'Bobo', 'Gretchen', 'Luciana', 'Domingo', 'Susaka', 'Drummer', 'Fisherman', 'Rayden', 'Robin', 'DungeonMonster', 'Skeleton', 'Jett', 'Blitz', 'Sharkguy'])
+        self.char_options.addItems([ 'Bobo', 'Gretchen', 'Luciana', 'Domingo', 'Susaka', 'Drummer', 'Fisherman', 'Rayden', 'Robin', 'DungeonMonster', 'Skeleton', 'Jett', 'Blitz', 'Sharkguy', 'RedPanda'])
         self.char_options.setFixedWidth(200)
         
         self.model_label = QtWidgets.QLabel('Model:')
