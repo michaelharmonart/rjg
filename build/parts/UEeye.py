@@ -784,18 +784,24 @@ class UEeye(UEface):
                 pivot=f'Eye_{side}_EyeCenterPivot'
                 upvector=f'Eye_{side}_Aim'
                 controlchannel=f'Eye_{side}_Look_{side}_CTRL.{Part}_Size'
+                controlchannel2=f'Eye_{side}_Look_{side}_CTRL.{Part}_Heart'
                 parentjnt=f'Eye_{side}_JNT'
                 parent=True
 
                 mc.addAttr(f'Eye_{side}_Look_{side}_CTRL', longName=f'{type}_Size', attributeType='float', keyable=True)
+                mc.addAttr(f'Eye_{side}_Look_{side}_CTRL', longName=f'{type}_Heart', attributeType='float', keyable=True)
                 guides = mc.ls(f"Eye_{side}_{type}_*", type="transform") or []
 
                 sel = []
                 for i, guide in enumerate(guides, start=1):
                     num = str(i).zfill(2)
                     pos1 = mc.xform(guide, q=True, ws=True, t=True)
+                    Scale_Mult = mc.getAttr(f"{guide}.scale_mult") #Heart_Mult
+                    Heart_Mult = mc.getAttr(f"{guide}.Heart_Mult") #Heart_Mult
                     mc.select(clear=True)
                     jnt = mc.joint(name=f"{side}_{Part}_{num}_EE_JNT", p=pos1, radius=.1)
+                    mc.addAttr(jnt, longName='Scale_Mult', attributeType='double', defaultValue=Scale_Mult, keyable=True )
+                    mc.addAttr(jnt, longName='Heart_Mult', attributeType='double', defaultValue=Heart_Mult, keyable=True )
                     sel.append(jnt)
 
 
@@ -839,11 +845,27 @@ class UEeye(UEface):
                     # freeze end rotations
                     mc.makeIdentity(new_end, apply=True, t=0, r=1, s=0, n=0)
 
-                    # connect control channel
+                    # connect control channel #controlchannel2
                     try:
-                        mc.connectAttr(controlchannel, f"{root}.rotateZ", f=True)
-                    except:
-                        mc.warning(f"Could not connect {controlchannel} to {root}.rotateZ")
+                        # SCALE MULTIPLIER
+                        md = mc.createNode("multiplyDivide", name=f"{jnt}_Scale_MD")
+                        mc.connectAttr(controlchannel, f"{md}.input1X")
+                        mc.connectAttr(f"{jnt}.Scale_Mult", f"{md}.input2X")
+
+                        # HEART MULTIPLIER
+                        md2 = mc.createNode("multiplyDivide", name=f"{jnt}_Heart_MD")
+                        mc.connectAttr(controlchannel2, f"{md2}.input1X")
+                        mc.connectAttr(f"{jnt}.Heart_Mult", f"{md2}.input2X")
+
+                        # ADD BOTH
+                        add_dl = mc.createNode("addDL", name=f"{jnt}_rot_ADL")
+                        mc.connectAttr(f"{md}.outputX", f"{add_dl}.input1")
+                        mc.connectAttr(f"{md2}.outputX", f"{add_dl}.input2")
+
+                        # FINAL ROTATE Z CONNECT
+                        mc.connectAttr(f"{add_dl}.output", f"{root}.rotateZ", f=True)
+                    except Exception as e:
+                        mc.warning(f"Could not connect {controlchannel} to {root}.rotateZ: {e}")
 
                     roots.append(root)
 

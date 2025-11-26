@@ -242,7 +242,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             jaw = UEjaw('Jaw_M_guides', ctrl_scale=1)
             jaw.build()
             from rjg.build.parts.UEmouth import UEmouth
-            mouth = UEmouth('Mouth_guides', ctrl_scale=1, Major_Mouth=6)
+            mouth = UEmouth('Mouth_guides', ctrl_scale=1, Major_Mouth=5, rib_mouth=10, Major_2=8)
             mouth.build()
             from rjg.build.parts.UEteeth import UEteeth
             teeth = UEteeth('Tongue_M_guides', ctrl_scale=1, skin=['tongue', 'topteeth', 'botteeth'])
@@ -1262,6 +1262,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         else:
             for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache',]:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+    if character == 'Luciana':
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon',]:
+                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
+
 
     if character == 'Luciana':
         if mc.objExists('switch_CTRL'):
