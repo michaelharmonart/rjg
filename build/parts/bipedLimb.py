@@ -15,6 +15,7 @@ from rjg.libs.transform import (
     get_parent_inverse_matrix,
     get_world_matrix,
     match_pose,
+    match_transform,
     matrix_constraint,
 )
 
@@ -239,7 +240,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
     def output_swing(self):
         swing_group = mc.group(empty=True, name=f"{self.base_name}_Swing", parent=self.limb_grp)
         anchor_group = mc.group(empty=True, name=f"{self.base_name}_Anchor", parent=swing_group)
-        match_pose(node=anchor_group, translate=self.fk_joints[0], rotate=self.fk_joints[0])
+        match_transform(anchor_group, self.fk_joints[0])
         matrix_constraint(self.swing_parent, anchor_group)
 
         orient_offset = mc.group(
@@ -254,6 +255,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             mc.parent(swing_joint, parent)
             parent = swing_joint
             match_pose(swing_joint, translate=joint, rotate=joint)
+            match_transform(swing_joint, joint)
             swing_joints.append(swing_joint)
         first_joint = swing_joints[0]
 
