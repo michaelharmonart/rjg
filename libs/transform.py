@@ -122,6 +122,16 @@ def get_world_matrix(transform: str) -> MMatrix:
     return dag_path.inclusiveMatrix()
 
 
+def get_parent_matrix(transform: str) -> MMatrix:
+    """
+    Returns the world matrix of a transform's parent, including rotateAxis, jointOrient, etc.
+    """
+    selection = MSelectionList()
+    selection.add(transform)
+    dag_path: MDagPath = selection.getDagPath(0)
+    return dag_path.exclusiveMatrix()
+
+
 def get_parent_inverse_matrix(transform: str) -> MMatrix:
     """
     Returns the inverse world matrix of a transform's parent, including rotateAxis, jointOrient, etc.

@@ -2,6 +2,7 @@ import ast
 from importlib import reload
 from typing import Any
 
+from maya.api.OpenMaya import MVector
 import maya.cmds as mc
 import rjg.libs.attribute as rAttr
 import rjg.libs.common as rCommon
@@ -33,8 +34,64 @@ class Chain:
     '''
     Given a list of transforms, place joints at each transform
     '''
-    def create_from_transforms(self, parent_constraint=True, orient_constraint=False, point_constraint=False, scale_constraint=False, connect_scale=True, parent=False, static=False, pad='auto'):
+
+    def create_from_transforms(
+        self,
+        parent_constraint=True,
+        orient_constraint=False,
+        point_constraint=False,
+        scale_constraint=False,
+        connect_scale=True,
+        parent=False,
+        static=False,
+        pad="auto",
+        force_planar: bool = False,
+    ):
         pose_dict = rXform.read_pose(self.transform_list)
+        new_poses = list(pose_dict.items())
+        if force_planar:
+            pose_keys = list(pose_dict.keys())
+            if len(pose_keys) != 3:
+                raise ValueError(f"{self.transform_list} is not 3 transforms (required to force_planar)")
+            first_guide = pose_keys[0]
+            second_guide = pose_keys[1]
+            last_guide = pose_keys[-1]
+            first_matrix = pose_dict[first_guide]
+            second_matrix = pose_dict[second_guide]
+            last_matrix = pose_dict[last_guide]
+
+            # Snag the location straight from the matrices
+            first_location = MVector(first_matrix[12], first_matrix[13], first_matrix[14])
+            second_location = MVector(second_matrix[12], second_matrix[13], second_matrix[14])
+            last_location = MVector(last_matrix[12], last_matrix[13], last_matrix[14])
+
+            first_segment: MVector = second_location - first_location
+            second_segment: MVector = last_location - second_location
+
+            ortho_vector: MVector = first_segment ^ second_segment
+            plane_normal: MVector = ortho_vector.normal()
+
+            for i, (guide_name, matrix) in enumerate(new_poses):
+                if i == len(new_poses) - 1:
+                    continue
+                current_matrix = matrix
+                next_matrix = new_poses[i+1][1]
+                current_location: MVector = MVector(current_matrix[12], current_matrix[13], current_matrix[14])
+                next_location: MVector = MVector(next_matrix[12], next_matrix[13], next_matrix[14])
+                aim_vector: MVector = (next_location - current_location).normal()
+                z_axis: MVector = (plane_normal ^ aim_vector).normal()
+                x_axis: MVector = (aim_vector ^ z_axis).normal()
+
+
+                new_matrix = [
+                        x_axis.x, x_axis.y, x_axis.z, 0,
+                        aim_vector.x, aim_vector.y, aim_vector.z, 0,
+                        z_axis.x, z_axis.y, z_axis.z, 0,
+                        current_location.x, current_location.y, current_location.z, 1
+                    ]
+
+                new_poses[i] = (guide_name, new_matrix)
+
         if pad == 'auto':
             pad = len(str(len(self.transform_list))) + 1
         if not pad and len(self.transform_list) > 1:
@@ -44,7 +101,8 @@ class Chain:
         self.joints = []
         split_dict: dict[str, list[str]] = {}
         joint_mapping: dict[str, str] = {}
-        for i, pose in enumerate(pose_dict):
+        for i, (guide_name, matrix) in enumerate(new_poses):
+
             # create the name of the joint
             if pad:
                 name_list = [self.name, self.side, str(i+1).zfill(pad), self.suffix]
@@ -61,17 +119,17 @@ class Chain:
                 p_jnt = jnt
 
             # place the joint in its worldspace position
-            rXform.set_pose(jnt, pose_dict[pose])
+            rXform.set_pose(jnt, matrix)
             self.joints.append(jnt)
-            joint_mapping[pose] = jnt
+            joint_mapping[guide_name] = jnt
 
             # Transfer split_joints attribute if it exists on the source transform
-            if mc.objExists(f"{pose}.split_joints"):
+            if mc.objExists(f"{guide_name}.split_joints"):
                 if not mc.attributeQuery("split_joints", node=jnt, exists=True):
                     mc.addAttr(jnt, longName="split_joints", dataType="string")
-                value = mc.getAttr(f"{pose}.split_joints")
+                value = mc.getAttr(f"{guide_name}.split_joints")
                 evaluated_list =  ast.literal_eval(value)
-                split_dict[pose] = evaluated_list
+                split_dict[guide_name] = evaluated_list
                 mc.setAttr(f"{jnt}.split_joints", value, type="string")
 
         # Switch out the split_joints attribute with a list of the corresponding new joints
@@ -121,7 +179,6 @@ class Chain:
 
         if self.label_chain:
             self.label_side(self.joints)
-
         return self.joints
 
     '''
@@ -477,14 +534,17 @@ class Chain:
         )
         for i, (joint_a, joint_b) in enumerate(zip(chain_a, chain_b)):
             switch_name =self.joints[i].replace(self.suffix, "")
+            switch_joint = self.joints[i]
             joint_a_matrix = f"{joint_a}.matrix"
             joint_b_matrix = f"{joint_b}.matrix"
             if handle_offsets:
-                offset_matrix = rXform.get_world_matrix(joint_b) * rXform.get_world_matrix(joint_a).inverse()
-                if not rXform.is_identity_matrix(offset_matrix):
+                offset_matrix =   rXform.get_world_matrix(joint_a) * rXform.get_world_matrix(joint_b).inverse()
+                parent_offset_matrix = rXform.get_parent_matrix(joint_b) * rXform.get_parent_inverse_matrix(joint_a)
+                if not (rXform.is_identity_matrix(offset_matrix) and rXform.is_identity_matrix(parent_offset_matrix)):
                     mult_matrix_node = node.MultMatrixNode(name=f"{switch_name}_BlendOffset")
                     mc.setAttr(mult_matrix_node.matrix_in[0], offset_matrix, type="matrix")
                     mc.connectAttr(joint_b_matrix, mult_matrix_node.matrix_in[1])
+                    mc.setAttr(mult_matrix_node.matrix_in[2], parent_offset_matrix, type="matrix")
                     joint_b_matrix = mult_matrix_node.matrix_sum
 
             blend_matrix_node = node.BlendMatrixNode(
@@ -496,7 +556,7 @@ class Chain:
 
             rXform.drive_transform_with_matrix(
                 matrix_attr=blend_matrix_node.output_matrix,
-                transform=self.joints[i],
+                transform=switch_joint,
                 translate=translate,
                 rotate=rotate,
                 scale=scale,

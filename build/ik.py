@@ -68,7 +68,7 @@ class Ik:
         self.ik_ctrls.append(self.base_ctrl)
         attr_util.lock_and_hide(node=self.base_ctrl.ctrl, translate=False, rotate=False)
         self.base_ctrl.tag_as_controller()
-        
+
         self.main_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_MAIN", axis='y', group_type='main', rig_type='primary', translate=self.guide_list[-1], ctrl_scale=self.ctrl_scale)
         self.ik_ctrls.append(self.main_ctrl)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
@@ -82,9 +82,9 @@ class Ik:
 
         return self.pv_ctrl.ctrl
 
-    def build_ik_chain(self):
+    def build_ik_chain(self, force_planar: bool = False):
         self.ik_chain = rChain.Chain(transform_list=self.guide_list, side=self.side, suffix=self.s_name + '_JNT', name=self.part)
-        self.ik_chain.create_from_transforms(static=True)
+        self.ik_chain.create_from_transforms(static=True, force_planar=force_planar)
         self.ik_joints = self.ik_chain.joints
 
     def build_ikh(self, scale_attr=None, constrain=True):
@@ -104,7 +104,7 @@ class Ik:
         if self.stretchy:
             if not scale_attr:
                 scale_attr = rAttr.Attribute(node=self.base_ctrl.ctrl, type='double', value=1, keyable=True, name='globalScale')
-            
+
             self.squash_switch = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=0, keyable=True, name='squash', max=1, min=0)
             self.stretch_switch = rAttr.Attribute(node=self.main_ctrl.ctrl, type='double', value=0, keyable=True, name='stretch', max=1, min=0)
 
@@ -139,7 +139,7 @@ class Ik:
             mc.connectAttr(dist + '.distance', squash_cond + '.firstTerm')
             mc.connectAttr(mdl + '.output', squash_cond + '.secondTerm')
             mc.connectAttr(mdn + '.outputX', squash_cond + '.colorIfTrueR')
-            mc.setAttr(squash_cond + '.operation', 5) 
+            mc.setAttr(squash_cond + '.operation', 5)
 
             # connect stretch condition output to stretch_bta blend value
             mc.setAttr(stretch_bta + '.input[0]', 1)
@@ -161,6 +161,3 @@ class Ik:
             #     mc.connectAttr(stretch_bta + '.output', joint + '.scaleY')
             for joint in self.ik_joints[:-1]:
                 mc.connectAttr(mult + '.outputX', joint + '.scaleY')
-
-
-

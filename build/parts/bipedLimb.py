@@ -13,6 +13,7 @@ from rjg.libs.transform import (
     drive_transform_with_matrix,
     get_matrix_values,
     get_parent_inverse_matrix,
+    get_parent_matrix,
     get_world_matrix,
     match_pose,
     match_transform,
@@ -145,7 +146,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
 
         # ik
         if self.create_ik:
-            self.build_ik_chain()
+            self.build_ik_chain(force_planar=True)
             self.build_ikh(scale_attr=self.global_scale)
             mc.parent(self.ikh, self.ik_joints[0], self.limb_grp)
             self.src_chain = self.ik_chain
@@ -253,7 +254,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
 
         parent = anchor_group
         swing_joints: list[str] = []
-        for i, joint in enumerate(self.fk_joints):
+        for i, joint in enumerate(self.ik_joints):
             swing_joint: str = mc.joint(name=f"{self.base_name}_Swing_{i:02d}")
             mc.parent(swing_joint, parent)
             parent = swing_joint
@@ -265,8 +266,10 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         if self.create_fk:
             # Set up FK
             driver_matrix = mc.createNode("multMatrix", name=f"{first_joint}_Matrix")
-            mc.connectAttr(f"{self.fk_ctrls[0].ctrl}.matrix", f"{driver_matrix}.matrixIn[0]")
-            mc.connectAttr(f"{orient_offset}.matrix", f"{driver_matrix}.matrixIn[1]")
+            offset_matrix = get_parent_matrix(orient_offset) * get_world_matrix(first_joint).inverse()
+            mc.setAttr(f"{driver_matrix}.matrixIn[0]", offset_matrix, type="matrix")
+            mc.connectAttr(f"{self.fk_ctrls[0].ctrl}.matrix", f"{driver_matrix}.matrixIn[1]")
+            mc.connectAttr(f"{orient_offset}.matrix", f"{driver_matrix}.matrixIn[2]")
             drive_transform_with_matrix(f"{driver_matrix}.matrixSum", first_joint)
         if self.create_ik:
             # Set up IK
