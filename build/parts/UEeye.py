@@ -723,6 +723,7 @@ class UEeye(UEface):
         mc.aimConstraint(f'{prefix}_eyelid_look_loc', f'{prefix}_look_offset', mo = True, worldUpType="objectrotation", worldUpObject ='head_M_01_CTRL')
         mc.group(surfs[0], surfs[1], f'{prefix}_eyelid_Control_GRP', f'{prefix}_Eyelid_OuterCorner_Major_JNT', f'{prefix}_Eyelid_Upper_Major_JNT',f'{prefix}_Eyelid_InnerCorner_Major_JNT',f'{prefix}_Eyelid_Lower_Major_JNT', name=f'{prefix}_eyelid_extra_offset')
         mc.parent(f'{prefix}_eyelid_extra_offset', 'RIG')
+        mc.parent(f'Eye_{side}_EyeRot_Offset_{side}_CTRL_CNST_GRP', f'{prefix}_eyelid_extra_offset')
 
         mc.hide(surfs[0], surfs[1],)
 

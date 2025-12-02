@@ -77,7 +77,7 @@ class UEfaceconnect(UEface):
                 nose_jnts.append(name)
             elif any(key in name for key in ['Brow', 'Eye', 'CheekBone']):
                 upper_jnts.append(name)
-            elif any(key in name for key in ['Mouth', 'Jaw_M_root_JNT', 'Puff']):
+            elif any(key in name for key in ['Mouth', 'Jaw_M_root_JNT', 'Puff', 'mouth']):
                 lower_jnts.append(name)
             else:
                 unsorted.append(name)

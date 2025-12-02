@@ -1,3 +1,4 @@
+from turtle import position
 import maya.cmds as mc
 from importlib import reload
 import re
@@ -15,11 +16,12 @@ reload (rGuide)
 reload(rXform)
 
 class UEmouth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2):
-        super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale,)
+    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=True):
+        super().__init__(part='Mouth', grp_name=grp_name, ctrl_scale=ctrl_scale,)
         self.Major_Mouth = Major_Mouth
         self.Major_2 = Major_2
         self.rib_mouth = rib_mouth
+        self.cornerhelper = cornerhelper
 
     def get_ordered_lip_guides(self, prefix, guides, guide_base, has_mid=True):
         """
@@ -37,6 +39,7 @@ class UEmouth(UEface):
         use_outer_corners = 'Outer' in guide_base
         right_corner = f"{prefix}R_CornerOuter" if use_outer_corners else f"{prefix}R_CornerLip"
         left_corner = f"{prefix}L_CornerOuter" if use_outer_corners else f"{prefix}L_CornerLip"
+
 
         ordered = []
         # Right corner
@@ -197,10 +200,16 @@ class UEmouth(UEface):
             name='UpperLip_M',
             position=pos,
             size=1,)
+        mc.select(clear=True)
+        upperjnt = mc.joint(name="uppermouth_jnt", position=pos)
+        mc.parentConstraint(upper_ctrl, upperjnt, mo=True)
         lower_ctrl, lower_offset = UEface.build_basic_control(
             name='LowerLip_M',
             position=pos,
             size=1,)
+        mc.select(clear=True)
+        lowerjnt = mc.joint(name="lowermouth_jnt", position=pos)
+        mc.parentConstraint(lower_ctrl, lowerjnt, mo=True)
         
         mc.parent('Major_Mouth_M_UpperLip_01_Mouth_CTRL_CNST_GRP', f'Major_Mouth_L_UpperLip_0{self.Major_Mouth}_Mouth_CTRL_CNST_GRP', f'Major_Mouth_R_UpperLip_0{self.Major_Mouth}_Mouth_CTRL_CNST_GRP', upper_ctrl)
         mc.parent('Major_Mouth_M_LowerLip_01_Mouth_CTRL_CNST_GRP', f'Major_Mouth_L_LowerLip_0{self.Major_Mouth}_Mouth_CTRL_CNST_GRP', f'Major_Mouth_R_LowerLip_0{self.Major_Mouth}_Mouth_CTRL_CNST_GRP', lower_ctrl)
@@ -244,4 +253,12 @@ class UEmouth(UEface):
         for loc in to_remove:
             side = loc.split('_')[1] if '_' in loc else 'Unknown'
             mc.parentConstraint(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', f'Mouth_{side}_CornerLip_{side}_CTRL_CNST_GRP', mo=True)
+
+        if self.cornerhelper:
+            for side in ['L', 'R']:
+                mc.select(clear=True)
+                pos = mc.xform(f'Mouth_{side}_CornerLip', q=True, ws=True, t=True)
+                jnt, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(f'Mouth_{side}_CornerLip', orient=False, check_side=True, CTRL_Size=.2, overwrite=True, overwrite_name=f'Mouth_{side}_CornerLip_Helper')
+                mc.parentConstraint(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', ctrl_offset, mo=True)
+                mc.parent(ctrl_offset, 'Mouth_Extras_offsets')
             
