@@ -14,7 +14,7 @@ reload(rCtrl)
 class Hand(rModule.RigModule):
     def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, local_orient=False, model_path=None, guide_path=None, expression_control=True):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
-        
+
         self.base_name = self.part + '_' + self.side
         self.expression_control = expression_control
 
@@ -31,15 +31,15 @@ class Hand(rModule.RigModule):
         self.add_plugs()
 
     def control_rig(self):
-        self.hand_01 = rCtrl.Control(parent=self.control_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name + '_01', axis='y', group_type='main', 
+        self.hand_01 = rCtrl.Control(parent=self.control_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name + '_01', axis='y', group_type='main',
                                      rig_type='primary', translate=self.guide_list[0], rotate=(0, 0, 0), ctrl_scale=self.ctrl_scale)
-        self.hand_02 = rCtrl.Control(parent=self.hand_01.ctrl, shape='cube', side=None, suffix='CTRL', name=self.base_name + '_02', axis='y', group_type='main', 
+        self.hand_02 = rCtrl.Control(parent=self.hand_01.ctrl, shape='cube', side=None, suffix='CTRL', name=self.base_name + '_02', axis='y', group_type='main',
                                      rig_type='secondary', translate=self.guide_list[0], rotate=(0, 0, 0), ctrl_scale=self.ctrl_scale * 0.85)
-        self.hand_local = rCtrl.Control(parent=self.hand_02.ctrl, shape='quad_arrow', side=None, suffix='CTRL', name=self.base_name + '_local', axis='y', group_type='main', 
+        self.hand_local = rCtrl.Control(parent=self.hand_02.ctrl, shape='quad_arrow', side=None, suffix='CTRL', name=self.base_name + '_local', axis='y', group_type='main',
                                      rig_type='secondary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
-        self.hand_fk = rCtrl.Control(parent=self.control_grp, shape='circle', side=None, suffix='CTRL', name=self.base_name + '_fk', axis='y', group_type='main', 
+        self.hand_fk = rCtrl.Control(parent=self.control_grp, shape='circle', side=None, suffix='CTRL', name=self.base_name + '_fk', axis='y', group_type='main',
                                      rig_type='fk', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
-        
+
         for c in [self.hand_01, self.hand_02, self.hand_local, self.hand_fk]:
             c.tag_as_controller()
 
@@ -60,7 +60,7 @@ class Hand(rModule.RigModule):
             mc.setAttr(f"{self.hand_express.ctrl}_LOWER.inputMin", 2.5)
             mc.connectAttr(f'{self.hand_express.ctrl}.Falloff', f"{self.hand_express.ctrl}_HIGHER.inputValue")
             mc.connectAttr(f'{self.hand_express.ctrl}.Falloff', f"{self.hand_express.ctrl}_LOWER.inputValue")
-            
+
 
 
     def output_rig(self):
@@ -74,7 +74,6 @@ class Hand(rModule.RigModule):
 
         self.blend_chain = rChain.Chain(transform_list=[ik_jnt], side=self.side, suffix='switch_JNT', name=self.part)
         self.blend_chain.create_blend_chain(switch_node=self.base_name, chain_a=[fk_jnt], chain_b=[ik_jnt], translate=False)
-        mc.setAttr(self.blend_chain.joints[0] + '.jointOrient', 0, 0, 0)
 
         rev = mc.createNode("reverse", name=self.base_name + '_REV')
         mc.connectAttr(self.blend_chain.switch.attr, rev + '.inputX')

@@ -1,6 +1,15 @@
-from maya.api.OpenMaya import MDagPath, MFnTransform, MMatrix, MSelectionList, MTransformationMatrix
-import maya.cmds as mc
 from collections import OrderedDict
+
+import maya.cmds as mc
+from maya.api.OpenMaya import (
+    MAngle,
+    MDagPath,
+    MFnTransform,
+    MMatrix,
+    MSelectionList,
+    MSpace,
+    MTransformationMatrix,
+)
 
 '''
 moves all transform attributes of node to those specified
@@ -83,7 +92,9 @@ def findPosOnCurve(curve, u_val):
     mc.delete(pci)
     return pos
 
-def is_identity_matrix(matrix: list[float], epsilon: float = 0.001) -> bool:
+def is_identity_matrix(matrix: list[float] | MMatrix, epsilon: float = 0.001) -> bool:
+    if isinstance(matrix, MMatrix):
+        return matrix.isEquivalent(MMatrix.kIdentity, epsilon)
     return all(
         abs(value - identity) < epsilon
         for value, identity in zip(matrix, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
@@ -111,6 +122,16 @@ def get_world_matrix(transform: str) -> MMatrix:
     return dag_path.inclusiveMatrix()
 
 
+def get_parent_matrix(transform: str) -> MMatrix:
+    """
+    Returns the world matrix of a transform's parent, including rotateAxis, jointOrient, etc.
+    """
+    selection = MSelectionList()
+    selection.add(transform)
+    dag_path: MDagPath = selection.getDagPath(0)
+    return dag_path.exclusiveMatrix()
+
+
 def get_parent_inverse_matrix(transform: str) -> MMatrix:
     """
     Returns the inverse world matrix of a transform's parent, including rotateAxis, jointOrient, etc.
@@ -124,6 +145,73 @@ def get_parent_inverse_matrix(transform: str) -> MMatrix:
 def get_matrix_values(matrix: MMatrix) -> list[float]:
     return [matrix[i] for i in range(16)]
 
+def set_world_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
+    """
+    Set the world matrix of a transform by decomposing it into local components.
+
+    Args:
+        transform: Maya transform node name.
+        matrix: Target world space matrix.
+        fallback: If True, use cmds.xform instead of manual decomposition.
+    """
+    if fallback:
+        mc.xform(transform, worldSpace=True, matrix=matrix)
+    else:
+
+        inverse_matrix: MMatrix = get_parent_inverse_matrix(transform)
+        local_matrix: MMatrix = matrix * inverse_matrix
+
+        # Apply local matrix using transformation matrix
+        transform_matrix: MTransformationMatrix = MTransformationMatrix(local_matrix)
+        # Set translation
+        translation = transform_matrix.translation(MSpace.kTransform)
+        mc.setAttr(f"{transform}.translate", translation.x, translation.y, translation.z)
+        node_type = mc.nodeType(transform)
+
+        transform_matrix
+
+        if node_type == "joint":
+            # Zero the rotate channel
+            mc.setAttr(f"{transform}.rotate", 0, 0, 0)
+            rotation = transform_matrix.rotation()
+            mc.setAttr(
+                f"{transform}.jointOrient",
+                MAngle(rotation.x).asDegrees(),
+                MAngle(rotation.y).asDegrees(),
+                MAngle(rotation.z).asDegrees(),
+            )
+        else:
+            rotate_order = mc.getAttr(f"{transform}.rotateOrder")
+            transform_matrix.reorderRotation(rotate_order + 1)
+            rotation = transform_matrix.rotation()
+            mc.setAttr(
+                f"{transform}.rotate",
+                MAngle(rotation.x).asDegrees(),
+                MAngle(rotation.y).asDegrees(),
+                MAngle(rotation.z).asDegrees(),
+            )
+
+
+        # Set scale
+        scale = transform_matrix.scale(MSpace.kTransform)
+        mc.setAttr(f"{transform}.scale", scale[0], scale[1], scale[2])
+
+        # Set shear
+        shear = transform_matrix.shear(MSpace.kTransform)
+        mc.setAttr(f"{transform}.shear", shear[0], shear[1], shear[2])
+
+
+def match_transform(transform: str, target_transform: str) -> None:
+    """
+    Match a transform to another in world space.
+
+    Args:
+        transform: Object to be moved to the specified transform.
+        target_transform: Name of the transform to match to.
+    """
+    source_matrix: MMatrix = get_world_matrix(transform=target_transform)
+    set_world_matrix(transform=transform, matrix=source_matrix)
+
 
 def matrix_constraint(
     source_transform: str,
@@ -134,6 +222,7 @@ def matrix_constraint(
     rotate: bool = True,
     scale: bool = True,
     shear: bool = True,
+    lock_joint_orient: bool = True,
 ) -> None:
     """
     Constrain a transform to another
@@ -144,6 +233,8 @@ def matrix_constraint(
         keep_offset: keep the offset of the constrained transform to the source at time of constraint generation.
         local_space: if False the constrained transform will have inheritsTransform turned off.
         translate: whether to constrain translation.
+        lock_joint_orient: When True, if the transform is a joint
+            it's joint orient will be locked after being zeroed to keep maya from screwing it up later when re-parenting.
     """
     constraint_name: str = constrain_transform.split("|")[-1]
 
@@ -198,11 +289,16 @@ def matrix_constraint(
     mc.connectAttr(f"{constrain_transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
 
     # Drive transform with decomposed values
+    # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient
+    if mc.nodeType(constrain_transform) == "joint":
+        if scale:
+            mc.setAttr(f"{constrain_transform}.segmentScaleCompensate", 0)
+        if rotate:
+            mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
+            if lock_joint_orient:
+                mc.setAttr(f"{constrain_transform}.jointOrient", lock=True)
     if rotate:
         mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{constrain_transform}.rotate")
-        # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient (I was up till 2am because of this)
-        if mc.nodeType(constrain_transform) == "joint":
-            mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
         mc.setAttr(f"{constrain_transform}.rotateAxis", 0, 0, 0, type="float3")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{constrain_transform}.translate")
@@ -223,6 +319,7 @@ def drive_transform_with_matrix(
     rotate: bool = True,
     scale: bool = True,
     shear: bool = True,
+    lock_joint_orient: bool = True,
 ):
     """
     Drive a transforms translate rotate scale and shear with a matrix attribute.
@@ -231,6 +328,8 @@ def drive_transform_with_matrix(
         matrix_attr: The matrix attribute to use as the driver.
         transform: The transform to be driven.
         translate: whether to constrain translation.
+        lock_joint_orient: When True, if the transform is a joint
+            it's joint orient will be locked after being zeroed to keep maya from screwing it up later when re-parenting.
     """
     constraint_name: str = transform.split("|")[-1]
 
@@ -243,11 +342,17 @@ def drive_transform_with_matrix(
 
 
     # Drive transform with decomposed values
+    # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient
+    if mc.nodeType(transform) == "joint":
+        if scale:
+            mc.setAttr(f"{transform}.segmentScaleCompensate", 0)
+        if rotate:
+            print(f"reset orient on {transform}")
+            mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
+            if lock_joint_orient:
+                mc.setAttr(f"{transform}.jointOrient", lock=True)
     if rotate:
         mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{transform}.rotate")
-        # Prep constrained transform
-        if mc.nodeType(transform) == "joint":
-            mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
         mc.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{transform}.translate")

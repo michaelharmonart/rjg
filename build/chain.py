@@ -1,14 +1,17 @@
 import ast
-from typing import Any
-import maya.cmds as mc
 from importlib import reload
+from typing import Any
 
-import rjg.libs.control.ctrl as rCtrl
-import rjg.libs.common as rCommon
+from maya.api.OpenMaya import MVector
+import maya.cmds as mc
 import rjg.libs.attribute as rAttr
-import rjg.libs.transform as rXform
+import rjg.libs.common as rCommon
+import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.math as rMath
 import rjg.libs.spline as spline
+import rjg.libs.transform as rXform
+from rjg.libs.maya_api import node
+
 reload(rCtrl)
 reload(rCommon)
 reload(rAttr)
@@ -31,9 +34,64 @@ class Chain:
     '''
     Given a list of transforms, place joints at each transform
     '''
-    def create_from_transforms(self, parent_constraint=True, orient_constraint=False, point_constraint=False, scale_constraint=False, connect_scale=True, parent=False, static=False, pad='auto'):
-        #print("scale_constraint =", scale_constraint)
+
+    def create_from_transforms(
+        self,
+        parent_constraint=True,
+        orient_constraint=False,
+        point_constraint=False,
+        scale_constraint=False,
+        connect_scale=True,
+        parent=False,
+        static=False,
+        pad="auto",
+        force_planar: bool = False,
+    ):
         pose_dict = rXform.read_pose(self.transform_list)
+        new_poses = list(pose_dict.items())
+        if force_planar:
+            pose_keys = list(pose_dict.keys())
+            if len(pose_keys) != 3:
+                raise ValueError(f"{self.transform_list} is not 3 transforms (required to force_planar)")
+            first_guide = pose_keys[0]
+            second_guide = pose_keys[1]
+            last_guide = pose_keys[-1]
+            first_matrix = pose_dict[first_guide]
+            second_matrix = pose_dict[second_guide]
+            last_matrix = pose_dict[last_guide]
+
+            # Snag the location straight from the matrices
+            first_location = MVector(first_matrix[12], first_matrix[13], first_matrix[14])
+            second_location = MVector(second_matrix[12], second_matrix[13], second_matrix[14])
+            last_location = MVector(last_matrix[12], last_matrix[13], last_matrix[14])
+
+            first_segment: MVector = second_location - first_location
+            second_segment: MVector = last_location - second_location
+
+            ortho_vector: MVector = first_segment ^ second_segment
+            plane_normal: MVector = ortho_vector.normal()
+
+            for i, (guide_name, matrix) in enumerate(new_poses):
+                if i == len(new_poses) - 1:
+                    continue
+                current_matrix = matrix
+                next_matrix = new_poses[i+1][1]
+                current_location: MVector = MVector(current_matrix[12], current_matrix[13], current_matrix[14])
+                next_location: MVector = MVector(next_matrix[12], next_matrix[13], next_matrix[14])
+                aim_vector: MVector = (next_location - current_location).normal()
+                z_axis: MVector = (plane_normal ^ aim_vector).normal()
+                x_axis: MVector = (aim_vector ^ z_axis).normal()
+
+
+                new_matrix = [
+                        x_axis.x, x_axis.y, x_axis.z, 0,
+                        aim_vector.x, aim_vector.y, aim_vector.z, 0,
+                        z_axis.x, z_axis.y, z_axis.z, 0,
+                        current_location.x, current_location.y, current_location.z, 1
+                    ]
+
+                new_poses[i] = (guide_name, new_matrix)
+
         if pad == 'auto':
             pad = len(str(len(self.transform_list))) + 1
         if not pad and len(self.transform_list) > 1:
@@ -43,7 +101,8 @@ class Chain:
         self.joints = []
         split_dict: dict[str, list[str]] = {}
         joint_mapping: dict[str, str] = {}
-        for i, pose in enumerate(pose_dict):
+        for i, (guide_name, matrix) in enumerate(new_poses):
+
             # create the name of the joint
             if pad:
                 name_list = [self.name, self.side, str(i+1).zfill(pad), self.suffix]
@@ -60,17 +119,17 @@ class Chain:
                 p_jnt = jnt
 
             # place the joint in its worldspace position
-            rXform.set_pose(jnt, pose_dict[pose])
+            rXform.set_pose(jnt, matrix)
             self.joints.append(jnt)
-            joint_mapping[pose] = jnt
+            joint_mapping[guide_name] = jnt
 
             # Transfer split_joints attribute if it exists on the source transform
-            if mc.objExists(f"{pose}.split_joints"):
+            if mc.objExists(f"{guide_name}.split_joints"):
                 if not mc.attributeQuery("split_joints", node=jnt, exists=True):
                     mc.addAttr(jnt, longName="split_joints", dataType="string")
-                value = mc.getAttr(f"{pose}.split_joints")
+                value = mc.getAttr(f"{guide_name}.split_joints")
                 evaluated_list =  ast.literal_eval(value)
-                split_dict[pose] = evaluated_list
+                split_dict[guide_name] = evaluated_list
                 mc.setAttr(f"{jnt}.split_joints", value, type="string")
 
         # Switch out the split_joints attribute with a list of the corresponding new joints
@@ -121,7 +180,6 @@ class Chain:
 
         if self.label_chain:
             self.label_side(self.joints)
-
         return self.joints
 
     '''
@@ -177,9 +235,9 @@ class Chain:
                 seg_pos = [s[axis] + ((i-1) * ((e[axis] - s[axis]) / segments)) for axis in range(3)]
                 mc.xform(seg_joint, ws=True, t=seg_pos)
             split_jnts.append(seg_joint)
-        
+
         return split_jnts
-    
+
     def twist_chain(self, start_translate, start_rotate, end_translate, end_rotate, twist_bone, twist_driver, reverse=False):
         if not mc.pluginInfo('quatNodes', q=True, loaded=True):
             mc.loadPlugin('quatNodes')
@@ -232,7 +290,7 @@ class Chain:
         prev_end_ctrl = None
         segments = self.joints[:-1]
         for index, joint in enumerate(segments):
-            
+
             segment_ctl = mc.group(empty=True, name=f"{joint}_Bend_CTRL_GRP", parent=ctrl_grp)
             segment_grp = mc.group(empty=True, name=f"{joint}_Bend_GRP", parent=rig_grp)
             rXform.matrix_constraint(source_transform=joint, constrain_transform=segment_grp, keep_offset=False)
@@ -249,9 +307,9 @@ class Chain:
                 start_ctrl = prev_end_ctrl
                 mc.parent(f"{start_ctrl.ctrl_name}_CNST_GRP", segment_ctl)
             else:
-                start_ctrl = rCtrl.Control(parent=segment_ctl, shape='square', side=None, suffix='CTRL', name=start_jnt.replace('JNT', 'Start'), axis='y', group_type='main', 
+                start_ctrl = rCtrl.Control(parent=segment_ctl, shape='square', side=None, suffix='CTRL', name=start_jnt.replace('JNT', 'Start'), axis='y', group_type='main',
                                  rig_type='bendy', translate=start_pos, rotate=joint, ctrl_scale=ctrl_scale*0.5)
-            mid_ctrl = rCtrl.Control(parent=segment_ctl, shape='square', side=None, suffix='CTRL', name=start_jnt.replace('JNT', 'Mid'), axis='y', group_type='main', 
+            mid_ctrl = rCtrl.Control(parent=segment_ctl, shape='square', side=None, suffix='CTRL', name=start_jnt.replace('JNT', 'Mid'), axis='y', group_type='main',
                                  rig_type='bendy', translate=mid_pos, rotate=joint, ctrl_scale=ctrl_scale*0.5)
             end_ctrl = rCtrl.Control(
                 parent=segment_ctl,
@@ -281,10 +339,10 @@ class Chain:
             mult_matrix = mc.createNode('multMatrix', name=f"{joint}_MMX") # Put the end joint into the space of the start joint
             mc.connectAttr(f"{end_jnt_twist}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
             mc.connectAttr(f"{start_jnt}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]") # Retrieve the rotation from the resulting matrix
-            decompose_matrix = mc.createNode('decomposeMatrix', name=f"{joint}_DCM") 
+            decompose_matrix = mc.createNode('decomposeMatrix', name=f"{joint}_DCM")
             mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
             # Create a quaternion from only the Y (down the chain axis) and W (scalar component)
-            # The resulting quaternion is the twist part of a swing twist decomposition. 
+            # The resulting quaternion is the twist part of a swing twist decomposition.
             quat_to_euler = mc.createNode('quatToEuler', name=f"{joint}_QTE")
             mc.connectAttr(f"{decompose_matrix}.outputQuatY", f"{quat_to_euler}.inputQuatY")
             mc.connectAttr(f"{decompose_matrix}.outputQuatW", f"{quat_to_euler}.inputQuatW")
@@ -295,7 +353,7 @@ class Chain:
             mc.setAttr(f"{twist_mult}.input[1]", 0.5)
             mc.connectAttr(f"{twist_mult}.output", f"{mid_ctrl.ctrl_name}_SDK_GRP.rotateY")
 
-           
+
 
             spline.matrix_spline_from_transforms(
                 transforms=[start_ctrl.ctrl_name, end_ctrl.ctrl_name],
@@ -327,7 +385,7 @@ class Chain:
             )
             prev_end_ctrl = end_ctrl
         return {'control':ctrl_grp, 'module':rig_grp}
-        
+
 
 
     def bend_chain(self, bone, ctrl_scale, spans=16, mirror=True, global_scale=None):
@@ -408,18 +466,18 @@ class Chain:
         mc.connectAttr(bone + '.worldMatrix[0]', dcm + '.inputMatrix')
         for attr in ['translate', 'rotate', 'scale']:
             mc.connectAttr(dcm + '.output' + attr.capitalize(), ctrl_grp + '.' + attr)
-        
+
         attr_util = rAttr.Attribute(add=False)
-        mid_ctrl = rCtrl.Control(parent=ctrl_grp, shape='square', side=None, suffix='CTRL', name=bone.replace('JNT', 'bendy'), axis='y', group_type='main', 
+        mid_ctrl = rCtrl.Control(parent=ctrl_grp, shape='square', side=None, suffix='CTRL', name=bone.replace('JNT', 'bendy'), axis='y', group_type='main',
                                  rig_type='bendy', translate=m, rotate=bone, ctrl_scale=ctrl_scale*0.5)
-        s_tan = rCtrl.Control(parent=ctrl_grp, shape='square', side=None, suffix='CTRL', name=bone.replace('JNT', 'start_tangent'), axis='y', group_type=2, 
+        s_tan = rCtrl.Control(parent=ctrl_grp, shape='square', side=None, suffix='CTRL', name=bone.replace('JNT', 'start_tangent'), axis='y', group_type=2,
                                  rig_type='tangent', translate=b_crv + '.cv[1]', rotate=bone, ctrl_scale=ctrl_scale*0.4)
-        e_tan = rCtrl.Control(parent=ctrl_grp, shape='square', side=None, suffix='CTRL', name=bone.replace('JNT', 'end_tangent'), axis='y', group_type=2, 
+        e_tan = rCtrl.Control(parent=ctrl_grp, shape='square', side=None, suffix='CTRL', name=bone.replace('JNT', 'end_tangent'), axis='y', group_type=2,
                                  rig_type='tangent', translate=b_crv + '.cv[5]', rotate=bone, ctrl_scale=ctrl_scale*0.4)
         mid_ctrl.tag_as_controller()
         s_tan.tag_as_controller()
         e_tan.tag_as_controller()
-        
+
         attr_util.lock_and_hide(node=mid_ctrl.ctrl, translate=False, rotate=False, scale='XZ')
         attr_util.lock_and_hide(node=s_tan.ctrl, translate=False)
         attr_util.lock_and_hide(node=e_tan.ctrl, translate=False)
@@ -459,34 +517,52 @@ class Chain:
 
         return {'control':ctrl_grp, 'module':rig_grp}
 
-    def create_blend_chain(self, switch_node, chain_a, chain_b, translate=True, rotate=True, scale=True):
+    def create_blend_chain(
+        self,
+        switch_node: str,
+        chain_a: list[str],
+        chain_b: list[str],
+        translate: bool = True,
+        rotate: bool = True,
+        scale: bool = True,
+        shear: bool = True,
+        handle_offsets: bool = False,
+    ):
         self.create_from_transforms(static=True)
 
-        self.switch = rAttr.Attribute(node=switch_node, type='double', min=0, max=1, keyable=True, name='switch')
+        self.switch = rAttr.Attribute(
+            node=switch_node, type="double", min=0, max=1, keyable=True, name="switch"
+        )
+        for i, (joint_a, joint_b) in enumerate(zip(chain_a, chain_b)):
+            switch_name =self.joints[i].replace(self.suffix, "")
+            switch_joint = self.joints[i]
+            joint_a_matrix = f"{joint_a}.matrix"
+            joint_b_matrix = f"{joint_b}.matrix"
+            if handle_offsets:
+                offset_matrix =   rXform.get_world_matrix(joint_a) * rXform.get_world_matrix(joint_b).inverse()
+                parent_offset_matrix = rXform.get_parent_matrix(joint_b) * rXform.get_parent_inverse_matrix(joint_a)
+                if not (rXform.is_identity_matrix(offset_matrix) and rXform.is_identity_matrix(parent_offset_matrix)):
+                    mult_matrix_node = node.MultMatrixNode(name=f"{switch_name}_BlendOffset")
+                    mc.setAttr(mult_matrix_node.matrix_in[0], offset_matrix, type="matrix")
+                    mc.connectAttr(joint_b_matrix, mult_matrix_node.matrix_in[1])
+                    mc.setAttr(mult_matrix_node.matrix_in[2], parent_offset_matrix, type="matrix")
+                    joint_b_matrix = mult_matrix_node.matrix_sum
 
-        i = 0
-        for a, b in zip(chain_a, chain_b):
-            bcn_name = self.joints[i].replace(self.suffix, '')
-            if translate:
-                bcn = mc.createNode('blendColors', name=bcn_name + 'translate_BCN')
-                mc.connectAttr(a + '.t', bcn + '.color1')
-                mc.connectAttr(b + '.t', bcn + '.color2')
-                mc.connectAttr(self.switch.attr, bcn + '.blender')
-                mc.connectAttr(bcn + '.output', self.joints[i] + '.t')
-            if rotate:
-                bcn = mc.createNode('blendColors', name=bcn_name + 'rotate_BCN')
-                mc.connectAttr(a + '.r', bcn + '.color1')
-                mc.connectAttr(b + '.r', bcn + '.color2')
-                mc.connectAttr(self.switch.attr, bcn + '.blender')
-                mc.connectAttr(bcn + '.output', self.joints[i] + '.r')
-            if scale:
-                bcn = mc.createNode('blendColors', name=bcn_name + 'scale_BCN')
-                mc.connectAttr(a + '.s', bcn + '.color1')
-                mc.connectAttr(b + '.s', bcn + '.color2')
-                mc.connectAttr(self.switch.attr, bcn + '.blender')
-                mc.connectAttr(bcn + '.output', self.joints[i] + '.s')
+            blend_matrix_node = node.BlendMatrixNode(
+                name=f"{switch_name}_Blend"
+            )
+            mc.connectAttr(joint_b_matrix, blend_matrix_node.input_matrix)
+            mc.connectAttr(joint_a_matrix, blend_matrix_node.target[0].target_matrix)
+            mc.connectAttr(self.switch.attr, blend_matrix_node.target[0].weight)
 
-            i += 1
+            rXform.drive_transform_with_matrix(
+                matrix_attr=blend_matrix_node.output_matrix,
+                transform=switch_joint,
+                translate=translate,
+                rotate=rotate,
+                scale=scale,
+                shear=shear,
+            )
 
     def create_from_curve(self, joint_num=5, curve=None, aim_vector=(0, 1, 0), up_vector=(0, 0, 1), world_up_vector=(0, 0, 1), stretch=None, ctrl_rotate=False):
         if not curve:
@@ -549,4 +625,3 @@ def stretch_segment(jnt, start, end, stretch_driver=None, global_scale=None):
         mc.connectAttr(bta + '.output', jnt + '.scaleY')
     else:
         mc.connectAttr(mdn + '.outputX', jnt + '.scaleY')
-    
