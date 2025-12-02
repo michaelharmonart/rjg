@@ -210,6 +210,7 @@ def matrix_constraint(
     rotate: bool = True,
     scale: bool = True,
     shear: bool = True,
+    lock_joint_orient: bool = True,
 ) -> None:
     """
     Constrain a transform to another
@@ -220,6 +221,8 @@ def matrix_constraint(
         keep_offset: keep the offset of the constrained transform to the source at time of constraint generation.
         local_space: if False the constrained transform will have inheritsTransform turned off.
         translate: whether to constrain translation.
+        lock_joint_orient: When True, if the transform is a joint
+            it's joint orient will be locked after being zeroed to keep maya from screwing it up later when re-parenting.
     """
     constraint_name: str = constrain_transform.split("|")[-1]
 
@@ -274,11 +277,16 @@ def matrix_constraint(
     mc.connectAttr(f"{constrain_transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
 
     # Drive transform with decomposed values
+    # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient
+    if mc.nodeType(constrain_transform) == "joint":
+        if scale:
+            mc.setAttr(f"{constrain_transform}.segmentScaleCompensate", 0)
+        if rotate:
+            mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
+            if lock_joint_orient:
+                mc.setAttr(f"{constrain_transform}.jointOrient", lock=True)
     if rotate:
         mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{constrain_transform}.rotate")
-        # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient (I was up till 2am because of this)
-        if mc.nodeType(constrain_transform) == "joint":
-            mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
         mc.setAttr(f"{constrain_transform}.rotateAxis", 0, 0, 0, type="float3")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{constrain_transform}.translate")
@@ -287,16 +295,6 @@ def matrix_constraint(
     if shear:
         mc.connectAttr(f"{decompose_matrix}.outputShear", f"{constrain_transform}.shear")
 
-def match_transform(transform: str, target_transform: str) -> None:
-    """
-    Match a transform to another in world space.
-
-    Args:
-        transform: Object to be moved to the specified transform.
-        target_transform: Name of the transform to match to.
-    """
-    source_matrix: MMatrix = get_world_matrix(transform=target_transform)
-    set_world_matrix(transform=transform, matrix=source_matrix)
 
 def freeze_and_zero(transform: str) -> None:
     mc.makeIdentity(transform, apply=True)
@@ -309,6 +307,7 @@ def drive_transform_with_matrix(
     rotate: bool = True,
     scale: bool = True,
     shear: bool = True,
+    lock_joint_orient: bool = True,
 ):
     """
     Drive a transforms translate rotate scale and shear with a matrix attribute.
@@ -317,6 +316,8 @@ def drive_transform_with_matrix(
         matrix_attr: The matrix attribute to use as the driver.
         transform: The transform to be driven.
         translate: whether to constrain translation.
+        lock_joint_orient: When True, if the transform is a joint
+            it's joint orient will be locked after being zeroed to keep maya from screwing it up later when re-parenting.
     """
     constraint_name: str = transform.split("|")[-1]
 
@@ -329,11 +330,17 @@ def drive_transform_with_matrix(
 
 
     # Drive transform with decomposed values
+    # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient
+    if mc.nodeType(transform) == "joint":
+        if scale:
+            mc.setAttr(f"{transform}.segmentScaleCompensate", 0)
+        if rotate:
+            print(f"reset orient on {transform}")
+            mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
+            if lock_joint_orient:
+                mc.setAttr(f"{transform}.jointOrient", lock=True)
     if rotate:
         mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{transform}.rotate")
-        # Prep constrained transform
-        if mc.nodeType(transform) == "joint":
-            mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
         mc.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{transform}.translate")

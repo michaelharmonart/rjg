@@ -4,6 +4,7 @@ import maya.cmds as cmds
 from rjg.libs.maya_api.attribute import (
     Attribute,
     IndexableAttribute,
+    IndexableBlendMatrixTargetAttribute,
     IntegerAttribute,
     MatrixAttribute,
     ScalarAttribute,
@@ -30,11 +31,14 @@ class Node:
         "multiply": {"standard": "multiply", "DL": "multiplyDL"},
         "subtract": {"standard": "subtract", "DL": "subtractDL"},
         "sum": {"standard": "sum", "DL": "sumDL"},
+        "sin": {"standard": "sin", "DL": "sinDL"},
+        "cos": {"standard": "cos", "DL": "cosDL"},
         "divide": {"standard": "divide", "DL": "divideDL"},
         "clampRange": {"standard": "clampRange", "DL": "clampRangeDL"},
         "distanceBetween": {"standard": "distanceBetween", "DL": "distanceBetweenDL"},
         "crossProduct": {"standard": "crossProduct", "DL": "crossProductDL"},
         "length": {"standard": "length", "DL": "lengthDL"},
+        "lerp": {"standard": "lerp", "DL": "lerpDL"},
         "rowFromMatrix": {"standard": "rowFromMatrix", "DL": "rowFromMatrixDL"},
         "multiplyPointByMatrix": {
             "standard": "multiplyPointByMatrix",
@@ -84,6 +88,20 @@ class Node:
         return f"{self.__class__.__name__}(name='{self.name}')"
 
 
+class BlendMatrixNode(Node):
+    """Maya blendMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "blendMatrix") -> None:
+        super().__init__("blendMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_matrix = MatrixAttribute(f"{self.name}.inputMatrix")
+        self.pose_space_matrix = MatrixAttribute(f"{self.name}.postSpaceMatrix")
+        self.pre_space_matrix = MatrixAttribute(f"{self.name}.preSpaceMatrix")
+        self.target = IndexableBlendMatrixTargetAttribute(f"{self.name}.target")
+        self.output_matrix = MatrixAttribute(f"{self.name}.outputMatrix")
+
+
 class ClampRangeNode(Node):
     """Maya clampRange node with enhanced interface."""
 
@@ -95,6 +113,17 @@ class ClampRangeNode(Node):
         self.minimum = ScalarAttribute(f"{self.name}.minimum")
         self.maximum = ScalarAttribute(f"{self.name}.maximum")
         self.output = ScalarAttribute(f"{self.name}.output")
+
+
+class CosNode(Node):
+    """Maya cos node with enhanced interface."""
+
+    def __init__(self, name: str = "cos") -> None:
+        super().__init__("cos", name)
+
+    def _setup_attributes(self) -> None:
+        self.input: ScalarAttribute = ScalarAttribute(f"{self.name}.input")
+        self.output: ScalarAttribute = ScalarAttribute(f"{self.name}.output")
 
 
 class CrossProductNode(Node):
@@ -146,6 +175,19 @@ class LengthNode(Node):
         self.output = ScalarAttribute(f"{self.name}.output")
 
 
+class LerpNode(Node):
+    """Maya lerp node with enhanced interface."""
+
+    def __init__(self, name: str = "lerp") -> None:
+        super().__init__("lerp", name)
+
+    def _setup_attributes(self) -> None:
+        self.input1 = ScalarAttribute(f"{self.name}.input1")
+        self.input2 = ScalarAttribute(f"{self.name}.input2")
+        self.weight = ScalarAttribute(f"{self.name}.weight")
+        self.output = ScalarAttribute(f"{self.name}.output")
+
+
 class MultiplyNode(Node):
     """Maya multiply node with enhanced interface."""
 
@@ -179,6 +221,17 @@ class RowFromMatrixNode(Node):
         self.input = IntegerAttribute(f"{self.name}.input")
         self.matrix = MatrixAttribute(f"{self.name}.matrix")
         self.output = Vector4Attribute(f"{self.name}.output")
+
+
+class SinNode(Node):
+    """Maya sin node with enhanced interface."""
+
+    def __init__(self, name: str = "sin") -> None:
+        super().__init__("sin", name)
+
+    def _setup_attributes(self) -> None:
+        self.input: ScalarAttribute = ScalarAttribute(f"{self.name}.input")
+        self.output: ScalarAttribute = ScalarAttribute(f"{self.name}.output")
 
 
 class SubtractNode(Node):
