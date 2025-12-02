@@ -5,6 +5,7 @@ from rjg.libs.maya_api.attribute import (
     Attribute,
     IndexableAttribute,
     IndexableBlendMatrixTargetAttribute,
+    IndexableMatrixAttribute,
     IntegerAttribute,
     MatrixAttribute,
     ScalarAttribute,
@@ -209,6 +210,17 @@ class MultiplyPointByMatrixNode(Node):
         self.input_point = Vector3Attribute(f"{self.name}.input")
         self.input_matrix = MatrixAttribute(f"{self.name}.matrix")
         self.output = Vector3Attribute(f"{self.name}.output")
+
+
+class MultMatrixNode(Node):
+    """Maya multMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "multMatrix") -> None:
+        super().__init__("multMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.matrix_in = IndexableMatrixAttribute(f"{self.name}.matrixIn")
+        self.matrix_sum = MatrixAttribute(f"{self.name}.matrixSum")
 
 
 class RowFromMatrixNode(Node):

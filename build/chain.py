@@ -1,13 +1,11 @@
 import ast
-from typing import Any
-import maya.cmds as mc
 from importlib import reload
 from typing import Any
 
-import rjg.libs.control.ctrl as rCtrl
-import rjg.libs.common as rCommon
+import maya.cmds as mc
 import rjg.libs.attribute as rAttr
-import rjg.libs.transform as rXform
+import rjg.libs.common as rCommon
+import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.math as rMath
 import rjg.libs.spline as spline
 import rjg.libs.transform as rXform
@@ -462,20 +460,38 @@ class Chain:
         return {'control':ctrl_grp, 'module':rig_grp}
 
     def create_blend_chain(
-        self, switch_node, chain_a, chain_b, translate=True, rotate=True, scale=True, shear=True
+        self,
+        switch_node: str,
+        chain_a: list[str],
+        chain_b: list[str],
+        translate: bool = True,
+        rotate: bool = True,
+        scale: bool = True,
+        shear: bool = True,
+        handle_offsets: bool = False,
     ):
         self.create_from_transforms(static=True)
 
         self.switch = rAttr.Attribute(
             node=switch_node, type="double", min=0, max=1, keyable=True, name="switch"
         )
-
         for i, (joint_a, joint_b) in enumerate(zip(chain_a, chain_b)):
+            switch_name =self.joints[i].replace(self.suffix, "")
+            joint_a_matrix = f"{joint_a}.matrix"
+            joint_b_matrix = f"{joint_b}.matrix"
+            if handle_offsets:
+                offset_matrix = rXform.get_world_matrix(joint_b) * rXform.get_world_matrix(joint_a).inverse()
+                if not rXform.is_identity_matrix(offset_matrix):
+                    mult_matrix_node = node.MultMatrixNode(name=f"{switch_name}_BlendOffset")
+                    mc.setAttr(mult_matrix_node.matrix_in[0], offset_matrix, type="matrix")
+                    mc.connectAttr(joint_b_matrix, mult_matrix_node.matrix_in[1])
+                    joint_b_matrix = mult_matrix_node.matrix_sum
+
             blend_matrix_node = node.BlendMatrixNode(
-                name=self.joints[i].replace(self.suffix, "_Blend")
+                name=f"{switch_name}_Blend"
             )
-            mc.connectAttr(f"{joint_b}.matrix", blend_matrix_node.input_matrix)
-            mc.connectAttr(f"{joint_a}.matrix", blend_matrix_node.target[0].target_matrix)
+            mc.connectAttr(joint_b_matrix, blend_matrix_node.input_matrix)
+            mc.connectAttr(joint_a_matrix, blend_matrix_node.target[0].target_matrix)
             mc.connectAttr(self.switch.attr, blend_matrix_node.target[0].weight)
 
             rXform.drive_transform_with_matrix(

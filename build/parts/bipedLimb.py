@@ -1,13 +1,13 @@
-from maya.api.OpenMaya import MMatrix
-from rjg.libs.control.ctrl import Control
-import maya.cmds as mc
 from importlib import reload
 
-import rjg.build.rigModule as rModule
+import maya.cmds as mc
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
 import rjg.build.ik as rIk
+import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
+from maya.api.OpenMaya import MMatrix
+from rjg.libs.control.ctrl import Control
 from rjg.libs.space import space_switch
 from rjg.libs.transform import (
     drive_transform_with_matrix,
@@ -159,9 +159,12 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                                         suffix='switch_JNT',
                                         name=self.part)
 
-            blend_chain.create_blend_chain(switch_node=self.base_name,
-                                           chain_a=self.fk_joints,
-                                           chain_b=self.ik_joints)
+            blend_chain.create_blend_chain(
+                switch_node=self.base_name,
+                chain_a=self.fk_joints,
+                chain_b=self.ik_joints,
+                handle_offsets=True,
+            )
             mc.parent(blend_chain.joints[0], self.limb_grp)
             self.src_chain = blend_chain
             self.src_joints = blend_chain.joints
@@ -311,19 +314,19 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         self.bind_joints = limb_chain.joints
 
         self.tag_bind_joints(self.bind_joints[:-1])
-  
+
     def add_plugs(self):
         #print(self.pv_control)
         if self.part == 'leg':
             par = 'COG_M_JNT'
             driver_list = ['waist_M_CTRL',
-                           'waist_M_CTRL', 
-                           #'waist_M_CTRL', 
-                           self.base_name + '_IK_BASE_CTRL', 
+                           'waist_M_CTRL',
+                           #'waist_M_CTRL',
+                           self.base_name + '_IK_BASE_CTRL',
                            'foot_' + self.side + '_01_ik_JNT',
                            'root_02_M_CTRL']
-            driven_list = [self.limb_grp, 
-                           self.base_name + '_IK_BASE_CTRL_CNST_GRP', 
+            driven_list = [self.limb_grp,
+                           self.base_name + '_IK_BASE_CTRL_CNST_GRP',
                            #self.base_name + '_01_fk_CTRL_CNST_GRP',
                            self.base_name + '_up_twist_LOC',
                            self.base_name + '_IK_MAIN_CTRL_CNST_GRP',
@@ -419,7 +422,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             pv_names = ['world', 'global', 'root', 'hip', 'hand', 'default_value']
             ik_ctrl = None
         elif self.part == 'neck':
-            
+
             rAttr.Attribute(node=self.part_grp, type='plug', value=['chest_M_JNT'], name='skeletonPlugs', children_name=[self.bind_joints[0]])
 
             driver_list = ['chest_M_02_JNT', 'head_M_02_CTRL']

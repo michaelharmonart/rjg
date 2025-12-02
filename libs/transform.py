@@ -92,7 +92,9 @@ def findPosOnCurve(curve, u_val):
     mc.delete(pci)
     return pos
 
-def is_identity_matrix(matrix: list[float], epsilon: float = 0.001) -> bool:
+def is_identity_matrix(matrix: list[float] | MMatrix, epsilon: float = 0.001) -> bool:
+    if isinstance(matrix, MMatrix):
+        return matrix.isEquivalent(MMatrix.kIdentity, epsilon)
     return all(
         abs(value - identity) < epsilon
         for value, identity in zip(matrix, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
