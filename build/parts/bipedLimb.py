@@ -15,6 +15,7 @@ from rjg.libs.transform import (
     get_parent_inverse_matrix,
     get_parent_matrix,
     get_world_matrix,
+    is_identity_matrix,
     match_pose,
     match_transform,
     matrix_constraint,
@@ -265,11 +266,20 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
 
         if self.create_fk:
             # Set up FK
+            i = 0
             driver_matrix = mc.createNode("multMatrix", name=f"{first_joint}_Matrix")
-            offset_matrix = get_parent_matrix(orient_offset) * get_world_matrix(first_joint).inverse()
-            mc.setAttr(f"{driver_matrix}.matrixIn[0]", offset_matrix, type="matrix")
-            mc.connectAttr(f"{self.fk_ctrls[0].ctrl}.matrix", f"{driver_matrix}.matrixIn[1]")
-            mc.connectAttr(f"{orient_offset}.matrix", f"{driver_matrix}.matrixIn[2]")
+            offset_matrix =  get_world_matrix(first_joint) * get_world_matrix(self.fk_ctrls[0].ctrl).inverse()
+            if not is_identity_matrix(offset_matrix):
+                mc.setAttr(f"{driver_matrix}.matrixIn[{i}]", offset_matrix, type="matrix")
+                i += 1
+            mc.connectAttr(f"{self.fk_ctrls[0].ctrl}.matrix", f"{driver_matrix}.matrixIn[{i}]")
+            i += 1
+            parent_offset_matrix = get_parent_matrix(self.fk_ctrls[0].ctrl) * get_parent_inverse_matrix(first_joint)
+            if not is_identity_matrix(parent_offset_matrix):
+                mc.setAttr(f"{driver_matrix}.matrixIn[{i}]", parent_offset_matrix, type="matrix")
+                i += 1
+            mc.connectAttr(f"{orient_offset}.matrix", f"{driver_matrix}.matrixIn[{i}]")
+            i += 1
             drive_transform_with_matrix(f"{driver_matrix}.matrixSum", first_joint)
         if self.create_ik:
             # Set up IK
