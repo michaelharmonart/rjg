@@ -173,7 +173,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         )
         
     if character == 'Luciana':
-        neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=True , spinejnt_count = 6, )
+        neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False , spinejnt_count = 6, )
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = True)
     else:    
         neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
@@ -1268,9 +1268,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Luciana':
-        if mc.objExists('switch_CTRL'):
-            mc.addAttr('switch_CTRL', longName='Neck_M_IKFK', attributeType='bool', keyable=True)
-            mc.connectAttr('switch_CTRL.Neck_M_IKFK', 'neck_M.switch', force=True)
+        #if mc.objExists('switch_CTRL'):
+        #    mc.addAttr('switch_CTRL', longName='Neck_M_IKFK', attributeType='bool', keyable=True)
+        #    mc.connectAttr('switch_CTRL.Neck_M_IKFK', 'neck_M.switch', force=True)
         bindjoints = mc.select(mc.listRelatives("SKEL", ad=True, type="joint"))
         mc.select(f'{character}_UBM')
         mc.skinCluster(f'{character}_UBM', edit=True, unbind=True)

@@ -1,4 +1,5 @@
 
+from unittest import expectedFailure
 import maya.cmds as mc
 from importlib import reload
 import re
@@ -77,10 +78,15 @@ class UEfaceconnect(UEface):
                 nose_jnts.append(name)
             elif any(key in name for key in ['Brow', 'Eye', 'CheekBone']):
                 upper_jnts.append(name)
-            elif any(key in name for key in ['Mouth', 'Jaw_M_root_JNT', 'Puff', 'mouth']):
+            elif any(key in name for key in ['Mouth', 'Jaw_M_root_JNT', 'Puff', 'uppermouth', 'lowermouth']):
                 lower_jnts.append(name)
             else:
                 unsorted.append(name)
+        try:
+            lower_jnts.append('uppermouth_JNT')
+            lower_jnts.append('lowermouth_JNT')
+        except:
+            pass
 
         # Parent to respective head joints
         if mc.objExists('LowerHead_JNT'):
