@@ -29,17 +29,21 @@ def write_clothes():
         print("saved:", ms)
         time.sleep(0.5)
 
-def Domingo_extras(skin_src, skin_trg_grp):
+def Domingo_extras(skin_src, skin_trg_grp, face):
     bind_joints = [jnt.split('.')[0] for jnt in mc.ls('*.bindJoint')]
     geo = mc.ls(mc.select(skin_trg_grp, hierarchy=True), selection=True)
     mc.select(skin_trg_grp, hierarchy=True)
     geo = mc.ls(selection=True, type='mesh')
 
     sk_g = []
-
-    geo = [
-        'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle'
-    ]
+    if face:
+        geo = [
+            'belt', 'mustache', 'vest', 'tail', 'comb', 'beard', 'buckle'
+        ]
+    else:
+        geo = [
+            'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle'
+        ]
 
     #rUtil.create_pxWrap('Shirt', 'Pants', 'Gretchen_UBM')
     #rUtil.create_pxWrap('VestFluff', 'Clothes')

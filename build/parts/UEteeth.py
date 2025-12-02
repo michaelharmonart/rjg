@@ -1,3 +1,4 @@
+
 import maya.cmds as mc
 from importlib import reload
 import re
@@ -16,8 +17,9 @@ reload(rXform)
 
 
 class UEteeth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1,):
+    def __init__(self, grp_name=None, ctrl_scale=1, skin=None):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
+        self.skin = skin
 
     def build(self):
         prefix = UEface.get_prefix_from_group(self.grp_name)
@@ -45,7 +47,9 @@ class UEteeth(UEface):
         index = 1
         guides = []
 
+
         for type in ['top', 'bot']:
+            bindjnts = []
             for guide in [f'{type}Teeth_M_Sub_01',f'{type}Teeth_L_Sub_02',f'{type}Teeth_R_Sub_02',f'{type}Teeth_L_Sub_03',f'{type}Teeth_R_Sub_03',]:
                 UEface.Simple_joint_and_Control(
                     guide=guide,
@@ -57,17 +61,20 @@ class UEteeth(UEface):
                 mc.parent(f'{guide}_JNT', f'{type.capitalize()}Teeth_JNT')
                 side = guide.split('_')[1]
                 mc.parent(f'{guide}_{side}_CTRL_CNST_GRP', f'{type.capitalize()}Teeth_M_CTRL')
+                bindjnts.append(f'{guide}_JNT')
+            if self.skin:
+                mc.skinCluster(*bindjnts, f'{type}teeth')
 
 
 
 
 
-
+        bindjnts = []
         while True:
             guide_name = f'Tongue_{index:02d}'  # formats as 01, 02, 03, etc.
             if mc.objExists(guide_name):
                 guides.append(guide_name)
-                UEface.Simple_joint_and_Control(
+                jnt, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(
                     guide=guide_name,
                     overwrite=True,
                     overwrite_name=guide_name,
@@ -77,6 +84,7 @@ class UEteeth(UEface):
                     CTRL_Color=(1, 0.6, 0),
                     bind = False
                 )
+                bindjnts.append(jnt)
                 if index != 1:
                     old_index = index - 1 
                     mc.parent(f'{guide_name}_0{index}_CTRL_CNST_GRP', f'{last_guide}_0{old_index}_CTRL')
@@ -87,4 +95,10 @@ class UEteeth(UEface):
                 break  # stop if the guide doesn't exist
         
         UEface.chain_parts(guides, joints=True, controls=True)
+        print(bindjnts)
+        mc.skinCluster(*bindjnts, f'tongue')
 
+
+
+
+#mc.skincluster(*combined, self.skin[0])

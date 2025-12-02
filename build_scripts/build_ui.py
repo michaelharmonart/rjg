@@ -103,8 +103,8 @@ class RigBuildUI(QtWidgets.QDialog):
                 "gp" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Guides.mb",
                 "ep" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Extras.mb",
                 "cp" : f"{groups}/bobo/character/Rigs/Gretchen/Controls/Gretchen_control_curves.json",
-                "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_18.json", 
-                "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose14.pose",
+                "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_21.json", 
+                "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose19.pose",
                 "im" : f"{groups}/bobo/character/Rigs/Rig_Icon/Gretchen.jpg",
             },
             "Susaka" : {
@@ -130,7 +130,7 @@ class RigBuildUI(QtWidgets.QDialog):
                 "gp" : f"{groups}/bobo/character/Rigs/Luciana/Luciana_Guides.mb",
                 "ep" : f"{groups}/bobo/character/Rigs/Luciana/Luciana_Extras.mb",
                 "cp" : f"{groups}/bobo/character/Rigs/Luciana/Controls/Luciana_control_curves.json", 
-                "sp" : f"{groups}/bobo/character/Rigs/Luciana/Skin_Files/Luciana_Weights.json",  
+                "sp" : f"{groups}/bobo/character/Rigs/Luciana/SkinFiles/Luciana_Weights.json",  
                 "pp" : None,
                 "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/dragon.png",
             },
@@ -164,6 +164,16 @@ class RigBuildUI(QtWidgets.QDialog):
                 "sp" : f"{groups}/bobo/character/Rigs/Sharkguy/SkinFiles/Sharkguy_Skin.json",  
                 "pp" : None,
                 "im" : f"{groups}/bobo/character/Rigs/Rig_Icon/Bee.jpg",
+            },
+
+            "RedPanda" : {
+                "mp" : f"{groups}/bobo/character/Rigs/RedPanda/RedPanda_Model.mb",
+                "gp" : f"{groups}/bobo/character/Rigs/RedPanda/RedPanda_Guides.mb",
+                "ep" : None,
+                "cp" : None, 
+                "sp" : None,  
+                "pp" : None,
+                "im" : None,
             }
 
 
@@ -176,7 +186,7 @@ class RigBuildUI(QtWidgets.QDialog):
         
     def create_widgets(self):
         self.char_options = QtWidgets.QComboBox()
-        self.char_options.addItems([ 'Bobo', 'Gretchen', 'Luciana', 'Domingo', 'Susaka', 'Drummer', 'Fisherman', 'Rayden', 'Robin', 'DungeonMonster', 'Skeleton', 'Jett', 'Blitz', 'Sharkguy'])
+        self.char_options.addItems([ 'Bobo', 'Gretchen', 'Luciana', 'Domingo', 'Susaka', 'Drummer', 'Fisherman', 'Rayden', 'Robin', 'DungeonMonster', 'Skeleton', 'Jett', 'Blitz', 'Sharkguy', 'RedPanda'])
         self.char_options.setFixedWidth(200)
         
         self.model_label = QtWidgets.QLabel('Model:')

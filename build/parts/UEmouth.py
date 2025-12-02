@@ -15,8 +15,11 @@ reload (rGuide)
 reload(rXform)
 
 class UEmouth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1,):
-        super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
+    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2):
+        super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale,)
+        self.Major_Mouth = Major_Mouth
+        self.Major_2 = Major_2
+        self.rib_mouth = rib_mouth
 
     def get_ordered_lip_guides(self, prefix, guides, guide_base, has_mid=True):
         """
@@ -104,8 +107,8 @@ class UEmouth(UEface):
         def loft_offset_curves(curve, name):
             curve_pos = mc.duplicate(curve, name=name + '_pos')[0]
             curve_neg = mc.duplicate(curve, name=name + '_neg')[0]
-            mc.move(0, 0.2, 0, curve_pos, r=True)
-            mc.move(0, -0.2, 0, curve_neg, r=True)
+            mc.move(0, self.rib_mouth, 0, curve_pos, r=True)
+            mc.move(0, -1 * self.rib_mouth, 0, curve_neg, r=True)
             surf = mc.loft(curve_pos, curve_neg, ch=True, u=True, c=False, ar=True, d=3, ss=1, rn=False, po=0,)[0]
             mc.delete(curve, curve_pos, curve_neg)
             return mc.rename(surf, name + '_surf')
@@ -177,7 +180,13 @@ class UEmouth(UEface):
 
         '''
         major_jnts = []
-        for loc in [f'{prefix}_M_UpperLip_01', f'{prefix}_M_LowerLip_01', f'{prefix}_L_UpperLip_03', f'{prefix}_L_LowerLip_03', f'{prefix}_R_UpperLip_03', f'{prefix}_R_LowerLip_03', f'{prefix}_L_CornerLip', f'{prefix}_R_CornerLip' ]:
+        MajorList = [f'{prefix}_M_UpperLip_01', f'{prefix}_M_LowerLip_01', f'{prefix}_L_UpperLip_0{self.Major_Mouth}', f'{prefix}_L_LowerLip_0{self.Major_Mouth}', f'{prefix}_R_UpperLip_0{self.Major_Mouth}', f'{prefix}_R_LowerLip_0{self.Major_Mouth}', f'{prefix}_L_CornerLip', f'{prefix}_R_CornerLip' ]
+        if self.Major_2:
+            MajorList.append(f'{prefix}_L_UpperLip_0{self.Major_2}')
+            MajorList.append(f'{prefix}_R_UpperLip_0{self.Major_2}')
+            MajorList.append(f'{prefix}_L_LowerLip_0{self.Major_2}')
+            MajorList.append(f'{prefix}_R_LowerLip_0{self.Major_2}')
+        for loc in MajorList:
             joint, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(loc, overwrite=True, overwrite_name=f'Major_{loc}', check_side=True, CTRL_Size=.6, bind=False, JNT_Size=.7)
             major_jnts.append(joint)
 
@@ -193,14 +202,26 @@ class UEmouth(UEface):
             position=pos,
             size=1,)
         
-        mc.parent('Major_Mouth_M_UpperLip_01_Mouth_CTRL_CNST_GRP', 'Major_Mouth_L_UpperLip_03_Mouth_CTRL_CNST_GRP', 'Major_Mouth_R_UpperLip_03_Mouth_CTRL_CNST_GRP', upper_ctrl)
-        mc.parent('Major_Mouth_M_LowerLip_01_Mouth_CTRL_CNST_GRP', 'Major_Mouth_L_LowerLip_03_Mouth_CTRL_CNST_GRP', 'Major_Mouth_R_LowerLip_03_Mouth_CTRL_CNST_GRP', lower_ctrl)
+        mc.parent('Major_Mouth_M_UpperLip_01_Mouth_CTRL_CNST_GRP', f'Major_Mouth_L_UpperLip_0{self.Major_Mouth}_Mouth_CTRL_CNST_GRP', f'Major_Mouth_R_UpperLip_0{self.Major_Mouth}_Mouth_CTRL_CNST_GRP', upper_ctrl)
+        mc.parent('Major_Mouth_M_LowerLip_01_Mouth_CTRL_CNST_GRP', f'Major_Mouth_L_LowerLip_0{self.Major_Mouth}_Mouth_CTRL_CNST_GRP', f'Major_Mouth_R_LowerLip_0{self.Major_Mouth}_Mouth_CTRL_CNST_GRP', lower_ctrl)
+        if self.Major_2:
+            mc.parent(f'Major_Mouth_L_UpperLip_0{self.Major_2}_Mouth_CTRL_CNST_GRP', f'Major_Mouth_R_UpperLip_0{self.Major_2}_Mouth_CTRL_CNST_GRP', upper_ctrl)
+            mc.parent(f'Major_Mouth_L_LowerLip_0{self.Major_2}_Mouth_CTRL_CNST_GRP', f'Major_Mouth_R_LowerLip_0{self.Major_2}_Mouth_CTRL_CNST_GRP', lower_ctrl)
 
+            #MajorList.append(f'{prefix}_L_UpperLip_0{self.Major_2}')
+            #MajorList.append(f'{prefix}_R_UpperLip_0{self.Major_2}')
 
         #skin_upperOuter = [upper_outer_surf, null_jnt, f'Major_{prefix}_M_UpperLip_01_JNT', f'Major_{prefix}_L_UpperLip_03_JNT', f'Major_{prefix}_R_UpperLip_03_JNT', f'Major_{prefix}_L_CornerLip_JNT', f'Major_{prefix}_R_CornerLip_JNT' ]
-        skin_upperLip = [upper_lip_surf,f'Major_{prefix}_M_UpperLip_01_JNT', f'Major_{prefix}_L_UpperLip_03_JNT', f'Major_{prefix}_R_UpperLip_03_JNT', f'Major_{prefix}_L_CornerLip_JNT', f'Major_{prefix}_R_CornerLip_JNT' ]
+        skin_upperLip = [upper_lip_surf,f'Major_{prefix}_M_UpperLip_01_JNT', f'Major_{prefix}_L_UpperLip_0{self.Major_Mouth}_JNT', f'Major_{prefix}_R_UpperLip_0{self.Major_Mouth}_JNT', f'Major_{prefix}_L_CornerLip_JNT', f'Major_{prefix}_R_CornerLip_JNT' ]
+        if self.Major_2:
+            skin_upperLip.append(f'Major_{prefix}_L_UpperLip_0{self.Major_2}_JNT')
+            skin_upperLip.append(f'Major_{prefix}_R_UpperLip_0{self.Major_2}_JNT')
         #skin_LowerOuter = [lower_outer_surf,null_jnt, f'Major_{prefix}_M_LowerLip_01_JNT', f'Major_{prefix}_L_LowerLip_03_JNT', f'Major_{prefix}_R_LowerLip_03_JNT', f'Major_{prefix}_L_CornerLip_JNT', f'Major_{prefix}_R_CornerLip_JNT' ]
-        skin_LowerLip = [lower_lip_surf, f'Major_{prefix}_M_LowerLip_01_JNT', f'Major_{prefix}_L_LowerLip_03_JNT', f'Major_{prefix}_R_LowerLip_03_JNT', f'Major_{prefix}_L_CornerLip_JNT', f'Major_{prefix}_R_CornerLip_JNT' ]
+        skin_LowerLip = [lower_lip_surf, f'Major_{prefix}_M_LowerLip_01_JNT', f'Major_{prefix}_L_LowerLip_0{self.Major_Mouth}_JNT', f'Major_{prefix}_R_LowerLip_0{self.Major_Mouth}_JNT', f'Major_{prefix}_L_CornerLip_JNT', f'Major_{prefix}_R_CornerLip_JNT' ]
+        if self.Major_2:
+            skin_LowerLip.append(f'Major_{prefix}_L_LowerLip_0{self.Major_2}_JNT')
+            skin_LowerLip.append(f'Major_{prefix}_R_LowerLip_0{self.Major_2}_JNT')
+
 
         print(skin_LowerLip)
         mc.select(skin_LowerLip, add=False)
@@ -212,9 +233,13 @@ class UEmouth(UEface):
         #mc.select(skin_upperOuter, add=False)
         #mc.skinCluster(tsb=True)
 
-        mc.group(upper_lip_surf, lower_lip_surf, *rib_offsets, 'Major_Mouth_M_UpperLip_01_JNT', 'Major_Mouth_M_LowerLip_01_JNT', 'Major_Mouth_L_UpperLip_03_JNT', 'Major_Mouth_L_LowerLip_03_JNT', 'Major_Mouth_R_UpperLip_03_JNT', 'Major_Mouth_R_LowerLip_03_JNT', 'Major_Mouth_L_CornerLip_JNT', 'Major_Mouth_R_CornerLip_JNT', name='Mouth_Extras_offsets')
+        mc.group(upper_lip_surf, lower_lip_surf, *rib_offsets, 'Major_Mouth_M_UpperLip_01_JNT', 'Major_Mouth_M_LowerLip_01_JNT', f'Major_Mouth_L_UpperLip_0{self.Major_Mouth}_JNT', f'Major_Mouth_L_LowerLip_0{self.Major_Mouth}_JNT', f'Major_Mouth_R_UpperLip_0{self.Major_Mouth}_JNT', f'Major_Mouth_R_LowerLip_0{self.Major_Mouth}_JNT', 'Major_Mouth_L_CornerLip_JNT', 'Major_Mouth_R_CornerLip_JNT', name='Mouth_Extras_offsets')
+        if self.Major_2:
+            mc.parent(f'Major_Mouth_L_UpperLip_0{self.Major_2}_JNT', f'Major_Mouth_R_UpperLip_0{self.Major_2}_JNT', f'Major_Mouth_L_LowerLip_0{self.Major_2}_JNT', f'Major_Mouth_R_LowerLip_0{self.Major_2}_JNT', 'Mouth_Extras_offsets')
         mc.parent('Mouth_Extras_offsets', 'RIG')
-        mc.hide(upper_lip_surf, lower_lip_surf, 'Major_Mouth_M_UpperLip_01_JNT', 'Major_Mouth_M_LowerLip_01_JNT', 'Major_Mouth_L_UpperLip_03_JNT', 'Major_Mouth_L_LowerLip_03_JNT', 'Major_Mouth_R_UpperLip_03_JNT', 'Major_Mouth_R_LowerLip_03_JNT', 'Major_Mouth_L_CornerLip_JNT', 'Major_Mouth_R_CornerLip_JNT', )
+        mc.hide(upper_lip_surf, lower_lip_surf, 'Major_Mouth_M_UpperLip_01_JNT', 'Major_Mouth_M_LowerLip_01_JNT', f'Major_Mouth_L_UpperLip_0{self.Major_Mouth}_JNT', f'Major_Mouth_L_LowerLip_0{self.Major_Mouth}_JNT', f'Major_Mouth_R_UpperLip_0{self.Major_Mouth}_JNT', f'Major_Mouth_R_LowerLip_0{self.Major_Mouth}_JNT', 'Major_Mouth_L_CornerLip_JNT', 'Major_Mouth_R_CornerLip_JNT',)
+        if self.Major_2:
+            mc.hide(f'Major_Mouth_L_UpperLip_0{self.Major_2}_JNT', f'Major_Mouth_R_UpperLip_0{self.Major_2}_JNT', f'Major_Mouth_L_LowerLip_0{self.Major_2}_JNT', f'Major_Mouth_R_LowerLip_0{self.Major_2}_JNT',)
 
         for loc in to_remove:
             side = loc.split('_')[1] if '_' in loc else 'Unknown'

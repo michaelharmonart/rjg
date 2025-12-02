@@ -58,7 +58,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     ## Setting parameters for individual Characters (splitting off groups)
     not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'NPC', 'Fisherman'] else True
-    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy']) else True
+    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy', 'RedPanda']) else True
 
     body_mesh = f'{character}_UBM'
 
@@ -226,14 +226,40 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     if character in ["Luciana"]:
         tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 13)], ctrl_scale=10, pad=2, IK_Spline=True)
-        #jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
-    
-    if character == 'Domingo':
-        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2, IK_Spline=True)
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
-                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1)
+                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['Eye', 'Cornea',], eyetype='lizzard')
+                eye.build()
+                from rjg.build.parts.UEbrow import UEbrow
+                brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1)
+                brow.build()
+                from rjg.build.parts.UEcheek import UEcheek
+                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1, NL=False)
+                cheek.build()
+
+            from rjg.build.parts.UEjaw import UEjaw
+            jaw = UEjaw('Jaw_M_guides', ctrl_scale=1)
+            jaw.build()
+            from rjg.build.parts.UEmouth import UEmouth
+            mouth = UEmouth('Mouth_guides', ctrl_scale=1, Major_Mouth=5, rib_mouth=10, Major_2=8)
+            mouth.build()
+            from rjg.build.parts.UEteeth import UEteeth
+            teeth = UEteeth('Tongue_M_guides', ctrl_scale=1, skin=['tongue', 'topteeth', 'botteeth'])
+            teeth.build()
+
+
+            from rjg.build.parts.UEfaceconnect import UEfaceconnect
+            faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1, custom='Luciana')
+            faceconnect.build() 
+    if character == 'RedPanda':
+        tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2,)
+    if character == 'Domingo':
+        tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2,)
+        if face:
+            for side in ['L', 'R']:
+                from rjg.build.parts.UEeye import UEeye
+                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['eyes', 'pupils', 'corneas'])
                 eye.build()
                 from rjg.build.parts.UEbrow import UEbrow
                 brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1)
@@ -249,7 +275,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mouth = UEmouth('Mouth_guides', ctrl_scale=1)
             mouth.build()
             from rjg.build.parts.UEteeth import UEteeth
-            teeth = UEteeth('Tongue_M_guides', ctrl_scale=1)
+            teeth = UEteeth('Tongue_M_guides', ctrl_scale=1, skin=['tongue', 'topteeth', 'botteeth'])
             teeth.build()
             from rjg.build.parts.UEStache import UEstache
             stache = UEstache('Stache_M_guides', ctrl_scale=1, beard=True)
@@ -417,7 +443,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 side = 'R'
             Glute = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}_Glute', guide_list=mc.getAttr(f'{fs}_Glute' + '.translate'), ctrl_scale=1, par_jnt='COG_M_JNT', par_ctrl='hip_M_CTRL')
             Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='Chest_Offset_CTRL')
-            GloveFlair = rBuild.build_module(module_type='arbitrary2', side=side, part='GloveFlair', guide_list=f'{fs}Glove', ctrl_scale=5, par_jnt=f'arm_{side}_7_JNT', par_ctrl=f'arm_{side}_7_JNT')
+            GloveFlair = rBuild.build_module(module_type='arbitrary2', side=side, part='GloveFlair', guide_list=f'{fs}Glove', ctrl_scale=5, par_jnt=f'arm_{side}_7_JNT', par_ctrl=f'arm_{side}_07_JNT', scale=True)
+            ArmTwist = rBuild.build_module(module_type='arbitrary2', side=side, part='ArmTwist', guide_list=f'{fs}ArmTwist', ctrl_scale=1, par_jnt=f'clavicle_{side}_02_JNT', par_ctrl=f'clavicle_{side}_02_JNT')
+            
+            #ArmTwist = rBuild.build_module(module_type='arbitrary', side=side, part=f'{fs}ArmTwist', guide_list=mc.getAttr(f'{fs}ArmTwist' + '.translate'), ctrl_scale=1, par_jnt=f'arm_{side}_01_JNT', par_ctrl=f'arm_{side}_01_JNT')
 
     #Bobo Specifics
     if character == 'Bobo':
@@ -734,8 +763,23 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         deformer = mc.deltaMush('shirt1')[0]
         mc.setAttr(f"{deformer}.envelope", .5)
         
-        deformer = mc.deltaMush('pants')[0]
+
+        import rjg.build_scripts.Gretchen_misc as rc
+        reload(rc)
+
+
         mc.setAttr(f"{deformer}.envelope", .5)
+
+        mc.select('head_M_01_CTRL', 'Eyes_ctrl')
+        spsw.run()
+        mc.addAttr('Eyes_ctrl.spaceSwitch', e=True, enumName='world:head:')
+        mc.setAttr('Eyes_ctrl.spaceSwitch', 1)
+        mc.parent('Eyes_ctrl_space_switch_GRP', 'RIG')
+
+
+        import rjg.build_scripts.Gretchen_misc as rc
+        reload(rc)
+
 
 
         import rjg.build_scripts.Gretchen_misc as rc
@@ -801,7 +845,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         reload(rc)
         if not_previs:
            try: 
-                rc.Domingo_extras(body_mesh, extras)
+                rc.Domingo_extras(body_mesh, extras, face)
            except Exception as e:
                 mc.warning(e)
     if character == 'Luciana':
@@ -1212,8 +1256,16 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Domingo':
-        for g in ['tail', 'vest', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye_L_Eye_L_Lower_curve_ribbon',]:
-            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+        if face:
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye_L_Eye_L_Lower_curve_ribbon',]:
+                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+        else:
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache',]:
+                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+    if character == 'Luciana':
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon',]:
+                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
+
 
     if character == 'Luciana':
         if mc.objExists('switch_CTRL'):
@@ -1417,15 +1469,15 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     #Skin Splitting 
     
-    if character in ['Bobo', 'Luciana', 'Domingo']:
+    if character in ['Bobo']:
+        auto_split_all_weights('MODEL')
+    if character in ['Luciana', 'Domingo']:
         auto_split_all_weights('MODEL')
     #if character == 'Domingo':
     #    auto_split_all_weights('tail')
 
 
-    print("siiiiiigggggghhhhhhhhh")
     if character == "Gretchen":
-        print("siiiiiigggggghhhhhhhhh")
         mc.setAttr("head_M_01_CTRL.orientSpace", 0)
         mc.setAttr("head_M_01_CTRL.rotateOrder", 2)
         
@@ -1433,6 +1485,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         mc.setAttr("neck_01_FK_M_CTRL.rotateOrder",4)
         mc.setAttr("neck_02_FK_M_CTRL.rotateOrder",4) 
+
+        mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
+        mc.delete('ArmTwist_L', 'ArmTwist_R')
+        mc.parentConstraint('arm_L_01_JNT', 'ArmTwist_L_JNT', mo = False)
+        mc.parentConstraint('arm_R_01_JNT', 'ArmTwist_R_JNT', mo = False)
     
         
 
