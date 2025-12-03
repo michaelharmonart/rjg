@@ -280,7 +280,7 @@ class Chain:
             t_val += t_i
         pass
 
-    def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None, sec_axis=(1, 0, 0)):
+    def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None, sec_axis=(1, 0, 0), first_joint_space: str | None = None):
         if mirror:
             mirror = -1
         else:
@@ -293,8 +293,13 @@ class Chain:
 
             segment_ctl = mc.group(empty=True, name=f"{joint}_Bend_CTRL_GRP", parent=ctrl_grp)
             segment_grp = mc.group(empty=True, name=f"{joint}_Bend_GRP", parent=rig_grp)
-            rXform.matrix_constraint(source_transform=joint, constrain_transform=segment_grp, keep_offset=False)
-            rXform.matrix_constraint(source_transform=joint, constrain_transform=segment_ctl, keep_offset=False)
+            source_transform = joint
+            if first_joint_space is not None and index == 0:
+                source_transform = first_joint_space
+            rXform.matrix_constraint(source_transform=source_transform, constrain_transform=segment_grp, keep_offset=False)
+            rXform.matrix_constraint(source_transform=source_transform, constrain_transform=segment_ctl, keep_offset=False)
+
+                
             start_jnt = joint
             end_jnt = self.joints[index + 1]
 
@@ -336,11 +341,8 @@ class Chain:
             end_jnt_twist = mc.group(empty=True, parent=segment_grp, name=f"{end_jnt}_Twist")
             rXform.match_pose(end_jnt_twist, translate=end_jnt, rotate=start_jnt)
             rXform.matrix_constraint(end_jnt, end_jnt_twist)
-            mult_matrix = mc.createNode('multMatrix', name=f"{joint}_MMX") # Put the end joint into the space of the start joint
-            mc.connectAttr(f"{end_jnt_twist}.worldMatrix[0]", f"{mult_matrix}.matrixIn[0]")
-            mc.connectAttr(f"{start_jnt}.worldInverseMatrix[0]", f"{mult_matrix}.matrixIn[1]") # Retrieve the rotation from the resulting matrix
             decompose_matrix = mc.createNode('decomposeMatrix', name=f"{joint}_DCM")
-            mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
+            mc.connectAttr(f"{end_jnt_twist}.matrix", f"{decompose_matrix}.inputMatrix")
             # Create a quaternion from only the Y (down the chain axis) and W (scalar component)
             # The resulting quaternion is the twist part of a swing twist decomposition.
             quat_to_euler = mc.createNode('quatToEuler', name=f"{joint}_QTE")

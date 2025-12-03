@@ -385,7 +385,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             },
             swing_parent="chest_M_02_CTRL",
             swing=True,
-            swing_connection_target=clavicle.swing_input
+            swing_connection_target=clavicle.swing_input,
+            remove_first_joint_twist=True,
         )
         
         hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8)
@@ -1388,15 +1389,45 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Bobo' and not_previs:
         try:
             last_deformer = rUtil.get_last_deformer('Bobo_UBM')
-            #Add Delta Mush
-            deformer = mc.deltaMush('Bobo_UBM')[0]
-            mc.setAttr(f"{deformer}.smoothingIterations", 20)
-            mc.setAttr(f"{deformer}.smoothingStep", .1)
-            mc.deformerWeights("BoboDeltaMush.xml", im=True,  deformer=deformer, path=f'{groups}/bobo/character/Rigs/Bobo/SkinFiles/')
-            deformer2 = mc.deltaMush('Bobo_UBM')[0]
-            mc.setAttr(f"{deformer2}.smoothingIterations", 2)
-            mc.setAttr(f"{deformer2}.smoothingStep", .5)
-            mc.deformerWeights("BoboDeltaMush.xml", im=True,  deformer=deformer2, path=f'{groups}/bobo/character/Rigs/Bobo/SkinFiles/')
+            # Add Delta Mush
+            deformer = mc.deltaMush("Bobo_UBM")[0]
+            mc.setAttr(f"{deformer}.smoothingIterations", 5)
+            mc.setAttr(f"{deformer}.smoothingStep", 0.5)
+            mc.deformerWeights(
+                "BoboDeltaMush.xml",
+                im=True,
+                deformer=deformer,
+                path=f"{groups}/bobo/character/Rigs/Bobo/SkinFiles/",
+            )
+
+            # Add smooth deformer that will be triggered when in an arms up pose
+            def create_smooth_deformer(
+                name: str,
+                smooth_iterations: int = 20,
+                smoothing_step: float = 1,
+                displacement: float = 0,
+            ) -> str:
+                smooth = mc.deltaMush("Bobo_UBM", name=name)[0]
+                mc.setAttr(f"{smooth}.smoothingIterations", smooth_iterations)
+                mc.setAttr(f"{smooth}.smoothingStep", smoothing_step)
+                mc.setAttr(f"{smooth}.displacement", displacement)
+                return smooth
+
+            #shoulder_smooth_L = create_smooth_deformer(name="Shoulder_Smooth_DeltaMush_L")
+            #mc.deformerWeights(
+            #    "BoboShoulderSmooth_L.xml",
+            #    im=True,
+            #    deformer=shoulder_smooth_L,
+            #    path=f"{groups}/bobo/character/Rigs/Bobo/SkinFiles/",
+            #)
+            #shoulder_smooth_R = create_smooth_deformer(name="Shoulder_Smooth_DeltaMush_R")
+            #mc.deformerWeights(
+            #    "BoboShoulderSmooth_R.xml",
+            #    im=True,
+            #    deformer=shoulder_smooth_R,
+            #    path=f"{groups}/bobo/character/Rigs/Bobo/SkinFiles/",
+            #)
+
             #Add Sculpt points
             if face:
                 CurveNetAtHome.create_curve_net_joints('Body', 'Bobo_UBM') 

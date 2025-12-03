@@ -59,6 +59,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         swing_parent: str | None = None,
         swing_connection_target: str | None = None,
         orient_spaces: dict[str, str] | None = None,
+        remove_first_joint_twist: bool = False,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.create_ik = create_ik
@@ -84,6 +85,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         self.swing_parent = swing_parent
         self.swing_connection_target = swing_connection_target
         self.orient_spaces = orient_spaces
+        self.remove_first_joint_twist = remove_first_joint_twist
         if swing:
             if swing_parent is None:
                 self.swing = False
@@ -135,7 +137,11 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         mc.matchTransform(self.limb_grp, self.guide_list[0])
 
         self.create_inputs(group=self.limb_grp)
-
+        if self.side == 'R':
+            self.mirror = True
+        else:
+            self.mirror = False
+            
         # fk
         if self.create_fk:
             self.build_fk_chain()
@@ -206,15 +212,19 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                 for s_jnt in split_list:
                     self.src_joints.append(s_jnt)
             self.src_joints.append(self.src_chain.joints[-1])
-
+        
+        if self.swing:
+            self.output_simple_swing()
+            
         if self.bendy:
-            if self.side == 'R':
-                self.mirror = True
+            if self.remove_first_joint_twist:
+                bend = self.src_chain.bend_twist_chain(
+                    ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr, first_joint_space=self.simple_swing_output
+                )
             else:
-                self.mirror = False
-            bend = self.src_chain.bend_twist_chain(
-                ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr
-            )
+                bend = self.src_chain.bend_twist_chain(
+                    ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr
+                )
 
             mc.parent(bend["control"], self.control_grp)
             mc.parent(bend["module"], self.module_grp)
@@ -241,7 +251,16 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                 value=3,
             )
             mc.orientConstraint(self.orient_input, orient_control.top, maintainOffset=True)
-
+            
+    def output_simple_swing(self):
+        """Outputs a simple swing transform for use with bendbow twist, etc. (not to be used for clavicle as it has dependencies on that)"""
+        swing_group = mc.group(empty=True, name=f"{self.base_name}_SimpleSwing", parent=self.limb_grp)
+        matrix_constraint(self.fk_ctrls[0].top, swing_group, keep_offset=False)
+        
+        self.simple_swing_output = mc.group(empty=True, name=f"{self.base_name}_SimpleSwing_OUT", parent=swing_group)
+        mc.aimConstraint(self.src_chain.joints[1], self.simple_swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
+        pass
+        
     def output_swing(self):
         swing_group = mc.group(empty=True, name=f"{self.base_name}_Swing", parent=self.limb_grp)
         anchor_group = mc.group(empty=True, name=f"{self.base_name}_Anchor", parent=swing_group)
@@ -301,7 +320,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         # Swing output
         self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=anchor_group)
         mc.aimConstraint(swing_joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
-
+        
         # Connect swing
         matrix_constraint(
             self.swing_output,
