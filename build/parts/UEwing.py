@@ -312,14 +312,7 @@ class UEwing(UEface):
             def_jnts.append(midjnt)
             def_jnts.append(basejnt)
 
-            if guide == subguides[-1]:
-                try:
-                    side = prefix.split("_")[-1]
-                    print(f'{side}{sub}GEO')
-                    mc.skinCluster(*def_jnts, f'{side}{sub}GEO', toSelectedBones=True)
-                except Exception as e:
-                    print(e)
-                
+                            
             mc.select(clear=True)
             mc.select(main_surf[0])
             mc.select(basectrl_offset, add=True)
@@ -465,8 +458,8 @@ class UEwing(UEface):
             if guide == mainguides[-1]:
                 try:
                     side = prefix.split("_")[-1]
-                    print(f'{side}MainFeathers')
-                    mc.skinCluster(*def_jnts, f'{side}MainFeathers', toSelectedBones=True)
+                    #print(f'{side}MainFeathers')
+                    mc.skinCluster(*def_jnts, f'feathers_{side}', toSelectedBones=True)
                 except Exception as e:
                     print(e)
 
