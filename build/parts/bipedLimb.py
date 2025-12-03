@@ -229,7 +229,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                 mc.connectAttr(f"{shoulder_swing_twist}.matrix", blend_node.input_matrix)
                 mc.connectAttr(f"{shoulder_swing}.matrix", blend_node.target[0].target_matrix)
                 mc.connectAttr(shoulder_twist_distribute.attr, blend_node.target[0].weight)
-                for control in [self.fk_ctrls[0].ctrl, self.main_ctrl.ctrl]:
+                for control in [self.fk_ctrls[0].ctrl, self.base_ctrl.ctrl]:
                     mc.addAttr(control, longName="shoulderTwistDistribute", proxy=shoulder_twist_distribute.attr)
                 shoulder_blend_transform = mc.group(empty=True, name=f"{self.base_name}_ShoulderBlend", parent=self.limb_grp)
                 drive_transform_with_matrix(blend_node.output_matrix,shoulder_blend_transform)
