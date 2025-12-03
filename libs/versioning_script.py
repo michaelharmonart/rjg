@@ -45,3 +45,8 @@ else:
             for control in ["clavicle_L_CTRL", "clavicle_R_CTRL"]:
                 version_attribute(f"{rig_namespace}{control}.autoClavicle", 0)
             update_version(3)
+        if scene_rig_version < 4:
+            # Shoulder Twist Distribute
+            for control in ["arm_L_RIG_GRP", "arm_R_RIG_GRP"]:
+                version_attribute(f"{rig_namespace}{control}.shoulderTwistDistribute", 0)
+            update_version(4)

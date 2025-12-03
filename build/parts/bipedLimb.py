@@ -8,6 +8,7 @@ import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 from maya.api.OpenMaya import MMatrix
 from rjg.libs.control.ctrl import Control
+from rjg.libs.maya_api import node
 from rjg.libs.space import space_switch
 from rjg.libs.transform import (
     drive_transform_with_matrix,
@@ -59,6 +60,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         swing_parent: str | None = None,
         swing_connection_target: str | None = None,
         orient_spaces: dict[str, str] | None = None,
+        remove_first_joint_twist: bool = False,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.create_ik = create_ik
@@ -84,6 +86,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         self.swing_parent = swing_parent
         self.swing_connection_target = swing_connection_target
         self.orient_spaces = orient_spaces
+        self.remove_first_joint_twist = remove_first_joint_twist
         if swing:
             if swing_parent is None:
                 self.swing = False
@@ -135,7 +138,11 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         mc.matchTransform(self.limb_grp, self.guide_list[0])
 
         self.create_inputs(group=self.limb_grp)
-
+        if self.side == 'R':
+            self.mirror = True
+        else:
+            self.mirror = False
+            
         # fk
         if self.create_fk:
             self.build_fk_chain()
@@ -206,15 +213,35 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                 for s_jnt in split_list:
                     self.src_joints.append(s_jnt)
             self.src_joints.append(self.src_chain.joints[-1])
-
+        
+        if self.swing and self.remove_first_joint_twist:
+            self.output_simple_swing()
+            
         if self.bendy:
-            if self.side == 'R':
-                self.mirror = True
+            if self.remove_first_joint_twist:
+                shoulder_twist_distribute = rAttr.Attribute(node=self.limb_grp, type="double", min=0, max=1, keyable=True, name="shoulderTwistDistribute", value=1)
+                
+                shoulder_swing = mc.group(empty=True, name=f"{self.base_name}_ShoulderSwingOnly", parent=self.limb_grp)
+                matrix_constraint(self.simple_swing_output, shoulder_swing, keep_offset=False)
+                shoulder_swing_twist = mc.group(empty=True, name=f"{self.base_name}_ShoulderSwingTwist", parent=self.limb_grp)
+                matrix_constraint(self.src_chain.joints[0], shoulder_swing_twist, keep_offset=False)
+                blend_node = node.BlendMatrixNode(name=f"{self.base_name}_ShoulderTwistBlend")
+                mc.connectAttr(f"{shoulder_swing_twist}.matrix", blend_node.input_matrix)
+                mc.connectAttr(f"{shoulder_swing}.matrix", blend_node.target[0].target_matrix)
+                mc.connectAttr(shoulder_twist_distribute.attr, blend_node.target[0].weight)
+                for control in [self.fk_ctrls[0].ctrl, self.main_ctrl.ctrl]:
+                    mc.addAttr(control, longName="shoulderTwistDistribute", proxy=shoulder_twist_distribute.attr)
+                shoulder_blend_transform = mc.group(empty=True, name=f"{self.base_name}_ShoulderBlend", parent=self.limb_grp)
+                drive_transform_with_matrix(blend_node.output_matrix,shoulder_blend_transform)
+                
+                bend = self.src_chain.bend_twist_chain(
+                    ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr, first_joint_space=shoulder_blend_transform
+                )
+                
             else:
-                self.mirror = False
-            bend = self.src_chain.bend_twist_chain(
-                ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr
-            )
+                bend = self.src_chain.bend_twist_chain(
+                    ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr
+                )
 
             mc.parent(bend["control"], self.control_grp)
             mc.parent(bend["module"], self.module_grp)
@@ -241,7 +268,19 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                 value=3,
             )
             mc.orientConstraint(self.orient_input, orient_control.top, maintainOffset=True)
-
+            
+    def output_simple_swing(self):
+        """Outputs a simple swing transform for use with bendbow twist, etc. (not to be used for clavicle as it has dependencies on that)"""
+        swing_group = mc.group(empty=True, name=f"{self.base_name}_SimpleSwing", parent=self.limb_grp)
+        anchor_group = mc.group(empty=True, name=f"{self.base_name}_SimpleAnchor", parent=swing_group)
+        match_transform(swing_group, self.fk_joints[0])
+        matrix_constraint(self.swing_parent, swing_group, keep_offset=True)
+        matrix_constraint(self.fk_ctrls[0].ctrl, anchor_group, rotate=False, scale=False, shear=False)
+        
+        self.simple_swing_output = mc.group(empty=True, name=f"{self.base_name}_SimpleSwing_OUT", parent=anchor_group)
+        mc.aimConstraint(self.src_chain.joints[1], self.simple_swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
+        pass
+        
     def output_swing(self):
         swing_group = mc.group(empty=True, name=f"{self.base_name}_Swing", parent=self.limb_grp)
         anchor_group = mc.group(empty=True, name=f"{self.base_name}_Anchor", parent=swing_group)
@@ -301,7 +340,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         # Swing output
         self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=anchor_group)
         mc.aimConstraint(swing_joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
-
+        
         # Connect swing
         matrix_constraint(
             self.swing_output,
