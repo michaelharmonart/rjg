@@ -307,6 +307,46 @@ class UEfaceconnect(UEface):
             #mc.parent('Stache_M_01_M_CTRL_CNST_GRP', 'Beard_M_01_M_CTRL_CNST_GRP', 'RIG')
             #mc.parent('Beard_M_01_JNT',  'Stache_M_01_JNT'  ,lower_jnt)     
 
+            for side in ['L', 'R']:
+                mastercontrol = None
+                for guide in [f'Fin_{side}_Master', f'Fin_{side}_01', f'Fin_{side}_02', f'Fin_{side}_03', f'Fin_{side}_04', f'Fin_{side}_05', f'Fin_{side}_06', f'Fin_{side}_07', f'Fin_{side}_08', f'FinLow_{side}_09']:
+                    pos = mc.xform(guide, q=True, ws=True, t=True)
+                    rot = mc.xform(guide, q=True, ws=True, ro=True)
+                    jnt, ctrl, offset = UEface.Simple_joint_and_Control(
+                        guide=guide,
+                        orient=True,
+                        CTRL_Size=10,
+                        JNT_Size=0.9,
+                    )
+                    mc.parent(offset, 'head_M_01_CTRL')
+                    mc.parent(jnt, 'head_M_JNT')
+                    if guide == f'FinLow_{side}_09':
+                        mc.parentConstraint('Jaw_M_root_M_CTRL', offset, mo=True)
+                    elif guide ==  f'Fin_{side}_Master':
+                        mastercontrol = ctrl
+                    else:
+                        if mastercontrol:
+                            for axes in ['X', 'Y', 'Z']:
+                                mc.connectAttr(f'{mastercontrol}.rotate{axes}', f'{guide}_{side}_CTRL_SDK_GRP.rotate{axes}')
+            mastercontrol = None
+            for side in ['M', 'L', 'R']:
+                pos = mc.xform(f'Horn_{side}_guide', q=True, ws=True, t=True)
+                rot = mc.xform(f'Horn_{side}_guide', q=True, ws=True, ro=True)
+                jnt, ctrl, offset = UEface.Simple_joint_and_Control(
+                        guide=f'Horn_{side}_guide',
+                        orient=True,
+                        CTRL_Size=10,
+                        JNT_Size=0.9,
+                    )
+                if mastercontrol:
+                    mc.parent(offset, mastercontrol)
+                    mc.parent(jnt, masterjnt)
+
+                else:
+                    mc.parent(offset, upper_ctrl)
+                    mc.parent(jnt, upper_jnt)
+                    mastercontrol = ctrl
+                    masterjnt = jnt
 
 
 

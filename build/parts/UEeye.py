@@ -293,6 +293,7 @@ class UEeye(UEface):
         mc.parent(ctrl_offset_grp, extra_offset_grp)
 
         print(f"Created master eyelid control '{ctrl_name}', grouped eyelids in '{eyelid_grp_name}', and set up offset groups.")
+        
 
 
     def build_blink_system(self, group_name):
@@ -353,32 +354,34 @@ class UEeye(UEface):
                 mc.xform(blink3_grp, ws=True, t=center_pos)
                 #mc.parent(offset, blink_grp)
 
-                # Add attribute
-                if not mc.attributeQuery('blink_mult', node=ctrl, exists=True) and side =="R":
-                    mc.addAttr(ctrl, longName='blink_mult', attributeType='double', defaultValue=10.0, keyable=True)
-                if not mc.attributeQuery('blink_mult2', node=ctrl, exists=True) and guide.endswith('Upper') and side =="R":
-                    mc.addAttr(ctrl, longName='blink_mult2', attributeType='double', defaultValue=-0.05, keyable=True)
-                if not mc.attributeQuery('blink_mult2', node=ctrl, exists=True) and guide.endswith('Lower') and side =="R":
-                    mc.addAttr(ctrl, longName='blink_mult2', attributeType='double', defaultValue=0.05, keyable=True)
+                blinkctrl, blinkoffset = UEface.build_basic_control(f'{ctrl_temp}_Blink', size=0.4, position=pos, rotation=(0, 0, 0))
 
-                if not mc.attributeQuery('blink_mult', node=ctrl, exists=True):
-                    mc.addAttr(ctrl, longName='blink_mult', attributeType='double', defaultValue=-10.0, keyable=True)
-                if not mc.attributeQuery('blink_mult2', node=ctrl, exists=True) and guide.endswith('Upper'):
-                    mc.addAttr(ctrl, longName='blink_mult2', attributeType='double', defaultValue=-0.05, keyable=True)
-                if not mc.attributeQuery('blink_mult2', node=ctrl, exists=True) and guide.endswith('Lower'):
-                    mc.addAttr(ctrl, longName='blink_mult2', attributeType='double', defaultValue=0.05, keyable=True)
+                # Add attribute
+                if not mc.attributeQuery('blink_mult', node=blinkctrl, exists=True) and side =="R":
+                    mc.addAttr(blinkctrl, longName='blink_mult', attributeType='double', defaultValue=10.0, keyable=True)
+                if not mc.attributeQuery('blink_mult2', node=blinkctrl, exists=True) and guide.endswith('Upper') and side =="R":
+                    mc.addAttr(blinkctrl, longName='blink_mult2', attributeType='double', defaultValue=-0.05, keyable=True)
+                if not mc.attributeQuery('blink_mult2', node=blinkctrl, exists=True) and guide.endswith('Lower') and side =="R":
+                    mc.addAttr(blinkctrl, longName='blink_mult2', attributeType='double', defaultValue=0.05, keyable=True)
+
+                if not mc.attributeQuery('blink_mult', node=blinkctrl, exists=True):
+                    mc.addAttr(blinkctrl, longName='blink_mult', attributeType='double', defaultValue=-10.0, keyable=True)
+                if not mc.attributeQuery('blink_mult2', node=blinkctrl, exists=True) and guide.endswith('Upper'):
+                    mc.addAttr(blinkctrl, longName='blink_mult2', attributeType='double', defaultValue=-0.05, keyable=True)
+                if not mc.attributeQuery('blink_mult2', node=blinkctrl, exists=True) and guide.endswith('Lower'):
+                    mc.addAttr(blinkctrl, longName='blink_mult2', attributeType='double', defaultValue=0.05, keyable=True)
                 if side == 'R':
-                    mc.setAttr(f"{prefix}_Upper_Major_R_CTRL.blink_mult", 10)
-                    mc.setAttr(f"{prefix}_Lower_Major_R_CTRL.blink_mult", 10)
+                    mc.setAttr(f"{prefix}_Upper_Blink_R_CTRL.blink_mult", 10)
+                    mc.setAttr(f"{prefix}_Lower_Blink_R_CTRL.blink_mult", 10)
 
 
                 # Inverse offset group (matches original offset group)
-                inverse_offset = f"{guide}_inverse"
-                inverse_grp = mc.group(empty=True, name=inverse_offset)
-                mc.xform(inverse_grp, ws=True, t=pos, ro=(0, 0, 0))
-                mc.delete(mc.parentConstraint(offset, inverse_grp))
-                mc.parent(inverse_grp, offset)
-                mc.parent(ctrl, inverse_grp)
+                #inverse_offset = f"{guide}_inverse"
+                #inverse_grp = mc.group(empty=True, name=inverse_offset)
+                #mc.xform(inverse_grp, ws=True, t=pos, ro=(0, 0, 0))
+                #mc.delete(mc.parentConstraint(offset, inverse_grp))
+                #mc.parent(inverse_grp, offset)
+                #mc.parent(ctrl, inverse_grp)
                 mc.parent(blink2_grp, blink3_grp)
                 mc.parent(blink_grp, blink2_grp)
                 mc.parent(offset, blink_grp)
@@ -386,22 +389,22 @@ class UEeye(UEface):
                 # MultiplyDivide nodes
                 mult_node = mc.createNode('multiplyDivide', name=f"{guide}_multDiv")
                 mult2_node = mc.createNode('multiplyDivide', name=f"{guide}_multDiv2")
-                inverse_mult = mc.createNode('multiplyDivide', name=f"{guide}_inverseMultDiv")
+                #inverse_mult = mc.createNode('multiplyDivide', name=f"{guide}_inverseMultDiv")
 
                 # Connect translateY → mult → rotateX
-                mc.connectAttr(f"{ctrl}.translateY", f"{mult_node}.input1X")
-                mc.connectAttr(f"{ctrl}.blink_mult", f"{mult_node}.input2X")
+                mc.connectAttr(f"{blinkctrl}.translateY", f"{mult_node}.input1X")
+                mc.connectAttr(f"{blinkctrl}.blink_mult", f"{mult_node}.input2X")
                 mc.connectAttr(f"{mult_node}.outputX", f"{blink_grp}.rotateX")
 
                 # Connect translateY → mult → rotateX
-                mc.connectAttr(f"{ctrl}.translateY", f"{mult2_node}.input1X")
-                mc.connectAttr(f"{ctrl}.blink_mult2", f"{mult2_node}.input2X")
+                mc.connectAttr(f"{blinkctrl}.translateY", f"{mult2_node}.input1X")
+                mc.connectAttr(f"{blinkctrl}.blink_mult2", f"{mult2_node}.input2X")
                 mc.connectAttr(f"{mult2_node}.outputX", f"{blink2_grp}.translateZ")
 
                 # Connect inverse translateY * -1 → translateY
-                mc.connectAttr(f"{ctrl}.translateY", f"{inverse_mult}.input1Y")
-                mc.setAttr(f"{inverse_mult}.input2Y", -1)
-                mc.connectAttr(f"{inverse_mult}.outputY", f"{inverse_grp}.translateY")
+                #mc.connectAttr(f"{ctrl}.translateY", f"{inverse_mult}.input1Y")
+                #mc.setAttr(f"{inverse_mult}.input2Y", -1)
+                #mc.connectAttr(f"{inverse_mult}.outputY", f"{inverse_grp}.translateY")
 
             print(f"Built blink system for {guide}")
         mc.parentConstraint(f"{side}_{prefix}_OuterCorner_Major_{prefix}_CTRL", f"{side}_{prefix}_Eyelid_OuterCorner_{prefix}_CTRL_CNST_GRP" )
@@ -484,6 +487,8 @@ class UEeye(UEface):
         mc.aimConstraint(look_ctrl, eyerot_offset, maintainOffset=True, aimVector=(1,0,0), upVector=(0,1,0), worldUpType="objectrotation", worldUpObject ='head_M_01_CTRL' ) #head_M_01_CTRL
         mc.pointConstraint(f'{suffix}_MasterControl_{side}_CTRL', f'{suffix}_JNT', maintainOffset=True,)
         mc.orientConstraint(eyerot_ctrl, eye_joint, mo=True)
+        #mc.scaleConstraint(eyerot_ctrl, eye_joint, mo=True)
+        #mc.scaleConstraint(f'{suffix}_MasterControl_{side}_CTRL', eyerot_ctrl, mo=True)
         mc.pointConstraint(f'{suffix}_MasterControl_{side}_CTRL', eyerot_offset, maintainOffset=True,)
         # Parent look control offset and LookNULL_loc under eyelid look locator
         mc.parentConstraint(look_ctrl, eyelid_look_loc, maintainOffset=True)
@@ -746,6 +751,7 @@ class UEeye(UEface):
                     pos1 = mc.xform(guide, q=True, ws=True, t=True)
                     mc.select(clear=True)
                     jnt = mc.joint(name=f"{side}_{Part}_{num}_EE_JNT", p=pos1, radius=.1)
+                    #mc.scaleConstraint(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', jnt, mo=True)
                     sel.append(jnt)
 
 
@@ -768,6 +774,8 @@ class UEeye(UEface):
 
                     # create root at pivot
                     root = mc.joint(name=root_name, p=pivot_pos, radius=.1)
+                    #mc.connectAttr(f'Eye_{side}_EyeRot_Offset_{side}_CTRL.scaleY', f'{root}.scaleY')
+                    #mc.scaleConstraint(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', root, mo=True)
                     mc.select(clear=True)
 
                     # orient root using aimConstraint (Y points at joint, X stabilized by upvector)
@@ -825,6 +833,7 @@ class UEeye(UEface):
                     Heart_Mult = mc.getAttr(f"{guide}.Heart_Mult") #Heart_Mult
                     mc.select(clear=True)
                     jnt = mc.joint(name=f"{side}_{Part}_{num}_EE_JNT", p=pos1, radius=.1)
+                    #mc.scaleConstraint(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', jnt, mo=True)
                     mc.addAttr(jnt, longName='Scale_Mult', attributeType='double', defaultValue=Scale_Mult, keyable=True )
                     mc.addAttr(jnt, longName='Heart_Mult', attributeType='double', defaultValue=Heart_Mult, keyable=True )
                     sel.append(jnt)
@@ -849,6 +858,8 @@ class UEeye(UEface):
 
                     # create root at pivot
                     root = mc.joint(name=root_name, p=pivot_pos, radius=.1)
+                    #mc.scaleConstraint(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', root, mo=True)
+                    #mc.connectAttr(f'Eye_{side}_EyeRot_Offset_{side}_CTRL.scaleY', f'{root}.scaleY')
                     mc.select(clear=True)
 
                     # orient root using aimConstraint (Y points at joint, X stabilized by upvector)
@@ -911,6 +922,7 @@ class UEeye(UEface):
                 mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[2])
             if self.eyetype == 'lizzard':
                 mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[1])
+        mc.parent(f'Eye_{side}_Lower_Blink_{side}_CTRL_CNST_GRP', f'Eye_{side}_Upper_Blink_{side}_CTRL_CNST_GRP', f'Eye_{side}_MasterControl_{side}_CTRL')
 
 
 
