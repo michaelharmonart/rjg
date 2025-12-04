@@ -40,8 +40,8 @@ class Chain:
         parent_constraint=True,
         orient_constraint=False,
         point_constraint=False,
-        scale_constraint=False,
-        connect_scale=True,
+        scale_constraint=True,
+        connect_scale=False,
         parent=False,
         static=False,
         pad="auto",
@@ -169,7 +169,7 @@ class Chain:
                     mc.connectAttr(src + '.rotate', jnt + '.rotate')
 
                 if scale_constraint:
-                    rXform.matrix_constraint(src, jnt, keep_offset=False)
+                    rXform.matrix_constraint(src, jnt, keep_offset=False, translate=False, shear=False, rotate=False)
                     #scc = mc.scaleConstraint(src, jnt, mo=True)[0]
                     #self.constraints.append(scc)
                 else:
