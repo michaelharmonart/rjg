@@ -222,7 +222,8 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                 shoulder_twist_distribute = rAttr.Attribute(node=self.limb_grp, type="double", min=0, max=1, keyable=True, name="shoulderTwistDistribute", value=1)
                 
                 shoulder_swing = mc.group(empty=True, name=f"{self.base_name}_ShoulderSwingOnly", parent=self.limb_grp)
-                matrix_constraint(self.simple_swing_output, shoulder_swing, keep_offset=False)
+                matrix_constraint(self.simple_swing_output, shoulder_swing, keep_offset=False, scale=False)
+                matrix_constraint(self.src_chain.joints[0], shoulder_swing, keep_offset=False, translate=False, scale=True, rotate=False, shear=False)
                 shoulder_swing_twist = mc.group(empty=True, name=f"{self.base_name}_ShoulderSwingTwist", parent=self.limb_grp)
                 matrix_constraint(self.src_chain.joints[0], shoulder_swing_twist, keep_offset=False)
                 blend_node = node.BlendMatrixNode(name=f"{self.base_name}_ShoulderTwistBlend")
@@ -361,7 +362,6 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             poc = False
         limb_chain.create_from_transforms(orient_constraint=True,
                                           point_constraint=poc,
-                                          scale_constraint=False,
                                           parent=self.skel)
         self.bind_joints = limb_chain.joints
 
