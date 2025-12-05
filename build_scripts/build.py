@@ -1309,7 +1309,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache',]:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
     if character == 'Luciana':
-        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye']:
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye',]:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
 
 

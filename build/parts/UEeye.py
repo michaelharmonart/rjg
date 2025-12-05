@@ -885,8 +885,14 @@ class UEeye(UEface):
                     try:
                         # SCALE MULTIPLIER
                         md = mc.createNode("multiplyDivide", name=f"{jnt}_Scale_MD")
+                        remap = mc.createNode("remapValue", name=f"{jnt}_Scale_remap")
                         mc.connectAttr(controlchannel, f"{md}.input1X")
-                        mc.connectAttr(f"{jnt}.Scale_Mult", f"{md}.input2X")
+                        #mc.connectAttr(f"{jnt}.Scale_Mult", f"{md}.input2X")
+                        mc.connectAttr(controlchannel, f"{remap}.inputValue")
+                        mc.setAttr(f'{remap}.inputMax', -5)
+                        mc.setAttr(f'{remap}.outputMin', 1)
+                        mc.connectAttr(f"{jnt}.Scale_Mult", f'{remap}.outputMax')
+                        mc.connectAttr(f'{remap}.outValue', f"{md}.input2X")
 
                         # HEART MULTIPLIER
                         md2 = mc.createNode("multiplyDivide", name=f"{jnt}_Heart_MD")

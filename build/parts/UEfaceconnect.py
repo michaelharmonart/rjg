@@ -306,7 +306,7 @@ class UEfaceconnect(UEface):
             #mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_01_M_CTRL_CNST_GRP', mo=True)  
             #mc.parent('Stache_M_01_M_CTRL_CNST_GRP', 'Beard_M_01_M_CTRL_CNST_GRP', 'RIG')
             #mc.parent('Beard_M_01_JNT',  'Stache_M_01_JNT'  ,lower_jnt)     
-
+            facefin_def = ['LowerHead_JNT', 'UpperHead_JNT', 'Jaw_M_root_JNT', 'Head_M_JNT', 'Horn_L_guide_JNT', 'Horn_R_guide_JNT']
             for side in ['L', 'R']:
                 mastercontrol = None
                 for guide in [f'Fin_{side}_Master', f'Fin_{side}_01', f'Fin_{side}_02', f'Fin_{side}_03', f'Fin_{side}_04', f'Fin_{side}_05', f'Fin_{side}_06', f'Fin_{side}_07', f'Fin_{side}_08', f'FinLow_{side}_09']:
@@ -318,6 +318,7 @@ class UEfaceconnect(UEface):
                         CTRL_Size=10,
                         JNT_Size=0.9,
                     )
+                    facefin_def.append(jnt)
                     mc.parent(offset, 'head_M_01_CTRL')
                     mc.parent(jnt, 'head_M_JNT')
                     if guide == f'FinLow_{side}_09':
@@ -328,7 +329,12 @@ class UEfaceconnect(UEface):
                         if mastercontrol:
                             for axes in ['X', 'Y', 'Z']:
                                 mc.connectAttr(f'{mastercontrol}.rotate{axes}', f'{guide}_{side}_CTRL_SDK_GRP.rotate{axes}')
+            try:
+                mc.skincluster(*facefin_def, 'facefeathers', toSelectedBones=True)
+            except:
+                pass
             mastercontrol = None
+            #facefin_def = ['LowerHead_JNT', 'UpperHead_JNT', 'Jaw_M_root_JNT', 'Head_M_JNT', 'Horn_L_guide_JNT', 'Horn_R_guide_JNT']
             for side in ['M', 'L', 'R']:
                 pos = mc.xform(f'Horn_{side}_guide', q=True, ws=True, t=True)
                 rot = mc.xform(f'Horn_{side}_guide', q=True, ws=True, ro=True)
@@ -347,6 +353,7 @@ class UEfaceconnect(UEface):
                     mc.parent(jnt, upper_jnt)
                     mastercontrol = ctrl
                     masterjnt = jnt
+            mc.hide('Jaw_M_ee_M_CTRL')
 
 
 
