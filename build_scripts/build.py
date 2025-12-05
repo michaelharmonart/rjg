@@ -17,6 +17,10 @@ import rjg.post.finalize as rFinal
 import rjg.post.usd as rUSD
 from rjg.libs.skin import auto_split_all_weights
 
+from rjg.build.parts.clavicle import Clavicle
+from rjg.build.parts.hand import Hand
+from rjg.build.parts.bipedLimb import BipedLimb
+
 reload(rUtil)
 reload(rProp)
 reload(rBuild)
@@ -44,7 +48,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     import rjg.post.dataIO.controls as rCtrlIO
     import rjg.post.dataIO.ng_weights as rWeightNgIO
     import rjg.post.dataIO.weights as rWeightIO
-    from rjg.build.parts.clavicle import Clavicle
     from rjg.build.parts.driverjoints import create_driver_joints
     from rjg.build_scripts import Bobo_Build_Scripts
     from rjg.build_scripts.SteveUtils import CurveNetAtHome
@@ -365,7 +368,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 local_orient=False,
                 ctrl_scale=9,
             )
-        arm = rBuild.build_module(
+        arm: BipedLimb = rBuild.build_module(
             module_type="biped_limb",
             side=fs[0],
             part="arm",
@@ -389,7 +392,22 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             remove_first_joint_twist=True,
         )
         
-        hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8)
+        #Bendy Fingers
+        if character in ['Domingo', 'Sharkguy', 'Bobo']:
+            bendbo = True
+            bendy_switch=True
+        else:
+            bendbo = False
+            bendy_switch=None
+        # Hand
+        if character == 'Bobo':
+            hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = False)
+        else:
+            hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = bendy_switch)
+        if hand.bendy_vis_attr is not None:
+            for control in [arm.fk_ctrls[-1], arm.main_ctrl]:
+                mc.addAttr(control.ctrl, longName="handBendyVisibility", proxy=hand.bendy_vis_attr)
+                
         if character == 'Luciana':
             leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
         else:    
@@ -422,19 +440,46 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         fingers = []
         
         ffs = ['Index', 'Middle', 'Ring', 'Pinky']
-        #BendyFingers
-        if character in ['Domingo', 'Sharkguy', 'Bobo']:
-            bendbo = True
-        else:
-            bendbo = False
+        
         #Fix Bobo's 3 fingered-ness
         if character in ['Bobo', 'Sharkguy']:
             ffs = ffs[:-1]
         for f in ffs:
-                finger = rBuild.build_module(module_type='finger', side=fs[0], part='finger'+f, guide_list=[fs + 'Hand' + f + str(num) for num in range(6 if character == 'Domingo' else 4 if character in ['DungeonMonster', 'BoboQuad'] else 5)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo, create_ik=False)
-                fingers.append(finger)
+            finger = rBuild.build_module(
+                module_type="finger",
+                side=fs[0],
+                part="finger" + f,
+                guide_list=[
+                    fs + "Hand" + f + str(num)
+                    for num in range(
+                        6
+                        if character == "Domingo"
+                        else 4
+                        if character in ["DungeonMonster", "BoboQuad"]
+                        else 5
+                    )
+                ],
+                ctrl_scale=1,
+                fk_shape=fing_shape,
+                bendy=bendbo,
+                create_ik=False,
+                bendy_vis_attr = hand.bendy_vis_attr,
+            )
+            fingers.append(finger)
 
-        thumb = rBuild.build_module(module_type='finger', side=fs[0], part='fingerThumb', guide_list=[fs + 'HandThumb' + str(num+1) for num in range(5 if character == 'Domingo' else 4)], ctrl_scale=1, fk_shape=fing_shape, bendy=bendbo, create_ik=False)
+        thumb = rBuild.build_module(
+            module_type="finger",
+            side=fs[0],
+            part="fingerThumb",
+            guide_list=[
+                fs + "HandThumb" + str(num + 1) for num in range(5 if character == "Domingo" else 4)
+            ],
+            ctrl_scale=1,
+            fk_shape=fing_shape,
+            bendy=bendbo,
+            create_ik=False,
+            bendy_vis_attr = hand.bendy_vis_attr,
+        )
         fingers.append(thumb) 
 
         if character == "Gretchen":
