@@ -1,11 +1,11 @@
-import maya.cmds as mc
 from importlib import reload
 
-import rjg.build.rigModule as rModule
-import rjg.libs.attribute as rAttr
+import maya.cmds as mc
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
 import rjg.build.ik as rIk
+import rjg.build.rigModule as rModule
+import rjg.libs.attribute as rAttr
 
 reload(rModule)
 reload(rAttr)
@@ -14,8 +14,32 @@ reload(rFk)
 reload(rIk)
 
 class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=1, model_path=None, guide_path=None, pad='auto', remove_last=True, fk_shape='circle', par_ctrl=None, bendy=False, create_ik=True, create_fk=True, expression_control=True):
-        super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
+    def __init__(
+        self,
+        side=None,
+        part=None,
+        guide_list=None,
+        ctrl_scale=1,
+        model_path=None,
+        guide_path=None,
+        pad="auto",
+        remove_last=True,
+        fk_shape="circle",
+        par_ctrl=None,
+        bendy=False,
+        create_ik=True,
+        create_fk=True,
+        expression_control=True,
+        bendy_vis_attr: str | None = None,
+    ):
+        super().__init__(
+            side=side,
+            part=part,
+            guide_list=guide_list,
+            ctrl_scale=ctrl_scale,
+            model_path=model_path,
+            guide_path=guide_path,
+        )
 
         self.__dict__.update(locals())
         self.gimbal = None
@@ -25,6 +49,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.create_ik = create_ik
         self.create_fk = create_fk
         self.expression_control = expression_control
+        self.bendy_vis_attr = bendy_vis_attr
         
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -74,7 +99,8 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             ctrl_scale=ctrl_scale,
             mirror=mirror,
             global_scale=global_scale_attr,
-            sec_axis=(0, 0, 1)
+            sec_axis=(0, 0, 1),
+            bendy_vis_attr=self.bendy_vis_attr
         )
 
         # Restore full joint list

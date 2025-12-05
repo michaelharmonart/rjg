@@ -280,13 +280,15 @@ class Chain:
             t_val += t_i
         pass
 
-    def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None, sec_axis=(1, 0, 0), first_joint_space: str | None = None):
+    def bend_twist_chain(self, ctrl_scale, mirror=True, global_scale=None, sec_axis=(1, 0, 0), first_joint_space: str | None = None, bendy_vis_attr: str | None = None):
         if mirror:
             mirror = -1
         else:
             mirror = 1
         rig_grp = mc.group(empty=True, name=f"{self.name}_Bend_GRP")
         ctrl_grp = mc.group(empty=True, name=f"{self.name}_Bend_CTRL_GRP")
+        if bendy_vis_attr is not None:
+            mc.connectAttr(bendy_vis_attr, f"{ctrl_grp}.visibility")
         prev_end_ctrl = None
         segments = self.joints[:-1]
         for index, joint in enumerate(segments):

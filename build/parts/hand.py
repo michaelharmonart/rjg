@@ -1,10 +1,11 @@
-import maya.cmds as mc
 from importlib import reload
 
+import maya.cmds as mc
+import rjg.build.chain as rChain
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
-import rjg.build.chain as rChain
 import rjg.libs.control.ctrl as rCtrl
+
 reload(rAttr)
 reload(rModule)
 reload(rChain)
@@ -12,14 +13,33 @@ reload(rCtrl)
 
 
 class Hand(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, local_orient=False, model_path=None, guide_path=None, expression_control=True):
-        super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
+    def __init__(
+        self,
+        side=None,
+        part=None,
+        guide_list=None,
+        ctrl_scale=None,
+        local_orient=False,
+        model_path=None,
+        guide_path=None,
+        expression_control=True,
+        bendy_visibility: bool | None = None,
+    ):
+        super().__init__(
+            side=side,
+            part=part,
+            guide_list=guide_list,
+            ctrl_scale=ctrl_scale,
+            model_path=model_path,
+            guide_path=guide_path,
+        )
 
-        self.base_name = self.part + '_' + self.side
+        self.base_name = self.part + "_" + self.side
         self.expression_control = expression_control
 
         self.local_orient = local_orient
-
+        self.bendy_visibility = bendy_visibility
+        
         self.create_module()
 
     def create_module(self):
@@ -60,8 +80,19 @@ class Hand(rModule.RigModule):
             mc.setAttr(f"{self.hand_express.ctrl}_LOWER.inputMin", 2.5)
             mc.connectAttr(f'{self.hand_express.ctrl}.Falloff', f"{self.hand_express.ctrl}_HIGHER.inputValue")
             mc.connectAttr(f'{self.hand_express.ctrl}.Falloff', f"{self.hand_express.ctrl}_LOWER.inputValue")
-
-
+            
+            self.bendy_vis_attr: str | None = None
+            if self.bendy_visibility is not None:
+                self.bendy_vis_attr = rAttr.Attribute(
+                    node=self.module_grp,
+                    type="double",
+                    min=0,
+                    max=1,
+                    keyable=True,
+                    name="handBendyVisibility",
+                    value=1 if self.bendy_visibility else 0,
+                ).attr
+            
 
     def output_rig(self):
         ik_jnt = mc.joint(self.hand_local.ctrl, name=self.hand_01.ctrl.replace("CTRL", "ik_JNT"))
