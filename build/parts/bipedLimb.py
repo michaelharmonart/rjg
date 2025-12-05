@@ -234,14 +234,18 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                     mc.addAttr(control, longName="shoulderTwistDistribute", proxy=shoulder_twist_distribute.attr)
                 shoulder_blend_transform = mc.group(empty=True, name=f"{self.base_name}_ShoulderBlend", parent=self.limb_grp)
                 drive_transform_with_matrix(blend_node.output_matrix,shoulder_blend_transform)
-                
+
                 bend = self.src_chain.bend_twist_chain(
-                    ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr, first_joint_space=shoulder_blend_transform
+                    ctrl_scale=self.ctrl_scale,
+                    mirror=self.mirror,
+                    global_scale=self.global_scale.attr,
+                    first_joint_space=shoulder_blend_transform,
                 )
-                
             else:
                 bend = self.src_chain.bend_twist_chain(
-                    ctrl_scale=self.ctrl_scale, mirror=self.mirror, global_scale=self.global_scale.attr
+                    ctrl_scale=self.ctrl_scale,
+                    mirror=self.mirror,
+                    global_scale=self.global_scale.attr,
                 )
 
             mc.parent(bend["control"], self.control_grp)
