@@ -379,6 +379,10 @@ class UEwing(UEface):
         for guide in mainguides:
             num = guide.split("_")[-2]
             ee_guide = f'{prefix}_MainFeather_{num}_ee_guide'
+            if side == 'R':
+                y = mc.getAttr(ee_guide + ".translateY")
+                mc.setAttr(ee_guide + ".translateY", -y)
+
             basepos = mc.xform(guide, q=True, ws=True, t=True)
             eepos = mc.xform(ee_guide, q=True, ws=True, t=True)
             midpos = [basepos[i] + (eepos[i] - basepos[i]) * .5 for i in range(3)]
@@ -460,6 +464,8 @@ class UEwing(UEface):
                     side = prefix.split("_")[-1]
                     #print(f'{side}MainFeathers')
                     mc.skinCluster(*def_jnts, f'feathers_{side}', toSelectedBones=True)
+                    mc.skinCluster(*def_jnts, f'Feathers_{side}_High', toSelectedBones=True)
+                    mc.skinCluster(*def_jnts, f'feathers_{side}_Low', toSelectedBones=True)
                 except Exception as e:
                     print(e)
 
