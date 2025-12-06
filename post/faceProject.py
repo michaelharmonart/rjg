@@ -233,6 +233,12 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
     except:
         pass
 
+    try:
+        for side in ['L', 'R']:
+            mc.connectAttr(f'{side}_NLF_ctrl.{side}_NLF_Crease', f'{side}_NLF_ctrl_clone.{side}_NLF_Crease')
+    except Exception as e:
+        print(e)
+
     # try:
     #     orig = mc.select('*ShapeOrig1')
     #     orig = mc.ls(selection=True)

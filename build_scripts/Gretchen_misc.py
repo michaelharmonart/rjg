@@ -37,15 +37,14 @@ def Gretchen_extras(skin_src, skin_trg_grp):
 
     sk_g = []
     
-    geo = [ 'loopleather1', 'buckle2', 'buckle', 'beltloops', 'honey_pin',   
-         'gloves', 'button3','button', 'thread1', 'thread', 'shirtlow', 'pantslow', 'bootslow']
+    geo = ['shirtlow', 'pantslow', 'bootslow', 'gloveslow', 'shirtextras', 'beltextras']
     
     geohead = ['bandanna', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 'topteeth', 'tounge',
     'LeftPupil', 'topeyelashes', 'bottomlash', 'eyebrows', 'hair', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth',]
     
-    buttons = ['button3','button', 'thread1', 'thread']
+    #buttons = ['button3','button', 'thread1', 'thread']
 
-    belt_parts = ['loopleather1', 'buckle2', 'buckle']
+    #belt_parts = ['loopleather1', 'buckle2', 'buckle']
 
 
     classic_sk = [] #'pants', 'shirt1', ]
@@ -56,6 +55,7 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     rUtil.create_pxWrap('shirt1', 'shirtlow')
     rUtil.create_pxWrap('pants', 'pantslow')
     rUtil.create_pxWrap('boots', 'bootslow')
+    rUtil.create_pxWrap('gloves', 'gloveslow')
     #rUtil.create_pxWrap('VestFluff', 'Clothes')
 
     for g in geo:
@@ -97,7 +97,7 @@ def Gretchen_extras(skin_src, skin_trg_grp):
         #mc.copySkinWeights(ss=shirt_skin, ds=g, surfaceAssociation='closestPoint', noMirror=True, )
     
     #read weighted skin maps 
-    for g in ['bootslow', 'pantslow', 'shirtlow', 'belt']:
+    for g in ['bootslow', 'pantslow', 'shirtlow', 'belt', 'gloveslow', 'shirtextras', 'beltextras']:
         import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Gretchen/Weights')
 
     for geo in ['pantslow', 'shirtlow']:
@@ -109,13 +109,17 @@ def Gretchen_extras(skin_src, skin_trg_grp):
             mc.setAttr(f'{skins[0]}.skinningMethod', 2)
 
 
-    deformer1 = mc.tension("shirt1", "pants" )[0]
+    deformer1 = mc.tension("shirt1", "pants", )[0]
     mc.setAttr(f"{deformer1}.smoothingIterations", 20)
     mc.setAttr(f"{deformer1}.smoothingStep", 1)
-    deformer2 = mc.deltaMush("shirt1", "pants", "boots" )[0]
+    deformer2 = mc.deltaMush("shirt1", "pants", "boots", "gloves", "shirtextras", "beltextras" )[0]
     mc.setAttr(f"{deformer2}.smoothingIterations", 40)
     mc.setAttr(f"{deformer2}.smoothingStep", 0.1)
     mc.setAttr(f'{deformer2}.pinBorderVertices', 0)
+
+
+    #reverse chest twist
+
 
     
 

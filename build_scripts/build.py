@@ -833,6 +833,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.setAttr('Eyes_ctrl.spaceSwitch', 1)
             mc.parent('Eyes_ctrl_space_switch_GRP', 'RIG')
 
+            # fix extra face skin
+            try:
+                mc.skinCluster('faceRoot_JNT', 'FaceAtOrigin_extras_skin_clone', tsb=False)
+            except Exception as e:
+                print(e)
+            rWeightNgIO.read_skin('FaceAtOrigin_extras_skin', f'{groups}/bobo/character/Rigs/Gretchen_face', 'Gretchen_Extras_Tweaks_Face_Skin')
+
         #deformer = mc.deltaMush('shirt1')[0]
         #mc.setAttr(f"{deformer}.envelope", .5)
         
@@ -1540,7 +1547,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
     #Skin Splitting 
     
-    if character in ['Bobo']:
+    if character in ['Bobo', 'Gretchen']:
         auto_split_all_weights('MODEL')
     if character in ['Luciana', 'Domingo']:
         auto_split_all_weights('MODEL')
@@ -1556,6 +1563,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         mc.setAttr("neck_01_FK_M_CTRL.rotateOrder",4)
         mc.setAttr("neck_02_FK_M_CTRL.rotateOrder",4) 
+
+        #hide clothing proxy
+        mc.group(empty=True, name='ClothingProxy')
+        mc.parent('ClothingProxy', 'RIG')
+        mc.parent('pantslow', 'bootslow', 'shirtlow', 'gloveslow', 'ClothingProxy')
+        mc.hide('ClothingProxy')
 
         #mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
         #mc.delete('ArmTwist_L', 'ArmTwist_R')
