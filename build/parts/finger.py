@@ -31,6 +31,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         create_fk=True,
         expression_control=True,
         bendy_vis_attr: str | None = None,
+        curl: bool = True,
     ):
         super().__init__(
             side=side,
@@ -50,6 +51,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.create_fk = create_fk
         self.expression_control = expression_control
         self.bendy_vis_attr = bendy_vis_attr
+        self.curl = curl
         
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -125,10 +127,13 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
     def control_rig(self):
         self.build_fk_controls()
         mc.parent(self.fk_ctrls[0].top, self.control_grp)
+        if self.curl:
+            self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[1], rotate=self.guide_list[1], ctrl_scale=self.ctrl_scale)
 
     def output_rig(self):
         self.build_fk_chain()
         mc.parent(self.fk_joints[0], self.module_grp)
+        
 
     def skeleton(self):
         fk_chain = rChain.Chain(transform_list=self.fk_joints, side=self.side, suffix='JNT', name=self.part)
@@ -193,3 +198,8 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
                     rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
             else:
                 rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
+        if self.curl:
+            mc.parentConstraint(f'{self.base_name}_01_fk_CTRL', 'self.curl_ctrl')
+            for num in ['02', '03', '04']:
+                pass
+
