@@ -15,11 +15,10 @@ import rjg.libs.util as rUtil
 import rjg.post.dataIO.controls as rCtrlIO
 import rjg.post.finalize as rFinal
 import rjg.post.usd as rUSD
-from rjg.libs.skin import auto_split_all_weights
-
+from rjg.build.parts.bipedLimb import BipedLimb
 from rjg.build.parts.clavicle import Clavicle
 from rjg.build.parts.hand import Hand
-from rjg.build.parts.bipedLimb import BipedLimb
+from rjg.libs.skin import auto_split_all_weights
 
 reload(rUtil)
 reload(rProp)
@@ -76,7 +75,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     mc.viewFit('perspShape', fitFactor=1, all=True, animate=True)
 
     # Versioning
-    create_versioning_script(rig_name=character, rig_version=4)
+    create_versioning_script(rig_name=character, rig_version=5)
     
     #Fixing Names
     if character == 'Skeleton':
@@ -386,10 +385,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 "chest01": "chest_M_01_CTRL",
                 "chest02": "chest_M_02_CTRL",
             },
-            swing_parent="chest_M_02_CTRL",
+            independent_swing_parent="chest_M_02_CTRL",
+            independent_swing=True,
+            independent_swing_connection_target=clavicle.swing_input,
             swing=True,
-            swing_connection_target=clavicle.swing_input,
             remove_first_joint_twist=True,
+            twist_distribute_name="shoulder"
         )
         
         #Bendy Fingers
@@ -410,8 +411,23 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 
         if character == 'Luciana':
             leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
-        else:    
-            leg = rBuild.build_module(module_type='biped_limb', side=fs[0], part='leg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Foot']], offset_pv=50, ctrl_scale=8, bendy=not_previs, twisty=not_previs, stretchy=True, segments=4 if not_previs else 1)
+        else:
+            leg = rBuild.build_module(
+                module_type="biped_limb",
+                side=fs[0],
+                part="leg",
+                guide_list=[fs + piece for piece in ["UpLeg", "Leg", "Foot"]],
+                offset_pv=50,
+                ctrl_scale=8,
+                bendy=not_previs,
+                twisty=not_previs,
+                stretchy=True,
+                segments=4 if not_previs else 1,
+                swing_parent="spine_M_01_JNT",
+                swing=True,
+                remove_first_joint_twist=True,
+                twist_distribute_name="hip"
+            )
             if character == "Gretchen":
                 foot = rBuild.build_module(
                     module_type="foot",
