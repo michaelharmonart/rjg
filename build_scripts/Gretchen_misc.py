@@ -1,6 +1,7 @@
 import maya.cmds as mc
 import rjg.post.dataIO.ng_weights as rWeightNgIO
 import rjg.libs.util as rUtil
+from rjg.build_scripts.SteveUtils.importskins import import_weights
 
 from importlib import reload
 import platform, time
@@ -87,23 +88,35 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     #rWeightNgIO.read_skin("gloves", f"{groups}/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Gloves_Weights_01")
 
     belt_skin = mc.skinCluster(bind_joints, 'belt', tsb=True, skinMethod=1, n='beltSkc')[0]
-    rWeightNgIO.read_skin("belt", f"{groups}/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Belt_Weights")
+    #rWeightNgIO.read_skin("belt", f"{groups}/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Belt_Weights")
 
-    for g in belt_parts:
-        mc.copySkinWeights(ss=belt_skin, ds=g, surfaceAssociation='closestPoint', noMirror=True, )
+    #for g in belt_parts:
+        #mc.copySkinWeights(ss=belt_skin, ds=g, surfaceAssociation='closestPoint', noMirror=True, )
 
-    for g in buttons:
-        mc.copySkinWeights(ss=shirt_skin, ds=g, surfaceAssociation='closestPoint', noMirror=True, )
+    #for g in buttons:
+        #mc.copySkinWeights(ss=shirt_skin, ds=g, surfaceAssociation='closestPoint', noMirror=True, )
     
     #read weighted skin maps 
     for g in ['bootslow', 'pantslow', 'shirtlow', 'belt']:
         import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Gretchen/Weights')
+
+    for geo in ['pantslow', 'shirtlow']:
+        history = mc.listHistory(geo)
+        if not history:
+            return None
+        skins = mc.ls(history, type='skinCluster')
+        if skins:
+            mc.setAttr(f'{skins[0]}.skinningMethod', 2)
+
+
     deformer1 = mc.tension("shirt1", "pants" )[0]
     mc.setAttr(f"{deformer1}.smoothingIterations", 20)
     mc.setAttr(f"{deformer1}.smoothingStep", 1)
     deformer2 = mc.deltaMush("shirt1", "pants", "boots" )[0]
     mc.setAttr(f"{deformer2}.smoothingIterations", 40)
     mc.setAttr(f"{deformer2}.smoothingStep", 0.1)
+    mc.setAttr(f'{deformer2}.pinBorderVertices', 0)
+
     
 
     
