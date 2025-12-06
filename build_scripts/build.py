@@ -490,7 +490,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             Glute = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}_Glute', guide_list=mc.getAttr(f'{fs}_Glute' + '.translate'), ctrl_scale=1, par_jnt='COG_M_JNT', par_ctrl='hip_M_CTRL')
             Breast = rBuild.build_module(module_type='arbitrary', side='M', part=f'{fs}Breast', guide_list=mc.getAttr(f'{fs}Breast' + '.translate'), ctrl_scale=1, par_jnt='chest_M_JNT', par_ctrl='Chest_Offset_CTRL')
             GloveFlair = rBuild.build_module(module_type='arbitrary2', side=side, part='GloveFlair', guide_list=f'{fs}Glove', ctrl_scale=5, par_jnt=f'arm_{side}_7_JNT', par_ctrl=f'arm_{side}_07_JNT', scale=True)
-            ArmTwist = rBuild.build_module(module_type='arbitrary2', side=side, part='ArmTwist', guide_list=f'{fs}ArmTwist', ctrl_scale=1, par_jnt=f'clavicle_{side}_02_JNT', par_ctrl=f'clavicle_{side}_02_JNT')
+            #ArmTwist = rBuild.build_module(module_type='arbitrary2', side=side, part='ArmTwist', guide_list=f'{fs}ArmTwist', ctrl_scale=1, par_jnt=f'clavicle_{side}_02_JNT', par_ctrl=f'clavicle_{side}_02_JNT')
             
             #ArmTwist = rBuild.build_module(module_type='arbitrary', side=side, part=f'{fs}ArmTwist', guide_list=mc.getAttr(f'{fs}ArmTwist' + '.translate'), ctrl_scale=1, par_jnt=f'arm_{side}_01_JNT', par_ctrl=f'arm_{side}_01_JNT')
 
@@ -794,40 +794,39 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.warning(e)
             
     #### Gretchen SPECIFICS
-    if character == 'Gretchen' and not_previs and face:
-        reload(rFile)
-        face = rFile.import_hierarchy(groups + f'/bobo/anim/Rigs/{character}Face.mb')
-        import rjg.post.faceProject as rFaceProj
-        reload(rFaceProj)
-        rFaceProj.project(body=body_mesh, char='ROOT', f_model='FaceAtOrigin', f_rig='face_M', extras=f'{character}_Extras', f_extras='F_EXTRAS', f_skel='faceRoot_JNT')#, tY=1.103)
-        mc.delete(face)
-        
-        mc.joint(n='root_root_JNT')
-        mc.parent('root_root_JNT', 'SKEL')
-        mc.parent('root_M_JNT', 'faceRoot_JNT', 'root_root_JNT')
-
-        deformer = mc.deltaMush('shirt1')[0]
-        mc.setAttr(f"{deformer}.envelope", .5)
-        
-
+    if character == 'Gretchen':
         import rjg.build_scripts.Gretchen_misc as rc
         reload(rc)
+        if face:
+            #face project
+            reload(rFile)
+            face = rFile.import_hierarchy(groups + f'/bobo/anim/Rigs/{character}Face.mb')
+            import rjg.post.faceProject as rFaceProj
+            reload(rFaceProj)
+            rFaceProj.project(body=body_mesh, char='ROOT', f_model='FaceAtOrigin', f_rig='face_M', extras=f'{character}_Extras', f_extras='F_EXTRAS', f_skel='faceRoot_JNT')#, tY=1.103)
+            mc.delete(face)
+            
+            mc.joint(n='root_root_JNT')
+            mc.parent('root_root_JNT', 'SKEL')
+            mc.parent('root_M_JNT', 'faceRoot_JNT', 'root_root_JNT')
+
+            # look spaceswitch
+            mc.select('head_M_01_CTRL', 'Eyes_ctrl')
+            spsw.run()
+            mc.addAttr('Eyes_ctrl.spaceSwitch', e=True, enumName='world:head:')
+            mc.setAttr('Eyes_ctrl.spaceSwitch', 1)
+            mc.parent('Eyes_ctrl_space_switch_GRP', 'RIG')
+
+        #deformer = mc.deltaMush('shirt1')[0]
+        #mc.setAttr(f"{deformer}.envelope", .5)
+        
+
+        #import rjg.build_scripts.Gretchen_misc as rc
+        #reload(rc)
 
 
-        mc.setAttr(f"{deformer}.envelope", .5)
-
-        mc.select('head_M_01_CTRL', 'Eyes_ctrl')
-        spsw.run()
-        mc.addAttr('Eyes_ctrl.spaceSwitch', e=True, enumName='world:head:')
-        mc.setAttr('Eyes_ctrl.spaceSwitch', 1)
-        mc.parent('Eyes_ctrl_space_switch_GRP', 'RIG')
-
-
-        import rjg.build_scripts.Gretchen_misc as rc
-        reload(rc)
-
-
-
+        #mc.setAttr(f"{deformer}.envelope", .5)
+    
         import rjg.build_scripts.Gretchen_misc as rc
         reload(rc)
 
@@ -836,11 +835,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 rc.Gretchen_extras(body_mesh, extras)
             except:
                 pass
-        else:
-            try:
-                rc.Gretchen_misc_pvis(body_mesh, ['Bandanna','Shirt','Boots','Hair', 'Glasses', 'Pants', 'banddanna2','knot1','knot2', 'knot', 'boots', 'loopleather', 'beltLeather', 'pockets', 'metalclip', 'pantsCreased1', 'beltloops', 'button1', 'shirt1', 'hair', 'bun', 'eyebrows', 'topeyelashes', 'bottomlash', 'earings', 'Righteye', 'Lefteye'])
-            except:
-                pass
+        #else:
+        #    try:
+        #        rc.Gretchen_misc_pvis(body_mesh, ['Bandanna','Shirt','Boots','Hair', 'Glasses', 'Pants', 'banddanna2','knot1','knot2', 'knot', 'boots', 'loopleather', 'beltLeather', 'pockets', 'metalclip', 'pantsCreased1', 'beltloops', 'button1', 'shirt1', 'hair', 'bun', 'eyebrows', 'topeyelashes', 'bottomlash', 'earings', 'Righteye', 'Lefteye'])
+        #    except:
+        #        pass
 
     #### RAYDEN SPECIFICS
     if character == 'Rayden':
@@ -1018,7 +1017,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         print(e)
     
     #Pre-vis shapes
-    if not not_previs and not bony and character != 'Gretchen' and character != 'BoboQuad':
+    if not not_previs and not bony:
         try:
             mc.blendShape(character + '_UBM', name = 'pvis_shapes', foc=True)
             mc.blendShape('pvis_shapes', e=True, ip=f'{groups}/dungeons/character/Rigging/Rigs/{character}/Skin/pvis_shapes.shp')
@@ -1026,19 +1025,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.connectAttr('look_R_CTRL.blink', 'pvis_shapes.blink_RShape')
         except:
             pass
-
-    if not not_previs and not bony and character in ['Bobo', 'Gretchen']:
-        try:
-            mc.blendShape(character + '_UBM', name = 'pvis_shapes', foc=True)
-            mc.blendShape('pvis_shapes', e=True, ip=f'{groups}/bobo/character/Rigs/{character}/Poses/pvis_shapes.shp')
-            mc.connectAttr('look_L_CTRL.blink', 'pvis_shapes.blink_LShape')
-            mc.connectAttr('look_R_CTRL.blink', 'pvis_shapes.blink_RShape')
-        except:
-            pass
         
 
     #Previs Face Fix
-    if not not_previs and not bony and character != 'Gretchen' and character != 'BoboQuad':
+    if not not_previs and not bony:
         try:
             for o in ['lipLeft_M_M_CTRL_SDK_GRP.', 'lipRight_M_M_CTRL_SDK_GRP.']:
                 for a in ['translateY', 'rotateX']:
@@ -1491,6 +1481,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     mc.select(clear=True)
 
     if character == "Gretchen" and face:
+        #MaskingFaceProject
         mc.deformerWeights("FaceProject_weights.xml", im=True,  deformer='main_blendshapes', path=f'{groups}/bobo/character/Rigs/Gretchen/Weights/')
 
 
@@ -1550,10 +1541,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.setAttr("neck_01_FK_M_CTRL.rotateOrder",4)
         mc.setAttr("neck_02_FK_M_CTRL.rotateOrder",4) 
 
-        mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
-        mc.delete('ArmTwist_L', 'ArmTwist_R')
-        mc.parentConstraint('arm_L_01_JNT', 'ArmTwist_L_JNT', mo = False)
-        mc.parentConstraint('arm_R_01_JNT', 'ArmTwist_R_JNT', mo = False)
+        #mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
+        #mc.delete('ArmTwist_L', 'ArmTwist_R')
+        #mc.parentConstraint('arm_L_01_JNT', 'ArmTwist_L_JNT', mo = False)
+        #mc.parentConstraint('arm_R_01_JNT', 'ArmTwist_R_JNT', mo = False)
     
         
 
