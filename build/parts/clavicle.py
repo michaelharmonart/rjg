@@ -1,3 +1,4 @@
+from math import radians
 from maya.api.OpenMaya import MEulerRotation, MMatrix, MSpace, MTransformationMatrix
 import maya.cmds as mc
 from importlib import reload
@@ -207,8 +208,9 @@ class Clavicle(rModule.RigModule):
             mc.connectAttr(strength_node.output, f"{auto_clav_strength_sum}.input[{index}]")
 
         def create_pose(name: str, rotation: tuple[float, float, float], strength: float):
+            rotation_radians = tuple(radians(a) for a in rotation)
             pose_transform: MTransformationMatrix = MTransformationMatrix()
-            pose_transform.setRotation(MEulerRotation(*rotation))
+            pose_transform.setRotation(MEulerRotation(*rotation_radians))
             pose_matrix = rotate_matrix_with_mirror(pose_transform) * parent_inverse_matrix
             pose = Pose(name=f"swing_{name}", matrices=[pose_matrix], gaussian_falloff=0.5)
             pose_interpolator.add_pose(pose)
@@ -289,5 +291,3 @@ class Clavicle(rModule.RigModule):
         # orient_names = ['orient' + name.title() for name in name_list]
         # rAttr.Attribute(node=self.part_grp, type='plug', value=target_list, name=self.main_ctrl.ctrl +'_point', children_name=point_names)
         # rAttr.Attribute(node=self.part_grp, type='plug', value=target_list, name=self.main_ctrl.ctrl +'_orient', children_name=orient_names)
-
-    
