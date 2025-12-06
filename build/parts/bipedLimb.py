@@ -7,6 +7,7 @@ import rjg.build.fk as rFk
 import rjg.build.ik as rIk
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
+import rjg.libs.control.ctrl as rCtrl
 from maya.api.OpenMaya import MEulerRotation, MMatrix, MSpace, MTransformationMatrix
 from rjg.libs.control.ctrl import Control
 from rjg.libs.maya_api import node
@@ -66,6 +67,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         orient_spaces: dict[str, str] | None = None,
         remove_first_joint_twist: bool = False,
         twist_distribute_name: str | None = None,
+        enable_prop_control: bool = False,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.create_ik = create_ik
@@ -118,6 +120,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                     The space should be something like the chest for the arm."""
                         )
         self.swing_output = None
+        self.enable_prop_control = enable_prop_control
                         
         if self.twisty or self.bendy and not self.segments:
             self.segments = 4
@@ -155,6 +158,25 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         if self.create_ik:
             self.pv_control = self.build_ik_controls()
             mc.parent(self.ik_ctrl_grp, self.control_grp)
+            
+        if self.enable_prop_control:
+            self.prop_control = rCtrl.Control(
+                parent=self.control_grp,
+                shape="cube",
+                side=None,
+                suffix="CTRL",
+                name=f"{self.base_name}_Prop",
+                axis="y",
+                group_type="main",
+                rig_type="primary",
+                translate=self.guide_list[-1],
+                rotate=self.guide_list[-1],
+                ctrl_scale=self.ctrl_scale,
+            )
+            prop_control_vis = rAttr.Attribute(node=self.control_grp, type="double", min=0, max=1, keyable=True, name="propControlVisibility", value=1)
+            for control in [self.fk_ctrls[-1].ctrl, self.main_ctrl.ctrl, self.prop_control.ctrl]:
+                mc.addAttr(control, longName="propControlVisibility", proxy=prop_control_vis.attr)
+            mc.connectAttr(prop_control_vis.attr, f"{self.prop_control.top}.visibility")
 
     def output_rig(self):
         self.limb_grp = mc.group(em=True, parent=self.module_grp, name=self.base_name + "_RIG_GRP")
@@ -226,8 +248,9 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                              self.fk_ctrls[0].top + '.visibility')
             mc.connectAttr(rev + '.outputZ', self.ik_ctrl_grp + '.visibility')
 
-
-
+        if self.enable_prop_control:
+            matrix_constraint(self.src_chain.joints[-1], self.prop_control.top, keep_offset=False)
+            
         if self.segments:
             self.src_chain.split_chain(segments=self.segments)
             self.src_joints = []
