@@ -1,4 +1,5 @@
 from importlib import reload
+from math import radians
 
 import maya.cmds as mc
 import rjg.build.chain as rChain
@@ -6,7 +7,7 @@ import rjg.build.fk as rFk
 import rjg.build.ik as rIk
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
-from maya.api.OpenMaya import MMatrix
+from maya.api.OpenMaya import MEulerRotation, MMatrix, MSpace, MTransformationMatrix
 from rjg.libs.control.ctrl import Control
 from rjg.libs.maya_api import node
 from rjg.libs.space import space_switch
@@ -20,6 +21,7 @@ from rjg.libs.transform import (
     match_pose,
     match_transform,
     matrix_constraint,
+    set_local_matrix,
 )
 
 reload(rModule)
@@ -308,7 +310,10 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         mc.aimConstraint(self.src_chain.joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
         self.twist_driver_output = mc.joint(name=f"{self.base_name}_TwistDriver")
         mc.parent(self.twist_driver_output, self.swing_output, relative=True)
-        matrix_constraint(self.src_chain.joints[1], self.twist_driver_output, translate=False, scale=False, shear=False)
+        rotation_matrix: MMatrix = MEulerRotation(radians(-90),0,0, MSpace.kTransform).asMatrix()
+        set_local_matrix(self.twist_driver_output, rotation_matrix)
+        print(rotation_matrix)
+        matrix_constraint(self.src_chain.joints[0], self.twist_driver_output, translate=False, scale=False, shear=False)
         pass
         
     def output_independent_swing(self):
