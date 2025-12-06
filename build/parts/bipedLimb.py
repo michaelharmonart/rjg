@@ -1,4 +1,5 @@
 from importlib import reload
+from math import radians
 
 import maya.cmds as mc
 import rjg.build.chain as rChain
@@ -6,7 +7,7 @@ import rjg.build.fk as rFk
 import rjg.build.ik as rIk
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
-from maya.api.OpenMaya import MMatrix
+from maya.api.OpenMaya import MEulerRotation, MMatrix, MSpace, MTransformationMatrix
 from rjg.libs.control.ctrl import Control
 from rjg.libs.maya_api import node
 from rjg.libs.space import space_switch
@@ -20,6 +21,7 @@ from rjg.libs.transform import (
     match_pose,
     match_transform,
     matrix_constraint,
+    set_local_matrix,
 )
 
 reload(rModule)
@@ -58,9 +60,12 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         spinejnt_count=4,
         swing: bool = False,
         swing_parent: str | None = None,
-        swing_connection_target: str | None = None,
+        independent_swing: bool = False,
+        independent_swing_parent: str | None = None,
+        independent_swing_connection_target: str | None = None,
         orient_spaces: dict[str, str] | None = None,
         remove_first_joint_twist: bool = False,
+        twist_distribute_name: str | None = None,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.create_ik = create_ik
@@ -84,18 +89,36 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
 
         self.swing = swing
         self.swing_parent = swing_parent
-        self.swing_connection_target = swing_connection_target
+        self.independent_swing = independent_swing
+        self.independent_swing_parent = independent_swing_parent
+        self.independent_swing_connection_target = independent_swing_connection_target
         self.orient_spaces = orient_spaces
         self.remove_first_joint_twist = remove_first_joint_twist
-        if swing:
-            if swing_parent is None:
+        if twist_distribute_name:
+            self.twist_distribute_name = twist_distribute_name
+        else:
+            self.twist_distribute_name = ""
+        if self.independent_swing:
+            if self.independent_swing_parent is None:
+                self.independent_swing = False
+                raise ValueError(
+                    f"""{self.part} has no independent_swing_parent! output_swing requires a space to be relative to
+                    (in order to avoid cyclical dependencies.)
+                    The space should be something like the chest for the arm."""
+                )
+            if self.swing_parent is None:
+                self.swing_parent = independent_swing_parent
+        self.independent_swing_output = None
+        if self.swing:
+            if self.swing_parent is None:
                 self.swing = False
                 raise ValueError(
                     f"""{self.part} has no swing_parent! output_swing requires a space to be relative to
                     (in order to avoid cyclical dependencies.)
                     The space should be something like the chest for the arm."""
-                )
-
+                        )
+        self.swing_output = None
+                        
         if self.twisty or self.bendy and not self.segments:
             self.segments = 4
 
@@ -214,32 +237,33 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                     self.src_joints.append(s_jnt)
             self.src_joints.append(self.src_chain.joints[-1])
         
-        if self.swing and self.remove_first_joint_twist:
-            self.output_simple_swing()
+        if self.swing:
+            self.output_swing()
             
         if self.bendy:
             if self.remove_first_joint_twist:
-                shoulder_twist_distribute = rAttr.Attribute(node=self.limb_grp, type="double", min=0, max=1, keyable=True, name="shoulderTwistDistribute", value=1)
+                twist_distribute_attr_name = f"{self.twist_distribute_name}TwistDistribute"
+                twist_distribute = rAttr.Attribute(node=self.limb_grp, type="double", min=0, max=1, keyable=True, name=twist_distribute_attr_name, value=1)
                 
-                shoulder_swing = mc.group(empty=True, name=f"{self.base_name}_ShoulderSwingOnly", parent=self.limb_grp)
-                matrix_constraint(self.simple_swing_output, shoulder_swing, keep_offset=False, scale=False)
-                matrix_constraint(self.src_chain.joints[0], shoulder_swing, keep_offset=False, translate=False, scale=True, rotate=False, shear=False)
-                shoulder_swing_twist = mc.group(empty=True, name=f"{self.base_name}_ShoulderSwingTwist", parent=self.limb_grp)
-                matrix_constraint(self.src_chain.joints[0], shoulder_swing_twist, keep_offset=False)
-                blend_node = node.BlendMatrixNode(name=f"{self.base_name}_ShoulderTwistBlend")
-                mc.connectAttr(f"{shoulder_swing_twist}.matrix", blend_node.input_matrix)
-                mc.connectAttr(f"{shoulder_swing}.matrix", blend_node.target[0].target_matrix)
-                mc.connectAttr(shoulder_twist_distribute.attr, blend_node.target[0].weight)
+                swing_only = mc.group(empty=True, name=f"{self.base_name}_SwingOnly", parent=self.limb_grp)
+                matrix_constraint(self.swing_output, swing_only, keep_offset=False, scale=False)
+                matrix_constraint(self.src_chain.joints[0], swing_only, keep_offset=False, translate=False, scale=True, rotate=False, shear=False)
+                swing_twist = mc.group(empty=True, name=f"{self.base_name}_SwingTwist", parent=self.limb_grp)
+                matrix_constraint(self.src_chain.joints[0], swing_twist, keep_offset=False)
+                blend_node = node.BlendMatrixNode(name=f"{self.base_name}_TwistBlend")
+                mc.connectAttr(f"{swing_twist}.matrix", blend_node.input_matrix)
+                mc.connectAttr(f"{swing_only}.matrix", blend_node.target[0].target_matrix)
+                mc.connectAttr(twist_distribute.attr, blend_node.target[0].weight)
                 for control in [self.fk_ctrls[0].ctrl, self.base_ctrl.ctrl]:
-                    mc.addAttr(control, longName="shoulderTwistDistribute", proxy=shoulder_twist_distribute.attr)
-                shoulder_blend_transform = mc.group(empty=True, name=f"{self.base_name}_ShoulderBlend", parent=self.limb_grp)
-                drive_transform_with_matrix(blend_node.output_matrix,shoulder_blend_transform)
+                    mc.addAttr(control, longName=twist_distribute_attr_name, proxy=twist_distribute.attr)
+                blend_transform = mc.group(empty=True, name=f"{self.base_name}_TwistBlendTransform", parent=self.limb_grp)
+                drive_transform_with_matrix(blend_node.output_matrix,blend_transform)
 
                 bend = self.src_chain.bend_twist_chain(
                     ctrl_scale=self.ctrl_scale,
                     mirror=self.mirror,
                     global_scale=self.global_scale.attr,
-                    first_joint_space=shoulder_blend_transform,
+                    first_joint_space=blend_transform,
                 )
             else:
                 bend = self.src_chain.bend_twist_chain(
@@ -251,8 +275,8 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             mc.parent(bend["control"], self.control_grp)
             mc.parent(bend["module"], self.module_grp)
 
-        if self.swing:
-            self.output_swing()
+        if self.independent_swing:
+            self.output_independent_swing()
 
     def create_orient_spaces(self):
         if self.orient_spaces is not None:
@@ -274,23 +298,29 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             )
             mc.orientConstraint(self.orient_input, orient_control.top, maintainOffset=True)
             
-    def output_simple_swing(self):
+    def output_swing(self):
         """Outputs a simple swing transform for use with bendbow twist, etc. (not to be used for clavicle as it has dependencies on that)"""
-        swing_group = mc.group(empty=True, name=f"{self.base_name}_SimpleSwing", parent=self.limb_grp)
-        anchor_group = mc.group(empty=True, name=f"{self.base_name}_SimpleAnchor", parent=swing_group)
+        swing_group = mc.group(empty=True, name=f"{self.base_name}_Swing", parent=self.limb_grp)
+        anchor_group = mc.group(empty=True, name=f"{self.base_name}_Anchor", parent=swing_group)
         match_transform(swing_group, self.fk_joints[0])
         matrix_constraint(self.swing_parent, swing_group, keep_offset=True)
         matrix_constraint(self.fk_ctrls[0].ctrl, anchor_group, rotate=False, scale=False, shear=False)
         
-        self.simple_swing_output = mc.group(empty=True, name=f"{self.base_name}_SimpleSwing_OUT", parent=anchor_group)
-        mc.aimConstraint(self.src_chain.joints[1], self.simple_swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
+        self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=anchor_group)
+        mc.aimConstraint(self.src_chain.joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
+        self.twist_driver_output = mc.joint(name=f"{self.base_name}_TwistDriver")
+        mc.parent(self.twist_driver_output, self.swing_output, relative=True)
+        rotation_matrix: MMatrix = MEulerRotation(radians(-90),0,0, MSpace.kTransform).asMatrix()
+        set_local_matrix(self.twist_driver_output, rotation_matrix)
+        print(rotation_matrix)
+        matrix_constraint(self.src_chain.joints[0], self.twist_driver_output, translate=False, scale=False, shear=False)
         pass
         
-    def output_swing(self):
-        swing_group = mc.group(empty=True, name=f"{self.base_name}_Swing", parent=self.limb_grp)
-        anchor_group = mc.group(empty=True, name=f"{self.base_name}_Anchor", parent=swing_group)
+    def output_independent_swing(self):
+        swing_group = mc.group(empty=True, name=f"{self.base_name}_IndependentSwing", parent=self.limb_grp)
+        anchor_group = mc.group(empty=True, name=f"{self.base_name}_IndependentAnchor", parent=swing_group)
         match_transform(anchor_group, self.fk_joints[0])
-        matrix_constraint(self.swing_parent, anchor_group)
+        matrix_constraint(self.independent_swing_parent, anchor_group)
 
         orient_offset = mc.group(
             empty=True, name=f"{self.base_name}_OrientOffset", parent=anchor_group
@@ -300,7 +330,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         parent = anchor_group
         swing_joints: list[str] = []
         for i, joint in enumerate(self.ik_joints):
-            swing_joint: str = mc.joint(name=f"{self.base_name}_Swing_{i:02d}")
+            swing_joint: str = mc.joint(name=f"{self.base_name}_IndependentSwing_{i:02d}")
             mc.parent(swing_joint, parent)
             parent = swing_joint
             match_pose(swing_joint, translate=joint, rotate=joint)
@@ -328,7 +358,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         if self.create_ik:
             # Set up IK
             swing_ik_handle: str = mc.ikHandle(
-                name=f"{self.base_name}_Swing_IK",
+                name=f"{self.base_name}_IndpendentSwing_IK",
                 startJoint=swing_joints[0],
                 endEffector=swing_joints[-1],
                 sticky=self.sticky,
@@ -343,13 +373,13 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             mc.connectAttr(f"{invert}.output", f"{swing_ik_handle}.ikBlend")
 
         # Swing output
-        self.swing_output = mc.group(empty=True, name=f"{self.base_name}_Swing_OUT", parent=anchor_group)
-        mc.aimConstraint(swing_joints[1], self.swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
+        self.independent_swing_output = mc.group(empty=True, name=f"{self.base_name}_IndependentSwing_OUT", parent=anchor_group)
+        mc.aimConstraint(swing_joints[1], self.independent_swing_output, aimVector=(0, 1 if not self.mirror else -1, 0), upVector=(0,0,0), worldUpType=4, maintainOffset=False)
         
         # Connect swing
         matrix_constraint(
-            self.swing_output,
-            self.swing_connection_target,
+            self.independent_swing_output,
+            self.independent_swing_connection_target,
             translate=False,
             shear=False,
             scale=False,
@@ -368,7 +398,6 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                                           point_constraint=poc,
                                           parent=self.skel)
         self.bind_joints = limb_chain.joints
-
         self.tag_bind_joints(self.bind_joints[:-1])
 
     def add_plugs(self):

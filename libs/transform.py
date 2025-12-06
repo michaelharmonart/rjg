@@ -110,6 +110,55 @@ def get_local_matrix(transform: str) -> MMatrix:
     mfn_transform: MFnTransform = MFnTransform(dag_path)
     transformation: MTransformationMatrix = mfn_transform.transformation()
     return transformation.asMatrix()
+    
+def set_local_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
+    """
+    Set the local matrix of a transform by decomposing it into components.
+
+    Args:
+        transform: Maya transform node name.
+        matrix: Target matrix.
+        fallback: If True, use cmds.xform instead of manual decomposition.
+    """
+    if fallback:
+        mc.xform(transform, worldSpace=False, matrix=matrix)
+    else:
+        # Apply local matrix using transformation matrix
+        transform_matrix: MTransformationMatrix = MTransformationMatrix(matrix)
+        # Set translation
+        translation = transform_matrix.translation(MSpace.kTransform)
+        mc.setAttr(f"{transform}.translate", translation.x, translation.y, translation.z)
+        node_type = mc.nodeType(transform)
+
+        if node_type == "joint":
+            # Zero the rotate channel
+            mc.setAttr(f"{transform}.rotate", 0, 0, 0)
+            rotation = transform_matrix.rotation()
+            mc.setAttr(
+                f"{transform}.jointOrient",
+                MAngle(rotation.x).asDegrees(),
+                MAngle(rotation.y).asDegrees(),
+                MAngle(rotation.z).asDegrees(),
+            )
+        else:
+            rotate_order = mc.getAttr(f"{transform}.rotateOrder")
+            transform_matrix.reorderRotation(rotate_order + 1)
+            rotation = transform_matrix.rotation()
+            mc.setAttr(
+                f"{transform}.rotate",
+                MAngle(rotation.x).asDegrees(),
+                MAngle(rotation.y).asDegrees(),
+                MAngle(rotation.z).asDegrees(),
+            )
+
+        # Set scale
+        scale = transform_matrix.scale(MSpace.kTransform)
+        mc.setAttr(f"{transform}.scale", scale[0], scale[1], scale[2])
+
+        # Set shear
+        shear = transform_matrix.shear(MSpace.kTransform)
+        mc.setAttr(f"{transform}.shear", shear[0], shear[1], shear[2])
+        
 
 def get_world_matrix(transform: str) -> MMatrix:
     """
@@ -160,46 +209,7 @@ def set_world_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
 
         inverse_matrix: MMatrix = get_parent_inverse_matrix(transform)
         local_matrix: MMatrix = matrix * inverse_matrix
-
-        # Apply local matrix using transformation matrix
-        transform_matrix: MTransformationMatrix = MTransformationMatrix(local_matrix)
-        # Set translation
-        translation = transform_matrix.translation(MSpace.kTransform)
-        mc.setAttr(f"{transform}.translate", translation.x, translation.y, translation.z)
-        node_type = mc.nodeType(transform)
-
-        transform_matrix
-
-        if node_type == "joint":
-            # Zero the rotate channel
-            mc.setAttr(f"{transform}.rotate", 0, 0, 0)
-            rotation = transform_matrix.rotation()
-            mc.setAttr(
-                f"{transform}.jointOrient",
-                MAngle(rotation.x).asDegrees(),
-                MAngle(rotation.y).asDegrees(),
-                MAngle(rotation.z).asDegrees(),
-            )
-        else:
-            rotate_order = mc.getAttr(f"{transform}.rotateOrder")
-            transform_matrix.reorderRotation(rotate_order + 1)
-            rotation = transform_matrix.rotation()
-            mc.setAttr(
-                f"{transform}.rotate",
-                MAngle(rotation.x).asDegrees(),
-                MAngle(rotation.y).asDegrees(),
-                MAngle(rotation.z).asDegrees(),
-            )
-
-
-        # Set scale
-        scale = transform_matrix.scale(MSpace.kTransform)
-        mc.setAttr(f"{transform}.scale", scale[0], scale[1], scale[2])
-
-        # Set shear
-        shear = transform_matrix.shear(MSpace.kTransform)
-        mc.setAttr(f"{transform}.shear", shear[0], shear[1], shear[2])
-
+        set_local_matrix(transform=transform, matrix=local_matrix, fallback=False)
 
 def match_transform(transform: str, target_transform: str) -> None:
     """
