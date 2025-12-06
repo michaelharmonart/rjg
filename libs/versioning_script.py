@@ -50,3 +50,8 @@ else:
             for control in ["arm_L_RIG_GRP", "arm_R_RIG_GRP"]:
                 version_attribute(f"{rig_namespace}{control}.shoulderTwistDistribute", 0)
             update_version(4)
+        if scene_rig_version < 5:
+            # Hip Twist Distribute
+            for control in ["leg_L_RIG_GRP", "leg_R_RIG_GRP"]:
+                version_attribute(f"{rig_namespace}{control}.hipTwistDistribute", 0)
+            update_version(5)
