@@ -358,6 +358,7 @@ def drive_transform_with_matrix(
             mc.setAttr(f"{transform}.segmentScaleCompensate", 0)
         if rotate:
             print(f"reset orient on {transform}")
+            mc.setAttr(f"{transform}.jointOrient", lock=False)
             mc.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")
             if lock_joint_orient:
                 mc.setAttr(f"{transform}.jointOrient", lock=True)

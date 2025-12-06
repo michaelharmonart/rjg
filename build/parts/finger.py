@@ -1,11 +1,13 @@
 from importlib import reload
 
 import maya.cmds as mc
+from rjg.libs.transform import drive_transform_with_matrix, get_world_matrix
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
 import rjg.build.ik as rIk
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
+from rjg.libs.maya_api import node
 
 reload(rModule)
 reload(rAttr)
@@ -176,17 +178,25 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
                     else:
                         mult1value = 0
                         mult2value = 1
-                    mc.parentConstraint(driver_list, driven_list, mo=True)
-                    mc.parentConstraint(f'hand_{self.side}_express_CTRL', driven_list, mo=True)
-                    mc.setAttr(f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_01_switch_JNTW0', mult1value)
-                    mc.setAttr(f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_express_CTRLW1', mult2value)
-                    if falloff == 'inner':
-                        mc.connectAttr( f"hand_{self.side}_express_CTRL_HIGHER.outValue", f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_01_switch_JNTW0')
-                        mc.connectAttr( f"hand_{self.side}_express_CTRL_LOWER.outValue", f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_express_CTRLW1')
-                    elif falloff == 'outer':
-                        mc.connectAttr( f"hand_{self.side}_express_CTRL_LOWER.outValue", f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_01_switch_JNTW0')
-                        mc.connectAttr( f"hand_{self.side}_express_CTRL_HIGHER.outValue", f'{self.base_name}_01_fk_CTRL_CNST_GRP_parentConstraint1.hand_{self.side}_express_CTRLW1')
+                        
+                    expression_blend_node = node.BlendMatrixNode(name=f"{self.base_name}_ExpressionBlend")
+                    mc.connectAttr(f"{driver_list[0]}.worldMatrix[0]", expression_blend_node.input_matrix)
+                    mc.connectAttr(f'hand_{self.side}_express_CTRL.worldMatrix[0]', expression_blend_node.target[0].target_matrix)
+                    mc.setAttr(expression_blend_node.target[0].weight, mult2value)
 
+                    if falloff == 'inner':
+                        mc.connectAttr(f"hand_{self.side}_express_CTRL_LOWER.outValue", expression_blend_node.target[0].weight)
+                    elif falloff == 'outer':
+                        mc.connectAttr( f"hand_{self.side}_express_CTRL_HIGHER.outValue", expression_blend_node.target[0].weight)
+                        
+                    offset_node = node.MultMatrixNode(name=f"{self.base_name}_ExpressionOffset")
+                    offset_matrix = get_world_matrix(driven_list[0]) * get_world_matrix(driver_list[0]).inverse()
+                    
+                    mc.setAttr(offset_node.matrix_in[0], offset_matrix, type="matrix")
+                    mc.connectAttr(expression_blend_node.output_matrix, offset_node.matrix_in[1])
+                    mc.connectAttr(f"{driven_list[0]}.parentInverseMatrix[0]", offset_node.matrix_in[2])
+                    
+                    drive_transform_with_matrix(offset_node.matrix_sum, driven_list[0])
 
 
                 else:
