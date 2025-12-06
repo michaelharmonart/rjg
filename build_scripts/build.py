@@ -367,6 +367,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 local_orient=False,
                 ctrl_scale=9,
             )
+        if character in ['Luciana']:
+            prop_control = False
+        else:
+            prop_control = True
         arm: BipedLimb = rBuild.build_module(
             module_type="biped_limb",
             side=fs[0],
@@ -390,7 +394,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             independent_swing_connection_target=clavicle.swing_input,
             swing=True,
             remove_first_joint_twist=True,
-            twist_distribute_name="shoulder"
+            twist_distribute_name="shoulder",
+            enable_prop_control=prop_control,
         )
         
         #Bendy Fingers
