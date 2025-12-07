@@ -343,6 +343,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
     #Mirrored Base Rig Parts
     fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo'] else 'lollipop'
+    curlaxis = 'Z' if character != 'Gretchen' else 'X'
     for fs in ["Left", "Right"]:
         side = fs[0]
         if character == "Bobo":
@@ -485,6 +486,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 bendy=bendbo,
                 create_ik=False,
                 bendy_vis_attr = hand.bendy_vis_attr,
+                curlaxis = curlaxis
             )
             fingers.append(finger)
 
@@ -500,6 +502,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             bendy=bendbo,
             create_ik=False,
             bendy_vis_attr = hand.bendy_vis_attr,
+            curlaxis = curlaxis
         )
         fingers.append(thumb) 
 

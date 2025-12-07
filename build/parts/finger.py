@@ -8,12 +8,14 @@ import rjg.build.ik as rIk
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 from rjg.libs.maya_api import node
+import rjg.libs.control.ctrl as rCtrl
 
 reload(rModule)
 reload(rAttr)
 reload(rChain)
 reload(rFk)
 reload(rIk)
+reload(rCtrl)
 
 class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
     def __init__(
@@ -34,6 +36,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         expression_control=True,
         bendy_vis_attr: str | None = None,
         curl: bool = True,
+        curlaxis: str = 'Z',
     ):
         super().__init__(
             side=side,
@@ -54,6 +57,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.expression_control = expression_control
         self.bendy_vis_attr = bendy_vis_attr
         self.curl = curl
+        self.curlaxis = curlaxis
         
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -130,7 +134,10 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.build_fk_controls()
         mc.parent(self.fk_ctrls[0].top, self.control_grp)
         if self.curl:
-            self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[1], rotate=self.guide_list[1], ctrl_scale=self.ctrl_scale)
+            if self.part == 'fingerThumb':
+                self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
+            else:
+                self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[1], rotate=self.guide_list[1], ctrl_scale=self.ctrl_scale)
 
     def output_rig(self):
         self.build_fk_chain()
@@ -209,7 +216,20 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             else:
                 rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
         if self.curl:
-            mc.parentConstraint(f'{self.base_name}_01_fk_CTRL', 'self.curl_ctrl')
-            for num in ['02', '03', '04']:
-                pass
+            sec_axes = [a for a in ['X', 'Y', 'Z'] if a != self.curlaxis]
+            #mc.pointConstraint(f'{self.base_name}_02_fk_CTRL', f'{self.curl_ctrl.ctrl}', mo=True)
+            if self.part == 'fingerThumb': 
+                mc.pointConstraint(f'{self.base_name}_01_fk_CTRL', f'{self.curl_ctrl.ctrl}', mo=True)
+                for num in ['01', '02', '03',]:
+                    mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{self.curlaxis}', f'{self.base_name}_{num}_fk_CTRL_SDK_GRP.rotate{self.curlaxis}')
+                for ax in sec_axes:
+                    mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{ax}', f'{self.base_name}_01_fk_CTRL_SDK_GRP.rotate{ax}')
+            else:
+                mc.pointConstraint(f'{self.base_name}_02_fk_CTRL', f'{self.curl_ctrl.ctrl}', mo=True)
+                for num in ['02', '03', '04']:
+                    mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{self.curlaxis}', f'{self.base_name}_{num}_fk_CTRL_SDK_GRP.rotate{self.curlaxis}')
+                for ax in sec_axes:
+                    mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{ax}', f'{self.base_name}_02_fk_CTRL_SDK_GRP.rotate{ax}')
+            if self.expression_control:
+                mc.addAttr(f'hand_{self.side}_express_CTRL', longName=f'{self.base_name}curl', proxy=f'{self.curl_ctrl.ctrl}.rotate{self.curlaxis}')
 
