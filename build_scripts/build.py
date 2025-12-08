@@ -842,11 +842,24 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.parent('Eyes_ctrl_space_switch_GRP', 'RIG')
 
             # fix extra face skin
-            try:
-                mc.skinCluster('faceRoot_JNT', 'FaceAtOrigin_extras_skin_clone', tsb=False)
+            '''try:
+                mc.delete('Gretch_extra')
+                print('here')
+                mesh = 'Gretch_extra_clone'
+                skin = mc.ls(mc.listHistory(mesh), type='skinCluster')
+                mc.delete(mesh, ch=True)
+                if skin:
+                    mc.delete(skin)
+                    print(f"Unskinned {mesh}")
+                else:
+                    print(f"No skinCluster found on {mesh}")
+                print('here3')
+                reskinres = mc.skinCluster('faceRoot_JNT', mesh, tsb=False)
+                print(reskinres)
             except Exception as e:
                 print(e)
-            rWeightNgIO.read_skin('FaceAtOrigin_extras_skin', f'{groups}/bobo/character/Rigs/Gretchen_face', 'Gretchen_Extras_Tweaks_Face_Skin')
+            rWeightNgIO.read_skin(mesh, f'{groups}/bobo/character/Rigs/Gretchen_face', 'Gretchen_Extras_Tweaks_Face_Skin')
+            print('here2')'''
 
         #deformer = mc.deltaMush('shirt1')[0]
         #mc.setAttr(f"{deformer}.envelope", .5)
@@ -1577,6 +1590,19 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.parent('ClothingProxy', 'RIG')
         mc.parent('pantslow', 'bootslow', 'shirtlow', 'gloveslow', 'ClothingProxy')
         mc.hide('ClothingProxy')
+
+        if face:
+            try:
+                #mc.delete('Gretch_extra')
+                mesh = 'Gretch_extra_clone'
+                skin = mc.ls(mc.listHistory(mesh), type='skinCluster')
+                mc.delete(mesh, ch=True)
+                if skin:
+                    mc.delete(skin)
+                reskinres = mc.skinCluster('faceRoot_JNT', mesh, tsb=False)
+            except Exception as e:
+                print(e)
+            rWeightNgIO.read_skin('Gretch_extra_clone', f'{groups}/bobo/character/Rigs/Gretchen_face', 'Gretchen_Extras_Tweaks_Face_Skin')
 
         #mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
         #mc.delete('ArmTwist_L', 'ArmTwist_R')

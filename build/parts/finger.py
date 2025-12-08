@@ -219,7 +219,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             sec_axes = [a for a in ['X', 'Y', 'Z'] if a != self.curlaxis]
             #mc.pointConstraint(f'{self.base_name}_02_fk_CTRL', f'{self.curl_ctrl.ctrl}', mo=True)
             if self.part == 'fingerThumb': 
-                mc.pointConstraint(f'{self.base_name}_01_fk_CTRL', f'{self.curl_ctrl.top}', mo=True)
+                mc.pointConstraint(f'{self.base_name}_01_fk_CTRL', f'{self.base_name}_curl_CTRL_CNST_GRP', mo=True)
                 for num in ['01', '02', '03',]:
                     mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{self.curlaxis}', f'{self.base_name}_{num}_fk_CTRL_SDK_GRP.rotate{self.curlaxis}')
                 for ax in sec_axes:
