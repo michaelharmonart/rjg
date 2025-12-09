@@ -373,6 +373,8 @@ class UEwing(UEface):
         full_aimjnt_list.extend(aim_joints)
         UEwing.build_ik_spline_with_controls(aim_joints=aim_joints, prefix=prefix, sub=False, FeatherType='Main')
 
+
+        #Build Feather :)
         rot_offset_list = []
         base_offsets = []
         def_jnts = []
@@ -389,6 +391,55 @@ class UEwing(UEface):
             rot = mc.xform(guide, q=True, ws=True, ro=True)
             mid_guide = mc.spaceLocator(p=midpos, name=f"interp_locator{guide}")[0]
             mc.xform(mid_guide, ws=True, ro=rot, t=midpos)
+
+            #curlCont + aim loc
+            add = [0, 0, 90]
+            main_rot = [a + b for a, b in zip(rot, add)]
+            Main_Ctrl, Main_Group = UEface.build_basic_control( name=f'{prefix}_Feather_{num}', shape='ZTpoint', size=50.0, position=basepos, rotation=main_rot)
+            aim_loc = mc.spaceLocator(p=basepos, name=f'{prefix}_Featheraim_{num}')[0]
+            mc.hide(aim_loc)
+            mc.xform(aim_loc, ws=True, ro=rot, t=basepos)
+            mc.orientConstraint(aim_loc, Main_Group, mo=True)
+            mc.parent(aim_loc, Main_Group, feather_grp)
+
+            aimmdZ = mc.createNode("multiplyDivide", name=f'{prefix}_{num}_FaimmdZ')
+            aimmdX = mc.createNode("multiplyDivide", name=f'{prefix}_{num}_FaimmdX') 
+
+            for pax in ['Z', 'X']:
+                for ax in ['X', 'Y', 'Z']:
+                    if ax == 'X':
+                        part = "base"
+                        if pax == 'Z':
+                            mult = .1
+                        else:
+                            mult = .2 
+                    elif ax == 'Y':
+                        part = "mid"
+                        if pax == 'Z':
+                            mult = .5
+                        else:
+                            mult = .7
+                    else:
+                        part = 'ee'
+                        if pax == 'Z':
+                            mult = 1
+                        else:
+                            mult = .5
+                    mc.createNode("addDL", name=f'{prefix}_{num}_{pax}FaimADL{ax}')
+                    mc.connectAttr(f'{prefix}_{num}_Faimmd{pax}.output{ax}',  f'{prefix}_{num}_{pax}FaimADL{ax}.input1')
+                    mc.connectAttr(f'{Main_Ctrl}.rotate{pax}',  f'{prefix}_{num}_{pax}FaimADL{ax}.input2')
+                    mc.connectAttr(f'{aim_loc}.rotate{pax}', f'{prefix}_{num}_Faimmd{pax}.input1{ax}')
+                    mc.addAttr(Main_Ctrl, ln=f'{part}_Aim_{pax}_mult', dv=mult, k=True)
+                    mc.connectAttr(f'{Main_Ctrl}.{part}_Aim_{pax}_mult', f'{prefix}_{num}_Faimmd{pax}.input2{ax}')
+                    if pax == 'X':
+                        mc.setAttr(f'{Main_Ctrl}.translate{ax}', lock=True, channelBox=False)
+                        mc.setAttr(f'{Main_Ctrl}.scale{ax}', lock=True, channelBox=False)
+                    
+
+
+
+
+
             basejnt, basectrl, basectrl_offset =UEface.Simple_joint_and_Control(
                 guide,
                 orient=True,
@@ -396,7 +447,7 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}MainFeather_{num}_base',
                 scale=True,
                 check_side=True,
-                CTRL_Size=2,
+                CTRL_Size=30,
                 JNT_Size=0.5
             )
             midjnt, midctrl, midctrl_offset =UEface.Simple_joint_and_Control(
@@ -406,7 +457,7 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}MainFeather_{num}_mid',
                 scale=True,
                 check_side=True,
-                CTRL_Size=2,
+                CTRL_Size=30,
                 JNT_Size=0.5
             )
             eejnt, eectrl, eectrl_offset =UEface.Simple_joint_and_Control(
@@ -416,9 +467,11 @@ class UEwing(UEface):
                 overwrite_name=f'{prefix}MainFeather_{num}_ee',
                 scale=True,
                 check_side=True,
-                CTRL_Size=2,
+                CTRL_Size=30,
                 JNT_Size=0.5
             )
+            mc.pointConstraint(basectrl, Main_Group, mo=True)
+            mc.pointConstraint(basectrl, aim_loc, mo=True)
             pre_jnt = None
             for part in [guide, mid_guide, ee_guide]:
                 if part == guide: 
@@ -427,18 +480,21 @@ class UEwing(UEface):
                     offset = basectrl_offset
                     ctrl = basectrl
                     jnt = basejnt
+                    mdspot = 'X'
                 elif part == mid_guide:
                     trans = midpos
                     nameing = 'mid'
                     offset = midctrl_offset
                     ctrl = midctrl
                     jnt = midjnt
+                    mdspot = 'Y'
                 else:
                     trans = eepos 
                     nameing = 'ee'
                     offset = eectrl_offset
                     ctrl = eectrl
                     jnt = eejnt
+                    mdspot = 'Z'
                 rot_offset = mc.group(empty=True, name=f'{prefix}_MainFeather_{num}_{nameing}_rotOffset')
                 mc.xform(rot_offset, ws=True, t=trans, ro=rot)
                 mc.parent(rot_offset, offset)
@@ -454,6 +510,11 @@ class UEwing(UEface):
                     pre_ctrl = ctrl
                     mc.parent(jnt,root_joint)
                     mc.parent(offset,feather_grp)
+
+                mc.connectAttr(f'{prefix}_{num}_XFaimADL{mdspot}.output', f'{rot_offset}.rotateX')
+                mc.connectAttr(f'{prefix}_{num}_ZFaimADL{mdspot}.output', f'{rot_offset}.rotateZ')
+                mc.connectAttr(f'{Main_Ctrl}.rotateY', f'{rot_offset}.rotateY')
+
             def_jnts.append(eejnt)
             def_jnts.append(midjnt)
             def_jnts.append(basejnt)
@@ -484,13 +545,13 @@ class UEwing(UEface):
                         mc.disconnectAttr(conn, f"{basectrl_offset}.{attr}")
             mc.aimConstraint(
                 f'{prefix}_MainFeatherAim_{num}_jnt',
-                basectrl_offset,
+                aim_loc,
                 aimVector=(0, 1, 0),
                 upVector=(1, 0, 0),
                 mo=False,
                 weight=1.0,
                 #worldUpVector = (1,0,0),
-                worldUpType="objectrotation", worldUpObject =f'{prefix}_MainAimUp{num}_{ctrlname}'
+                worldUpType="objectrotation", worldUpObject =f'{prefix}_MainAimUp{num}_{ctrlname}',
                 #worldUpType = 'None'
             )
 
@@ -580,11 +641,11 @@ class UEwing(UEface):
             if num != '01':
                 mc.parentConstraint(f'{prefix}_{num}_bind_jnt', f'{prefix}_Main_Feather_aim_{num}_{grpname}', mo=True)
             mc.parentConstraint(f'{prefix}_{num}_FK_JNT', f'{prefix}_{num}_bind_jnt', mo=True )
-        for cont in [f'{prefix}_Close', f'{prefix}_FeatherShaper', f'{prefix}_Span']:
+        for cont in [f'{prefix}_Close', f'{prefix}_Span']: #f'{prefix}_FeatherShaper',
             rot = mc.xform(cont, q=True, ws=True, ro=True)
             trans = mc.xform(cont, q=True, ws=True, t=True)
             UEface.build_basic_control(name=f'{cont}', shape='ZTarrow', size=10.0, position=trans, rotation=rot)
-        mc.parent(f'{prefix}_FeatherShaper_{grpname}', f'{prefix}_Span_{ctrlname}')
+        #mc.parent(f'{prefix}_FeatherShaper_{grpname}', f'{prefix}_Span_{ctrlname}')
         mc.parent(f'{prefix}_Span_{grpname}', f'{prefix}_04_FK_{ctrlname}')
 
         #ik
@@ -643,25 +704,25 @@ class UEwing(UEface):
         ##End
 
 
-        mc.addAttr(f'{prefix}_FeatherShaper_{ctrlname}', longName="Full_Bend", attributeType="bool", defaultValue=True, keyable=True)
-        mc.addAttr(f'{prefix}_FeatherShaper_{ctrlname}', longName="Full_Twist", attributeType="bool", defaultValue=True, keyable=True)
-        mult_node2 = mc.createNode("multiplyDivide", name=f"{prefix}_Shape_multNode")
-        mc.connectAttr(f'{prefix}_FeatherShaper_{ctrlname}.Full_Bend', f"{mult_node2}.input2X")
-        mc.connectAttr(f'{prefix}_FeatherShaper_{ctrlname}.Full_Twist', f"{mult_node2}.input2Y")
-        mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateX", f"{mult_node2}.input1X")
-        mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateY", f"{mult_node2}.input1Y")
-        for rotoff in rot_offset_list:
-            parts = rotoff.split('_')
+        #mc.addAttr(f'{prefix}_FeatherShaper_{ctrlname}', longName="Full_Bend", attributeType="bool", defaultValue=True, keyable=True)
+        #mc.addAttr(f'{prefix}_FeatherShaper_{ctrlname}', longName="Full_Twist", attributeType="bool", defaultValue=True, keyable=True)
+        #mult_node2 = mc.createNode("multiplyDivide", name=f"{prefix}_Shape_multNode")
+        #mc.connectAttr(f'{prefix}_FeatherShaper_{ctrlname}.Full_Bend', f"{mult_node2}.input2X")
+        #mc.connectAttr(f'{prefix}_FeatherShaper_{ctrlname}.Full_Twist', f"{mult_node2}.input2Y")
+        #mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateX", f"{mult_node2}.input1X")
+        #mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateY", f"{mult_node2}.input1Y")
+        #for rotoff in rot_offset_list:
+        #    parts = rotoff.split('_')
         
             # The identifier is the second-to-last element
-            identifier = parts[-2]
+        #    identifier = parts[-2]
         
-            if identifier == "base":
-                mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateX", f"{rotoff}.rotateX")
-                mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateY", f"{rotoff}.rotateY")
-            else:
-                mc.connectAttr(f"{mult_node2}.outputX", f"{rotoff}.rotateX")
-                mc.connectAttr(f"{mult_node2}.outputY", f"{rotoff}.rotateY")
+        #    if identifier == "base":
+        #        mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateX", f"{rotoff}.rotateX")
+        #        mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateY", f"{rotoff}.rotateY")
+        #    else:
+        #        mc.connectAttr(f"{mult_node2}.outputX", f"{rotoff}.rotateX")
+        #        mc.connectAttr(f"{mult_node2}.outputY", f"{rotoff}.rotateY")
 
         max_val = 20
 
