@@ -220,12 +220,14 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             #mc.pointConstraint(f'{self.base_name}_02_fk_CTRL', f'{self.curl_ctrl.ctrl}', mo=True)
             if self.part == 'fingerThumb': 
                 mc.pointConstraint(f'{self.base_name}_01_fk_CTRL', f'{self.base_name}_curl_CTRL_CNST_GRP', mo=True)
+                mc.orientConstraint({driver_list[0]}, f'{self.base_name}_curl_CTRL_CNST_GRP', mo=True)
                 for num in ['01', '02', '03',]:
                     mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{self.curlaxis}', f'{self.base_name}_{num}_fk_CTRL_SDK_GRP.rotate{self.curlaxis}')
                 for ax in sec_axes:
                     mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{ax}', f'{self.base_name}_01_fk_CTRL_SDK_GRP.rotate{ax}')
             else:
-                mc.pointConstraint(f'{self.base_name}_02_fk_CTRL', f'{self.curl_ctrl.ctrl}', mo=True)
+                mc.pointConstraint(f'{self.base_name}_02_fk_CTRL', f'{self.curl_ctrl.top}', mo=True)
+                mc.orientConstraint(f'{self.base_name}_01_fk_CTRL', f'{self.curl_ctrl.top}', mo=True)
                 for num in ['02', '03', '04']:
                     mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{self.curlaxis}', f'{self.base_name}_{num}_fk_CTRL_SDK_GRP.rotate{self.curlaxis}')
                 for ax in sec_axes:
