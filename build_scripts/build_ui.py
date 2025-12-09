@@ -84,7 +84,7 @@ class RigBuildUI(QtWidgets.QDialog):
                 "mp" : f"{groups}/bobo/character/Rigs/Bobo/Bobo_Model.mb",
                 "gp" : f"{groups}/bobo/character/Rigs/Bobo/Bobo_Guides.mb",
                 "ep" : f"{groups}/bobo/character/Rigs/Bobo/Bobo_Extras.mb",
-                "cp" : f"{groups}/bobo/character/Rigs/Bobo/Controls/bobo_control_curves.json",
+                "cp" : f"{groups}/bobo/character/Rigs/Bobo/Controls/Bobo_control_curves.json",
                 "sp" : f"{groups}/bobo/character/Rigs/Bobo/SkinFiles/Bobo_Weights.json",
                 "pp" : f"{groups}/bobo/character/Rigs/Bobo/Poses/Bobo.pose",
                 "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/Bobo.jpg",
