@@ -522,7 +522,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Bobo':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 4)], ctrl_scale=10, pad=2)
         # for ar in ('BellyLowerM', 'BellyLowerL1', 'BellyLowerL2', 'BellyLowerR1', 'BellyLowerR2'):
-        rb = rBuild.build_module(module_type='arbitrary', side='M', part='BellyHighM', guide_list=mc.getAttr('BellyHighM' + '.translate'), ctrl_scale=15, par_jnt='spine_M_01_JNT', par_ctrl='spine_02_FK_M_CTRL')
+        rb = rBuild.build_module(module_type='arbitrary', side='M', part='BellyHighM', guide_list=mc.getAttr('BellyHighM' + '.translate'), ctrl_scale=15, par_jnt='spine_M_02_JNT', par_ctrl='spine_M_02_JNT')
         for toe in ['Innertoe', 'Middletoe', 'Outertoe']:
             for side in ['L', 'R']:
                 toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=10, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT')
