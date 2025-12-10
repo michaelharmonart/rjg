@@ -650,3 +650,24 @@ build_ik_fk_switch(prefix="branch_",
                        IKRoot="branch_spline_root_OFF",
                        FKRoot="branch_root_FK_grp",
                        MO=True)
+
+
+##### Enum Bulk Add Attr
+
+import maya.cmds as mc
+
+def add_attributes():
+    selected_objs = mc.ls(selection=True)
+    if not selected_objs:
+        print("No objects selected.")
+        return
+    
+    attr_list = input("Enter the attribute names separated by spaces: ").split()
+    
+    for obj in selected_objs:
+        for attr in attr_list:
+            # Define enum values as a string (e.g., "Option1:Option2:Option3")
+            enum_values = '01:02:03:04'
+            mc.addAttr(obj, longName=attr, attributeType='enum', keyable=True, enumName=enum_values)
+
+add_attributes()

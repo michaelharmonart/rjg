@@ -737,7 +737,7 @@ def auto_split_all_weights(mesh_group: str, degree: int = 2, add_ng_layer: bool 
                         raise RuntimeError(
                             f"{evaluated} should be a list of influences to split weights with."
                         )
-                    if len(evaluated) > degree + 1:
+                    if len(evaluated) >= degree + 1:
                         split_dict[influence] = evaluated
             if split_dict:
                 split_weights(mesh, joint_split_dict=split_dict, skin_cluster=skin_cluster, degree=degree, add_ng_layer=False)

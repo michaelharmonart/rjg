@@ -144,7 +144,7 @@ class UEwing(UEface):
         count = 0
         guides = []
         
-        # We'll just loop up to some reasonable high number to check
+        # We'll just loop up to some reasonable high number to check #{i:02d}
         for i in range(1, 200):  
             num_str = f"{i:02}" if i < 10 else str(i)  # pad with zero if < 10
             name = f"{prefix}_{feather}_{num_str}_guide"
@@ -157,7 +157,11 @@ class UEwing(UEface):
         return count, guides
 
     @staticmethod
-    def place_joints_on_guide_curve(guides, feather_count, prefix, feathertype, up_controls=False):
+    def place_joints_on_guide_curve(guides=[], feather_count=1, prefix=None, feathertype=None, up_controls=False, even=False):
+        if guides == []:
+            for i in range(1, feather_count + 1):
+                num = f"{i:02d}"
+                guides.append(f"{prefix}_MainFeather_{num}_aim")
         ctrlname, grpname = UEwing.get_namestruc(prefix)
         # Get world positions from guides
         positions = [mc.xform(g, q=True, ws=True, t=True) for g in guides]
@@ -169,23 +173,46 @@ class UEwing(UEface):
         joints = []
         upgrps = []
         upctrs = []
-        for i in range(feather_count):
-            u = float(i) / (feather_count - 1) if feather_count > 1 else 0.0
-            pos = mc.pointOnCurve(curve, pr=u, p=True) #Wing_L_MainFeather01_guide Wing_L_MainFeather_01_guide
-            pos2 = mc.xform(f'{prefix}_{feathertype}Feather_{i+1:02}_guide', q=True, ws=True, t=True)
-            tangent = UEwing.look_at_rotation(pos,pos2)
-            
-            jnt = mc.joint(p=pos, name=f"{prefix}_{feathertype}FeatherAim_{i+1:02}_jnt")
-            joints.append(jnt)
-            if up_controls == True:
-                rot = mc.xform(jnt, q=True, ws=False, rotation=True)
-                size = 1 if feathertype != "Main" else 5
-                upctr, upgrp = UEface.build_basic_control(name=f'{prefix}_{feathertype}AimUp{i+1:02}', shape='ZTpoint', size=size, color_rgb=(1, 1, 0), position=pos, rotation=tangent)
-                mc.parentConstraint(jnt, upgrp, mo=True)
-                upgrps.append(upgrp)
-                upctrs.append(upctr)
-                mc.parent(upgrp, f'{prefix}_upAim_{grpname}')
-                mc.select(jnt)
+        if even:
+            for i in range(feather_count):
+                u = float(i) / (feather_count - 1) if feather_count > 1 else 0.0
+                pos = mc.pointOnCurve(curve, pr=u, p=True) #Wing_L_MainFeather01_guide Wing_L_MainFeather_01_guide
+                pos2 = mc.xform(f'{prefix}_{feathertype}Feather_{i+1:02}_guide', q=True, ws=True, t=True)
+                tangent = UEwing.look_at_rotation(pos,pos2)
+                
+                jnt = mc.joint(p=pos, name=f"{prefix}_{feathertype}FeatherAim_{i+1:02}_jnt")
+                joints.append(jnt)
+                if up_controls == True:
+                    rot = mc.xform(jnt, q=True, ws=False, rotation=True)
+                    size = 1 if feathertype != "Main" else 50
+                    upctr, upgrp = UEface.build_basic_control(name=f'{prefix}_{feathertype}AimUp{i+1:02}', shape='ZTpoint', size=size, color_rgb=(1, 1, 0), position=pos, rotation=tangent)
+                    mc.parentConstraint(jnt, upgrp, mo=True)
+                    upgrps.append(upgrp)
+                    upctrs.append(upctr)
+                    mc.parent(upgrp, f'{prefix}_upAim_{grpname}')
+                    mc.select(jnt)
+        else:
+            for i in range(1, feather_count + 1):
+                num = f"{i:02d}"
+                u = float(i) / (feather_count - 1) if feather_count > 1 else 0.0
+                #pos = mc.pointOnCurve(curve, pr=u, p=True) #Wing_L_MainFeather01_guide Wing_L_MainFeather_01_guide
+                pos = mc.xform(f"{prefix}_MainFeather_{num}_aim", q=True, ws=True, t=True) 
+                pos2 = mc.xform(f"{prefix}_MainFeather_{num}_guide", q=True, ws=True, t=True)
+                tangent = UEwing.look_at_rotation(pos,pos2)
+                
+                jnt = mc.joint(p=pos, name=f"{prefix}_{feathertype}FeatherAim_{num}_jnt")
+                joints.append(jnt)
+                if up_controls == True:
+                    rot = mc.xform(jnt, q=True, ws=False, rotation=True)
+                    size = 1 if feathertype != "Main" else 50
+                    upctr, upgrp = UEface.build_basic_control(name=f'{prefix}_{feathertype}AimUp{num}', shape='ZTpoint', size=size, color_rgb=(1, 1, 0), position=pos, rotation=tangent)
+                    mc.parentConstraint(jnt, upgrp, mo=True)
+                    upgrps.append(upgrp)
+                    upctrs.append(upctr)
+                    mc.parent(upgrp, f'{prefix}_upAim_{grpname}')
+                    mc.select(jnt)
+
+
 
         # Delete temp curve
         mc.delete(curve)
@@ -193,153 +220,8 @@ class UEwing(UEface):
         return joints, upgrps, upctrs
 
 
-    @staticmethod
-    def get_sub_groups(prefix):
-        ctrlname, grpname = UEwing.get_namestruc(prefix)
-        """
-        Returns a sorted list of sub-groups under the {prefix}_guides group,
-        stripped of the prefix.
-        """
-        group_name = f"{prefix}_guides"
-        if not mc.objExists(group_name):
-            print(f"[WARN] Group '{group_name}' does not exist.")
-            return []
-
-        # List children of the group
-        children = mc.listRelatives(group_name, children=True, fullPath=False) or []
-
-        # Filter for sub-groups
-        sub_groups = [c for c in children if c.startswith(f"{prefix}_Sub")]
-
-        # Sort numerically
-        sub_groups.sort(key=lambda x: int(''.join(filter(str.isdigit, x))))
-
-        # Strip prefix
-        stripped_sub_groups = [name.replace(f"{prefix}_", "", 1) for name in sub_groups]
-
-        return stripped_sub_groups
-
-    @staticmethod
-    def build_sub_feathers(prefix=None, sub=None, main_surf=None,):
-        ctrlname, grpname = UEwing.get_namestruc(prefix)
-        subcount, subguides = UEwing.count_feather_guides(prefix = prefix, feather=f'{sub}Feather')
-        print(subcount, subguides, sub)
-        sub_aimjnt_list = []
-        aim_joints, upgrps, upctrs = UEwing.place_joints_on_guide_curve([f'{prefix}_WingAim_01_guide', f'{prefix}_WingAim_02_guide', f'{prefix}_WingAim_03_guide', f'{prefix}_WingAim_04_guide'], subcount, prefix, sub, up_controls=True ) 
-        sub_aimjnt_list.extend(aim_joints)
-        UEwing.build_ik_spline_with_controls(aim_joints=aim_joints, prefix=prefix, sub=True, FeatherType=sub)
-        rot_offset_list = []
-        base_offsets = []
-        def_jnts = []
-        for guide in subguides:
-            num = guide.split("_")[-2]
-            ee_guide = f'{prefix}_{sub}Feather_{num}_ee_guide'
-            basepos = mc.xform(guide, q=True, ws=True, t=True)
-            eepos = mc.xform(ee_guide, q=True, ws=True, t=True)
-            midpos = [basepos[i] + (eepos[i] - basepos[i]) * .5 for i in range(3)]
-            rot = mc.xform(guide, q=True, ws=True, ro=True)
-            mid_guide = mc.spaceLocator(p=midpos, name=f"interp_locator{guide}")[0]
-            mc.xform(mid_guide, ws=True, ro=rot, t=midpos)
-            basejnt, basectrl, basectrl_offset =UEface.Simple_joint_and_Control(
-                guide,
-                orient=True,
-                overwrite=True,
-                overwrite_name=f'{prefix}{sub}Feather_{num}_base',
-                scale=True,
-                check_side=True,
-                CTRL_Size=2,
-                JNT_Size=0.5
-            )
-            midjnt, midctrl, midctrl_offset =UEface.Simple_joint_and_Control(
-                mid_guide,
-                orient=True,
-                overwrite=True,
-                overwrite_name=f'{prefix}{sub}Feather_{num}_mid',
-                scale=True,
-                check_side=True,
-                CTRL_Size=2,
-                JNT_Size=0.5
-            )
-            eejnt, eectrl, eectrl_offset =UEface.Simple_joint_and_Control(
-                ee_guide,
-                orient=True,
-                overwrite=True,
-                overwrite_name=f'{prefix}{sub}Feather_{num}_ee',
-                scale=True,
-                check_side=True,
-                CTRL_Size=2,
-                JNT_Size=0.5
-            )
-            pre_jnt = None
-            for part in [guide, mid_guide, ee_guide]:
-                if part == guide: 
-                    trans = basepos
-                    nameing = 'base'
-                    offset = basectrl_offset
-                    ctrl = basectrl
-                    jnt = basejnt
-                elif part == mid_guide:
-                    trans = midpos
-                    nameing = 'mid'
-                    offset = midctrl_offset
-                    ctrl = midctrl
-                    jnt = midjnt
-                else:
-                    trans = eepos 
-                    nameing = 'ee'
-                    offset = eectrl_offset
-                    ctrl = eectrl
-                    jnt = eejnt
-                rot_offset = mc.group(empty=True, name=f'{prefix}_{sub}Feather_{num}_{nameing}_rotOffset')
-                mc.xform(rot_offset, ws=True, t=trans, ro=rot)
-                mc.parent(rot_offset, offset)
-                mc.parent(ctrl, rot_offset)
-                rot_offset_list.append(rot_offset)
-                if pre_jnt != None:
-                    mc.parent(jnt, pre_jnt)
-                    mc.parent(offset, pre_ctrl)
-                    pre_jnt = jnt
-                    pre_ctrl = ctrl
-                else:
-                    pre_jnt = jnt
-                    pre_ctrl = ctrl
-                    mc.parent(jnt, f'{prefix}_root_jnt')
-                    mc.parent(offset, f'{prefix}_feather_{grpname}')
-            base_offsets.append(basectrl_offset)
-            mc.delete(mid_guide)
-            #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_{sub}Feather_{num}_GEO', tsb=True )
-            def_jnts.append(eejnt)
-            def_jnts.append(midjnt)
-            def_jnts.append(basejnt)
-
-                            
-            mc.select(clear=True)
-            mc.select(main_surf[0])
-            mc.select(basectrl_offset, add=True)
-            print(main_surf)
-            mc.UVPin()
-            for attr in ["rotateX", "rotateY", "rotateZ"]:
-                # Find any nodes driving this attribute
-                connections = mc.listConnections(f"{basectrl_offset}.{attr}", s=True, d=False, plugs=True)
-                if connections:
-                    for conn in connections:
-                        mc.disconnectAttr(conn, f"{basectrl_offset}.{attr}")
-            mc.aimConstraint(
-                f'{prefix}_{sub}FeatherAim_{num}_jnt',
-                basectrl_offset,
-                aimVector=(0, 1, 0),
-                upVector=(1, 0, 0),
-                mo=False,
-                weight=1.0,
-                worldUpType="objectrotation", worldUpObject =f'{prefix}_{sub}AimUp{num}_{ctrlname}'
-                #worldUpVector = (1,0,0),
-                #worldUpType = 'None'
-            )
-        return rot_offset_list, base_offsets, sub_aimjnt_list
-
 
     def build_wing(self):
-
         #group='Wing_L_guides'
         prefix = UEface.get_prefix_from_group(self.grp_name)
         grp = self.grp_name
@@ -351,231 +233,15 @@ class UEwing(UEface):
         handle_grp = mc.group(em=True, name=f'{prefix}_handle_{grpname}')
         upAim_grp = mc.group(em=True, name=f'{prefix}_upAim_{grpname}')
         mc.select(clear=True)
-        if side == 'L':
-            pos = mc.xform(f'LeftArm', q=True, ws=True, t=True)
-        elif side == 'R':
-            pos = mc.xform(f'RightArm', q=True, ws=True, t=True)
-        else:
-            pos = (0,0,0)
-        root_joint = mc.joint(name=f'{prefix}_root_jnt', p=pos)
         fk_group = mc.group(em=True, name=f'{prefix}_FK_{grpname}')
         ik_group = mc.group(em=True, name=f'{prefix}_IK_{grpname}')
 
         maincount, mainguides = UEwing.count_feather_guides(prefix = prefix, feather='MainFeather')
-        curve_offset = 1
-        main_curve = UEwing.build_curve(mainguides, prefix)
-        main_curve2 = mc.duplicate(main_curve)
-        mc.move(0, 0,curve_offset, main_curve, r=True)
-        mc.move(0, 0,-curve_offset, main_curve2, r=True)
-        main_surf = mc.loft(main_curve, main_curve2, name=f'{prefix}_Main_loft')
-        full_aimjnt_list = []
-        aim_joints, upgrps, upctrs = UEwing.place_joints_on_guide_curve([f'{prefix}_WingAim_01_guide', f'{prefix}_WingAim_02_guide', f'{prefix}_WingAim_03_guide', f'{prefix}_WingAim_04_guide'], maincount, prefix, 'Main', up_controls=True) 
+
+        full_aimjnt_list = [] #guides=False, feather_count, prefix, feathertype, up_controls=False, even=False
+        aim_joints, upgrps, upctrs = UEwing.place_joints_on_guide_curve(guides=[], feather_count=maincount, prefix=prefix, feathertype='Main', up_controls=True, even=False) #[f'{prefix}_WingAim_01_guide', f'{prefix}_WingAim_02_guide', f'{prefix}_WingAim_03_guide', f'{prefix}_WingAim_04_guide']
         full_aimjnt_list.extend(aim_joints)
         UEwing.build_ik_spline_with_controls(aim_joints=aim_joints, prefix=prefix, sub=False, FeatherType='Main')
-
-
-        #Build Feather :)
-        rot_offset_list = []
-        base_offsets = []
-        def_jnts = []
-        for guide in mainguides:
-            num = guide.split("_")[-2]
-            ee_guide = f'{prefix}_MainFeather_{num}_ee_guide'
-            if side == 'R':
-                y = mc.getAttr(ee_guide + ".translateY")
-                mc.setAttr(ee_guide + ".translateY", -y)
-
-            basepos = mc.xform(guide, q=True, ws=True, t=True)
-            eepos = mc.xform(ee_guide, q=True, ws=True, t=True)
-            midpos = [basepos[i] + (eepos[i] - basepos[i]) * .5 for i in range(3)]
-            rot = mc.xform(guide, q=True, ws=True, ro=True)
-            mid_guide = mc.spaceLocator(p=midpos, name=f"interp_locator{guide}")[0]
-            mc.xform(mid_guide, ws=True, ro=rot, t=midpos)
-
-            #curlCont + aim loc
-            add = [0, 0, 90]
-            main_rot = [a + b for a, b in zip(rot, add)]
-            Main_Ctrl, Main_Group = UEface.build_basic_control( name=f'{prefix}_Feather_{num}', shape='ZTpoint', size=50.0, position=basepos, rotation=main_rot)
-            aim_loc = mc.spaceLocator(p=basepos, name=f'{prefix}_Featheraim_{num}')[0]
-            mc.hide(aim_loc)
-            mc.xform(aim_loc, ws=True, ro=rot, t=basepos)
-            mc.orientConstraint(aim_loc, Main_Group, mo=True)
-            mc.parent(aim_loc, Main_Group, feather_grp)
-
-            aimmdZ = mc.createNode("multiplyDivide", name=f'{prefix}_{num}_FaimmdZ')
-            aimmdX = mc.createNode("multiplyDivide", name=f'{prefix}_{num}_FaimmdX') 
-
-            for pax in ['Z', 'X']:
-                for ax in ['X', 'Y', 'Z']:
-                    if ax == 'X':
-                        part = "base"
-                        if pax == 'Z':
-                            mult = .1
-                        else:
-                            mult = .2 
-                    elif ax == 'Y':
-                        part = "mid"
-                        if pax == 'Z':
-                            mult = .5
-                        else:
-                            mult = .7
-                    else:
-                        part = 'ee'
-                        if pax == 'Z':
-                            mult = 1
-                        else:
-                            mult = .5
-                    mc.createNode("addDL", name=f'{prefix}_{num}_{pax}FaimADL{ax}')
-                    mc.connectAttr(f'{prefix}_{num}_Faimmd{pax}.output{ax}',  f'{prefix}_{num}_{pax}FaimADL{ax}.input1')
-                    mc.connectAttr(f'{Main_Ctrl}.rotate{pax}',  f'{prefix}_{num}_{pax}FaimADL{ax}.input2')
-                    mc.connectAttr(f'{aim_loc}.rotate{pax}', f'{prefix}_{num}_Faimmd{pax}.input1{ax}')
-                    mc.addAttr(Main_Ctrl, ln=f'{part}_Aim_{pax}_mult', dv=mult, k=True)
-                    mc.connectAttr(f'{Main_Ctrl}.{part}_Aim_{pax}_mult', f'{prefix}_{num}_Faimmd{pax}.input2{ax}')
-                    if pax == 'X':
-                        mc.setAttr(f'{Main_Ctrl}.translate{ax}', lock=True, channelBox=False)
-                        mc.setAttr(f'{Main_Ctrl}.scale{ax}', lock=True, channelBox=False)
-                    
-
-
-
-
-
-            basejnt, basectrl, basectrl_offset =UEface.Simple_joint_and_Control(
-                guide,
-                orient=True,
-                overwrite=True,
-                overwrite_name=f'{prefix}MainFeather_{num}_base',
-                scale=True,
-                check_side=True,
-                CTRL_Size=30,
-                JNT_Size=0.5
-            )
-            midjnt, midctrl, midctrl_offset =UEface.Simple_joint_and_Control(
-                mid_guide,
-                orient=True,
-                overwrite=True,
-                overwrite_name=f'{prefix}MainFeather_{num}_mid',
-                scale=True,
-                check_side=True,
-                CTRL_Size=30,
-                JNT_Size=0.5
-            )
-            eejnt, eectrl, eectrl_offset =UEface.Simple_joint_and_Control(
-                ee_guide,
-                orient=True,
-                overwrite=True,
-                overwrite_name=f'{prefix}MainFeather_{num}_ee',
-                scale=True,
-                check_side=True,
-                CTRL_Size=30,
-                JNT_Size=0.5
-            )
-            mc.pointConstraint(basectrl, Main_Group, mo=True)
-            mc.pointConstraint(basectrl, aim_loc, mo=True)
-            pre_jnt = None
-            for part in [guide, mid_guide, ee_guide]:
-                if part == guide: 
-                    trans = basepos
-                    nameing = 'base'
-                    offset = basectrl_offset
-                    ctrl = basectrl
-                    jnt = basejnt
-                    mdspot = 'X'
-                elif part == mid_guide:
-                    trans = midpos
-                    nameing = 'mid'
-                    offset = midctrl_offset
-                    ctrl = midctrl
-                    jnt = midjnt
-                    mdspot = 'Y'
-                else:
-                    trans = eepos 
-                    nameing = 'ee'
-                    offset = eectrl_offset
-                    ctrl = eectrl
-                    jnt = eejnt
-                    mdspot = 'Z'
-                rot_offset = mc.group(empty=True, name=f'{prefix}_MainFeather_{num}_{nameing}_rotOffset')
-                mc.xform(rot_offset, ws=True, t=trans, ro=rot)
-                mc.parent(rot_offset, offset)
-                mc.parent(ctrl, rot_offset)
-                rot_offset_list.append(rot_offset)
-                if pre_jnt != None:
-                    mc.parent(jnt, pre_jnt)
-                    mc.parent(offset, pre_ctrl)
-                    pre_jnt = jnt
-                    pre_ctrl = ctrl
-                else:
-                    pre_jnt = jnt
-                    pre_ctrl = ctrl
-                    mc.parent(jnt,root_joint)
-                    mc.parent(offset,feather_grp)
-
-                mc.connectAttr(f'{prefix}_{num}_XFaimADL{mdspot}.output', f'{rot_offset}.rotateX')
-                mc.connectAttr(f'{prefix}_{num}_ZFaimADL{mdspot}.output', f'{rot_offset}.rotateZ')
-                mc.connectAttr(f'{Main_Ctrl}.rotateY', f'{rot_offset}.rotateY')
-
-            def_jnts.append(eejnt)
-            def_jnts.append(midjnt)
-            def_jnts.append(basejnt)
-            mc.delete(mid_guide)
-            #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_MainFeather_{num}_GEO', tsb=True)
-            if guide == mainguides[-1]:
-                try:
-                    side = prefix.split("_")[-1]
-                    #print(f'{side}MainFeathers')
-                    mc.skinCluster(*def_jnts, f'feathers_{side}', toSelectedBones=True)
-                    mc.skinCluster(*def_jnts, f'Feathers_{side}_High', toSelectedBones=True)
-                    mc.skinCluster(*def_jnts, f'feathers_{side}_Low', toSelectedBones=True)
-                except Exception as e:
-                    print(e)
-
-
-            
-            mc.select(clear=True)
-            mc.select(main_surf[0])
-            mc.select(basectrl_offset, add=True)
-            print(main_surf)
-            mc.UVPin()
-            for attr in ["rotateX", "rotateY", "rotateZ"]:
-                # Find any nodes driving this attribute
-                connections = mc.listConnections(f"{basectrl_offset}.{attr}", s=True, d=False, plugs=True)
-                if connections:
-                    for conn in connections:
-                        mc.disconnectAttr(conn, f"{basectrl_offset}.{attr}")
-            mc.aimConstraint(
-                f'{prefix}_MainFeatherAim_{num}_jnt',
-                aim_loc,
-                aimVector=(0, 1, 0),
-                upVector=(1, 0, 0),
-                mo=False,
-                weight=1.0,
-                #worldUpVector = (1,0,0),
-                worldUpType="objectrotation", worldUpObject =f'{prefix}_MainAimUp{num}_{ctrlname}',
-                #worldUpType = 'None'
-            )
-
-        #sub_groups = UEwing.get_sub_groups(prefix)
-        #print(sub_groups)
-        #for sub in sub_groups:
-        #    subrot_offset_list, subbase_offsets, sub_aimjnt_list = UEwing.build_sub_feathers(prefix, sub, main_surf,)
-        #    rot_offset_list.extend(subrot_offset_list)
-        #    full_aimjnt_list.extend(sub_aimjnt_list)
-
-        pre_jnt = None
-        pre_ctrl = None
-        armjnts = []
-        armoffsets = []
-        armctrls = []
-        armcloses= []
-
-        #arm Logic
-        FKIKSwitch_pos = mc.xform(f'{prefix}_Close', q=True, ws=True, t=True)
-        FKIKSwitch_CTL, FKIKSwitch_GRP = UEface.build_basic_control(name=f'{prefix}_FKIKSwitch', shape='ZTgear', size=5.0, color_rgb=(1, 1, 0), position=FKIKSwitch_pos, rotation=(0, 0, 0))
-        mc.addAttr(FKIKSwitch_CTL, longName="FK_IK", attributeType="bool", keyable=True)
-        rev_node = mc.createNode("reverse", name=f"{prefix}IKReverse")
-        mc.connectAttr(f'{FKIKSwitch_CTL}.FK_IK', f'{rev_node}.inputX')
-
 
         #bind
         bind_joints = []
@@ -598,8 +264,263 @@ class UEwing(UEface):
             if pre_jnt != None:
                 mc.parent(joint_name, pre_jnt)
             pre_jnt = joint_name
-        mc.skinCluster(bind_joints, main_surf)
+        #mc.skinCluster(bind_joints, main_surf)
         pre_jnt = None
+
+        parjnts = ['01', '02', '03', '04']
+
+        #Build Feather :)
+        rot_offset_list = []
+        base_offsets = []
+        def_jnts = []
+        for guide in mainguides:
+            num = guide.split("_")[-2]
+            ee_guide = f'{prefix}_MainFeather_{num}_ee_guide'
+            #if side == 'R':
+                #y = mc.getAttr(ee_guide + ".translateY")
+                #mc.setAttr(ee_guide + ".translateY", -y)
+            
+            if mc.attributeQuery('parent_joint', node=guide, exists=True):
+                tempnum = mc.getAttr(f'{guide}.parent_joint')
+                root_num = parjnts[tempnum]
+            else:
+                root_num = '01'
+
+            obj = f'{prefix}_{root_num}_guide'
+            # Get the base name and generate joint name
+            base_name = obj.split('|')[-1].replace('_guide', '')
+            root_joint = f"{base_name}_bind_jnt"
+
+            basepos = mc.xform(guide, q=True, ws=True, t=True)
+            eepos = mc.xform(ee_guide, q=True, ws=True, t=True)
+            #if side == 'R':
+            #    eepos[0] = -eepos[0]  # mirror across X axis
+            #midpos = [basepos[i] + (eepos[i] - basepos[i]) * .5 for i in range(3)]
+            mid1pos = [basepos[i] + (eepos[i] - basepos[i]) * (1/3) for i in range(3)]
+            mid2pos = [basepos[i] + (eepos[i] - basepos[i]) * (2/3) for i in range(3)]
+            rot = mc.xform(guide, q=True, ws=True, ro=True)
+            mid1_guide = mc.spaceLocator(p=mid1pos, name=f"interp_locator{guide}")[0]
+            mid2_guide = mc.spaceLocator(p=mid2pos, name=f"interp_locator{guide}")[0]
+            mc.xform(mid1_guide, ws=True, ro=rot, t=mid1pos)
+            mc.xform(mid2_guide, ws=True, ro=rot, t=mid2pos)
+
+            #curlCont + aim loc
+            #add = [0, 0, 90]
+            main_rot = rot #[a + b for a, b in zip(rot, add)]
+            Main_Ctrl, Main_Group = UEface.build_basic_control( name=f'{prefix}_Feather_{num}', shape='ZTpoint', size=90.0, position=basepos, rotation=main_rot)
+            mc.select(clear = True)
+            aim_loc_off = mc.group(name=f'{prefix}_Featheraim_{num}_off', empty = True)
+            mc.select(clear = True)
+            aim_loc = mc.joint(name=f'{prefix}_Featheraim_{num}')
+            mc.select(clear = True)
+            mc.parent(aim_loc, aim_loc_off)
+            #aim_loc = mc.spaceLocator(p=basepos, name=f'{prefix}_Featheraim_{num}')[0]
+            mc.hide(aim_loc_off)
+            mc.xform(aim_loc_off, ws=True, ro=rot, t=basepos)
+            mc.orientConstraint(aim_loc, Main_Group, mo=True)
+            mc.parent(aim_loc_off, Main_Group, feather_grp)
+
+            aimmdZ = mc.createNode("multiplyDivide", name=f'{prefix}_{num}_FaimmdZ')
+            aimmdX = mc.createNode("multiplyDivide", name=f'{prefix}_{num}_FaimmdX') 
+
+            for pax in ['Z', 'X']:
+                for ax in ['X', 'Y', 'Z']:
+                    if ax == 'X':
+                        part = "mid1"
+                        if pax == 'Z':
+                            mult = .4
+                        else:
+                            mult = .5 
+                    elif ax == 'Y':
+                        part = "mid2"
+                        if pax == 'Z':
+                            mult = .1
+                        else:
+                            mult = .2
+                    else:
+                        part = 'ee'
+                        if pax == 'Z':
+                            mult = .05
+                        else:
+                            mult = .05
+                    mc.createNode("addDL", name=f'{prefix}_{num}_{pax}FaimADL{ax}')
+                    mc.connectAttr(f'{prefix}_{num}_Faimmd{pax}.output{ax}',  f'{prefix}_{num}_{pax}FaimADL{ax}.input1')
+                    mc.connectAttr(f'{Main_Ctrl}.rotate{pax}',  f'{prefix}_{num}_{pax}FaimADL{ax}.input2')
+                    mc.connectAttr(f'{aim_loc}.rotate{pax}', f'{prefix}_{num}_Faimmd{pax}.input1{ax}')
+                    mc.addAttr(Main_Ctrl, ln=f'{part}_Aim_{pax}_mult', dv=mult, k=True)
+                    mc.connectAttr(f'{Main_Ctrl}.{part}_Aim_{pax}_mult', f'{prefix}_{num}_Faimmd{pax}.input2{ax}')
+                    if pax == 'X':
+                        mc.setAttr(f'{Main_Ctrl}.translate{ax}', lock=True, channelBox=False)
+                        mc.setAttr(f'{Main_Ctrl}.scale{ax}', lock=True, channelBox=False)
+                    
+
+
+
+
+
+            basejnt, basectrl, basectrl_offset =UEface.Simple_joint_and_Control(
+                guide,
+                orient=True,
+                overwrite=True,
+                overwrite_name=f'{prefix}MainFeather_{num}_base',
+                scale=True,
+                check_side=True,
+                CTRL_Size=60,
+                JNT_Size=0.5
+            )
+            mid1jnt, mid1ctrl, mid1ctrl_offset =UEface.Simple_joint_and_Control(
+                mid1_guide,
+                orient=True,
+                overwrite=True,
+                overwrite_name=f'{prefix}MainFeather_{num}_mid1',
+                scale=True,
+                check_side=True,
+                CTRL_Size=60,
+                JNT_Size=0.5
+            )
+            mid2jnt, mid2ctrl, mid2ctrl_offset =UEface.Simple_joint_and_Control(
+                mid2_guide,
+                orient=True,
+                overwrite=True,
+                overwrite_name=f'{prefix}MainFeather_{num}_mid2',
+                scale=True,
+                check_side=True,
+                CTRL_Size=60,
+                JNT_Size=0.5
+            )
+            eejnt, eectrl, eectrl_offset =UEface.Simple_joint_and_Control(
+                ee_guide,
+                orient=True,
+                overwrite=True,
+                overwrite_name=f'{prefix}MainFeather_{num}_ee',
+                scale=True,
+                check_side=True,
+                CTRL_Size=60,
+                JNT_Size=0.5
+            )
+
+            split_joint = basejnt
+            split_joints: list[str] = [basejnt,mid1jnt,mid2jnt,eejnt]
+            #mc.addAttr(basejnt, longName="split_joints", niceName="Split Joints", dataType="string")
+            #value = f"['{basejnt}','{midjnt}','{eejnt}']"
+            #mc.setAttr(f'{basejnt}.split_joints', value, type='string')
+            mc.addAttr(split_joint, longName="split_joints", dataType="string")
+            mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
+
+            '''split_joints: list[str] = bind_joints
+                mc.addAttr(split_joint, longName="split_joints", dataType="string")
+                mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")'''
+
+            mc.pointConstraint(basectrl, Main_Group, mo=True)
+            mc.pointConstraint(basectrl, aim_loc_off, mo=True)
+            pre_jnt = None
+            for part in [guide, mid1_guide, mid2_guide, ee_guide]:
+                if part == guide: 
+                    trans = basepos
+                    nameing = 'base'
+                    offset = basectrl_offset
+                    ctrl = basectrl
+                    jnt = basejnt
+                    mdspot = 'Y'
+                elif part == mid1_guide:
+                    trans = mid1pos
+                    nameing = 'mid1'
+                    offset = mid1ctrl_offset
+                    ctrl = mid1ctrl
+                    jnt = mid1jnt
+                    mdspot = 'X'
+                elif part == mid2_guide:
+                    trans = mid2pos
+                    nameing = 'mid2'
+                    offset = mid2ctrl_offset
+                    ctrl = mid2ctrl
+                    jnt = mid2jnt
+                    mdspot = 'Y'
+                else:
+                    trans = eepos 
+                    nameing = 'ee'
+                    offset = eectrl_offset
+                    ctrl = eectrl
+                    jnt = eejnt
+                    mdspot = 'Z'
+                rot_offset = mc.group(empty=True, name=f'{prefix}_MainFeather_{num}_{nameing}_rotOffset')
+                mc.xform(rot_offset, ws=True, t=trans, ro=rot)
+                mc.parent(rot_offset, offset)
+                mc.parent(ctrl, rot_offset)
+                rot_offset_list.append(rot_offset)
+
+
+                if pre_jnt != None:
+                    mc.parent(jnt, pre_jnt)
+                    mc.parent(offset, pre_ctrl)
+                    pre_jnt = jnt
+                    pre_ctrl = ctrl
+                else:
+                    pre_jnt = jnt
+                    pre_ctrl = ctrl
+                    mc.parent(jnt,root_joint)
+                    mc.parent(offset,feather_grp)
+                if mdspot:
+                    mc.connectAttr(f'{prefix}_{num}_XFaimADL{mdspot}.output', f'{rot_offset}.rotateX')
+                    mc.connectAttr(f'{prefix}_{num}_ZFaimADL{mdspot}.output', f'{rot_offset}.rotateZ')
+                    mc.connectAttr(f'{Main_Ctrl}.rotateY', f'{rot_offset}.rotateY')
+
+            def_jnts.append(eejnt)
+            def_jnts.append(mid1jnt)
+            def_jnts.append(mid2jnt)
+            def_jnts.append(basejnt)
+            mc.delete(mid1_guide, mid2_guide)
+            #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_MainFeather_{num}_GEO', tsb=True)
+
+            mc.parentConstraint(root_joint, basectrl_offset, mo=True)
+            #mc.select(clear=True)
+            #mc.select(main_surf[0])
+            #mc.select(basectrl_offset, add=True)
+            #print(main_surf)
+            #mc.UVPin()
+            #for attr in ["rotateX", "rotateY", "rotateZ"]:
+            #    # Find any nodes driving this attribute
+            #    connections = mc.listConnections(f"{basectrl_offset}.{attr}", s=True, d=False, plugs=True)
+            #    if connections:
+            #        for conn in connections:
+            #            mc.disconnectAttr(conn, f"{basectrl_offset}.{attr}")
+            if side == 'R':
+                vect = -1
+            else:
+                vect = 1
+            mc.aimConstraint(
+                f'{prefix}_MainFeatherAim_{num}_jnt',
+                aim_loc,
+                aimVector=(0, vect, 0),
+                upVector=(0, 0, vect),
+                mo=False,
+                weight=1.0,
+                #worldUpVector = (1,0,0),
+                worldUpType="objectrotation", worldUpObject =f'{prefix}_MainAimUp{num}_{ctrlname}',
+                #worldUpType = 'None'
+            )
+
+
+        #sub_groups = UEwing.get_sub_groups(prefix)
+        #print(sub_groups)
+        #for sub in sub_groups:
+        #    subrot_offset_list, subbase_offsets, sub_aimjnt_list = UEwing.build_sub_feathers(prefix, sub, main_surf,)
+        #    rot_offset_list.extend(subrot_offset_list)
+        #    full_aimjnt_list.extend(sub_aimjnt_list)
+
+        pre_jnt = None
+        pre_ctrl = None
+        armjnts = []
+        armoffsets = []
+        armctrls = []
+        armcloses= []
+
+        #arm Logic
+        FKIKSwitch_pos = mc.xform(f'{prefix}_Close', q=True, ws=True, t=True)
+        FKIKSwitch_CTL, FKIKSwitch_GRP = UEface.build_basic_control(name=f'{prefix}_FKIKSwitch', shape='ZTgear', size=5.0, color_rgb=(1, 1, 0), position=FKIKSwitch_pos, rotation=(0, 0, 0))
+        mc.addAttr(FKIKSwitch_CTL, longName="FK_IK", attributeType="bool", keyable=True)
+        rev_node = mc.createNode("reverse", name=f"{prefix}IKReverse")
+        mc.connectAttr(f'{FKIKSwitch_CTL}.FK_IK', f'{rev_node}.inputX')
 
 
         #fk
@@ -866,9 +787,9 @@ class UEwing(UEface):
 
         #Clean Up Wing
 
-        mc.group(f'{prefix}_01_FK_JNT', f'{prefix}_01_IK_jnt', f'{prefix}_ikHandle', f'{prefix}_Main_loft', name=f'{prefix}_extraOffset_{grpname}')
+        mc.group(f'{prefix}_01_FK_JNT', f'{prefix}_01_IK_jnt', f'{prefix}_ikHandle', name=f'{prefix}_extraOffset_{grpname}') #f'{prefix}_Main_loft'
         mc.parent(f'{prefix}_Close_{grpname}', f'{prefix}_01_FK_{ctrlname}')
-        mc.delete(f'{prefix}_curve', f'{prefix}_curve1')
+        #mc.delete(f'{prefix}_curve', f'{prefix}_curve1')
         mc.parent(f'{prefix}_IK_Aim_{grpname}', f'{prefix}_IK_Root_{ctrlname}' )
         mc.parent(f'{prefix}_IK_EE_{grpname}', f'{prefix}_IK_Root_{ctrlname}' )
         mc.parent(f'{prefix}_Span_{grpname}', world=True)
@@ -903,11 +824,20 @@ class UEwing(UEface):
         mastergrp = mc.group(em=True, name =f'{prefix}')
         mc.parent( f'{prefix}_FK_{grpname}', f'{prefix}_IK_{grpname}', ctrl)
         mc.parent(f'{prefix}_feather_{grpname}', f'{prefix}_handle_{grpname}',f'{prefix}_upAim_{grpname}',f'{prefix}_FKIKSwitch_{grpname}', f'{prefix}_extraOffset_{grpname}', f'{prefix}_Span_{grpname}', f'{prefix}_aimcurve_{grpname}', ctrl_offset, mastergrp)
-        mc.parent(f'{prefix}_root_jnt',f'{prefix}_01_bind_jnt', jnt)
+        mc.parent(f'{prefix}_01_bind_jnt', jnt) #f'{prefix}_root_jnt'
         mc.parent(jnt, 'chest_M_JNT')
         mc.parentConstraint('chest_M_02_CTRL', ctrl_offset, mo=True)
         #mc.parentConstraint(ctrl,f'{prefix}_feather_{grpname}', mo=True)
         mc.parentConstraint(ctrl, f'{prefix}_Main_Feather_aim_01_{grpname}', mo=True)
         mc.hide(f'{prefix}_handle_{grpname}', f'{prefix}_extraOffset_{grpname}')
         mc.parent(mastergrp, 'RIG')
+
+        #try:
+        #    side = prefix.split("_")[-1]
+        #    #print(f'{side}MainFeathers')
+        #    mc.skinCluster(*def_jnts, f'feathers_{side}', toSelectedBones=True)
+        #    mc.skinCluster(*def_jnts, f'Feathers_{side}_High', toSelectedBones=True)
+        #    mc.skinCluster(*def_jnts, f'feathers_{side}_Low', toSelectedBones=True)
+        #except Exception as e:
+        #    print(e)
 

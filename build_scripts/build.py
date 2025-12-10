@@ -414,7 +414,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if hand.bendy_vis_attr is not None:
             for control in [arm.fk_ctrls[-1], arm.main_ctrl]:
                 mc.addAttr(control.ctrl, longName="handBendyVisibility", proxy=hand.bendy_vis_attr)
-                
+        
+        Fexpress = True if character in ['Bobo', 'Domingo'] else False
+
         if character == 'Luciana':
             leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
         else:
@@ -446,6 +448,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     in_piv=fs + "In",
                     out_piv=fs + "Out",
                     toe_roll_threshold=14,
+                    express=False
                 )
             else:
                 foot = rBuild.build_module(
@@ -458,6 +461,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     heel_piv=fs + "HeelPiv",
                     in_piv=fs + "In",
                     out_piv=fs + "Out",
+                    express=Fexpress
                 )
         fingers = []
         
@@ -525,7 +529,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         rb = rBuild.build_module(module_type='arbitrary', side='M', part='BellyHighM', guide_list=mc.getAttr('BellyHighM' + '.translate'), ctrl_scale=15, par_jnt='spine_M_02_JNT', par_ctrl='spine_M_02_JNT')
         for toe in ['Innertoe', 'Middletoe', 'Outertoe']:
             for side in ['L', 'R']:
-                toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=10, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT')
+                toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=10, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT', express=True)
     if character == 'Domingo':
         for toe in ['Innertoe', 'Middletoe', 'Outertoe']:
             for side in ['L', 'R']:
@@ -1343,7 +1347,15 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache',]:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
     if character == 'Luciana':
-        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye',]:
+        try:
+            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers', tsb=False) 
+            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_SecHigh', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_SecLow', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_TerHigh', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_TerLow', tsb=False)
+        except:
+            pass
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh''Feathers_TerLow']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
 
 
@@ -1532,6 +1544,14 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Luciana':
         mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
         mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
+        mc.setAttr("perspShape.nearClipPlane", 1)
+        mc.setAttr("perspShape.farClipPlane", 100000)
+
+
+
+
+
+
     print(f"\n{character} rig build complete.")
 
     try:

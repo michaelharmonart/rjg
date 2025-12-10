@@ -56,6 +56,8 @@ def Luciana_extras(skin_src, skin_trg_grp):
         mc.copySkinWeights(ss='skinCluster1', ds=g, surfaceAssociation='closestPoint', noMirror=True, )
         #rUtil.create_pxWrap([g, 'Rayden_UBM'])
 
+    
+
    
 
 def Luciana_misc_pvis(skin_src, skin_trg_grp):

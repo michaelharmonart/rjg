@@ -31,6 +31,7 @@ class Foot(rModule.RigModule):
         heel_piv=None,
         toe_piv=None,
         toe_roll_threshold: float = 0,
+        express=False,
     ):
         super(Foot, self).__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.in_piv = in_piv
