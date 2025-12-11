@@ -671,3 +671,14 @@ def add_attributes():
             mc.addAttr(obj, longName=attr, attributeType='enum', keyable=True, enumName=enum_values)
 
 add_attributes()
+
+
+
+
+###### mel // joint count
+SelectAllJoints;
+string $stuff[] = `ls -sl`;
+
+int $numbjoints = `size($stuff)`;
+
+print("Number of Joints in the scene: "+ $numbjoints +"\n");

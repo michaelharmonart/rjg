@@ -553,5 +553,7 @@ def _rebuild_mirrored_entry_recursive(entry, modX, modY, modZ):
 # Example usage:
 #mirror_graph_from_json(r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator_data.json", modX=-1, modY=-1, modZ=-1)
 rebuild_graph_from_json()
-mirror_rebuild_from_json_strict(r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator_data.json",
-                                modX=-1, modY=-1, modZ=-1)
+mirror_rebuild_from_json_strict(r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator_data.json",modX=-1, modY=-1, modZ=-1)
+#write_graph(filepath=r"G:/bobo/character/Rigs/Domingo/Poses/neckposeInterpolator_data.json")
+rebuild_graph_from_json(filepath=r"G:/bobo/character/Rigs/Domingo/Poses/neckposeInterpolator_data.json")
+                               
