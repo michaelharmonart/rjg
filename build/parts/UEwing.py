@@ -325,7 +325,11 @@ class UEwing(UEface):
             if autoconstrain and feathernum:
                 if i == 1:
                     mc.parentConstraint(f'main_{side}_{feathernum}_jnt', cluster_handle, mo=True)
-                elif i in [2, 3]:
+                elif i == 2:
+                    mc.parentConstraint(f'main_{side}_{feathernum}_jnt', cluster_handle, mo=True)
+                    mc.parentConstraint(f'mid_{side}_{feathernum}_jnt', cluster_handle, mo=True)
+                elif i == 3:
+                    mc.parentConstraint(f'aim_{side}_{feathernum}_jnt', cluster_handle, mo=True)
                     mc.parentConstraint(f'mid_{side}_{feathernum}_jnt', cluster_handle, mo=True)
                 else:
                     mc.parentConstraint(f'aim_{side}_{feathernum}_jnt', cluster_handle, mo=True)
@@ -622,7 +626,8 @@ class UEwing(UEface):
 
                     if pre_jnt != None:
                         mc.parent(jnt, pre_jnt)
-                        mc.parent(offset, pre_ctrl)
+                        mc.parentConstraint(pre_ctrl, offset, mo=True)
+                        mc.parent(offset,feather_grp)
                         pre_jnt = jnt
                         pre_ctrl = ctrl
                     else:
@@ -952,6 +957,7 @@ class UEwing(UEface):
                 JNT_Size=0.5,
                 bind=False
             )
+            #mc.addAttr()
             rot = mc.xform(guide, q=True, ws=True, ro=True)
             trans = mc.xform(guide, q=True, ws=True, t=True)
             close_offset = mc.group(empty=True, name=f'{prefix}_{number}_FK_ArmClose_offset')
