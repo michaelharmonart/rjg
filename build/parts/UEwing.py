@@ -311,7 +311,7 @@ class UEwing(UEface):
                 ctrl, offset = UEface.build_basic_control(
                     name=ctrl_name,
                     shape='ZTsphere',
-                    size=10.0,
+                    size=30.0,
                     color_rgb=(1, 1, 0),
                     position=pos,
                     rotation=(0, 0, 0)
@@ -534,7 +534,7 @@ class UEwing(UEface):
                     overwrite_name=f'{prefix}MainFeather_{num}_base',
                     scale=True,
                     check_side=True,
-                    CTRL_Size=60,
+                    CTRL_Size=50,
                     JNT_Size=0.5
                 )
 
@@ -545,7 +545,7 @@ class UEwing(UEface):
                     overwrite_name=f'{prefix}MainFeather_{num}_mid1',
                     scale=True,
                     check_side=True,
-                    CTRL_Size=60,
+                    CTRL_Size=50,
                     JNT_Size=0.5
                 )
                 mid2jnt, mid2ctrl, mid2ctrl_offset =UEface.Simple_joint_and_Control(
@@ -555,7 +555,7 @@ class UEwing(UEface):
                     overwrite_name=f'{prefix}MainFeather_{num}_mid2',
                     scale=True,
                     check_side=True,
-                    CTRL_Size=60,
+                    CTRL_Size=50,
                     JNT_Size=0.5
                 )
                 eejnt, eectrl, eectrl_offset =UEface.Simple_joint_and_Control(
@@ -565,7 +565,7 @@ class UEwing(UEface):
                     overwrite_name=f'{prefix}MainFeather_{num}_ee',
                     scale=True,
                     check_side=True,
-                    CTRL_Size=60,
+                    CTRL_Size=50,
                     JNT_Size=0.5
                 )
 

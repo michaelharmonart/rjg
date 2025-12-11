@@ -81,8 +81,8 @@ class SplineTail(rModule.RigModule, rFk.Fk):
                 ctrl_name = f"{prefix}_IK_{i:02}"
                 ctrl, offset = SplineTail.build_basic_control(
                     name=ctrl_name,
-                    shape='circle',
-                    size=1.0,
+                    shape='ZTsphere',
+                    size=10.0,
                     color_rgb=(1, 1, 0),
                     position=pos,
                     rotation=(0, 0, 0)
