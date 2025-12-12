@@ -318,6 +318,7 @@ class UEwing(UEface):
                 )
                 ctrl_list.append(ctrl)
                 offset_list.append(offset)
+                mc.parent(offset, f'{prefix}_feather_{grpname}')
 
                 # Parent cluster to control
                 mc.parentConstraint(ctrl, cluster_handle, mo=True)
@@ -338,6 +339,7 @@ class UEwing(UEface):
                     mc.xform(clusteroffset2, ws=True, t=pos, ro=rot)
                     mc.parent(clusteroffset, clusteroffset2)
                     mc.parent(cluster_handle, clusteroffset)
+                    mc.parent(clusteroffset2, f'{prefix}_handle_{grpname}' )
                     mc.parentConstraint(f'aim_{side}_{feathernum}_jnt', clusteroffset, mo=True)
             if finalclustertwist:
                 if i == 4:
@@ -455,6 +457,8 @@ class UEwing(UEface):
 
                 for newjnt in jntlist:
                     mc.connectAttr(f"{frac}.outputX", f"{newjnt}.scaleZ")
+
+        mc.parent(jntlist[0], f'{prefix}_net_{grpname}')
         
         return ik_handle, curve, ctrl_list, offset_list, jntlist
             
@@ -479,10 +483,11 @@ class UEwing(UEface):
 
         feather_grp = mc.group(em=True, name=f'{prefix}_feather_{grpname}')
         handle_grp = mc.group(em=True, name=f'{prefix}_handle_{grpname}')
-        upAim_grp = mc.group(em=True, name=f'{prefix}_upAim_{grpname}')
+        #upAim_grp = mc.group(em=True, name=f'{prefix}_upAim_{grpname}')
         mc.select(clear=True)
         fk_group = mc.group(em=True, name=f'{prefix}_FK_{grpname}')
         ik_group = mc.group(em=True, name=f'{prefix}_IK_{grpname}')
+        netgrp = mc.group(em=True, name=f'{prefix}_net_{grpname}')
 
         maincount, mainguides = UEwing.count_feather_guides(prefix = prefix, feather='MainFeather')
 
@@ -688,6 +693,8 @@ class UEwing(UEface):
                 mc.parentConstraint(featherjntlist[1], mid1ctrl_offset, mo=True)
                 mc.parentConstraint(featherjntlist[2], mid2ctrl_offset, mo=True)
                 mc.parentConstraint(featherjntlist[3], eectrl_offset, mo=True)
+
+
 
 
 
@@ -1304,6 +1311,8 @@ class UEwing(UEface):
         #mc.parentConstraint(ctrl, f'{prefix}_Main_Feather_aim_01_{grpname}', mo=True)
         mc.hide(f'{prefix}_handle_{grpname}', f'{prefix}_extraOffset_{grpname}')
         mc.parent(mastergrp, 'RIG')
+        mc.parent(netgrp, mastergrp)
+        mc.parentConstraint(bind_joints[0], netgrp, mo=True)
 
         #try:
         #    side = prefix.split("_")[-1]
