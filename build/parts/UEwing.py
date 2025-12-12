@@ -459,6 +459,7 @@ class UEwing(UEface):
                     mc.connectAttr(f"{frac}.outputX", f"{newjnt}.scaleZ")
 
         mc.parent(jntlist[0], f'{prefix}_net_{grpname}')
+        mc.setAttr(f'{jntlist[0]}.template', 1)
         
         return ik_handle, curve, ctrl_list, offset_list, jntlist
             
