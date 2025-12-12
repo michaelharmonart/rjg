@@ -221,7 +221,7 @@ class UEwing(UEface):
 
 
     @staticmethod
-    def build_stretchy_spline(source='GuideList', offsetname=None, inputlist = [], inputcurve = None, buildControls=True, guidecurve=None, feathernum=None, Stretch=True, StretchControl = None, prefix=None, autoconstrain=True ):
+    def build_stretchy_spline(source='GuideList', offsetname=None, inputlist = [], inputcurve = None, buildControls=True, guidecurve=None, feathernum=None, Stretch=True, StretchControl = None, prefix=None, autoconstrain=True, finalclustertwist=False, featherrot=[0,0,0] ):
         #'GuideList', 'Curve', 'jointlist'
         ctrlname, grpname = UEwing.get_namestruc(prefix)
         parts = prefix.split("_")   # ["wing", "L"]
@@ -332,7 +332,51 @@ class UEwing(UEface):
                     mc.parentConstraint(f'aim_{side}_{feathernum}_jnt', cluster_handle, mo=True)
                     mc.parentConstraint(f'mid_{side}_{feathernum}_jnt', cluster_handle, mo=True)
                 else:
-                    mc.parentConstraint(f'aim_{side}_{feathernum}_jnt', cluster_handle, mo=True)
+                    clusteroffset = mc.group(empty=True)
+                    clusteroffset2 = mc.group(empty=True)
+                    mc.xform(clusteroffset, ws=True, t=pos, ro=rot)
+                    mc.xform(clusteroffset2, ws=True, t=pos, ro=rot)
+                    mc.parent(clusteroffset, clusteroffset2)
+                    mc.parent(cluster_handle, clusteroffset)
+                    mc.parentConstraint(f'aim_{side}_{feathernum}_jnt', clusteroffset, mo=True)
+            if finalclustertwist:
+                if i == 4:
+                    mc.addAttr(StretchControl, ln='twist', at='double', k=True)
+                    mc.addAttr(StretchControl, ln='roll', at='double', k=True)
+                    #mc.connectAttr(f'{StretchControl}.roll', f'{ik_handle}.roll')
+                    mc.connectAttr(f'{StretchControl}.twist', f'{ik_handle}.twist')
+                    rolladl = mc.createNode("addDL", name=f"{ik_handle}_rolladl")
+                    rotadl = mc.createNode("addDL", name=f"{ik_handle}_rotadl")
+                    mc.addAttr(StretchControl, ln='autoroll_mult', at='double', k=True)
+                    try:
+                        mod = mc.getAttr(f"Wing_{side}_MainFeather_{num}_guide.autoroll_mult")
+                    except:
+                        mod = 0.5
+
+                    if side == 'R':
+                        mod = mod * -1
+                    flipnode = mc.createNode("multiplyDivide", name=f"{ik_handle}_rollflip")
+                    #autoattr = f'{flipnode}.outputX'
+                    mc.connectAttr(f"{clusteroffset}.rotateX", f'{flipnode}.input1X')
+                    mc.connectAttr(f"{clusteroffset}.rotateZ", f'{flipnode}.input1Z')
+                    mc.connectAttr(f"{flipnode}.outputX", f'{rotadl}.input1')
+                    mc.connectAttr(f"{flipnode}.outputZ", f'{rotadl}.input2')
+                    autoattr = f'{rotadl}.output'
+                    
+
+                    mc.connectAttr(f'{StretchControl}.autoroll_mult', f'{flipnode}.input2X')
+                    mc.connectAttr(f'{StretchControl}.autoroll_mult', f'{flipnode}.input2Z')
+                    #mc.setAttr( f'{flipnode}.input2X', mod)
+                    #mc.setAttr( f'{flipnode}.input2Z', mod)
+                    #else:
+                    #    #autoattr = f"{clusteroffset}.rotateX"
+                    #    #mc.connectAttr(f"{clusteroffset}.rotateX", f'{rotadl}.input1')
+                    #    #mc.connectAttr(f"{clusteroffset}.rotateZ", f'{rotadl}.input2')
+                    #    #autoattr = f'{rotadl}.output'
+                        
+                    mc.connectAttr(autoattr, f'{rolladl}.input1')
+                    mc.connectAttr(f'{StretchControl}.roll', f'{rolladl}.input2')
+                    mc.connectAttr(f'{rolladl}.output', f'{ik_handle}.roll')
 
 
                 
@@ -529,7 +573,7 @@ class UEwing(UEface):
                     mc.setAttr(f'{Main_Ctrl}.scale{ax}', lock=True, channelBox=False)
 
                 feather_list = [guide, mid1_guide, mid2_guide, ee_guide, aim_guide]
-                featherik_handle, feathercurve, featherctrl_list, featheroffset_list, featherjntlist = UEwing.build_stretchy_spline(source='GuideList', offsetname=None, inputlist = feather_list, inputcurve = None, buildControls=False, guidecurve=None, feathernum=num, Stretch=True, StretchControl = Main_Ctrl, prefix=prefix, autoconstrain=True )
+                featherik_handle, feathercurve, featherctrl_list, featheroffset_list, featherjntlist = UEwing.build_stretchy_spline(source='GuideList', offsetname=None, inputlist = feather_list, inputcurve = None, buildControls=False, guidecurve=None, feathernum=num, Stretch=True, StretchControl = Main_Ctrl, prefix=prefix, autoconstrain=True, finalclustertwist=True, featherrot = rot)
 
                 basejnt, basectrl, basectrl_offset =UEface.Simple_joint_and_Control(
                     guide,
@@ -626,7 +670,7 @@ class UEwing(UEface):
 
                     if pre_jnt != None:
                         mc.parent(jnt, pre_jnt)
-                        mc.parentConstraint(pre_ctrl, offset, mo=True)
+                        #mc.parentConstraint(pre_ctrl, offset, mo=True)
                         mc.parent(offset,feather_grp)
                         pre_jnt = jnt
                         pre_ctrl = ctrl
@@ -635,21 +679,31 @@ class UEwing(UEface):
                         pre_ctrl = ctrl
                         mc.parent(jnt,root_joint)
                         mc.parent(offset,feather_grp)
-                    if mdspot: #AddSesitivity
-                        mc.connectAttr(f'{Main_Ctrl}.rotateX', f'{rot_offset}.rotateX')
-                        mc.connectAttr(f'{Main_Ctrl}.rotateY', f'{rot_offset}.rotateY')
-                        mc.connectAttr(f'{Main_Ctrl}.rotateZ', f'{rot_offset}.rotateZ')
+                    #if mdspot: #AddSesitivity
+                    #    mc.connectAttr(f'{Main_Ctrl}.rotateX', f'{rot_offset}.rotateX')
+                    #    mc.connectAttr(f'{Main_Ctrl}.rotateY', f'{rot_offset}.rotateY')
+                    #    mc.connectAttr(f'{Main_Ctrl}.rotateZ', f'{rot_offset}.rotateZ')
 
-                mc.parentConstraint(featherjntlist[0], basectrl_offset)
-                mc.parentConstraint(featherjntlist[1], mid1ctrl_offset)
-                mc.parentConstraint(featherjntlist[2], mid2ctrl_offset)
-                mc.parentConstraint(featherjntlist[3], eectrl_offset)
+                mc.parentConstraint(featherjntlist[0], basectrl_offset, mo=True)
+                mc.parentConstraint(featherjntlist[1], mid1ctrl_offset, mo=True)
+                mc.parentConstraint(featherjntlist[2], mid2ctrl_offset, mo=True)
+                mc.parentConstraint(featherjntlist[3], eectrl_offset, mo=True)
+
+
 
                 def_jnts.append(eejnt)
                 def_jnts.append(mid1jnt)
                 def_jnts.append(mid2jnt)
                 def_jnts.append(basejnt)
                 mc.delete(mid1_guide, mid2_guide)
+
+                for i, bind_jnt in enumerate(bind_joints):
+                    main   = mainoffset_list[i]
+                    mid    = midoffset_list[i]
+                    aim    = aimoffset_list[i]
+                    mc.parentConstraint(bind_jnt, main, mo=True)
+                    mc.parentConstraint(bind_jnt, mid, mo=True)
+                    mc.parentConstraint(bind_jnt, aim, mo=True)
 
             
 

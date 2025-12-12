@@ -1355,7 +1355,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_TerLow', tsb=False)
         except:
             pass
-        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh''Feathers_TerLow']:
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
 
 
