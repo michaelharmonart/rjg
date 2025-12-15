@@ -37,12 +37,15 @@ def Gretchen_extras(skin_src, skin_trg_grp):
 
     sk_g = []
     
-    geo = ['shirtlow', 'pantslow', 'bootslow', 'gloveslow', 'shirtextras', 'beltextras']
+    geo = ['shirtlow', 'pantslow', 'bootslow', 'gloveslow', 'beltextras'] #'shirtextras', 'beltextras']
     
     geohead = ['bandanna', 'RightCornea', 'RightEye', 'RightPupil', 'LeftEye', 'LeftCornea', 'topteeth', 'tounge',
     'LeftPupil', 'topeyelashes', 'bottomlash', 'eyebrows', 'hair', 'earrings', 'lenses', 'glasses1', 'frame', 'hinge', 'bottomteeth',]
+
+    pinjnts = ["ButtonPin02_JNT", 'ButtonPin01_JNT', 'CollarPin01_JNT', 'CollarPin02_JNT']
+    mc.skinCluster(*pinjnts, 'shirtextras', tsb=True)
     
-    #buttons = ['button3','button', 'thread1', 'thread']
+    #buttons = ['button3','button', 'thread1', 'thread'] ButtonPin02_JNT, ButtonPin01_JNT, CollarPin01_JNT, CollarPin02_JNT
 
     #belt_parts = ['loopleather1', 'buckle2', 'buckle']
 
@@ -117,8 +120,25 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     mc.setAttr(f"{deformer2}.smoothingStep", 0.1)
     mc.setAttr(f'{deformer2}.pinBorderVertices', 0)
 
+    print('here')
 
     #reverse chest twist
+    mc.addAttr('Chest_Offset_CTRL', ln='CounterTwist_mult', at='double', dv=-.5, k=True)
+
+    addnode = mc.createNode('plusMinusAverage', name='counterTwistPMA')
+
+    jntlist = ['spine_M_01_JNT', 'spine_M_02_JNT', 'spine_M_03_JNT', 'spine_M_04_JNT', 'spine_M_05_JNT', 'chest_M_JNT']
+
+    for i, jnt in enumerate(jntlist):
+        mc.connectAttr(f'{jnt}.rotateZ', f'{addnode}.input1D[{i}]')
+    
+    mdnode = mc.createNode('multiplyDivide', name='counterTwistMD')
+
+    mc.connectAttr(f'{addnode}.output1D', f'{mdnode}.input1X')
+    mc.connectAttr('Chest_Offset_CTRL.CounterTwist_mult', f'{mdnode}.input2X')
+    mc.connectAttr(f'{mdnode}.outputX', 'Chest_Offset_CTRL_OFF_GRP.rotateZ')
+
+
 
 
     

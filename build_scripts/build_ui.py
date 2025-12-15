@@ -95,7 +95,7 @@ class RigBuildUI(QtWidgets.QDialog):
                 "ep" : f"{groups}/bobo/character/Rigs/Gretchen/Gretchen_Extras.mb",
                 "cp" : f"{groups}/bobo/character/Rigs/Gretchen/Controls/Gretchen_control_curves.json",
                 "sp" : f"{groups}/bobo/character/Rigs/Gretchen/Weights/Gretchen_Weights_22.json", 
-                "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose20.pose",
+                "pp" : f"{groups}/bobo/character/Rigs/Gretchen/Poses/GretchenPose21.pose",
                 "im" : f"{groups}/bobo/character/Rigs/Rig_Icon/Gretchen.jpg",
             },
             "Susaka" : {

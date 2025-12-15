@@ -511,6 +511,17 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         fingers.append(thumb) 
 
         if character == "Gretchen":
+            import rjg.build.parts.pin as rPin
+            if fs == 'Left':
+                for guide in ['ButtonPin01', 'ButtonPin02', 'CollarPin01', 'CollarPin02']:
+                    rPin.build_pin_part(
+                        geo_to_pin='shirt1',
+                        guide=guide,
+                        pintype='UVpin',
+                        parjnt='chest_M_JNT')
+
+
+
             if fs == 'Left':
                 side = 'L'
             else:
@@ -533,7 +544,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Domingo':
         for toe in ['Innertoe', 'Middletoe', 'Outertoe']:
             for side in ['L', 'R']:
-                toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=3, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT')
+                toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=3, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT', express=True)
         for side in ['L', 'R']:
             backtoe = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_Backtoe', guide_list=f'{side}_Backtoe', ctrl_scale=3, par_jnt=f'foot_{side}_01_JNT', par_ctrl=f'foot_{side}_01_switch_JNT')
             #for num in ['01', '02', '03','04', '06', '07', '08',]:

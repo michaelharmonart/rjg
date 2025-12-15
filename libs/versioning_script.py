@@ -55,3 +55,9 @@ else:
             for control in ["leg_L_RIG_GRP", "leg_R_RIG_GRP"]:
                 version_attribute(f"{rig_namespace}{control}.hipTwistDistribute", 0)
             update_version(5)
+        if scene_rig_version < 6:
+            #Gretchen 
+            if rig_name = 'Gretchen'
+                for control in ["Chest_Offset_CTRL"]:
+                    version_attribute(f"{rig_namespace}{control}.CounterTwist_mult", 0)
+            update_version(6)

@@ -39,6 +39,7 @@ class Foot(rModule.RigModule):
         self.heel_piv = heel_piv
         self.toe_piv = toe_piv
         self.toe_roll_threshold: float = toe_roll_threshold
+        self.express = express
 
         if not self.toe_piv:
             self.toe_piv = self.guide_list[-1]
@@ -110,6 +111,22 @@ class Foot(rModule.RigModule):
         mc.connectAttr(self.blend_chain.switch.attr, rev + '.inputX')
         mc.connectAttr(rev + '.outputX', self.main_ctrl.top + '.visibility')
         mc.connectAttr(self.blend_chain.switch.attr, fk.fk_ctrls[0].top + '.visibility')
+
+        if self.express:
+            if self.side == 'L':
+                longside = 'Left'
+            else:
+                longside = 'Right'
+            self.foot_express = rCtrl.Control(parent=self.control_grp, shape="square", side=None, suffix='CTRL', name=f'{self.base_name}_express', axis='y', group_type='main', rig_type='primary', translate=f'{longside}Express', rotate=f'{longside}Express', ctrl_scale=self.ctrl_scale)
+            self.foot_express.tag_as_controller()
+            mc.addAttr(self.foot_express.ctrl, longName='Falloff', attributeType='float', min=0.0, max=10.0, defaultValue=5.0, keyable=True)
+            mc.createNode('remapValue', name=f"{self.foot_express.ctrl}_HIGHER")
+            mc.setAttr(f"{self.foot_express.ctrl}_HIGHER.inputMax", 7.5)
+            mc.createNode('remapValue', name=f"{self.foot_express.ctrl}_LOWER")
+            mc.setAttr(f"{self.foot_express.ctrl}_LOWER.inputMax", 10)
+            mc.setAttr(f"{self.foot_express.ctrl}_LOWER.inputMin", 2.5)
+            mc.connectAttr(f'{self.foot_express.ctrl}.Falloff', f"{self.foot_express.ctrl}_HIGHER.inputValue")
+            mc.connectAttr(f'{self.foot_express.ctrl}.Falloff', f"{self.foot_express.ctrl}_LOWER.inputValue")
 
 
     def add_foot_attrs(self):
@@ -239,3 +256,6 @@ class Foot(rModule.RigModule):
 
         switch_attr = 'leg' + self.side + '_IKFK'
         rAttr.Attribute(node=self.part_grp, type='plug', value=[switch_attr], name='switchRigPlugs', children_name=['ikFkSwitch'])
+        
+        if self.express:
+            mc.parentConstraint(f'foot_' + self.side + '_03_switch_JNT', self.foot_express.top)
