@@ -349,7 +349,7 @@ class UEwing(UEface):
                     mc.connectAttr(f'{StretchControl}.twist', f'{ik_handle}.twist')
                     rolladl = mc.createNode("addDL", name=f"{ik_handle}_rolladl")
                     rotadl = mc.createNode("addDL", name=f"{ik_handle}_rotadl")
-                    mc.addAttr(StretchControl, ln='autoroll_mult', at='double', k=True)
+                    mc.addAttr(StretchControl, ln='autoroll_mult', at='double', k=False)
                     try:
                         mod = mc.getAttr(f"Wing_{side}_MainFeather_{num}_guide.autoroll_mult")
                     except:
@@ -638,6 +638,7 @@ class UEwing(UEface):
                 mc.pointConstraint(basectrl, Main_Group, mo=True)
                 #mc.pointConstraint(basectrl, aim_loc_off, mo=True)
                 pre_jnt = None
+                pre_ctrl = None
                 for part in [guide, mid1_guide, mid2_guide, ee_guide]:
                     if part == guide: 
                         trans = basepos
@@ -689,6 +690,8 @@ class UEwing(UEface):
                     #    mc.connectAttr(f'{Main_Ctrl}.rotateX', f'{rot_offset}.rotateX')
                     #    mc.connectAttr(f'{Main_Ctrl}.rotateY', f'{rot_offset}.rotateY')
                     #    mc.connectAttr(f'{Main_Ctrl}.rotateZ', f'{rot_offset}.rotateZ')
+
+                    #IF i want to do a switch it needs to be a on or off (no blending), then it will pre to post 
 
                 mc.parentConstraint(featherjntlist[0], basectrl_offset, mo=True)
                 mc.parentConstraint(featherjntlist[1], mid1ctrl_offset, mo=True)
