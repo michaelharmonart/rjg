@@ -703,6 +703,10 @@ class DomingoFeathers(UEface):
                         mc.parentConstraint(f'fingerPinky_{side}_04_JNT', aim, mo=True)
 
 
+        mc.parent(module_grp_name, 'RIG')
+        mc.parent(feather_grp, handle_grp, module_grp_name)
+        mc.hide(handle_grp)
+
             
 
             

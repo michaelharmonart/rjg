@@ -258,6 +258,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2,)
     if character == 'Domingo':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2,)
+        highcombparent = 'head_M_JNT'
+        lowcombparent = 'head_M_JNT'
+        combbind = ['head_M_JNT']
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
@@ -286,7 +289,31 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             from rjg.build.parts.UEfaceconnect import UEfaceconnect
             faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1, custom='Domingo')
             faceconnect.build() 
+            highcombparent = 'UpperHead_JNT'
+            lowcombparent = 'LowerHead_JNT'
+            combbind.append(highcombparent)
+            combbind.append(lowcombparent)
 
+
+        from rjg.build.parts.comb import comb
+        for a in ['A', 'B', 'C', 'D', 'E', 'F']:
+            guidelist = []
+            if a == 'A':
+                seg = 6
+            else:
+                seg = 4
+            for i in range(1, seg + 1):
+                guidelist.append(f'Comb{a}_0{i}')
+            if a in ['E', 'F']:
+                comb_inst = comb(inputlist=guidelist, parent=lowcombparent)
+            else:
+                comb_inst = comb(inputlist=guidelist, parent=highcombparent)
+            tempbind = comb_inst.build()
+
+            for jnt in tempbind:
+                combbind.append(jnt)
+
+        mc.skinCluster(*combbind, 'comb', tsb=True)
 
     if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy', 'Drummer']:
         for side in ['L', 'R']:
@@ -850,11 +877,19 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.parent('root_M_JNT', 'faceRoot_JNT', 'root_root_JNT')
 
             # look spaceswitch
-            mc.select('head_M_01_CTRL', 'Eyes_ctrl')
+            mc.select('head_M_01_CTRL', 'Glasses_ctrl')
             spsw.run()
-            mc.addAttr('Eyes_ctrl.spaceSwitch', e=True, enumName='world:head:')
-            mc.setAttr('Eyes_ctrl.spaceSwitch', 1)
-            mc.parent('Eyes_ctrl_space_switch_GRP', 'RIG')
+            mc.addAttr('Glasses_ctrl.spaceSwitch', e=True, enumName='world:head:')
+            mc.setAttr('Glasses_ctrl.spaceSwitch', 1)
+            mc.parent('Glasses_ctrl_space_switch_GRP', 'RIG')
+
+            # glasses spaceswitch
+            mc.select('head_M_01_CTRL', 'Glasses_ctrl')
+            spsw.run()
+            mc.addAttr('Glasses_ctrl.spaceSwitch', e=True, enumName='world:head:')
+            mc.setAttr('Glasses_ctrl.spaceSwitch', 1)
+            mc.parent('Glasses_ctrl_space_switch_GRP', 'RIG')
+
 
             # fix extra face skin
             '''try:

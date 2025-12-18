@@ -447,7 +447,7 @@ class UEwing(UEface):
                 mc.setAttr(f"{frac}.operation", 2)
 
                 # Connect inputs
-                mc.connectAttr(f"{postci}.arcLengtht", f"{frac}.input1X", force=True)
+                mc.connectAttr(f"{postci}.arcLength", f"{frac}.input1X", force=True)
                 mc.connectAttr(f"{preci}.arcLength", f"{frac}.input2X", force=True) 
 
                 #md = mc.createNode("multiplyDivide", name=f"{curve}_MD")

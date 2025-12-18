@@ -38,11 +38,11 @@ def Domingo_extras(skin_src, skin_trg_grp, face):
     sk_g = []
     if face:
         geo = [
-            'belt', 'mustache', 'vest', 'tail', 'comb', 'beard', 'buckle'
+            'belt', 'mustache', 'vest', 'tail', 'beard', 'buckle'
         ]
     else:
         geo = [
-            'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle'
+            'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle'
         ]
 
     #rUtil.create_pxWrap('Shirt', 'Pants', 'Gretchen_UBM')
