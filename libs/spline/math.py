@@ -73,7 +73,8 @@ def generate_knots(count: int, degree: int = 3, periodic=False) -> list[float]:
     Returns:
         list: A list of knot values. (aka knot vector)
     """
-
+    if count <= degree:
+        raise ValueError(f"Curves of degree {degree} require at least {degree + 1} CVs.")
     if periodic:
         knots = [i for i in range(count + degree + 1)]
     else:
