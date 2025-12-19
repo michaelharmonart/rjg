@@ -105,9 +105,14 @@ class comb(UEface):
                     mc.parent(jnt, prejnt)
                 else:
                     mc.parent(jnt, self.parent)
+                    split_joint = jnt
                 
                 prejnt = jnt
                 prepos = pos
+
+        split_joints: list[str] = bindjnts
+        mc.addAttr(split_joint, longName="split_joints", dataType="string")
+        mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
 
         #FK
 
@@ -200,7 +205,7 @@ class comb(UEface):
 
             masterikctrl, masterikoffset = UEface.build_basic_control(
             name=f'{self.inputlist[0]}_IK',
-            shape='ZTsphere',
+            shape='square',
             size=1.0,
             color_rgb=(1, 1, 0),
             position=pos,

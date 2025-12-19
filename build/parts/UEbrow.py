@@ -130,6 +130,20 @@ class UEbrow(UEface):
 
         )
 
+
+        if mc.objExists(f'{prefix}_Crease'):
+            guide = f'{prefix}_Crease'
+            creasejnt, creasectrl, creaseoffset = UEface.Simple_joint_and_Control(
+                guide=guide,
+                orient=False,
+                CTRL_Size=.5,
+                JNT_Size=0.4,
+                check_side=True)
+            
+            side = prefix.split('_')[-1]  # "L"
+            
+            mc.parentConstraint(f'{prefix}_Inner_{side}_CTRL', creaseoffset, mo=True)
+
         # Parent offset groups under master
         for _, offset in io_ctrls:
             mc.parent(offset, master_ctrl)
@@ -139,5 +153,8 @@ class UEbrow(UEface):
         mc.group(f'{prefix}_Brow_ribbon', f'{prefix}_01_{side}_CTRL_CNST_GRP', f'{prefix}_02_{side}_CTRL_CNST_GRP', f'{prefix}_03_{side}_CTRL_CNST_GRP', f'{prefix}_04_{side}_CTRL_CNST_GRP', f'{prefix}_05_{side}_CTRL_CNST_GRP', f'{prefix}_01_Major_JNT', f'{prefix}_02_Major_JNT', f'{prefix}_Inner_major_JNT', f'{prefix}_Outer_major_JNT',  name=f'{prefix}_extras_offset_grp')
         mc.parent(f'{prefix}_extras_offset_grp', "RIG")
         mc.hide(f'{prefix}_Inner_major_JNT', f'{prefix}_01_Major_JNT', f'{prefix}_02_Major_JNT', f'{prefix}_Outer_major_JNT', f'{prefix}_Brow_ribbon')
+        if mc.objExists(f'{prefix}_Crease'):
+            mc.parent(creaseoffset, f'{prefix}_extras_offset_grp')
+
 #        for object in [f'{prefix}_Brow_ribbon', f'{prefix}_01_{side}_CTRL_CNST_GRP', f'{prefix}_02_{side}_CTRL_CNST_GRP', f'{prefix}_03_{side}_CTRL_CNST_GRP', f'{prefix}_04_{side}_CTRL_CNST_GRP', f'{prefix}_05_{side}_CTRL_CNST_GRP', f'{prefix}_01_Major_JNT', f'{prefix}_02_Major_JNT', f'{prefix}_Inner_major_JNT', f'{prefix}_Outer_major_JNT']:
 #            mc.parent(object, f'{prefix}_extras_offset_grp')

@@ -24,27 +24,45 @@ class UEstache(UEface):
 
     def build(self):
         prefix = UEface.get_prefix_from_group(self.grp_name)
+
+        subgrp = mc.group(empty=True, name=f'{prefix}_subgrp')
+        maingrp = mc.group(empty=True, name=f'{prefix}_M')
+        mc.parent(subgrp, maingrp)
+        mc.parent(maingrp, "RIG")
         
         main_jnt, main_ctrl, main_offset = UEface.Simple_joint_and_Control(
             guide='Stache_M_01',
             overwrite=True,
-            overwrite_name=f'Stache_M_01',
+            overwrite_name='Stache_M_01_Major',
             orient=True,
             CTRL_Size=.5,
             JNT_Size=0.5,
         )
+
+        mc.parent(main_offset,main_jnt, maingrp)
+        mc.hide(main_jnt)
+
+        mainsub_jnt, mainsub_ctrl, mainsub_offset = UEface.Simple_joint_and_Control(
+            guide='Stache_M_01',
+            orient=True,
+            CTRL_Size=.5,
+            JNT_Size=0.5,
+        )
+        mc.parent(mainsub_offset, subgrp)
+
+        mc.parentConstraint(main_ctrl, mainsub_offset)
+
         for side in ['L', 'R']:
-            guidelist = []
+            guidelist = [f'Stache_{side}_03', f'Stache_{side}_06']
             prejnt = None
             prectrl = None
-            for i in range(2, self.Sguide_num + 1):
-                guidelist.append(f"Stache_{side}_{i:02d}")
+            jntlist = [main_jnt]
 
             for guide in guidelist:
                 sub_jnt, sub_ctrl, sub_offset = UEface.Simple_joint_and_Control(
                         guide=guide,
                         overwrite=True,
-                        overwrite_name=guide,
+                        overwrite_name=f'{guide}_Major',
                         orient=True,
                         CTRL_Size=.5,
                         JNT_Size=0.5,)
@@ -60,11 +78,88 @@ class UEstache(UEface):
                     prejnt=sub_jnt
                     prectrl=sub_ctrl
 
+                jntlist.append(sub_jnt)
+
+        
+            offsetlist = []
+            guidelist = []
+            for i in range(2, self.Sguide_num + 1):
+                guidelist.append(f"Stache_{side}_{i:02d}")
+
+            upper_curve = UEface.build_curve(guidelist, prefix + '_Upper')
+            mc.xform(upper_curve, ws=False, t=(0, 1, 0))
+            
+            lower_curve = UEface.build_curve(guidelist, prefix + '_Lower')
+            mc.xform(lower_curve, ws=False, t=(0, -1, 0))
+
+            loft_surface = mc.loft(upper_curve, lower_curve, ch=True, u=True, c=False, ar=True, d=3, ss=1, rn=False, po=0)[0]
+            loft_surface = mc.rename(loft_surface, f'Stache_{side}_ribbon')
+            mc.parent(loft_surface, maingrp)
+            mc.hide(loft_surface)
+            mc.delete(upper_curve, lower_curve)
+
+            mc.select([loft_surface] + jntlist)
+            mc.skinCluster(tsb=True)
+                
+
+
+            for guide in guidelist:
+                sub_jnt, sub_ctrl, sub_offset = UEface.Simple_joint_and_Control(
+                        guide=guide,
+                        orient=True,
+                        CTRL_Size=.5,
+                        JNT_Size=0.5,)
+                offsetlist.append(sub_offset)
+
+                mc.parent(sub_jnt, mainsub_jnt)
+                mc.parent(sub_offset, subgrp)
+
+                mc.select(clear=True)
+                mc.select(loft_surface)
+                mc.select(sub_offset, add=True)
+                mc.UVPin()
+
+
         if self.beard:
             guidelist = []
+            jntlist = []
             prejnt = None
             for i in ['01', '02', '03']:
                 guidelist.append(f"Beard_M_{i}")
+
+                if i in ['01', '03']:
+                    guide = f"Beard_M_{i}"
+                    maj_jnt, maj_ctrl, maj_offset = UEface.Simple_joint_and_Control(
+                        guide=guide,
+                        overwrite=True,
+                        overwrite_name=f"{guide}_Major",
+                        orient=True,
+                        CTRL_Size=.5,
+                        JNT_Size=0.5,)
+                    mc.parent(maj_jnt, maj_offset, maingrp)
+                    mc.hide(maj_jnt)
+                    jntlist.append(maj_jnt)
+                    
+
+
+
+
+            upper_curve = UEface.build_curve(guidelist, prefix + '_Upper')
+            mc.xform(upper_curve, ws=False, t=(1, 0, 0))
+            
+            lower_curve = UEface.build_curve(guidelist, prefix + '_Lower')
+            mc.xform(lower_curve, ws=False, t=(-1, 0, 0))
+
+            loft_surface = mc.loft(upper_curve, lower_curve, ch=True, u=True, c=False, ar=True, d=3, ss=1, rn=False, po=0)[0]
+            loft_surface = mc.rename(loft_surface, f'Beard_{side}_ribbon')
+            mc.parent(loft_surface, maingrp)
+            mc.hide(loft_surface)
+            mc.delete(upper_curve, lower_curve)
+
+            mc.select([loft_surface] + jntlist)
+            mc.skinCluster(tsb=True)
+
+
             for guide in guidelist:
                 sub_jnt, sub_ctrl, sub_offset = UEface.Simple_joint_and_Control(
                         guide=guide,
@@ -76,12 +171,19 @@ class UEstache(UEface):
 
                 if prejnt is None:
                     prejnt=sub_jnt
-                    prectrl=sub_ctrl
                 else:
                     mc.parent(sub_jnt, prejnt)
-                    mc.parent(sub_offset, prectrl)
                     prejnt=sub_jnt
-                    prectrl=sub_ctrl
+                
+                mc.parent(sub_offset, subgrp)
+
+                mc.select(clear=True)
+                mc.select(loft_surface)
+                mc.select(sub_offset, add=True)
+                mc.UVPin()
+
+
+
 
 
 

@@ -203,6 +203,12 @@ class UEfaceconnect(UEface):
             for side in ['L', 'R']:
                 mc.pointConstraint('LowerLip_M_M_CTRL_CNST_GRP', f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_CNST_GRP', mo=True)
                 mc.pointConstraint(loc, f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_CNST_GRP', mo=True)
+                mc.parentConstraint(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', f'NLFold_{side}_{side}_CTRL_CNST_GRP', mo=True)
+
+            mc.parentConstraint('UpperHead_M_CTRL', 'Cheek_L_NLFold_02_Major_jnt', mo=True)
+            mc.parentConstraint('UpperHead_M_CTRL', 'Cheek_R_NLFold_02_Major_jnt', mo=True)
+            mc.parentConstraint('Jaw_M_root_M_CTRL', 'Cheek_L_NLFold_05_Major_jnt', mo=True)
+            mc.parentConstraint('Jaw_M_root_M_CTRL', 'Cheek_R_NLFold_05_Major_jnt', mo=True)
 
             mc.parent(loc, 'LowerHead_M_CTRL')
 
@@ -237,10 +243,18 @@ class UEfaceconnect(UEface):
 
             # Connect reverse output to the root weight
             mc.connectAttr(f"{rev}.outputX", f"{constraint_name}.{root_ctrl}W1", f=True)
-            mc.parentConstraint('LowerHead_M_CTRL', 'Stache_M_01_M_CTRL_CNST_GRP', mo=True)
-            mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_01_M_CTRL_CNST_GRP', mo=True)  
-            mc.parent('Stache_M_01_M_CTRL_CNST_GRP', 'Beard_M_01_M_CTRL_CNST_GRP', 'RIG')
-            mc.parent('Beard_M_01_JNT',  'Stache_M_01_JNT'  ,lower_jnt)     
+            #mc.parentConstraint('LowerHead_M_CTRL', 'Stache_M_01_M_CTRL_CNST_GRP', mo=True)
+            #mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_01_M_CTRL_CNST_GRP', mo=True)  
+            #mc.parent('Stache_M_01_M_CTRL_CNST_GRP', 'Beard_M_01_M_CTRL_CNST_GRP', 'RIG')
+            #mc.parent('Beard_M_01_JNT',  'Stache_M_01_JNT'  ,lower_jnt)     
+
+            mc.parentConstraint('UpperLip_M_M_CTRL', 'Stache_M_01_Major_M_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint('Major_Mouth_L_CornerLip_Mouth_CTRL','Stache_L_03_Major_L_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint('Major_Mouth_R_CornerLip_Mouth_CTRL','Stache_R_03_Major_R_CTRL_CNST_GRP', mo=True)
+            mc.parent('Stache_M_01_JNT', upper_jnt)
+            mc.parentConstraint('LowerLip_M_M_CTRL', 'Beard_M_01_Major_M_CTRL_CNST_GRP', mo=True, )
+            mc.parentConstraint('LowerLip_M_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
+            mc.parent('Beard_M_01_JNT', lower_jnt)
 
         elif self.custom == 'Luciana':
             mc.parent('Eye_L_look_offset', 'Eye_R_look_offset', 'UpperHead_M_CTRL')

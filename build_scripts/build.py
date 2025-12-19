@@ -264,13 +264,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
-                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['eyes', 'pupils', 'corneas'])
+                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['eyes', 'pupils', 'corneas'], eyetype='Human')
                 eye.build()
                 from rjg.build.parts.UEbrow import UEbrow
                 brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1)
                 brow.build()
                 from rjg.build.parts.UEcheek import UEcheek
-                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1, NL=False)
+                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1, NL=True)
                 cheek.build()
 
             from rjg.build.parts.UEjaw import UEjaw
@@ -290,9 +290,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1, custom='Domingo')
             faceconnect.build() 
             highcombparent = 'UpperHead_JNT'
-            lowcombparent = 'LowerHead_JNT'
+            lowcombparent = 'head_M_JNT'
             combbind.append(highcombparent)
-            combbind.append(lowcombparent)
+            combbind.append('LowerHead_JNT')
 
 
         from rjg.build.parts.comb import comb
@@ -1389,10 +1389,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.skinCluster('arm_L_01_JNT', 'PrimaryFeathers', tsb=False) 
         mc.skinCluster('arm_L_01_JNT', 'SecondaryFeathers', tsb=False)
         if face:
-            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye_L_Eye_L_Lower_curve_ribbon', 'PrimaryFeathers', 'SecondaryFeathers']:
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'PrimaryFeathers', 'SecondaryFeathers', 'comb']: #'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf',
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
         else:
-            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'PrimaryFeathers', 'SecondaryFeathers']:
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'PrimaryFeathers', 'SecondaryFeathers', 'comb']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
     if character == 'Luciana':
         try:

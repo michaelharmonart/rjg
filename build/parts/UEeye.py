@@ -743,6 +743,8 @@ class UEeye(UEface):
                 parent=True
 
                 mc.addAttr(f'Eye_{side}_Look_{side}_CTRL', longName=f'{type}_Size', attributeType='float', keyable=True)
+
+                mc.addAttr(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', longName=f'{type}_Size', proxy=f'Eye_{side}_Look_{side}_CTRL.{type}_Size')
                 guides = mc.ls(f"Eye_{side}_{type}_*", type="transform") or []
 
                 sel = []
@@ -823,6 +825,8 @@ class UEeye(UEface):
 
                 mc.addAttr(f'Eye_{side}_Look_{side}_CTRL', longName=f'{type}_Size', attributeType='float', keyable=True)
                 mc.addAttr(f'Eye_{side}_Look_{side}_CTRL', longName=f'{type}_Heart', attributeType='float', keyable=True)
+                mc.addAttr(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', longName=f'{Part}_Size', proxy=controlchannel)
+                mc.addAttr(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', longName=f'{Part}_Heart', proxy=controlchannel2)
                 guides = mc.ls(f"Eye_{side}_{type}_*", type="transform") or []
 
                 sel = []
@@ -923,7 +927,7 @@ class UEeye(UEface):
             combined.append('Eye_L_JNT')
             combined.append('Eye_R_JNT')
             mc.skinCluster(*combined, self.skin[0])
-            if self.eyetype == 'human':
+            if self.eyetype == 'Human':
                 mc.skinCluster(*combined, self.skin[1])
                 mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[2])
             if self.eyetype == 'lizzard':

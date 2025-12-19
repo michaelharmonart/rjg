@@ -28,7 +28,7 @@ FACE_PARTS = {
     "Brow": [f'Brow_{side}_01', f'Brow_{side}_02', f'Brow_{side}_03', f'Brow_{side}_04', f'Brow_{side}_05',
              f'Brow_{side}_01_Upper', f'Brow_{side}_02_Upper', f'Brow_{side}_03_Upper', f'Brow_{side}_04_Upper',
              f'Brow_{side}_05_Upper', f'Brow_{side}_01_Lower', f'Brow_{side}_02_Lower', f'Brow_{side}_03_Lower',
-             f'Brow_{side}_04_Lower', f'Brow_{side}_05_Lower', f'Brow_{side}_01_Major', f'Brow_{side}_02_Major'],
+             f'Brow_{side}_04_Lower', f'Brow_{side}_05_Lower', f'Brow_{side}_01_Major', f'Brow_{side}_02_Major', f'Brow_{side}_Crease'],
 
     "Mouth": ['Mouth_M_UpperLip_01', 'Mouth_M_center', f'Mouth_{side}_CornerLip',
               'Mouth_M_LowerLip_01', f'Mouth_{side}_UpperLip_02', f'Mouth_{side}_LowerLip_02',
@@ -38,7 +38,7 @@ FACE_PARTS = {
 
     "Nose": ["NoseTip", "Nostril"],
     "Ear": ["EarBase", "EarTip"],
-    "NL": ["Nasolabial_01", "Nasolabial_02"],
+    "NL": [f"Cheek_{side}_NLFold_01_outer", f"Cheek_{side}_NLFold_02_outer", f"Cheek_{side}_NLFold_03_outer", f"Cheek_{side}_NLFold_04_outer", f"Cheek_{side}_NLFold_05_outer", f"Cheek_{side}_NLFold_01_inner", f"Cheek_{side}_NLFold_02_inner", f"Cheek_{side}_NLFold_03_inner", f"Cheek_{side}_NLFold_04_inner", f"Cheek_{side}_NLFold_05_inner", f"Cheek_{side}_NLFold_04"],
     "Cheek": [f"Cheek_{side}_CheekBone", f"Cheek_{side}_Puff"],
     "Jaw": ['Jaw_M_ee', 'Jaw_M_root', 'Jaw_M_larynx'],
     "Tongue": ["Tongue_00", 'topTeeth', 'botTeeth', 'topTeeth_M_Sub_01', 'botTeeth_M_Sub_01',
@@ -267,7 +267,7 @@ class FaceGuideUI(QtWidgets.QDialog):
 
 
 
-        elif name in ['Jaw_M_Root', "Eye_L_EyeCenterPivot", "Eye_R_EyeCenterPivot", 'botTeeth', 'topTeeth', 'Mouth_M_center']:
+        elif name in ['Jaw_M_Root', "Eye_L_EyeCenterPivot", "Eye_R_EyeCenterPivot", 'botTeeth', 'topTeeth', 'Mouth_M_center', "Cheek_L_NLFold_04", "Cheek_R_NLFold_04", 'Brow_L_Crease', 'Brow_R_Crease']:
             if not verts:
                 mc.warning("Please select at least one vertex for Jaw_M_guide.")
                 return None
