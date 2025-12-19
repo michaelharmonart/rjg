@@ -1,8 +1,10 @@
 from typing import Final
 
 import maya.cmds as cmds
+
 from rjg.libs.maya_api.attribute import (
     Attribute,
+    BooleanAttribute,
     IndexableAttribute,
     IndexableBlendMatrixTargetAttribute,
     IndexableMatrixAttribute,
@@ -221,6 +223,21 @@ class MultMatrixNode(Node):
     def _setup_attributes(self) -> None:
         self.matrix_in = IndexableMatrixAttribute(f"{self.name}.matrixIn")
         self.matrix_sum = MatrixAttribute(f"{self.name}.matrixSum")
+
+
+class PickMatrixNode(Node):
+    """Maya pickMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "pickMatrix") -> None:
+        super().__init__("pickMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_matrix = MatrixAttribute(f"{self.name}.inputMatrix")
+        self.use_translate = BooleanAttribute(f"{self.name}.useTranslate")
+        self.use_rotate = BooleanAttribute(f"{self.name}.useRotate")
+        self.use_scale = BooleanAttribute(f"{self.name}.useScale")
+        self.use_shear = BooleanAttribute(f"{self.name}.useShear")
+        self.output_matrix = MatrixAttribute(f"{self.name}.outputMatrix")
 
 
 class RowFromMatrixNode(Node):
