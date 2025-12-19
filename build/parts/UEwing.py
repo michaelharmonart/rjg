@@ -368,27 +368,11 @@ class UEwing(UEface):
 
                     mc.connectAttr(f'{StretchControl}.autoroll_mult', f'{flipnode}.input2X')
                     mc.connectAttr(f'{StretchControl}.autoroll_mult', f'{flipnode}.input2Z')
-                    #mc.setAttr( f'{flipnode}.input2X', mod)
-                    #mc.setAttr( f'{flipnode}.input2Z', mod)
-                    #else:
-                    #    #autoattr = f"{clusteroffset}.rotateX"
-                    #    #mc.connectAttr(f"{clusteroffset}.rotateX", f'{rotadl}.input1')
-                    #    #mc.connectAttr(f"{clusteroffset}.rotateZ", f'{rotadl}.input2')
-                    #    #autoattr = f'{rotadl}.output'
                         
                     mc.connectAttr(autoattr, f'{rolladl}.input1')
                     mc.connectAttr(f'{StretchControl}.roll', f'{rolladl}.input2')
                     mc.connectAttr(f'{rolladl}.output', f'{ik_handle}.roll')
 
-
-                
-
-
-
-                #close_offset = mc.group(empty=True, name=f'{prefix}Aim_{i:02}_ArmClose_offset')
-                #mc.xform(close_offset, ws=True, t=pos,)
-                #mc.parent(close_offset, offset)
-                #mc.parent(ctrl, close_offset)
 
             if Stretch:
                 if buildControls:
@@ -559,9 +543,6 @@ class UEwing(UEface):
 
                 basepos = mc.xform(guide, q=True, ws=True, t=True)
                 eepos = mc.xform(ee_guide, q=True, ws=True, t=True)
-                #if side == 'R':
-                #    eepos[0] = -eepos[0]  # mirror across X axis
-                #midpos = [basepos[i] + (eepos[i] - basepos[i]) * .5 for i in range(3)]
                 mid1pos = [basepos[i] + (eepos[i] - basepos[i]) * (1/3) for i in range(3)]
                 mid2pos = [basepos[i] + (eepos[i] - basepos[i]) * (2/3) for i in range(3)]
                 rot = mc.xform(guide, q=True, ws=True, ro=True)
@@ -625,9 +606,6 @@ class UEwing(UEface):
 
                 split_joint = basejnt
                 split_joints: list[str] = [basejnt,mid1jnt,mid2jnt,eejnt]
-                #mc.addAttr(basejnt, longName="split_joints", niceName="Split Joints", dataType="string")
-                #value = f"['{basejnt}','{midjnt}','{eejnt}']"
-                #mc.setAttr(f'{basejnt}.split_joints', value, type='string')
                 mc.addAttr(split_joint, longName="split_joints", dataType="string")
                 mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
 
@@ -686,10 +664,6 @@ class UEwing(UEface):
                         pre_ctrl = ctrl
                         mc.parent(jnt,root_joint)
                         mc.parent(offset,feather_grp)
-                    #if mdspot: #AddSesitivity
-                    #    mc.connectAttr(f'{Main_Ctrl}.rotateX', f'{rot_offset}.rotateX')
-                    #    mc.connectAttr(f'{Main_Ctrl}.rotateY', f'{rot_offset}.rotateY')
-                    #    mc.connectAttr(f'{Main_Ctrl}.rotateZ', f'{rot_offset}.rotateZ')
 
                     #IF i want to do a switch it needs to be a on or off (no blending), then it will pre to post 
 
@@ -883,9 +857,6 @@ class UEwing(UEface):
 
                 split_joint = basejnt
                 split_joints: list[str] = [basejnt,mid1jnt,mid2jnt,eejnt]
-                #mc.addAttr(basejnt, longName="split_joints", niceName="Split Joints", dataType="string")
-                #value = f"['{basejnt}','{midjnt}','{eejnt}']"
-                #mc.setAttr(f'{basejnt}.split_joints', value, type='string')
                 mc.addAttr(split_joint, longName="split_joints", dataType="string")
                 mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
 
@@ -952,20 +923,8 @@ class UEwing(UEface):
                 def_jnts.append(mid2jnt)
                 def_jnts.append(basejnt)
                 mc.delete(mid1_guide, mid2_guide)
-                #mc.skinCluster(eejnt, midjnt, basejnt, f'{prefix}_MainFeather_{num}_GEO', tsb=True)
 
                 mc.parentConstraint(root_joint, basectrl_offset, mo=True)
-                #mc.select(clear=True)
-                #mc.select(main_surf[0])
-                #mc.select(basectrl_offset, add=True)
-                #print(main_surf)
-                #mc.UVPin()
-                #for attr in ["rotateX", "rotateY", "rotateZ"]:
-                #    # Find any nodes driving this attribute
-                #    connections = mc.listConnections(f"{basectrl_offset}.{attr}", s=True, d=False, plugs=True)
-                #    if connections:
-                #        for conn in connections:
-                #            mc.disconnectAttr(conn, f"{basectrl_offset}.{attr}")
                 if side == 'R':
                     vect = -1
                 else:
@@ -982,13 +941,6 @@ class UEwing(UEface):
                     #worldUpType = 'None'
                 )
 
-
-            #sub_groups = UEwing.get_sub_groups(prefix)
-            #print(sub_groups)
-            #for sub in sub_groups:
-            #    subrot_offset_list, subbase_offsets, sub_aimjnt_list = UEwing.build_sub_feathers(prefix, sub, main_surf,)
-            #    rot_offset_list.extend(subrot_offset_list)
-            #    full_aimjnt_list.extend(sub_aimjnt_list)
 
         pre_jnt = None
         pre_ctrl = None
@@ -1043,15 +995,7 @@ class UEwing(UEface):
             armcloses.append(close_offset)
         ########################################################## Come back to this
         for num in ['01', '02', '03', '04']:
-        #    if num != '01':
-        #        mc.parentConstraint(f'{prefix}_{num}_bind_jnt', f'{prefix}_Main_Feather_aim_{num}_{grpname}', mo=True)
             mc.parentConstraint(f'{prefix}_{num}_FK_JNT', f'{prefix}_{num}_bind_jnt', mo=True )
-        #for cont in [f'{prefix}_Close', f'{prefix}_Span']: #f'{prefix}_FeatherShaper',
-        #    rot = mc.xform(cont, q=True, ws=True, ro=True)
-        #    trans = mc.xform(cont, q=True, ws=True, t=True)
-        #    UEface.build_basic_control(name=f'{cont}', shape='ZTarrow', size=10.0, position=trans, rotation=rot)
-        #mc.parent(f'{prefix}_FeatherShaper_{grpname}', f'{prefix}_Span_{ctrlname}')
-        #mc.parent(f'{prefix}_Span_{grpname}', f'{prefix}_04_FK_{ctrlname}')
 
         #ik
         IK_joints = []
@@ -1084,7 +1028,6 @@ class UEwing(UEface):
             ee=f"{prefix}_03_IK_jnt", 
             sol="ikRPsolver"
         )[0]
-        #print(ikhandel)
 
         mc.poleVectorConstraint(ikaimCTL, ikhandel)
         IK_Root_pos = mc.xform(f'{prefix}_01_guide', q=True, ws=True, t=True)
@@ -1106,192 +1049,16 @@ class UEwing(UEface):
             mc.connectAttr(f'{rev_node}.outputX', f'{prefix}_{num}_bind_jnt_parentConstraint1.{prefix}_{num}_IK_jntW1')
         mc.pointConstraint( f'{prefix}_01_bind_jnt', FKIKSwitch_GRP, mo=True)
         mc.orientConstraint(f'{prefix}_IK_EE_{ctrlname}', f'{prefix}_03_IK_jnt', mo=True)
-        ##End
-
-
-        #mc.addAttr(f'{prefix}_FeatherShaper_{ctrlname}', longName="Full_Bend", attributeType="bool", defaultValue=True, keyable=True)
-        #mc.addAttr(f'{prefix}_FeatherShaper_{ctrlname}', longName="Full_Twist", attributeType="bool", defaultValue=True, keyable=True)
-        #mult_node2 = mc.createNode("multiplyDivide", name=f"{prefix}_Shape_multNode")
-        #mc.connectAttr(f'{prefix}_FeatherShaper_{ctrlname}.Full_Bend', f"{mult_node2}.input2X")
-        #mc.connectAttr(f'{prefix}_FeatherShaper_{ctrlname}.Full_Twist', f"{mult_node2}.input2Y")
-        #mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateX", f"{mult_node2}.input1X")
-        #mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateY", f"{mult_node2}.input1Y")
-        #for rotoff in rot_offset_list:
-        #    parts = rotoff.split('_')
-        
-            # The identifier is the second-to-last element
-        #    identifier = parts[-2]
-        
-        #    if identifier == "base":
-        #        mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateX", f"{rotoff}.rotateX")
-        #        mc.connectAttr(f"{prefix}_FeatherShaper_{ctrlname}.rotateY", f"{rotoff}.rotateY")
-        #    else:
-        #        mc.connectAttr(f"{mult_node2}.outputX", f"{rotoff}.rotateX")
-        #        mc.connectAttr(f"{mult_node2}.outputY", f"{rotoff}.rotateY")
 
         max_val = 20
-
-        # Objects
-        #control = f"{prefix}_Span_{ctrlname}"
-        # 1. Add custom attributes
-        #if not mc.objExists(f"{control}.span_mult"):
-        #    mc.addAttr(control, longName="span_mult", attributeType="double", defaultValue=1.0, keyable=True)
-        #if not mc.objExists(f"{control}.sensitivity"):
-        #    mc.addAttr(control, longName="sensitivity", attributeType="double", defaultValue=1.0, keyable=True)
-
-        # 2. Create MultiplyDivide node
-        #mult_node = mc.createNode("multiplyDivide", name=f"{control}_span_multNode")
-        #blend = mc.createNode("blendColors", name=f"{control}_span_blend")
-        #mc.connectAttr(f"{prefix}_Span_{ctrlname}.translateX", f"{blend}.color1R")
-
-        # 3. Create remapValue node
-        #remap_node = mc.createNode("remapValue", name=f"{control}_span_remapNode")
-        #mc.setAttr(f"{remap_node}.inputMin", -max_val)
-        #mc.setAttr(f"{remap_node}.inputMax", max_val)
-        #mc.setAttr(f"{remap_node}.outputMin", 0)
-        #mc.setAttr(f"{remap_node}.outputMax", 2.0)
-
-        # 4. Connect translateX to multiplyDivide input1X
-        #mc.connectAttr(f"{blend}.outputR", f"{mult_node}.input1X")
-
-        # 5. Connect sensitivity and span_mult to input2 channels
-        #mc.connectAttr(f"{control}.sensitivity", f"{mult_node}.input2X")
-        #mc.connectAttr(f"{control}.span_mult", f"{mult_node}.input2Y")
-
-        # 6. Connect multiplyDivide output to remapValue input
-        #mc.connectAttr(f"{mult_node}.outputX", f"{remap_node}.inputValue")
-
-        # 7. Connect remapValue output to multiplyDivide input1Y
-        #mc.connectAttr(f"{remap_node}.outValue", f"{mult_node}.input1Y")
-
-        # 8. Connect multiplyDivide outputY to target joint scaleX
-        #for aimjnt in full_aimjnt_list:
-        #    mc.connectAttr(f"{mult_node}.outputY", f"{aimjnt}.scaleX")
-        #FOLD Logic
-        #mc.addAttr(f'{prefix}_Close_{ctrlname}', longName="Jnt01_Mult", attributeType="double", defaultValue=0, keyable=True)
-        #mc.addAttr(f'{prefix}_Close_{ctrlname}', longName="Jnt02_Mult", attributeType="double", defaultValue=1, keyable=True)
-        #mc.addAttr(f'{prefix}_Close_{ctrlname}', longName="Jnt03_Mult", attributeType="double", defaultValue=1, keyable=True)
-        #mc.addAttr(f'{prefix}_Close_{ctrlname}', longName="Jnt04_Mult", attributeType="double", defaultValue=1, keyable=True)
-        #mc.addAttr(f'{prefix}_Close_{ctrlname}', longName="Span_Mult", attributeType="double", defaultValue=1, keyable=True)
-        #mc.addAttr(f'{prefix}_Close_{ctrlname}', longName="Driver_Mult", attributeType="double", defaultValue=1, keyable=True)
-
-        #in_value = -5
-        #fold_01 = -40
-        #fold_02 = 100
-        #fold_03 = -140
-        #fold_span = -40
         
-        #remap_node_01 = mc.createNode("remapValue", name=f"{prefix}_01fold_remapNode")
-        #mc.setAttr(f"{remap_node_01}.inputMin", -in_value)
-        #mc.setAttr(f"{remap_node_01}.inputMax", in_value)
-        #mc.setAttr(f"{remap_node_01}.outputMin", -fold_01)
-        #mc.setAttr(f"{remap_node_01}.outputMax", fold_01)
-
-        #remap_node_02 = mc.createNode("remapValue", name=f"{prefix}_02fold_remapNode")
-        #mc.setAttr(f"{remap_node_02}.inputMin", -in_value)
-        #mc.setAttr(f"{remap_node_02}.inputMax", in_value)
-        #mc.setAttr(f"{remap_node_02}.outputMin", -fold_02)
-        #mc.setAttr(f"{remap_node_02}.outputMax", fold_02)
-
-        #remap_node_03 = mc.createNode("remapValue", name=f"{prefix}_03fold_remapNode")
-        #mc.setAttr(f"{remap_node_03}.inputMin", -in_value)
-        #mc.setAttr(f"{remap_node_03}.inputMax", in_value)
-        #mc.setAttr(f"{remap_node_03}.outputMin", -fold_03)
-        #mc.setAttr(f"{remap_node_03}.outputMax", fold_03)
-
-        #remap_node_span = mc.createNode("remapValue", name=f"{prefix}_spanfold_remapNode")
-        #mc.setAttr(f"{remap_node_span}.inputMin", 0)
-        #mc.setAttr(f"{remap_node_span}.inputMax", in_value)
-        #mc.setAttr(f"{remap_node_span}.outputMin", 1)
-        #mc.setAttr(f"{remap_node_span}.outputMax", fold_span)
-        
-        #mult_node3 = mc.createNode("multiplyDivide", name=f"{prefix}_fold_multNode")
-        #mult_node4 = mc.createNode("multiplyDivide", name=f"{prefix}_folding_multNode")
-        
-        #mc.connectAttr(f'{prefix}_Close_{ctrlname}.Driver_Mult', f"{mult_node3}.input2X")
-        #mc.connectAttr(f'{prefix}_Close_{ctrlname}.translateX', f"{mult_node3}.input1X")
-
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{remap_node_01}.inputValue')
-        #mc.connectAttr(f'{remap_node_01}.outValue', f'{mult_node4}.input1X')
-        #mc.connectAttr(f'{prefix}_Close_{ctrlname}.Jnt01_Mult', f"{mult_node4}.input2X")
-        #mc.connectAttr(f"{mult_node4}.outputX", f'{prefix}_01_FK_ArmClose_offset.rotateX')
-
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{remap_node_02}.inputValue')
-        #mc.connectAttr(f'{remap_node_02}.outValue', f'{mult_node4}.input1Y')
-        #mc.connectAttr(f'{prefix}_Close_{ctrlname}.Jnt02_Mult', f"{mult_node4}.input2Y")
-        #mc.connectAttr(f"{mult_node4}.outputY", f'{prefix}_02_FK_ArmClose_offset.rotateX')
-        
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{remap_node_03}.inputValue')
-        #mc.connectAttr(f'{remap_node_03}.outValue', f'{mult_node4}.input1Z')
-        #mc.connectAttr(f'{prefix}_Close_{ctrlname}.Jnt03_Mult', f"{mult_node4}.input2Z")
-        #mc.connectAttr(f"{mult_node4}.outputZ", f'{prefix}_03_FK_ArmClose_offset.rotateX')
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{remap_node_span}.inputValue')
-        #mc.connectAttr(f'{remap_node_span}.outValue', f"{blend}.color2R")
-
-        #aimremap_node_01 = mc.createNode("remapValue", name=f"{prefix}_01foldaim_remapNode")
-        #mc.setAttr(f"{aimremap_node_01}.inputMin", -in_value)
-        #mc.setAttr(f"{aimremap_node_01}.inputMax", in_value)
-        #mc.setAttr(f"{aimremap_node_01}.outputMin", -7)
-        #mc.setAttr(f"{aimremap_node_01}.outputMax", 7)
-
-        #aimremap_node_02 = mc.createNode("remapValue", name=f"{prefix}_02foldaim_remapNode")
-        #mc.setAttr(f"{aimremap_node_02}.inputMin", -in_value)
-        #mc.setAttr(f"{aimremap_node_02}.inputMax", in_value)
-        #mc.setAttr(f"{aimremap_node_02}.outputMin", 20)
-        #mc.setAttr(f"{aimremap_node_02}.outputMax", -20)
-
-        #aimremap_node_03 = mc.createNode("remapValue", name=f"{prefix}_03foldaim_remapNode")
-        #mc.setAttr(f"{aimremap_node_03}.inputMin", -in_value)
-        #mc.setAttr(f"{aimremap_node_03}.inputMax", in_value)
-        #mc.setAttr(f"{aimremap_node_03}.outputMin", -13)
-        #mc.setAttr(f"{aimremap_node_03}.outputMax", 13)
-
-        #aimremap_node_04 = mc.createNode("remapValue", name=f"{prefix}_04foldaim_remapNode")
-        #mc.setAttr(f"{aimremap_node_04}.inputMin", -in_value)
-        #mc.setAttr(f"{aimremap_node_04}.inputMax", in_value)
-        #mc.setAttr(f"{aimremap_node_04}.outputMin", -7)
-        #mc.setAttr(f"{aimremap_node_04}.outputMax", 7)
-
-        #aimremap_node_05 = mc.createNode("remapValue", name=f"{prefix}_05foldaim_remapNode")
-        #mc.setAttr(f"{aimremap_node_05}.inputMin", -in_value)
-        #mc.setAttr(f"{aimremap_node_05}.inputMax", in_value)
-        #mc.setAttr(f"{aimremap_node_05}.outputMin", -5)
-        #mc.setAttr(f"{aimremap_node_05}.outputMax", 5)
-
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{aimremap_node_01}.inputValue')
-        #mc.connectAttr(f'{aimremap_node_01}.outValue', f'{prefix}Aim_01_ArmClose_offset.translateX')
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{aimremap_node_02}.inputValue')
-        #mc.connectAttr(f'{aimremap_node_02}.outValue', f'{prefix}Aim_02_ArmClose_offset.translateX')
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{aimremap_node_03}.inputValue')
-        #mc.connectAttr(f'{aimremap_node_03}.outValue', f'{prefix}Aim_02_ArmClose_offset.translateY')
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{aimremap_node_04}.inputValue')
-        #mc.connectAttr(f'{aimremap_node_04}.outValue', f'{prefix}Aim_03_ArmClose_offset.translateX')
-        #mc.connectAttr(f"{mult_node3}.outputX", f'{aimremap_node_05}.inputValue')
-        #mc.connectAttr(f'{aimremap_node_05}.outValue', f'{prefix}Aim_03_ArmClose_offset.translateY')
-
         #Clean Up Wing
-
         mc.group(f'{prefix}_01_FK_JNT', f'{prefix}_01_IK_jnt', f'{prefix}_ikHandle', name=f'{prefix}_extraOffset_{grpname}') #f'{prefix}_Main_loft'
-        #mc.parent(f'{prefix}_Close_{grpname}', f'{prefix}_01_FK_{ctrlname}')
-        #mc.delete(f'{prefix}_curve', f'{prefix}_curve1')
         mc.parent(f'{prefix}_IK_Aim_{grpname}', f'{prefix}_IK_Root_{ctrlname}' )
         mc.parent(f'{prefix}_IK_EE_{grpname}', f'{prefix}_IK_Root_{ctrlname}' )
-        #mc.parent(f'{prefix}_Span_{grpname}', world=True)
-        #mc.parentConstraint(f'{prefix}_IK_EE_{ctrlname}', f'{prefix}_Span_{grpname}', mo=True)
-        #mc.parentConstraint(f'{prefix}_03_FK_{ctrlname}', f'{prefix}_Span_{grpname}', mo=True)
-        #mc.group(f'{prefix}_Main_Feather_aim_01_{grpname}', f'{prefix}_Main_Feather_aim_02_{grpname}', f'{prefix}_Main_Feather_aim_03_{grpname}', f'{prefix}_Main_Feather_aim_04_{grpname}', name = f'{prefix}_aimcurve_{grpname}')
-        mc.parent(f'{prefix}_01_FK_{grpname}', fk_group)
         mc.parent(f'{prefix}_IK_Root_{grpname}', ik_group)
         mc.connectAttr(f'{FKIKSwitch_CTL}.FK_IK', f'{prefix}_FK_{grpname}.visibility')
         mc.connectAttr(f'{rev_node}.outputX', f'{prefix}_IK_{grpname}.visibility')
-        #for side in ['L', 'R']:
-        #    try:
-        #        mc.connectAttr(f'{FKIKSwitch_CTL}.FK_IK', f'{prefix}_Span_{grpname}_parentConstraint1.Wing_{side}_03_FK_{ctrlname}W1')
-        #    except:
-        #        pass
-        #mc.connectAttr(f'{rev_node}.outputX', f'{prefix}_Span_{grpname}_parentConstraint1.{prefix}_IK_EE_{ctrlname}W0')
-
-        #Scap
         jnt, ctrl, ctrl_offset =UEface.Simple_joint_and_Control(
                 f'{prefix}_Scap',
                 orient=True,
@@ -1311,19 +1078,7 @@ class UEwing(UEface):
         mc.parent(f'{prefix}_01_bind_jnt', jnt) #f'{prefix}_root_jnt'
         mc.parent(jnt, 'chest_M_JNT')
         mc.parentConstraint('chest_M_02_CTRL', ctrl_offset, mo=True)
-        #mc.parentConstraint(ctrl,f'{prefix}_feather_{grpname}', mo=True)
-        #mc.parentConstraint(ctrl, f'{prefix}_Main_Feather_aim_01_{grpname}', mo=True)
         mc.hide(f'{prefix}_handle_{grpname}', f'{prefix}_extraOffset_{grpname}')
         mc.parent(mastergrp, 'RIG')
         mc.parent(netgrp, mastergrp)
         mc.parentConstraint(bind_joints[0], netgrp, mo=True)
-
-        #try:
-        #    side = prefix.split("_")[-1]
-        #    #print(f'{side}MainFeathers')
-        #    mc.skinCluster(*def_jnts, f'feathers_{side}', toSelectedBones=True)
-        #    mc.skinCluster(*def_jnts, f'Feathers_{side}_High', toSelectedBones=True)
-        #    mc.skinCluster(*def_jnts, f'feathers_{side}_Low', toSelectedBones=True)
-        #except Exception as e:
-        #    print(e)
-
