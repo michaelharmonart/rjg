@@ -38,7 +38,7 @@ def Domingo_extras(skin_src, skin_trg_grp, face):
     sk_g = []
     if face:
         geo = [
-            'belt', 'mustache', 'vest', 'tail', 'beard', 'buckle'
+            'belt', 'vest', 'tail', 'buckle', 'ChestFeathers', 'KneeFeathers', 'HandFeathers', 'FaceFeathers'
         ]
     else:
         geo = [

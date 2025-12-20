@@ -255,8 +255,8 @@ class UEfaceconnect(UEface):
             mc.parentConstraint('Major_Mouth_L_CornerLip_Mouth_CTRL','Stache_L_03_Major_L_CTRL_CNST_GRP', mo=True)
             mc.parentConstraint('Major_Mouth_R_CornerLip_Mouth_CTRL','Stache_R_03_Major_R_CTRL_CNST_GRP', mo=True)
             mc.parent('Stache_M_01_JNT', upper_jnt)
-            mc.parentConstraint('LowerLip_M_M_CTRL', 'Beard_M_01_Major_M_CTRL_CNST_GRP', mo=True, )
-            mc.parentConstraint('LowerLip_M_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
+            mc.parentConstraint('Jaw_M_root_M_CTRL', 'Beard_M_01_Major_M_CTRL_CNST_GRP', mo=True, )
+            mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
             mc.parent('Beard_M_01_JNT', lower_jnt)
 
         elif self.custom == 'Luciana':
