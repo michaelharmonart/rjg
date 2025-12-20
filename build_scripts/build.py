@@ -1562,6 +1562,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             #)
 
             #Add Sculpt points
+            before_nodes = set(mc.ls())
             if face:
                 CurveNetAtHome.create_curve_net_joints('Body', 'Bobo_UBM') 
                 skin_clusters = "curve_net_skin_cluster"
@@ -1569,6 +1570,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
                 Bobo_Build_Scripts.Clean_up_SculptJoints()
             mc.delete('CurveNet_Guide_Group')
+            after_nodes = set(mc.ls())
+            added_nodes = after_nodes - before_nodes
+            for node in added_nodes:
+                add_profiler_tag(node, "sculpt")
             Bobo_Build_Scripts.clean_claws()
             Bobo_Build_Scripts.Clean_Fur()
 
