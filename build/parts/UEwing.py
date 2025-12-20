@@ -9,7 +9,6 @@ import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
-from rjg.libs.profile import add_profiler_tag
 from rjg.libs.spline import generate_knots, get_cvs, get_knots
 from rjg.libs.profile import auto_profiler_tag
 
@@ -234,7 +233,6 @@ class UEwing(UEface):
                 
                 prejnt = jnt
                 prepos = pos
-            add_profiler_tag(jntlist, tag_name=self.part)
             #######################################################
         ik_handle, effector, curve = mc.ikHandle(
             sj=jntlist[0],
@@ -243,7 +241,6 @@ class UEwing(UEface):
             ccv=True,
             pcv=False
         )
-        add_profiler_tag([ik_handle, effector, curve], tag_name=self.part)
         if feathernum:
             name = f"{side}_feather{feathernum}_spline"
         elif guidecurve:
@@ -267,7 +264,6 @@ class UEwing(UEface):
         for i, cv in enumerate(cvs, start=1):
             # Make cluster for the CV
             cluster, cluster_handle = mc.cluster(cv, n=f"{name}_{i:02}_cluster")
-            add_profiler_tag([cluster, cluster_handle], tag_name=self.part)
             mc.parent(cluster_handle, f'{prefix}_handle_{grpname}')
             cluster_point = mc.group(empty=True, name=f"{name}_{i:02}_clusterPoint", parent=f'{prefix}_handle_{grpname}') 
             cluster_list.append(cluster_point)
@@ -290,7 +286,6 @@ class UEwing(UEface):
                     position=pos,
                     rotation=(0, 0, 0)
                 )
-                add_profiler_tag([ctrl, offset], tag_name=self.part)
                 ctrl_list.append(ctrl)
                 offset_list.append(offset)
                 mc.parent(offset, f'{prefix}_feather_{grpname}')
@@ -398,12 +393,10 @@ class UEwing(UEface):
 
                 postci = mc.createNode("curveInfo", name=f"{curve}_postci")
                 preci = mc.createNode("curveInfo", name=f"{curve}_preci")
-                add_profiler_tag([postci, preci], tag_name=self.part)
                 mc.connectAttr(f"{postcurve}.worldSpace[0]", f"{postci}.inputCurve", force=True)
                 mc.connectAttr(f"{precurve}.worldSpace[0]", f"{preci}.inputCurve", force=True)
 
                 frac = mc.createNode("multiplyDivide", name=f"{curve}_Frac")
-                add_profiler_tag(frac, tag_name=self.part)
                 # Set the operation to DIVIDE (2)
                 mc.setAttr(f"{frac}.operation", 2)
 
@@ -442,7 +435,6 @@ class UEwing(UEface):
         fk_group = mc.group(em=True, name=f'{prefix}_FK_{grpname}')
         ik_group = mc.group(em=True, name=f'{prefix}_IK_{grpname}')
         netgrp = mc.group(em=True, name=f'{prefix}_net_{grpname}')
-        add_profiler_tag([feather_grp, handle_grp, fk_group, ik_group, netgrp], tag_name=self.part)
 
         maincount, mainguides = self.count_feather_guides(prefix = prefix, feather='MainFeather')
 
@@ -516,7 +508,6 @@ class UEwing(UEface):
                 degreeU=2,
             )
             surface_transform = mc.listRelatives(surface, parent=True)[0]
-            add_profiler_tag([surface, surface_transform], self.part)
             for index, cluster in enumerate(main_cluster_list + mid_cluster_list + aim_cluster_list):
                 mc.connectAttr(f"{cluster}.translate", f"{surface}.controlPoints[{index}]")
             mc.parent(surface_transform, handle_grp)
@@ -586,7 +577,6 @@ class UEwing(UEface):
                 #main
                 main_rot = rot #[a + b for a, b in zip(rot, add)]
                 main_ctrl, main_group = UEface.build_basic_control( name=f'{prefix}_Feather_{num}', shape='ZTpoint', size=90.0, position=basepos, rotation=main_rot)
-                add_profiler_tag([main_ctrl, main_group], tag_name=self.part)
                 mc.parent(main_group, feather_grp)
                 for ax in ["X", "Y", "Z"]:
                     mc.setAttr(f'{main_ctrl}.translate{ax}', lock=True, channelBox=False)
@@ -605,7 +595,6 @@ class UEwing(UEface):
                     CTRL_Size=50,
                     JNT_Size=0.5
                 )
-                add_profiler_tag([basejnt, basectrl, basectrl_offset], tag_name=self.part)
                 mid1jnt, mid1ctrl, mid1ctrl_offset =UEface.Simple_joint_and_Control(
                     mid1_guide,
                     orient=True,
@@ -616,7 +605,6 @@ class UEwing(UEface):
                     CTRL_Size=50,
                     JNT_Size=0.5
                 )
-                add_profiler_tag([mid1jnt, mid1ctrl, mid1ctrl_offset], tag_name=self.part)
                 mid2jnt, mid2ctrl, mid2ctrl_offset =UEface.Simple_joint_and_Control(
                     mid2_guide,
                     orient=True,
@@ -627,7 +615,6 @@ class UEwing(UEface):
                     CTRL_Size=50,
                     JNT_Size=0.5
                 )
-                add_profiler_tag([mid2jnt, mid2ctrl, mid2ctrl_offset], tag_name=self.part)
                 eejnt, eectrl, eectrl_offset =UEface.Simple_joint_and_Control(
                     ee_guide,
                     orient=True,
@@ -638,7 +625,6 @@ class UEwing(UEface):
                     CTRL_Size=50,
                     JNT_Size=0.5
                 )
-                add_profiler_tag([eejnt, eectrl, eectrl_offset], tag_name=self.part)
                 split_joint = basejnt
                 split_joints: list[str] = [basejnt,mid1jnt,mid2jnt,eejnt]
                 mc.addAttr(split_joint, longName="split_joints", dataType="string")
