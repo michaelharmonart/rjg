@@ -5,6 +5,11 @@ for ($s in $sel) {
 ##HIveUnlock
 
 
+
+#Combine Control Shapes ##### MEL
+
+parent -r -s
+
 ##BulkAddAttr
 
 import maya.cmds as mc

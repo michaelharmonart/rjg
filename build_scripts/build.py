@@ -258,7 +258,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'RedPanda':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2,)
     if character == 'Domingo':
-        tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2,)
+        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2, IK_Spline=True)
         highcombparent = 'head_M_JNT'
         lowcombparent = 'head_M_JNT'
         combbind = ['head_M_JNT']
@@ -1400,6 +1400,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         else:
             for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'PrimaryFeathers', 'SecondaryFeathers', 'comb']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+
+        #TempFix
+        for side in ['L', 'R']:
+            mc.parentConstraint(f'fingerPinky_{side}_02_JNT', f'main_{side}_08_{side}_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint(f'fingerPinky_{side}_03_JNT', f'mid_{side}_08_{side}_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint(f'fingerPinky_{side}_04_JNT', f'aim_{side}_08_{side}_CTRL_CNST_GRP', mo=True)
     if character == 'Luciana':
         try:
             mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers', tsb=False) 

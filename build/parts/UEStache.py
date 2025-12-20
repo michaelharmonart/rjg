@@ -132,7 +132,7 @@ class UEstache(UEface):
 
 
         if self.skin:
-            for jnt in ['Cheek_L_NLFold_01_JNT', 'Cheek_L_NLFold_02_JNT', 'Cheek_L_NLFold_03_JNT', 'Cheek_L_NLFold_04_JNT', 'Cheek_L_NLFold_05_JNT', 'Cheek_R_NLFold_01_JNT', 'Cheek_R_NLFold_02_JNT', 'Cheek_R_NLFold_03_JNT', 'Cheek_R_NLFold_04_JNT', 'Cheek_R_NLFold_05_JNT', 'lowermouth_JNT', 'uppermouth_JNT']:
+            for jnt in ['Cheek_L_NLFold_01_JNT', 'Cheek_L_NLFold_02_JNT', 'Cheek_L_NLFold_03_JNT', 'Cheek_L_NLFold_04_JNT', 'Cheek_L_NLFold_05_JNT', 'Cheek_R_NLFold_01_JNT', 'Cheek_R_NLFold_02_JNT', 'Cheek_R_NLFold_03_JNT', 'Cheek_R_NLFold_04_JNT', 'Cheek_R_NLFold_05_JNT', 'lowermouth_JNT', 'uppermouth_JNT', 'Mouth_L_CornerLip_JNT', 'Mouth_R_CornerLip_JNT', 'Mouth_L_UpperLip_05_JNT', 'Mouth_R_UpperLip_05_JNT', 'Mouth_L_UpperLip_04_JNT', 'Mouth_R_UpperLip_04_JNT',]:
                 bindjnts.append(jnt)
             mc.skinCluster(*bindjnts, 'mustache', tsb=True)
 
@@ -203,6 +203,8 @@ class UEstache(UEface):
                 mc.UVPin()
 
             if self.skin:
+                for jnt in ['Cheek_L_NLFold_01_JNT', 'Cheek_L_NLFold_02_JNT', 'Cheek_L_NLFold_03_JNT', 'Cheek_L_NLFold_04_JNT', 'Cheek_L_NLFold_05_JNT', 'Cheek_R_NLFold_01_JNT', 'Cheek_R_NLFold_02_JNT', 'Cheek_R_NLFold_03_JNT', 'Cheek_R_NLFold_04_JNT', 'Cheek_R_NLFold_05_JNT', 'lowermouth_JNT', 'uppermouth_JNT', 'Mouth_L_CornerLip_JNT', 'Mouth_R_CornerLip_JNT', 'Mouth_L_UpperLip_05_JNT', 'Mouth_R_UpperLip_05_JNT', 'Mouth_L_UpperLip_04_JNT', 'Mouth_R_UpperLip_04_JNT',]:
+                    bindjnts.append(jnt)
                 mc.skinCluster(*bindjnts, 'beard', tsb=True)
 
 
