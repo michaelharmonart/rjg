@@ -135,6 +135,8 @@ class comb(UEface):
                 )
 
                 controllist.append(fkctrl)
+                if guide == self.inputlist[0]:
+                    mc.parentConstraint(self.parent, fkctrl_offset)
 
 
 
