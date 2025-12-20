@@ -4,6 +4,7 @@ from importlib import reload
 import rjg.build.rigBase as rBase
 import rjg.libs.attribute as rAttr
 import rjg.libs.common as rCommon
+from rjg.libs import profile
 
 reload(rBase)
 reload(rAttr)
@@ -66,3 +67,9 @@ class RigModule(rBase.RigBase):
 
         for joint in joints:
             rAttr.Attribute(node=joint, type='bool', value=True, keyable=False, name='bindJoint')
+            
+    def tag_created_nodes(self, nodes_before: set[str]):
+        nodes_after = set(mc.ls())
+        added_nodes = nodes_after - nodes_before
+        for node in added_nodes:
+            profile.add_profiler_tag(node, self.part)

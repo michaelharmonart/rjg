@@ -11,6 +11,7 @@ import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
 from rjg.libs.profile import add_profiler_tag
 from rjg.libs.spline import generate_knots, get_cvs, get_knots
+from rjg.libs.profile import auto_profiler_tag
 
 reload(rAttr)
 reload(rChain)
@@ -424,7 +425,7 @@ class UEwing(UEface):
         return ik_handle, curve, ctrl_list, offset_list, jntlist, cluster_list
 
 
-
+    @auto_profiler_tag
     def build_wing(self, buildType='splines'):
         # 'splines' or 'stretchey_splines'
         #group='Wing_L_guides'

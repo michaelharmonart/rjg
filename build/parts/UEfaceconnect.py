@@ -11,17 +11,20 @@ import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
 import rjg.build.rigModule as rModule
+from rjg.libs.profile import auto_profiler_tag
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
 reload (rGuide)
 reload(rXform)
 
+
 class UEfaceconnect(UEface):
     def __init__(self, grp_name=None, ctrl_scale=1, custom=None):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.custom = custom
-
+    
+    @auto_profiler_tag
     def build(self, character=None):
         rig_module = rModule.RigModule(side=None, part="UEFace")
         upper_jnt, upper_ctrl, upper_offset = UEface.Simple_joint_and_Control(
@@ -368,20 +371,3 @@ class UEfaceconnect(UEface):
                     mastercontrol = ctrl
                     masterjnt = jnt
             mc.hide('Jaw_M_ee_M_CTRL')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

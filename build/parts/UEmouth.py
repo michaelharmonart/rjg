@@ -9,6 +9,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
+from rjg.libs.profile import auto_profiler_tag
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -73,6 +74,7 @@ class UEmouth(UEface):
         striped_list = [loc.removeprefix(prefix) for loc in ordered]
         return ordered
     
+    @auto_profiler_tag
     def build(self):
         prefix = UEface.get_prefix_from_group(self.grp_name)
         guide_list = mc.listRelatives(self.grp_name, children=True, type='transform', f=False) or []
@@ -261,4 +263,3 @@ class UEmouth(UEface):
                 jnt, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(f'Mouth_{side}_CornerLip', orient=False, check_side=True, CTRL_Size=.2, overwrite=True, overwrite_name=f'Mouth_{side}_CornerLip_Helper')
                 mc.parentConstraint(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', ctrl_offset, mo=True)
                 mc.parent(ctrl_offset, 'Mouth_Extras_offsets')
-            

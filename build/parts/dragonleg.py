@@ -5,6 +5,7 @@ import rjg.build.rigModule as rModule
 import rjg.build.chain as rChain
 import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.attribute as rAttr
+from rjg.libs.profile import auto_profiler_tag
 reload(rModule)
 reload(rChain)
 reload(rCtrl)
@@ -512,7 +513,7 @@ class DragonLeg(rModule.RigModule):
         mc.setAttr(f'{self.side}_Options_{ctrlnames}.FootRoot', 1)
 
         
-
+    @auto_profiler_tag
     def create_module(self):
         super().create_module()
 

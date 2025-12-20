@@ -8,6 +8,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
+from rjg.libs.profile import auto_profiler_tag
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -19,7 +20,7 @@ class UEnose(UEface):
     def __init__(self, grp_name=None, ctrl_scale=1,):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
 
- 
+    @auto_profiler_tag
     def build(self):
         suffix = UEface.get_prefix_from_group(self.grp_name)
     
@@ -106,4 +107,3 @@ class UEnose(UEface):
         for jnt in ['Nose_L_Nostril_JNT', 'Nose_R_Nostril_JNT', 'Nose_M_Nostril_Inner_JNT', 'Nose_R_Nostril_Outer_JNT', 'Nose_R_UpperCorner_JNT', 'Nose_L_UpperCorner_JNT', 'Nose_L_Nostril_Outer_JNT', 'Nose_M_Tip_JNT', 'Nose_M_NoseBridge_JNT']:
             mc.parent(jnt, 'Nose_M_NoseRoot_JNT')
         print(f"✅ Built nose module for group: {self.grp_name} (suffix: {suffix})")
-

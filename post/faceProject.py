@@ -4,10 +4,12 @@ import maya.mel as mel
 from importlib import reload
 import rjg.libs.file as rFile
 import rjg.libs.control.ctrl as rCtrl
+from rjg.libs.profile import add_profiler_tag
 reload(rFile)
 reload(rCtrl)
 
 def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=None, f_extras=None, rig_par='head_M_02_CTRL_CNST_GRP', tY=0):
+    before_nodes = set(mc.ls())
     # reparent face sections to main rig
     mc.group(em=True, name='HIDE_FACE')
     mc.parent('HIDE_FACE', char)
@@ -267,4 +269,7 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
             
     mc.hide("HIDE_FACE")
     mc.hide(f_rig)
-
+    after_nodes = set(mc.ls())
+    added_nodes = after_nodes - before_nodes
+    for node in added_nodes:
+        add_profiler_tag(node, "face")

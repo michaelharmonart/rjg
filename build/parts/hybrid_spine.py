@@ -12,6 +12,7 @@ import rjg.libs.spline as spline
 import rjg.libs.transform as rXform
 from rjg.libs.control.ctrl import Control, tag_as_controller
 from rjg.libs.maya_api import node
+from rjg.libs.profile import auto_profiler_tag
 
 reload(rModule)
 reload(rChain)
@@ -91,7 +92,8 @@ class HybridSpine(rModule.RigModule):
         self.chestoffset: bool = chestoffset
 
         self.create_module()
-
+        
+    @auto_profiler_tag
     def create_module(self):
         super().create_module()
 

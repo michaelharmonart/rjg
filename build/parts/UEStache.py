@@ -8,6 +8,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
+from rjg.libs.profile import auto_profiler_tag
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -21,7 +22,8 @@ class UEstache(UEface):
         self.beard=beard
         self.Sguide_num = Sguide_num
         self.Bguide_num = Bguide_num
-
+        
+    @auto_profiler_tag
     def build(self):
         prefix = UEface.get_prefix_from_group(self.grp_name)
 
@@ -181,17 +183,3 @@ class UEstache(UEface):
                 mc.select(loft_surface)
                 mc.select(sub_offset, add=True)
                 mc.UVPin()
-
-
-
-
-
-
-
-                
-
-
-
-    
-       
-

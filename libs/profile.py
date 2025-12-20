@@ -1,7 +1,22 @@
+from functools import wraps
 import maya.cmds as cmds
 from rjg.libs.color import color_from_name, float_to_byte_color
 
-
+def auto_profiler_tag(build_method):
+    @wraps(build_method)
+    def wrapper(self, *args, **kwargs):
+        # Capture the state of the scene before anything happens
+        before_nodes = set(cmds.ls())
+        
+        # Run the actual build logic
+        result = build_method(self, *args, **kwargs)
+        
+        # Check if the object is a rig module.
+        if hasattr(self, "tag_created_nodes"):
+            self.tag_created_nodes(before_nodes)
+        return result
+    return wrapper
+        
 def add_profiler_tag(node: str | list[str], tag_name: str, tag_color: tuple[float, float, float] | None = None):
     """
     Add a profiler tag to a node for rig speed profiling based on part/name.
@@ -23,23 +38,26 @@ def add_profiler_tag(node: str | list[str], tag_name: str, tag_color: tuple[floa
         nodes = [node]
     
     for node in nodes:
-        # Add metadata channels only if they don't yet exist
-        extant_metadata: list[str] = (cmds.addMetadata(node, q=True, channelName=True) or [])
-        if "ProfileTag" in extant_metadata and "ProfileTagColor" in extant_metadata:
-            return
-        if "ProfileTag" not in extant_metadata:
-            cmds.addMetadata(node, streamName="ProfileTagStream", channelName="ProfileTag", structure="NodeProfileStruct")
-        if "ProfileTagColor" not in extant_metadata:
-            cmds.addMetadata(node, streamName="ProfileTagColorStream", channelName="ProfileTagColor", structure="NodeProfileStruct")
-    
-        # Set the actual metadata
-        cmds.editMetadata(node, streamName="ProfileTagStream", memberName="NodeProfileTag", channelName="ProfileTag", stringValue=tag_name, index=0)
+        try:
+            # Add metadata channels only if they don't yet exist
+            extant_metadata: list[str] = (cmds.addMetadata(node, q=True, channelName=True) or [])
+            if "ProfileTag" in extant_metadata and "ProfileTagColor" in extant_metadata:
+                return
+            if "ProfileTag" not in extant_metadata:
+                cmds.addMetadata(node, streamName="ProfileTagStream", channelName="ProfileTag", structure="NodeProfileStruct")
+            if "ProfileTagColor" not in extant_metadata:
+                cmds.addMetadata(node, streamName="ProfileTagColorStream", channelName="ProfileTagColor", structure="NodeProfileStruct")
         
-        # Get the tag_color value
-        if tag_color is not None:
-            color: tuple[int, int, int] = float_to_byte_color(tag_color)
-        else:
-            color: tuple[int, int, int] = float_to_byte_color(color_from_name(tag_name))
-        cmds.editMetadata(node, streamName="ProfileTagColorStream", memberName="NodeProfileTagColor", channelName="ProfileTagColor", value=color[0], index=0)
-        cmds.editMetadata(node, streamName="ProfileTagColorStream", memberName="NodeProfileTagColor", channelName="ProfileTagColor", value=color[1], index=1)
-        cmds.editMetadata(node, streamName="ProfileTagColorStream", memberName="NodeProfileTagColor", channelName="ProfileTagColor", value=color[2], index=2)
+            # Set the actual metadata
+            cmds.editMetadata(node, streamName="ProfileTagStream", memberName="NodeProfileTag", channelName="ProfileTag", stringValue=tag_name, index=0)
+            
+            # Get the tag_color value
+            if tag_color is not None:
+                color: tuple[int, int, int] = float_to_byte_color(tag_color)
+            else:
+                color: tuple[int, int, int] = float_to_byte_color(color_from_name(tag_name))
+            cmds.editMetadata(node, streamName="ProfileTagColorStream", memberName="NodeProfileTagColor", channelName="ProfileTagColor", value=color[0], index=0)
+            cmds.editMetadata(node, streamName="ProfileTagColorStream", memberName="NodeProfileTagColor", channelName="ProfileTagColor", value=color[1], index=1)
+            cmds.editMetadata(node, streamName="ProfileTagColorStream", memberName="NodeProfileTagColor", channelName="ProfileTagColor", value=color[2], index=2)
+        except Exception as e:
+            print(f"{node} -- {e}")
