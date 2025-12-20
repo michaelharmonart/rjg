@@ -8,6 +8,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
+from rjg.libs.profile import auto_profiler_tag
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -19,6 +20,7 @@ class UEjaw(UEface):
     def __init__(self, grp_name=None, ctrl_scale=1,):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
 
+    @auto_profiler_tag
     def build(self):
         prefix = UEface.get_prefix_from_group(self.grp_name)
     
@@ -82,4 +84,3 @@ class UEjaw(UEface):
         mc.setAttr(f'{mult_node2}.input2X', -0.05)
         mc.connectAttr(f'{root_ctrl}.rotateX', f'{mult_node2}.input1X')
         mc.connectAttr(f'{mult_node2}.outputX', f'Jaw_M_larynx_M_CTRL_OFF_GRP.translateY')
-

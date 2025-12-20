@@ -8,6 +8,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
+from rjg.libs.profile import auto_profiler_tag
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -18,7 +19,8 @@ reload(rXform)
 class UEear(UEface):
     def __init__(self, grp_name=None, ctrl_scale=1,):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
-
+    
+    @auto_profiler_tag
     def build(self):
         prefix = UEface.get_prefix_from_group(self.grp_name)
         side = prefix.split('_')[-1]  # "L"

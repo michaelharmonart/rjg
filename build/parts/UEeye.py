@@ -8,6 +8,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
+from rjg.libs.profile import auto_profiler_tag
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -589,6 +590,8 @@ class UEeye(UEface):
                 print(f"Constrained {jnt} to {ctrl}")
             except Exception as e:
                 print(f"Constraint failed for {ctrl} → {jnt}: {e}")
+    
+    @auto_profiler_tag
     def build(self):
         
         prefix = UEface.get_prefix_from_group(self.grp_name)
@@ -933,15 +936,3 @@ class UEeye(UEface):
             if self.eyetype == 'lizzard':
                 mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[1])
         mc.parent(f'Eye_{side}_Lower_Blink_{side}_CTRL_CNST_GRP', f'Eye_{side}_Upper_Blink_{side}_CTRL_CNST_GRP', f'Eye_{side}_MasterControl_{side}_CTRL')
-
-
-
-                    
-
-                    
-
-            
-
-
-
-        

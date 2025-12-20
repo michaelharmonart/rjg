@@ -19,6 +19,7 @@ from rjg.build.parts.bipedLimb import BipedLimb
 from rjg.build.parts.clavicle import Clavicle
 from rjg.build.parts.hand import Hand
 from rjg.libs.skin import auto_split_all_weights
+from rjg.libs.profile import add_profiler_tag
 
 reload(rUtil)
 reload(rProp)
@@ -829,11 +830,16 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     #### Bobo SPECIFICS
     if character == 'Bobo' and not_previs and face:
         reload(rFile)
+        before_nodes = set(mc.ls())
         face = rFile.import_hierarchy(groups + f'/bobo/anim/Rigs/{character}Face.mb')
         import rjg.post.BobofaceProject as rBFaceProj
         reload(rBFaceProj)
         rBFaceProj.project(body=body_mesh, char='ROOT', f_model='FaceAtOrigin', f_rig='face_M', extras=f'{character}_Extras', f_extras='F_EXTRAS', f_skel='faceRoot_JNT')#, tY=1.103)
         mc.delete(face)
+        after_nodes = set(mc.ls())
+        added_nodes = after_nodes - before_nodes
+        for node in added_nodes:
+            add_profiler_tag(node, "face")
         mc.joint(n='root_root_JNT')
         mc.parent('root_root_JNT', 'SKEL')
         mc.parent('root_M_JNT', 'faceRoot_JNT', 'root_root_JNT')
@@ -1556,6 +1562,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             #)
 
             #Add Sculpt points
+            before_nodes = set(mc.ls())
             if face:
                 CurveNetAtHome.create_curve_net_joints('Body', 'Bobo_UBM') 
                 skin_clusters = "curve_net_skin_cluster"
@@ -1563,6 +1570,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
                 Bobo_Build_Scripts.Clean_up_SculptJoints()
             mc.delete('CurveNet_Guide_Group')
+            after_nodes = set(mc.ls())
+            added_nodes = after_nodes - before_nodes
+            for node in added_nodes:
+                add_profiler_tag(node, "sculpt")
             Bobo_Build_Scripts.clean_claws()
             Bobo_Build_Scripts.Clean_Fur()
 

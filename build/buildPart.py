@@ -32,6 +32,7 @@ import rjg.build.parts.winghand as rWingHand
 import rjg.build.parts.dragonleg as rDragonLeg
 
 from rjg.build.parts.hybrid_spine import HybridSpine
+from rjg.libs import profile
 
 reload(rAttr)
 reload(rRoot)
@@ -99,9 +100,13 @@ MODULE_DICT = {
 
 
 def build_module(module_type, **kwargs):
+    scene_nodes = set(mc.ls())
     # creates object from module_type class (kwargs carrying any info specific to that class)
     module = MODULE_DICT[module_type](**kwargs)
-
+    new_scene_nodes = set(mc.ls())
+    added_nodes = new_scene_nodes - scene_nodes
+    for node in added_nodes:
+        profile.add_profiler_tag(node, module_type)
     # tags to part group with the module type
     rAttr.Attribute(node=module.part_grp, type='string', name='moduleType', value=module_type, lock=True)
 

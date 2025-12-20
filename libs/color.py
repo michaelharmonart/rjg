@@ -1,3 +1,4 @@
+import hashlib
 import math
 
 import maya.api.OpenMaya as om2
@@ -192,6 +193,40 @@ def srgb_to_linear_color(srgb_color: tuple[float, float, float]) -> tuple[float,
         max(0.0, min(1.0, b)),
     )
 
+def float_to_byte_color(color: tuple[float, float, float]) -> tuple[int, int, int]:
+    """
+        Convert an RGB color from float to 8-bit integer represenation.
+    
+        Each channel in the input color is expected to be in the range [0.0, 1.0].
+        Values are scaled to [0, 255], rounded to the nearest integer, and clamped
+        to ensure they stay within valid 8-bit bounds.
+    
+        Args:
+            color: Linear RGB color as normalized floats (R, G, B).
+    
+        Returns:
+            RGB color as 8-bit integers (R, G, B).
+    """
+    return tuple(
+            max(0, min(255, int(round(channel * 255.0))))
+            for channel in color
+        )
+
+def color_from_name(name:str) -> tuple[float, float, float]:
+    """
+    Create a random RGB color from a name using a hash function (color will always be the same for the same name).
+
+    Args:
+        name: The input string for the hash function
+
+    Returns:
+        tuple[float, float, float]: Linear sRGB Color.
+    """
+    hashed = int.from_bytes(hashlib.sha1(name.encode()).digest()[:2])
+    hue_angle = hashed % 360
+    lab_color = lch_to_lab(color=(0.7, 0.2, hue_angle))
+    return linear_to_srgb_color(oklab_to_linear_srgb(color=lab_color))
+    
 
 def get_texture_from_shader(shader: str) -> str | None:
     # Check if the 'color' plug exists and is connected

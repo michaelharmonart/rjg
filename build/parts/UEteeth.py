@@ -9,6 +9,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
 from rjg.build.UEface import UEface
+from rjg.libs.profile import auto_profiler_tag
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -21,6 +22,7 @@ class UEteeth(UEface):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.skin = skin
 
+    @auto_profiler_tag
     def build(self):
         prefix = UEface.get_prefix_from_group(self.grp_name)
         UEface.Simple_joint_and_Control(

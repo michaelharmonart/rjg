@@ -7,6 +7,7 @@ import rjg.build.chain as rChain
 import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
 import rjg.libs.transform as rXform
+from rjg.libs import profile
 reload(rAttr)
 reload(rChain)
 reload(rCtrl)
@@ -375,3 +376,9 @@ class UEface:
         result = mc.curve(name=curve_name, degree=curve_degree, point=points)
         print(f"[INFO] Created curve: {result}")
         return result
+
+    def tag_created_nodes(self, nodes_before: set[str]):
+        nodes_after = set(mc.ls())
+        added_nodes = nodes_after - nodes_before
+        for node in added_nodes:
+            profile.add_profiler_tag(node, self.part)
