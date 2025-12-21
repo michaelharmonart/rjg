@@ -116,7 +116,7 @@ class Spline:
         self.name = name
         self.spline = spline_from_guides(
             guides=guides,
-            name=f"{name}_Spline",
+            name=f"{name}",
             parent=parent,
             degree=degree,
             rebuild_spans=1 if rebuild else None,
@@ -199,79 +199,18 @@ class UEwing(UEface):
             tip_guide = f"{prefix}_{feather}_{index:02d}_aim"
             valid_guides.append((guide, mid_guide, tip_guide))
         return valid_guides
-
-    @auto_profiler_tag
-    def build_wing(self):
-        # 'splines' or 'stretchey_splines'
-        # group='Wing_L_guides'
+        
+    def build_limb(self):
         prefix = self.prefix
-        grp = self.grp_name
         ctrlname, grpname = UEwing.get_namestruc(prefix)
-        parts = prefix.split("_")  # ["wing", "L"]
-        side = parts[-1]
-
-        feather_grp = mc.group(em=True, name=f"{prefix}_feather_{grpname}")
-        handle_grp = mc.group(em=True, name=f"{prefix}_handle_{grpname}")
-        # upAim_grp = mc.group(em=True, name=f'{prefix}_upAim_{grpname}')
         mc.select(clear=True)
-        fk_group = mc.group(em=True, name=f"{prefix}_FK_{grpname}")
-        ik_group = mc.group(em=True, name=f"{prefix}_IK_{grpname}")
-        netgrp = mc.group(em=True, name=f"{prefix}_net_{grpname}")
+        self.fk_group = mc.group(em=True, name=f"{prefix}_FK_{grpname}")
+        self.ik_group = mc.group(em=True, name=f"{prefix}_IK_{grpname}")
 
-        guides = self.get_guides(prefix=prefix, feather="MainFeather")
-        root_list = [guide[0] for guide in guides]
-        mid_list = [guide[1] for guide in guides]
-        aim_list = [guide[2] for guide in guides]
-        mainguides = root_list
-
-        # Feathershaping
-        root_spline = Spline(
-            guides=root_list,
-            name=f"{prefix}_Root_Spline",
-            parent=handle_grp,
-            control_parent=feather_grp,
-            ctrl_scale=self.ctrl_scale,
-            rebuild=True,
-        )
-        mid_spline = Spline(
-            guides=mid_list,
-            name=f"{prefix}_Mid_Spline",
-            parent=handle_grp,
-            control_parent=feather_grp,
-            ctrl_scale=self.ctrl_scale,
-            rebuild=True,
-        )
-        tip_spline = Spline(
-            guides=aim_list,
-            name=f"{prefix}_Tip_Spline",
-            parent=handle_grp,
-            control_parent=feather_grp,
-            ctrl_scale=self.ctrl_scale,
-            rebuild=True,
-        )
-
-        main_shape = root_spline.spline_shape
-        mid_shape = mid_spline.spline_shape
-        aim_shape = tip_spline.spline_shape
-        positions = get_cvs(main_shape) + get_cvs(mid_shape) + get_cvs(aim_shape)
-        knots_v = get_knots(main_shape)[1:-1]
-        knots_u = generate_knots(3, degree=2)[1:-1]
-        surface = mc.surface(
-            name=f"{prefix}_Surface",
-            point=[(position.x, position.y, position.z) for position in positions],
-            knotU=knots_u,
-            knotV=knots_v,
-            degreeU=2,
-        )
-        surface_transform = mc.listRelatives(surface, parent=True)[0]
-        for index, cluster in enumerate(
-            root_spline.pin_list + mid_spline.pin_list + tip_spline.pin_list
-        ):
-            mc.connectAttr(f"{cluster}.translate", f"{surface}.controlPoints[{index}]")
-        mc.parent(surface_transform, handle_grp)
+        
 
         # bind
-        bind_joints = []
+        self.limb_bind_joints = []
         pre_jnt = None
         for obj in [
             f"{prefix}_01_guide",
@@ -286,7 +225,7 @@ class UEwing(UEface):
             # Clear selection before creating the joint to avoid parenting
             mc.select(clear=True)
             joint = mc.joint(name=joint_name)
-            bind_joints.append(joint)
+            self.limb_bind_joints.append(joint)
 
             # Match translation and rotation in world space
             pos = mc.xform(obj, q=True, ws=True, t=True)
@@ -301,42 +240,7 @@ class UEwing(UEface):
 
         parjnts = ["01", "02", "03", "04"]
 
-        # Build Feather :)
-        def_jnts = []
-        for index, (root_guide, mid_guide, tip_guide) in enumerate(
-            zip(root_list, mid_list, aim_list)
-        ):
-            name = root_guide.replace("guide", "Spline")
-            root_pin = create_pin_on_curve(
-                name=f"{root_guide}_Pin",
-                curve=root_spline.spline,
-                parent=handle_grp,
-                guide=root_guide,
-            )
-            mid_pin = create_pin_on_curve(
-                name=f"{mid_guide}_Pin", curve=mid_spline.spline, parent=handle_grp, guide=mid_guide
-            )
-            tip_pin = create_pin_on_curve(
-                name=f"{tip_guide}_Pin", curve=tip_spline.spline, parent=handle_grp, guide=tip_guide
-            )
-            feather_spline = Spline(
-                name=name,
-                guides=[root_pin, mid_pin, tip_pin],
-                parent=handle_grp,
-                control_parent=feather_grp,
-                build_controls=False,
-                pin_transforms=[root_pin, mid_pin, tip_pin],
-                degree=2,
-            )
-            pass
-
-        for i, bind_jnt in enumerate(bind_joints):
-            main = root_spline.control_list[i]
-            mid = mid_spline.control_list[i]
-            aim = tip_spline.control_list[i]
-            mc.parentConstraint(bind_jnt, main.top, mo=True)
-            mc.parentConstraint(bind_jnt, mid.top, mo=True)
-            mc.parentConstraint(bind_jnt, aim.top, mo=True)
+        
 
         pre_jnt = None
         pre_ctrl = None
@@ -507,7 +411,7 @@ class UEwing(UEface):
         )  # f'{prefix}_Main_loft'
         mc.parent(f"{prefix}_IK_Aim_{grpname}", f"{prefix}_IK_Root_{ctrlname}")
         mc.parent(f"{prefix}_IK_EE_{grpname}", f"{prefix}_IK_Root_{ctrlname}")
-        mc.parent(f"{prefix}_IK_Root_{grpname}", ik_group)
+        mc.parent(f"{prefix}_IK_Root_{grpname}", self.ik_group)
         mc.connectAttr(f"{FKIKSwitch_CTL}.FK_IK", f"{prefix}_FK_{grpname}.visibility")
         mc.connectAttr(f"{rev_node}.outputX", f"{prefix}_IK_{grpname}.visibility")
         jnt, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(
@@ -519,21 +423,123 @@ class UEwing(UEface):
             CTRL_Size=10,
             JNT_Size=0.5,
         )
-
-        mastergrp = mc.group(em=True, name=f"{prefix}")
+        
         mc.parent(f"{prefix}_FK_{grpname}", f"{prefix}_IK_{grpname}", ctrl)
         mc.parent(
-            f"{prefix}_feather_{grpname}",
-            f"{prefix}_handle_{grpname}",
-            f"{prefix}_FKIKSwitch_{grpname}",
-            f"{prefix}_extraOffset_{grpname}",
-            ctrl_offset,
-            mastergrp,
-        )  # f'{prefix}_upAim_{grpname}'f'{prefix}_Span_{grpname}'f'{prefix}_aimcurve_{grpname}'
+             f"{prefix}_FKIKSwitch_{grpname}",
+             f"{prefix}_extraOffset_{grpname}",
+             ctrl_offset,
+             self.mastergrp,
+         )  # f'{prefix}_upAim_{grpname}'f'{prefix}_Span_{grpname}'f'{prefix}_aimcurve_{grpname}'
         mc.parent(f"{prefix}_01_bind_jnt", jnt)  # f'{prefix}_root_jnt'
         mc.parent(jnt, "chest_M_JNT")
         mc.parentConstraint("chest_M_02_CTRL", ctrl_offset, mo=True)
-        mc.hide(f"{prefix}_handle_{grpname}", f"{prefix}_extraOffset_{grpname}")
-        mc.parent(mastergrp, "RIG")
-        mc.parent(netgrp, mastergrp)
-        mc.parentConstraint(bind_joints[0], netgrp, mo=True)
+        mc.hide(f"{prefix}_extraOffset_{grpname}")
+        mc.parent(self.mastergrp, "RIG")
+
+        
+    def build_feathers(self):
+        prefix = self.prefix
+        self.feather_grp = mc.group(em=True, name=f"{self.prefix}_feather_{self.grp_name}", parent=self.mastergrp)
+        self.spline_grp = mc.group(em=True, name=f"{self.prefix}_handle_{self.grp_name}", parent=self.mastergrp)
+        mc.hide(self.spline_grp)
+        guides = self.get_guides(prefix=prefix, feather="MainFeather")
+        root_list = [guide[0] for guide in guides]
+        mid_list = [guide[1] for guide in guides]
+        aim_list = [guide[2] for guide in guides]
+        mainguides = root_list
+
+        # Feathershaping
+        root_spline = Spline(
+            guides=root_list,
+            name=f"{prefix}_Root_Spline",
+            parent=self.spline_grp,
+            control_parent=self.feather_grp,
+            ctrl_scale=self.ctrl_scale,
+            rebuild=True,
+        )
+        mid_spline = Spline(
+            guides=mid_list,
+            name=f"{prefix}_Mid_Spline",
+            parent=self.spline_grp,
+            control_parent=self.feather_grp,
+            ctrl_scale=self.ctrl_scale,
+            rebuild=True,
+        )
+        tip_spline = Spline(
+            guides=aim_list,
+            name=f"{prefix}_Tip_Spline",
+            parent=self.spline_grp,
+            control_parent=self.feather_grp,
+            ctrl_scale=self.ctrl_scale,
+            rebuild=True,
+        )
+
+        main_shape = root_spline.spline_shape
+        mid_shape = mid_spline.spline_shape
+        aim_shape = tip_spline.spline_shape
+        positions = get_cvs(main_shape) + get_cvs(mid_shape) + get_cvs(aim_shape)
+        knots_v = get_knots(main_shape)[1:-1]
+        knots_u = generate_knots(3, degree=2)[1:-1]
+        surface = mc.surface(
+            name=f"{prefix}_Surface",
+            point=[(position.x, position.y, position.z) for position in positions],
+            knotU=knots_u,
+            knotV=knots_v,
+            degreeU=2,
+        )
+        surface_transform = mc.listRelatives(surface, parent=True)[0]
+        for index, cluster in enumerate(
+            root_spline.pin_list + mid_spline.pin_list + tip_spline.pin_list
+        ):
+            mc.connectAttr(f"{cluster}.translate", f"{surface}.controlPoints[{index}]")
+        mc.parent(surface_transform, self.spline_grp)
+        
+        # Build Feather :)
+        def_jnts = []
+        for index, (root_guide, mid_guide, tip_guide) in enumerate(
+            zip(root_list, mid_list, aim_list)
+        ):
+            name = root_guide.replace("guide", "Spline")
+            root_pin = create_pin_on_curve(
+                name=f"{root_guide}_Pin",
+                curve=root_spline.spline,
+                parent=self.spline_grp,
+                guide=root_guide,
+            )
+            mid_pin = create_pin_on_curve(
+                name=f"{mid_guide}_Pin", curve=mid_spline.spline, parent=self.spline_grp, guide=mid_guide
+            )
+            tip_pin = create_pin_on_curve(
+                name=f"{tip_guide}_Pin", curve=tip_spline.spline, parent=self.spline_grp, guide=tip_guide
+            )
+            feather_spline = Spline(
+                name=name,
+                guides=[root_pin, mid_pin, tip_pin],
+                parent=self.spline_grp,
+                control_parent=self.feather_grp,
+                build_controls=False,
+                pin_transforms=[root_pin, mid_pin, tip_pin],
+                degree=2,
+            )
+            pass
+
+        for i, bind_jnt in enumerate(self.limb_bind_joints):
+            main = root_spline.control_list[i]
+            mid = mid_spline.control_list[i]
+            aim = tip_spline.control_list[i]
+            mc.parentConstraint(bind_jnt, main.top, mo=True)
+            mc.parentConstraint(bind_jnt, mid.top, mo=True)
+            mc.parentConstraint(bind_jnt, aim.top, mo=True)
+        
+    @auto_profiler_tag
+    def build_wing(self):
+        prefix = self.prefix
+        grp = self.grp_name
+        ctrlname, grpname = UEwing.get_namestruc(prefix)
+        parts = prefix.split("_")  # ["wing", "L"]
+        side = parts[-1]
+        self.mastergrp = mc.group(em=True, name=f"{prefix}")
+        self.build_limb()
+        self.build_feathers()
+        # upAim_grp = mc.group(em=True, name=f'{prefix}_upAim_{grpname}')
