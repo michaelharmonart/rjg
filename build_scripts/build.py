@@ -176,7 +176,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         )
         
     if character == 'Luciana':
-        neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False , spinejnt_count = 6, )
+        neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=5,)
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = True)
     else:    
         neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)

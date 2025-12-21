@@ -30,6 +30,7 @@ import rjg.build.parts.wing as rWing
 import rjg.build.parts.scapula as rScapula
 import rjg.build.parts.winghand as rWingHand
 import rjg.build.parts.dragonleg as rDragonLeg
+import rjg.build.parts.autoneck as rautoneck
 
 from rjg.build.parts.hybrid_spine import HybridSpine
 from rjg.libs import profile
@@ -63,6 +64,9 @@ reload(rWing)
 reload(rScapula)
 reload(rWingHand)
 reload(rDragonLeg)
+reload(rautoneck)
+
+
 '''
 Wrapper for all part modules
 '''
@@ -95,7 +99,8 @@ MODULE_DICT = {
                'wing' : rWing.Wing,
                'scapula' : rScapula.Scapula,
                'winghand' : rWingHand.WingHand,
-               'dragonleg' : rDragonLeg.DragonLeg
+               'dragonleg' : rDragonLeg.DragonLeg,
+               'autoneck' : rautoneck.autoneck,
                }
 
 
