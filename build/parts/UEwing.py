@@ -42,12 +42,19 @@ def spline_from_guides(
     degree: int = 3,
     rebuild_spans: int | None = None,
     edit_point: bool = True,
+    display_reference: bool = False
 ) -> str:
     positions: list[tuple[float, float, float]] = [get_world_position(guide) for guide in guides]
     if edit_point:
         curve: str = mc.curve(name=name, editPoint=positions, degree=degree)
     else:
         curve: str = mc.curve(name=name, point=positions, degree=degree)
+    curve_shape = get_curve(curve)
+    curve_shape = mc.rename(curve_shape, f"{curve}Shape")
+    if display_reference:
+        mc.displaySmoothness(curve_shape, pointsWire=16)
+        mc.setAttr(f"{curve_shape}.overrideEnabled", 1)
+        mc.setAttr(f"{curve_shape}.overrideDisplayType", 1)
     if rebuild_spans is not None:
         mc.rebuildCurve(spans=rebuild_spans, keepRange=2, degree=degree)
         mc.delete(curve, constructionHistory=True)
@@ -112,6 +119,7 @@ class Spline:
         ctrl_scale: float = 1,
         degree: int = 3,
         rebuild: bool = False,
+        display_reference = True,
     ) -> None:
         self.name = name
         self.spline = spline_from_guides(
@@ -121,6 +129,7 @@ class Spline:
             degree=degree,
             rebuild_spans=1 if rebuild else None,
             edit_point=rebuild,
+            display_reference=display_reference,
         )
         self.spline_shape = get_curve(self.spline)
         cvs: list[Vector3] = get_cvs(self.spline_shape)
@@ -440,8 +449,9 @@ class UEwing(UEface):
         
     def build_feathers(self):
         prefix = self.prefix
-        self.feather_grp = mc.group(em=True, name=f"{self.prefix}_feather_{self.grp_name}", parent=self.mastergrp)
-        self.spline_grp = mc.group(em=True, name=f"{self.prefix}_handle_{self.grp_name}", parent=self.mastergrp)
+        self.feather_grp = mc.group(em=True, name=f"{self.prefix}_feather", parent=self.mastergrp)
+        self.spline_grp = mc.group(em=True, name=f"{self.prefix}_spline", parent=self.mastergrp)
+        self.net_grp = mc.group(em=True, name=f"{self.prefix}_net", parent=self.mastergrp)
         mc.hide(self.spline_grp)
         guides = self.get_guides(prefix=prefix, feather="MainFeather")
         root_list = [guide[0] for guide in guides]
@@ -453,7 +463,7 @@ class UEwing(UEface):
         root_spline = Spline(
             guides=root_list,
             name=f"{prefix}_Root_Spline",
-            parent=self.spline_grp,
+            parent=self.net_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
             rebuild=True,
@@ -461,7 +471,7 @@ class UEwing(UEface):
         mid_spline = Spline(
             guides=mid_list,
             name=f"{prefix}_Mid_Spline",
-            parent=self.spline_grp,
+            parent=self.net_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
             rebuild=True,
@@ -469,7 +479,7 @@ class UEwing(UEface):
         tip_spline = Spline(
             guides=aim_list,
             name=f"{prefix}_Tip_Spline",
-            parent=self.spline_grp,
+            parent=self.net_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
             rebuild=True,
@@ -516,7 +526,7 @@ class UEwing(UEface):
             feather_spline = Spline(
                 name=name,
                 guides=[root_pin, mid_pin, tip_pin],
-                parent=self.spline_grp,
+                parent=self.net_grp,
                 control_parent=self.feather_grp,
                 build_controls=False,
                 pin_transforms=[root_pin, mid_pin, tip_pin],
@@ -542,4 +552,3 @@ class UEwing(UEface):
         self.mastergrp = mc.group(em=True, name=f"{prefix}")
         self.build_limb()
         self.build_feathers()
-        # upAim_grp = mc.group(em=True, name=f'{prefix}_upAim_{grpname}')
