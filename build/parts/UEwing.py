@@ -1,5 +1,6 @@
 import math
 import re
+from dataclasses import dataclass
 from importlib import reload
 from tkinter import Scale
 from typing import Sequence
@@ -12,9 +13,11 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.transform as rXform
 from maya.api.OpenMaya import MFnNurbsCurve, MPoint, MSelectionList, MSpace, MVector
 from rjg.build.UEface import UEface
+from rjg.libs.maya_api import node
 from rjg.libs.profile import auto_profiler_tag
-from rjg.libs.spline import generate_knots, get_cvs, get_knots
-from rjg.libs.spline.math import Vector3
+from rjg.libs.spline import get_cvs
+from rjg.libs.spline.math import Vector3, point_on_spline_weights
+from rjg.libs.spline.maya_query import get_knots
 
 reload(rAttr)
 reload(rChain)
@@ -83,12 +86,17 @@ def closest_point_on_curve(curve: str, guide: str, fraction: bool = True) -> flo
         return parameter
 
 
+@dataclass
+class MotionPathPin:
+    pin: str
+    motion_path: str
+
+
 def create_pin_on_curve(
     name: str, curve: str, guide: str, parent: str, arc_length: bool = True
-) -> str:
+) -> MotionPathPin:
     curve_shape = get_curve(curve)
-    pin: str = mc.spaceLocator(name=name)[0]
-    mc.parent(pin, parent, relative=True)
+    pin: str = mc.group(empty=True, name=name, parent=parent)
 
     motion_path = mc.createNode("motionPath", name=f"{name}_motionPathPin")
     mc.setAttr(f"{motion_path}.fractionMode", arc_length)
@@ -98,6 +106,80 @@ def create_pin_on_curve(
 
     fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
     mc.setAttr(f"{motion_path}.uValue", fraction)
+    return MotionPathPin(pin, motion_path)
+
+
+def create_pin_on_net(
+    name: str,
+    curve: str,
+    backbone_curves: Sequence[str],
+    backbones_pins: Sequence[MotionPathPin],
+    guide: str,
+    parent: str,
+    arc_length: bool = True,
+) -> str:
+    curve_shape = get_curve(curve)
+    curve_knots = get_knots(curve_shape)
+    pin: str = mc.spaceLocator(name=name)[0]
+    mc.parent(pin, parent, relative=True)
+
+    fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
+    parameter = closest_point_on_curve(curve_shape, guide, fraction=False)
+    weights = point_on_spline_weights(
+        cvs=list(backbones_pins), t=parameter, knots=curve_knots, normalize=False, degree=2
+    )
+
+    motion_path = mc.createNode("motionPath", name=f"{name}_motionPathPin")
+    mc.setAttr(f"{motion_path}.fractionMode", arc_length)
+    mc.connectAttr(f"{curve_shape}.local", f"{motion_path}.geometryPath")
+    mc.setAttr(f"{motion_path}.uValue", fraction)
+    
+    tangent_node = node.AxisFromMatrixNode(name=f"{name}_backboneTangent")
+    mc.connectAttr(f"{motion_path}.orientMatrix", tangent_node.input)
+    tangent_node.axis.value = 1
+    
+
+    # Pin
+    matrix_blend = node.WtAddMatrixNode(name=f"{name}_tangentBlend")
+    backbone_pin: MotionPathPin
+    for index, (backbone_pin, weight) in enumerate(weights):
+        mc.connectAttr(
+            f"{backbone_pin.motion_path}.orientMatrix", matrix_blend.weight_matrix[index].matrix_in
+        )
+        mc.setAttr(matrix_blend.weight_matrix[index].weight_in, weight)
+
+    backbone_tangent_node = node.AxisFromMatrixNode(name=f"{name}_backboneTangent")
+    mc.connectAttr(matrix_blend.matrix_sum, backbone_tangent_node.input)
+    backbone_tangent_node.axis.value = 1
+    
+    cross_product_node = node.CrossProductNode(f"{name}_tangentCross")
+    mc.connectAttr(tangent_node.output, cross_product_node.input1)
+    mc.connectAttr(backbone_tangent_node.output, cross_product_node.input2)
+    
+    basis_matrix_node = node.FourByFourMatrixNode(f"{name}_BasisMatrix")
+    mc.connectAttr(backbone_tangent_node.output.x, basis_matrix_node.in_00)
+    mc.connectAttr(backbone_tangent_node.output.y, basis_matrix_node.in_01)
+    mc.connectAttr(backbone_tangent_node.output.z, basis_matrix_node.in_02)
+    mc.connectAttr(tangent_node.output.x, basis_matrix_node.in_10)
+    mc.connectAttr(tangent_node.output.y, basis_matrix_node.in_11)
+    mc.connectAttr(tangent_node.output.z, basis_matrix_node.in_12)
+    mc.connectAttr(cross_product_node.output.x, basis_matrix_node.in_20)
+    mc.connectAttr(cross_product_node.output.y, basis_matrix_node.in_21)
+    mc.connectAttr(cross_product_node.output.z, basis_matrix_node.in_22)
+    mc.connectAttr(f"{motion_path}.allCoordinates.xCoordinate", basis_matrix_node.in_30)
+    mc.connectAttr(f"{motion_path}.allCoordinates.yCoordinate", basis_matrix_node.in_31)
+    mc.connectAttr(f"{motion_path}.allCoordinates.zCoordinate", basis_matrix_node.in_32)
+    
+    pick_matrix_node = node.PickMatrixNode(f"{name}_PinMatrix")
+    mc.connectAttr(basis_matrix_node.output, pick_matrix_node.input_matrix)
+    pick_matrix_node.use_scale.value = False
+    pick_matrix_node.use_shear.value = False
+    
+    rXform.drive_transform_with_matrix(pick_matrix_node.output_matrix, pin, scale=False, shear=False)
+    
+    #mc.connectAttr(f"{motion_path}.allCoordinates", f"{pin}.translate")
+    #mc.connectAttr(f"{motion_path}.rotate", f"{pin}.rotate")
+
     return pin
 
 
@@ -492,7 +574,7 @@ class UEwing(UEface):
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
             rebuild=False,
-            degree=1
+            degree=1,
         )
         mid_spline = Spline(
             guides=mid_list,
@@ -541,15 +623,15 @@ class UEwing(UEface):
             )
             feather_spline = Spline(
                 name=name,
-                guides=[root_pin, mid_pin, tip_pin],
+                guides=[root_pin.pin, mid_pin.pin, tip_pin.pin],
                 parent=self.spline_grp,
                 control_parent=self.feather_grp,
                 build_controls=False,
-                pin_transforms=[root_pin, mid_pin, tip_pin],
+                pin_transforms=[root_pin.pin, mid_pin.pin, tip_pin.pin],
                 degree=2,
             )
             mc.parent(feather_spline.spline, self.net_grp)
-            
+
             parent = mc.listRelatives(root_guide, parent=True)[0]
             mid_guides = create_mid_guides(
                 root_guide, mid_guide, 2, f"{prefix}_{feather}_mid_guide_", parent=parent
@@ -560,12 +642,12 @@ class UEwing(UEface):
                 mid_guides[1]: f"{prefix}{feather}_{index:02d}_mid2_JNT",
                 mid_guide: f"{prefix}{feather}_{index:02d}_ee_JNT",
             }
-            
+
             joint_parent = self.spline_grp
-            if mc.attributeQuery('parent_joint', node=root_guide, exists=True):
-                joint_parent_index = mc.getAttr(f'{root_guide}.parent_joint')
+            if mc.attributeQuery("parent_joint", node=root_guide, exists=True):
+                joint_parent_index = mc.getAttr(f"{root_guide}.parent_joint")
                 joint_parent = self.limb_bind_joints[joint_parent_index]
-            split_joints: list[str] = []    
+            split_joints: list[str] = []
             for guide in [root_guide] + mid_guides + [mid_guide]:
                 if guide in guide_mapping:
                     joint_name = guide_mapping[guide]
@@ -574,24 +656,22 @@ class UEwing(UEface):
                 joint = mc.joint(name=joint_name)
                 UEface.add_to_face_bind_set(joint)
                 split_joints.append(joint)
-                pin = create_pin_on_curve(
+                pin = create_pin_on_net(
                     name=f"{joint}_Pin",
                     curve=feather_spline.spline,
+                    backbone_curves=[root_spline.spline, mid_spline.spline, tip_spline.spline],
+                    backbones_pins=[root_pin, mid_pin, tip_pin],
                     guide=guide,
                     parent=self.spline_grp,
                 )
                 mc.parent(joint, joint_parent, relative=True)
                 rXform.matrix_constraint(pin, joint, keep_offset=False)
                 joint_parent = joint
-            
+
             split_joint = split_joints[0]
             mc.addAttr(split_joint, longName="split_joints", dataType="string")
-            mc.setAttr(
-                f'{split_joint}.split_joints',
-                repr(split_joints),
-                type="string"
-            )
-        
+            mc.setAttr(f"{split_joint}.split_joints", repr(split_joints), type="string")
+
         for i, bind_jnt in enumerate(self.limb_bind_joints):
             main = root_spline.control_list[i]
             mid = mid_spline.control_list[i]
