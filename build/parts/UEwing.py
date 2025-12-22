@@ -512,26 +512,6 @@ class UEwing(UEface):
         )
         mc.parent(root_spline.spline, mid_spline.spline, tip_spline.spline, self.net_grp)
 
-        #main_shape = root_spline.spline_shape
-        #mid_shape = mid_spline.spline_shape
-        #aim_shape = tip_spline.spline_shape
-        #positions = get_cvs(main_shape) + get_cvs(mid_shape) + get_cvs(aim_shape)
-        #knots_v = get_knots(mid_shape)[1:-1]
-        #knots_u = generate_knots(3, degree=2)[1:-1]
-        #surface = mc.surface(
-        #    name=f"{prefix}_Surface",
-        #    point=[(position.x, position.y, position.z) for position in positions],
-        #    knotU=knots_u,
-        #    knotV=knots_v,
-        #    degreeU=2,
-        #)
-        #surface_transform = mc.listRelatives(surface, parent=True)[0]
-        #for index, cluster in enumerate(
-        #    root_spline.pin_list + mid_spline.pin_list + tip_spline.pin_list
-        #):
-        #    mc.connectAttr(f"{cluster}.translate", f"{surface}.controlPoints[{index}]")
-        #mc.parent(surface_transform, self.spline_grp)
-
         # Build Feather :)
         def_jnts = []
         for index, (root_guide, mid_guide, tip_guide) in enumerate(
