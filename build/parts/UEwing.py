@@ -90,23 +90,31 @@ def closest_point_on_curve(curve: str, guide: str, fraction: bool = True) -> flo
 class MotionPathPin:
     pin: str
     motion_path: str
+    orient_attr: str
 
 
 def create_pin_on_curve(
-    name: str, curve: str, guide: str, parent: str, arc_length: bool = True
+    name: str, curve: str, guide: str, parent: str, arc_length: bool = True, normalize_orient: bool = True
 ) -> MotionPathPin:
     curve_shape = get_curve(curve)
     pin: str = mc.group(empty=True, name=name, parent=parent)
 
     motion_path = mc.createNode("motionPath", name=f"{name}_motionPathPin")
     mc.setAttr(f"{motion_path}.fractionMode", arc_length)
+    mc.setAttr(f"{motion_path}.follow", True)
     mc.connectAttr(f"{curve_shape}.local", f"{motion_path}.geometryPath")
     mc.connectAttr(f"{motion_path}.allCoordinates", f"{pin}.translate")
     mc.connectAttr(f"{motion_path}.rotate", f"{pin}.rotate")
+    
+    motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
+    mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
+    motion_path_orient.use_translate.set(False)
+    motion_path_orient.use_scale.set(False)
+    motion_path_orient.use_translate.set(False)
 
     fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
     mc.setAttr(f"{motion_path}.uValue", fraction)
-    return MotionPathPin(pin, motion_path)
+    return MotionPathPin(pin, motion_path, str(motion_path_orient.output_matrix))
 
 
 def create_pin_on_net(
@@ -121,6 +129,8 @@ def create_pin_on_net(
     curve_shape = get_curve(curve)
     curve_knots = get_knots(curve_shape)
     pin: str = mc.spaceLocator(name=name)[0]
+    pin_shape = mc.listRelatives(pin, shapes=True, children=True)[0]
+    mc.setAttr(f"{pin_shape}.localScale",10,10,10, type="double3")
     mc.parent(pin, parent, relative=True)
 
     fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
@@ -133,9 +143,16 @@ def create_pin_on_net(
     mc.setAttr(f"{motion_path}.fractionMode", arc_length)
     mc.connectAttr(f"{curve_shape}.local", f"{motion_path}.geometryPath")
     mc.setAttr(f"{motion_path}.uValue", fraction)
+    mc.setAttr(f"{motion_path}.follow", True)
+    
+    motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
+    mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
+    motion_path_orient.use_translate.set(False)
+    motion_path_orient.use_scale.set(False)
+    motion_path_orient.use_translate.set(False)
     
     tangent_node = node.AxisFromMatrixNode(name=f"{name}_backboneTangent")
-    mc.connectAttr(f"{motion_path}.orientMatrix", tangent_node.input)
+    mc.connectAttr(motion_path_orient.output_matrix, tangent_node.input)
     tangent_node.axis.value = 1
     
 
@@ -144,7 +161,7 @@ def create_pin_on_net(
     backbone_pin: MotionPathPin
     for index, (backbone_pin, weight) in enumerate(weights):
         mc.connectAttr(
-            f"{backbone_pin.motion_path}.orientMatrix", matrix_blend.weight_matrix[index].matrix_in
+            backbone_pin.orient_attr, matrix_blend.weight_matrix[index].matrix_in
         )
         mc.setAttr(matrix_blend.weight_matrix[index].weight_in, weight)
 
@@ -172,10 +189,10 @@ def create_pin_on_net(
     
     pick_matrix_node = node.PickMatrixNode(f"{name}_PinMatrix")
     mc.connectAttr(basis_matrix_node.output, pick_matrix_node.input_matrix)
-    pick_matrix_node.use_scale.value = False
-    pick_matrix_node.use_shear.value = False
+    #pick_matrix_node.use_scale.value = False
+    #pick_matrix_node.use_shear.value = False
     
-    rXform.drive_transform_with_matrix(pick_matrix_node.output_matrix, pin, scale=False, shear=False)
+    rXform.drive_transform_with_matrix(pick_matrix_node.output_matrix, pin, scale=True, shear=True)
     
     #mc.connectAttr(f"{motion_path}.allCoordinates", f"{pin}.translate")
     #mc.connectAttr(f"{motion_path}.rotate", f"{pin}.rotate")
