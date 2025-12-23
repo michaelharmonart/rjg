@@ -93,8 +93,9 @@ class MotionPathPin:
     orient_attr: str
 
 
+
 def create_pin_on_curve(
-    name: str, curve: str, guide: str, parent: str, arc_length: bool = True, normalize_orient: bool = True
+    name: str, curve: str, guide: str, parent: str, arc_length: bool = True, normalize_orient: bool = False
 ) -> MotionPathPin:
     curve_shape = get_curve(curve)
     pin: str = mc.group(empty=True, name=name, parent=parent)
@@ -106,15 +107,20 @@ def create_pin_on_curve(
     mc.connectAttr(f"{motion_path}.allCoordinates", f"{pin}.translate")
     mc.connectAttr(f"{motion_path}.rotate", f"{pin}.rotate")
     
-    motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
-    mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
-    motion_path_orient.use_translate.set(False)
-    motion_path_orient.use_scale.set(False)
-    motion_path_orient.use_translate.set(False)
+    if normalize_orient:
+        motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
+        mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
+        motion_path_orient.use_translate.set(False)
+        motion_path_orient.use_scale.set(False)
+        motion_path_orient.use_translate.set(False)
+        orient_attr = str(motion_path_orient.output_matrix)
+    else:
+        orient_attr = f"{motion_path}.orientMatrix"
+    
 
     fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
     mc.setAttr(f"{motion_path}.uValue", fraction)
-    return MotionPathPin(pin, motion_path, str(motion_path_orient.output_matrix))
+    return MotionPathPin(pin, motion_path, orient_attr)
 
 
 def create_pin_on_net(
@@ -130,7 +136,7 @@ def create_pin_on_net(
     curve_knots = get_knots(curve_shape)
     pin: str = mc.spaceLocator(name=name)[0]
     pin_shape = mc.listRelatives(pin, shapes=True, children=True)[0]
-    mc.setAttr(f"{pin_shape}.localScale",10,10,10, type="double3")
+    mc.setAttr(f"{pin_shape}.localScale",20,20,20, type="double3")
     mc.parent(pin, parent, relative=True)
 
     fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
@@ -145,20 +151,21 @@ def create_pin_on_net(
     mc.setAttr(f"{motion_path}.uValue", fraction)
     mc.setAttr(f"{motion_path}.follow", True)
     
-    motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
-    mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
-    motion_path_orient.use_translate.set(False)
-    motion_path_orient.use_scale.set(False)
-    motion_path_orient.use_translate.set(False)
+    motion_path_orient_attr = f"{motion_path}.orientMatrix"
+    #motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
+    #mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
+    #motion_path_orient.use_translate.set(False)
+    #motion_path_orient.use_scale.set(False)
+    #motion_path_orient.use_translate.set(False)
+    #motion_path_orient_attr = motion_path_orient.output_matrix
     
-    tangent_node = node.AxisFromMatrixNode(name=f"{name}_backboneTangent")
-    mc.connectAttr(motion_path_orient.output_matrix, tangent_node.input)
+    tangent_node = node.AxisFromMatrixNode(name=f"{name}_tangent")
+    mc.connectAttr(motion_path_orient_attr, tangent_node.input)
     tangent_node.axis.value = 1
     
 
     # Pin
     matrix_blend = node.WtAddMatrixNode(name=f"{name}_tangentBlend")
-    backbone_pin: MotionPathPin
     for index, (backbone_pin, weight) in enumerate(weights):
         mc.connectAttr(
             backbone_pin.orient_attr, matrix_blend.weight_matrix[index].matrix_in
@@ -173,16 +180,27 @@ def create_pin_on_net(
     mc.connectAttr(tangent_node.output, cross_product_node.input1)
     mc.connectAttr(backbone_tangent_node.output, cross_product_node.input2)
     
+    backbone_tangent_ortho = node.CrossProductNode(f"{name}_backboneTangentOrtho")
+    mc.connectAttr(cross_product_node.output, backbone_tangent_ortho.input1)
+    mc.connectAttr(tangent_node.output, backbone_tangent_ortho.input2)
+    
+    x_normalize = node.NormalizeNode(f"{name}_xNormalized")
+    mc.connectAttr(backbone_tangent_ortho.output, x_normalize.input)
+    y_normalize = node.NormalizeNode(f"{name}_yNormalized")
+    mc.connectAttr(tangent_node.output, y_normalize.input)
+    z_normalize = node.NormalizeNode(f"{name}_zNormalized")
+    mc.connectAttr(cross_product_node.output, z_normalize.input)
+    
     basis_matrix_node = node.FourByFourMatrixNode(f"{name}_BasisMatrix")
-    mc.connectAttr(backbone_tangent_node.output.x, basis_matrix_node.in_00)
-    mc.connectAttr(backbone_tangent_node.output.y, basis_matrix_node.in_01)
-    mc.connectAttr(backbone_tangent_node.output.z, basis_matrix_node.in_02)
-    mc.connectAttr(tangent_node.output.x, basis_matrix_node.in_10)
-    mc.connectAttr(tangent_node.output.y, basis_matrix_node.in_11)
-    mc.connectAttr(tangent_node.output.z, basis_matrix_node.in_12)
-    mc.connectAttr(cross_product_node.output.x, basis_matrix_node.in_20)
-    mc.connectAttr(cross_product_node.output.y, basis_matrix_node.in_21)
-    mc.connectAttr(cross_product_node.output.z, basis_matrix_node.in_22)
+    mc.connectAttr(x_normalize.output.x, basis_matrix_node.in_00)
+    mc.connectAttr(x_normalize.output.y, basis_matrix_node.in_01)
+    mc.connectAttr(x_normalize.output.z, basis_matrix_node.in_02)
+    mc.connectAttr(y_normalize.output.x, basis_matrix_node.in_10)
+    mc.connectAttr(y_normalize.output.y, basis_matrix_node.in_11)
+    mc.connectAttr(y_normalize.output.z, basis_matrix_node.in_12)
+    mc.connectAttr(z_normalize.output.x, basis_matrix_node.in_20)
+    mc.connectAttr(z_normalize.output.y, basis_matrix_node.in_21)
+    mc.connectAttr(z_normalize.output.z, basis_matrix_node.in_22)
     mc.connectAttr(f"{motion_path}.allCoordinates.xCoordinate", basis_matrix_node.in_30)
     mc.connectAttr(f"{motion_path}.allCoordinates.yCoordinate", basis_matrix_node.in_31)
     mc.connectAttr(f"{motion_path}.allCoordinates.zCoordinate", basis_matrix_node.in_32)
