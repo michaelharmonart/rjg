@@ -210,7 +210,7 @@ def create_pin_on_net(
     #pick_matrix_node.use_scale.value = False
     #pick_matrix_node.use_shear.value = False
     
-    rXform.drive_transform_with_matrix(basis_matrix_node.output_matrix, pin, scale=True, shear=True)
+    rXform.drive_transform_with_matrix(basis_matrix_node.output, pin, scale=True, shear=True)
     
     #mc.connectAttr(f"{motion_path}.allCoordinates", f"{pin}.translate")
     #mc.connectAttr(f"{motion_path}.rotate", f"{pin}.rotate")
@@ -451,6 +451,8 @@ class UEwing(UEface):
             else:
                 pre_jnt = jnt
                 pre_ctrl = ctrl
+                mc.parent(ctrl_offset, self.fk_group)
+                
             armjnts.append(jnt)
             armoffsets.append(ctrl_offset)
             armctrls.append(ctrl)
