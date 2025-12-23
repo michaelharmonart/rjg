@@ -205,12 +205,12 @@ def create_pin_on_net(
     mc.connectAttr(f"{motion_path}.allCoordinates.yCoordinate", basis_matrix_node.in_31)
     mc.connectAttr(f"{motion_path}.allCoordinates.zCoordinate", basis_matrix_node.in_32)
     
-    pick_matrix_node = node.PickMatrixNode(f"{name}_PinMatrix")
-    mc.connectAttr(basis_matrix_node.output, pick_matrix_node.input_matrix)
+    #pick_matrix_node = node.PickMatrixNode(f"{name}_PinMatrix")
+    #mc.connectAttr(basis_matrix_node.output, pick_matrix_node.input_matrix)
     #pick_matrix_node.use_scale.value = False
     #pick_matrix_node.use_shear.value = False
     
-    rXform.drive_transform_with_matrix(pick_matrix_node.output_matrix, pin, scale=True, shear=True)
+    rXform.drive_transform_with_matrix(basis_matrix_node.output_matrix, pin, scale=True, shear=True)
     
     #mc.connectAttr(f"{motion_path}.allCoordinates", f"{pin}.translate")
     #mc.connectAttr(f"{motion_path}.rotate", f"{pin}.rotate")
