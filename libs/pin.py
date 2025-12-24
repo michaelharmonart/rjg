@@ -456,7 +456,7 @@ def make_matrix_pin(
     if not shear:
         pick_matrix = node.PickMatrixNode(name=f"{object_to_pin}_pickMatrix")
         cmds.connectAttr(f"{pinMatrix}.output", pick_matrix.input_matrix)
-        pick_matrix.use_shear = False
+        pick_matrix.use_shear.value = False
         pin_matrix_attr = pick_matrix.output_matrix
     cmds.connectAttr(pin_matrix_attr, f"{object_to_pin}.offsetParentMatrix")
     if not local_space:

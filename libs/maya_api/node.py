@@ -1,13 +1,14 @@
 from typing import Final
 
 import maya.cmds as cmds
-
 from rjg.libs.maya_api.attribute import (
     Attribute,
     BooleanAttribute,
+    EnumAttribute,
     IndexableAttribute,
     IndexableBlendMatrixTargetAttribute,
     IndexableMatrixAttribute,
+    IndexableWtMatrixAttribute,
     IntegerAttribute,
     MatrixAttribute,
     ScalarAttribute,
@@ -47,6 +48,7 @@ class Node:
             "standard": "multiplyPointByMatrix",
             "DL": "multiplyPointByMatrixDL",
         },
+        "normalize": {"standard": "normalize", "DL": "normalizeDL"},
     }
 
     def __init__(self, node_type: str, name: str | None = None) -> None:
@@ -89,6 +91,18 @@ class Node:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name='{self.name}')"
+
+
+class AxisFromMatrixNode(Node):
+    """Maya axisFromMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "axisFromMatrix") -> None:
+        super().__init__("axisFromMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input = MatrixAttribute(f"{self.name}.input")
+        self.axis = EnumAttribute(f"{self.name}.axis")
+        self.output = Vector3Attribute(f"{self.name}.output")
 
 
 class BlendMatrixNode(Node):
@@ -167,6 +181,32 @@ class DivideNode(Node):
         self.output = ScalarAttribute(f"{self.name}.output")
 
 
+class FourByFourMatrixNode(Node):
+    """Maya fourByFourMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "fourByFourMatrix") -> None:
+        super().__init__("fourByFourMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.in_00 = ScalarAttribute(f"{self.name}.in00")
+        self.in_01 = ScalarAttribute(f"{self.name}.in01")
+        self.in_02 = ScalarAttribute(f"{self.name}.in02")
+        self.in_03 = ScalarAttribute(f"{self.name}.in03")
+        self.in_10 = ScalarAttribute(f"{self.name}.in10")
+        self.in_11 = ScalarAttribute(f"{self.name}.in11")
+        self.in_12 = ScalarAttribute(f"{self.name}.in12")
+        self.in_13 = ScalarAttribute(f"{self.name}.in13")
+        self.in_20 = ScalarAttribute(f"{self.name}.in20")
+        self.in_21 = ScalarAttribute(f"{self.name}.in21")
+        self.in_22 = ScalarAttribute(f"{self.name}.in22")
+        self.in_23 = ScalarAttribute(f"{self.name}.in23")
+        self.in_30 = ScalarAttribute(f"{self.name}.in30")
+        self.in_31 = ScalarAttribute(f"{self.name}.in31")
+        self.in_32 = ScalarAttribute(f"{self.name}.in32")
+        self.in_33 = ScalarAttribute(f"{self.name}.in33")
+        self.output = MatrixAttribute(f"{self.name}.output")
+
+
 class LengthNode(Node):
     """Maya length node with enhanced interface."""
 
@@ -223,6 +263,17 @@ class MultMatrixNode(Node):
     def _setup_attributes(self) -> None:
         self.matrix_in = IndexableMatrixAttribute(f"{self.name}.matrixIn")
         self.matrix_sum = MatrixAttribute(f"{self.name}.matrixSum")
+
+
+class NormalizeNode(Node):
+    """Maya normalize node with enhanced interface."""
+
+    def __init__(self, name: str = "normalize") -> None:
+        super().__init__("normalize", name)
+
+    def _setup_attributes(self) -> None:
+        self.input = Vector3Attribute(f"{self.name}.input")
+        self.output = Vector3Attribute(f"{self.name}.output")
 
 
 class PickMatrixNode(Node):
@@ -284,3 +335,16 @@ class SumNode(Node):
     def _setup_attributes(self) -> None:
         self.input: IndexableAttribute = IndexableAttribute(f"{self.name}.input")
         self.output: ScalarAttribute = ScalarAttribute(f"{self.name}.output")
+
+
+class WtAddMatrixNode(Node):
+    """Maya wtAddMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "wtAddMatrix") -> None:
+        super().__init__("wtAddMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.weight_matrix: IndexableWtMatrixAttribute = IndexableWtMatrixAttribute(
+            f"{self.name}.wtMatrix"
+        )
+        self.matrix_sum: MatrixAttribute = MatrixAttribute(f"{self.name}.matrixSum")

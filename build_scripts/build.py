@@ -354,7 +354,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             import rjg.build.parts.UEwing
             reload(rjg.build.parts.UEwing)
             from rjg.build.parts.UEwing import UEwing
-            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=100)
+            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=100, side=side)
             UEwing.build_wing()
     # previs face rig
     if not not_previs and not bony and character != 'Jett' and character != 'Blitz' and character != 'Bobo' and character != 'Susaka' and character != 'Drummer' and character !='Luciana' and character !='Domingo' and character != 'Fisherman': 
