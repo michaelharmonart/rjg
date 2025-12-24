@@ -54,7 +54,8 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
         guide_path=None,
         pv_guide="auto",
         slide_pv=None,
-        spinejnt_count = 4
+        spinejnt_count = 4,
+        split=True
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.create_ik = create_ik
@@ -77,6 +78,7 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
         self.spinejnt_count = spinejnt_count
         self.fk_ctrls = []
         self.ik_ctrls = []  # always define, even if empty
+        self.split=split
 
         if self.pad == "auto":
             self.pad = len(str(len(self.guide_list))) + 1
@@ -120,102 +122,118 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
         
 
     def output_rig(self):
-            self.limb_grp = mc.group(em=True, parent=self.module_grp, name=self.base_name + "_RIG_GRP")
-            mc.matchTransform(self.limb_grp, self.guide_list[0])
+        self.limb_grp = mc.group(em=True, parent=self.module_grp, name=self.base_name + "_RIG_GRP")
+        mc.matchTransform(self.limb_grp, self.guide_list[0])
 
-            self.create_inputs(group=self.limb_grp)
-            if self.side == 'R':
-                self.mirror = True
+        self.create_inputs(group=self.limb_grp)
+        if self.side == 'R':
+            self.mirror = True
+        else:
+            self.mirror = False
+            
+        # fk
+        if self.create_fk:
+            self.build_fk_chain()
+            mc.parent(self.fk_joints[0], self.limb_grp)
+            self.src_chain = self.fk_chain
+            self.src_joints = self.fk_joints
+            up_twist = self.fk_ctrls[0].ctrl
+            lo_twist = self.fk_ctrls[-1].ctrl
+
+        # ik
+        if self.create_ik:
+            if self.segments == 2:
+                self.build_ik_chain(force_planar=True)
+                self.build_ikh(scale_attr=self.global_scale)
+                mc.parent(self.ikh, self.ik_joints[0], self.limb_grp)
+                self.src_chain = self.ik_chain
+                self.src_joints = self.ik_joints
+                up_twist = self.base_ctrl.ctrl
+                lo_twist = self.main_ctrl.ctrl
+            if self.segments > 2:
+                self.build_ikspline_chain()
+                self.build_spline_ikh()
+
+                mc.parent(self.ikspline_joints[0], self.limb_grp)
+                mc.parent(self.ik_ctrl_grp, self.control_grp)
+
+                self.src_chain = self.ikspline_chain
+                self.src_joints = self.ikspline_joints
+
+                # twist drivers (for advanced twist)
+                up_twist = self.start_ctrl.ctrl
+                lo_twist = self.end_ctrl.ctrl
             else:
-                self.mirror = False
-                
-            # fk
-            if self.create_fk:
-                self.build_fk_chain()
-                mc.parent(self.fk_joints[0], self.limb_grp)
-                self.src_chain = self.fk_chain
-                self.src_joints = self.fk_joints
-                up_twist = self.fk_ctrls[0].ctrl
-                lo_twist = self.fk_ctrls[-1].ctrl
+                print('Not enough neck segments for IK')
 
-            # ik
+        if self.create_ik and self.create_fk:
+            # Determine correct IK controllers and joints based on segments
+            if self.segments == 2:
+                ik_ctrl_upper = self.base_ctrl.ctrl
+                ik_ctrl_lower = self.main_ctrl.ctrl
+                ik_chain_joints = self.ik_joints
+            else:  # IK spline
+                ik_ctrl_upper = self.start_ctrl.ctrl
+                ik_ctrl_lower = self.end_ctrl.ctrl
+                ik_chain_joints = self.ikspline_joints
+
+            # Create the blend chain
+            blend_chain = rChain.Chain(transform_list=self.src_joints,
+                                        side=self.side,
+                                        suffix='switch_JNT',
+                                        name=self.part)
+
+            blend_chain.create_blend_chain(
+                switch_node=self.base_name,
+                chain_a=self.fk_joints,
+                chain_b=ik_chain_joints,
+                handle_offsets=True,
+            )
+            mc.parent(blend_chain.joints[0], self.limb_grp)
+            self.src_chain = blend_chain
+            self.src_joints = blend_chain.joints
+            self.ik_switch_attr: str = blend_chain.switch.attr
+
+            # Twist locators
+            up_twist = mc.spaceLocator(name=self.base_name + '_up_twist_LOC')[0]
+            lo_twist = mc.spaceLocator(name=self.base_name + '_lo_twist_LOC')[0]
+            mc.matchTransform(up_twist, self.guide_list[0])
+            mc.matchTransform(lo_twist, self.guide_list[-1])
+
+            # Twist parent constraint with reverse node
+            rev = mc.createNode('reverse', name=self.base_name + '_REV')
+            pac = mc.parentConstraint(self.fk_ctrls[-1].ctrl,
+                                    ik_ctrl_lower,
+                                    lo_twist, maintainOffset=True)[0]
+            wal = mc.parentConstraint(pac, query=True, weightAliasList=True)
+            mc.setAttr(pac + '.interpType', 2)
+            mc.connectAttr(blend_chain.switch.attr, rev + '.inputY')
+            mc.connectAttr(rev + '.outputY', pac + '.' + wal[1])
+            mc.connectAttr(blend_chain.switch.attr, pac + '.' + wal[0])
+            mc.parent(lo_twist, up_twist, self.limb_grp)
+            mc.hide(lo_twist, up_twist)
+
+            # Visibility switching
+            mc.connectAttr(blend_chain.switch.attr, rev + '.inputZ')
+            mc.connectAttr(blend_chain.switch.attr,
+                        self.fk_ctrls[0].top + '.visibility')
+            mc.connectAttr(rev + '.outputZ', self.ik_ctrl_grp + '.visibility')
+
             if self.create_ik:
-                if self.segments == 2:
-                    self.build_ik_chain(force_planar=True)
-                    self.build_ikh(scale_attr=self.global_scale)
-                    mc.parent(self.ikh, self.ik_joints[0], self.limb_grp)
-                    self.src_chain = self.ik_chain
-                    self.src_joints = self.ik_joints
-                    up_twist = self.base_ctrl.ctrl
-                    lo_twist = self.main_ctrl.ctrl
+                self.Ikhead = rCtrl.Control(parent=self.control_grp, shape="brackets", side=None, suffix='CTRL', name=f'Head_M_ik', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[-1], rotate=self.guide_list[-1])
+                self.Ikhead.tag_as_controller()
                 if self.segments > 2:
-                    self.build_ikspline_chain()
-                    self.build_spline_ikh()
+                    mc.parentConstraint(self.Ikhead.ctrl, self.iklist[-1].top, mo=True)
+                    mc.parentConstraint(self.Ikhead.ctrl, self.iklist[-2].top, mo=True)
+                    mc.addAttr(self.Ikhead.ctrl, longName='Stretchy', at='double', dv=.2, k=True, max=1, min=0 )
 
-                    mc.parent(self.ikspline_joints[0], self.limb_grp)
-                    mc.parent(self.ik_ctrl_grp, self.control_grp)
+                    mc.addAttr(self.Ikhead.ctrl, ln='roll', at='double', k=True)
+                    mc.connectAttr(f'{self.Ikhead.ctrl}.Stretchy', f'{self.iklist[-1].ctrl}.Stretchy')
+                    mc.connectAttr(f'{self.Ikhead.ctrl}.roll', f'{self.iklist[-1].ctrl}.roll')
+                    mc.connectAttr(f'{self.Ikhead.ctrl}.rotateZ', f'{self.iklist[-1].ctrl}.twist')
+                    mc.hide(self.iklist[-1].ctrl)
 
-                    self.src_chain = self.ikspline_chain
-                    self.src_joints = self.ikspline_joints
-
-                    # twist drivers (for advanced twist)
-                    up_twist = self.start_ctrl.ctrl
-                    lo_twist = self.end_ctrl.ctrl
-                else:
-                    print('Not enough neck segments for IK')
-
-            if self.create_ik and self.create_fk:
-                # Determine correct IK controllers and joints based on segments
-                if self.segments == 2:
-                    ik_ctrl_upper = self.base_ctrl.ctrl
-                    ik_ctrl_lower = self.main_ctrl.ctrl
-                    ik_chain_joints = self.ik_joints
-                else:  # IK spline
-                    ik_ctrl_upper = self.start_ctrl.ctrl
-                    ik_ctrl_lower = self.end_ctrl.ctrl
-                    ik_chain_joints = self.ikspline_joints
-
-                # Create the blend chain
-                blend_chain = rChain.Chain(transform_list=self.src_joints,
-                                            side=self.side,
-                                            suffix='switch_JNT',
-                                            name=self.part)
-
-                blend_chain.create_blend_chain(
-                    switch_node=self.base_name,
-                    chain_a=self.fk_joints,
-                    chain_b=ik_chain_joints,
-                    handle_offsets=True,
-                )
-                mc.parent(blend_chain.joints[0], self.limb_grp)
-                self.src_chain = blend_chain
-                self.src_joints = blend_chain.joints
-                self.ik_switch_attr: str = blend_chain.switch.attr
-
-                # Twist locators
-                up_twist = mc.spaceLocator(name=self.base_name + '_up_twist_LOC')[0]
-                lo_twist = mc.spaceLocator(name=self.base_name + '_lo_twist_LOC')[0]
-                mc.matchTransform(up_twist, self.guide_list[0])
-                mc.matchTransform(lo_twist, self.guide_list[-1])
-
-                # Twist parent constraint with reverse node
-                rev = mc.createNode('reverse', name=self.base_name + '_REV')
-                pac = mc.parentConstraint(self.fk_ctrls[-1].ctrl,
-                                        ik_ctrl_lower,
-                                        lo_twist, maintainOffset=True)[0]
-                wal = mc.parentConstraint(pac, query=True, weightAliasList=True)
-                mc.setAttr(pac + '.interpType', 2)
-                mc.connectAttr(blend_chain.switch.attr, rev + '.inputY')
-                mc.connectAttr(rev + '.outputY', pac + '.' + wal[1])
-                mc.connectAttr(blend_chain.switch.attr, pac + '.' + wal[0])
-                mc.parent(lo_twist, up_twist, self.limb_grp)
-                mc.hide(lo_twist, up_twist)
-
-                # Visibility switching
-                mc.connectAttr(blend_chain.switch.attr, rev + '.inputZ')
-                mc.connectAttr(blend_chain.switch.attr,
-                            self.fk_ctrls[0].top + '.visibility')
-                mc.connectAttr(rev + '.outputZ', self.ik_ctrl_grp + '.visibility')
+        
 
     
 
@@ -236,6 +254,11 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
                                           parent=self.skel)
         self.bind_joints = limb_chain.joints
         self.tag_bind_joints(self.bind_joints[:-1])
+        if self.split:
+            split_joint = self.bind_joints[0]
+            split_joints: list[str] = self.bind_joints
+            mc.addAttr(split_joint, longName="split_joints", dataType="string")
+            mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
     
     
     def add_plugs(self):
@@ -317,4 +340,18 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
             self.ik_switch_attr = f"{self.limb_grp}.{switch_attr_name}"
 
         mc.parentConstraint('chest_top_M_CTRL', 'neck_M_IK_CTRL_GRP', mo=True)
+        mc.parentConstraint('chest_top_M_CTRL', self.Ikhead.top, mo=True)
+        if self.create_ik and self.create_fk:
+            ikfkswitchattr = []
+            ikfkswitchattr.extend(self.iklist)
+            ikfkswitchattr.append(self.Ikhead)
+            ikfkswitchattr.extend(self.fk_ctrls)
+            for ctrl in ikfkswitchattr:
+                mc.addAttr(ctrl.ctrl, longName='FK_IK_Switch', proxy='neck_M.switch')
+            mc.connectAttr('neck_M_REV.outputZ', f'{self.Ikhead.top}.visibility')
+
+
+
+
+
 

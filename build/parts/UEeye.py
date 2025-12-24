@@ -735,6 +735,14 @@ class UEeye(UEface):
 
         mc.hide(surfs[0], surfs[1],)
 
+
+        #socket corner follow
+
+        if mc.objExists(f'Eye_{side}_Socket_OuterCorner_CTRL_{side}_CTRL_CNST_GRP'):
+            mc.parentConstraint(f'Eye_{side}_OuterCorner_Major_{side}_CTRL', f'Eye_{side}_Socket_OuterCorner_CTRL_{side}_CTRL_CNST_GRP', mo=True)
+        if mc.objExists(f'Eye_{side}_Socket_InnerCorner_CTRL_{side}_CTRL_CNST_GRP'):
+            mc.parentConstraint(f'Eye_{side}_InnerCorner_Major_{side}_CTRL', f'Eye_{side}_Socket_InnerCorner_CTRL_{side}_CTRL_CNST_GRP', mo=True)
+
         ees = []
         if self.eyetype == 'Human':
             for type in ['Iris', 'Pupil']:

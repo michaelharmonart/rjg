@@ -232,6 +232,14 @@ class SplineTail(rModule.RigModule, rFk.Fk):
                 mc.setAttr(f"{cond}.colorIfFalseR", 0)
                 mc.connectAttr(f"{cond}.outColorR", f"{pc}.{weights[idx]}")
 
+        proxylist = ['Tail_IK_01_M_CTRL', 'Tail_IK_02_M_CTRL', 'Tail_IK_03_M_CTRL', 'Tail_IK_04_M_CTRL']
+        for i in range(1, 12, 1):
+            proxylist.append(f'Tail{i}_M_CTRL')
+        for ctrl in proxylist:
+            mc.addAttr(ctrl, longName='FK_IK_Switch', proxy='Tail_M.Tail_M_IKFK')
+
+        
+
 
 
 

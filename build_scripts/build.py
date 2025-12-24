@@ -1415,7 +1415,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_TerLow', tsb=False)
         except:
             pass
-        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow']:
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow', 'TailFeathers']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
 
 
@@ -1607,10 +1607,44 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Luciana':
-        mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
-        mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
+        #mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
+        #mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
         mc.setAttr("perspShape.nearClipPlane", 1)
         mc.setAttr("perspShape.farClipPlane", 100000)
+
+        for side in ['L', 'R']:
+            startvalue = 0
+            if side == 'L':
+                end = -90
+                mod=-1000
+            else:
+                end = -90
+                mod=1000
+            mod2=-500
+            for part in ['Mid', 'Tip']:
+                mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectX', at='double', dv=mod)
+                mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectY', at='double', dv=mod2)
+                remapx= mc.createNode('remapValue', name=f'{part}_{side}_remapx')
+                remapy= mc.createNode('remapValue', name=f'{part}_{side}_remapy')
+                mc.connectAttr(f'Wing_{side}_02_FK_{side}_CTRL.rotateZ', f'{remapx}.inputValue')
+                mc.connectAttr(f'Wing_{side}_02_FK_{side}_CTRL.rotateZ', f'{remapy}.inputValue')
+                mc.setAttr(f'{remapy}.inputMax', end)
+                mc.setAttr(f'{remapx}.inputMax', end)
+                mc.setAttr(f'{remapy}.inputMin', startvalue)
+                mc.setAttr(f'{remapx}.inputMin', startvalue)
+                mc.setAttr(f'{remapx}.outputMax', mod)
+                mc.setAttr(f'{remapy}.outputMax', mod2)
+                mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateY')
+                mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateX')
+                if side == 'L':
+                    mod = mod - 1000
+                else:
+                    mod = mod + 1000
+                mod2 = mod2 - 1000
+
+        if face == False:
+            for obj in ['Eye', 'topteeth', 'botteeth', 'tongue']:
+                mc.skinCluster('head_M_JNT', obj, tsb=True)
 
 
 
@@ -1634,6 +1668,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     print(f"Failed to set {attr}: {e}")
             else:
                 print(f"{attr} does not exist on {sc}")
+            if character in ['Luciana', 'Domingo']:
+                mc.setAttr(f'{sc}.skinningMethod', 0)
     except Exception as e:
         print(f"Failed")
     try:

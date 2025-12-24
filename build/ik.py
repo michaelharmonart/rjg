@@ -280,11 +280,13 @@ class Ik:
         #mc.rename(self.spline_curve, self.base_name + "_IKSPLINE_CRV")
         buildControls = True
         cvs = mc.ls(f"{self.spline_curve }.cv[*]", fl=True)
+        ctrl_list = []
+        offset_list = []
+        self.iklist = []
 
         for i, cv in enumerate(cvs, start=1):
             # Make cluster for the CV
-            ctrl_list = []
-            offset_list = []
+            #ctrl_list = []
             cluster_list = []
             cluster, cluster_handle = mc.cluster(cv, n=f"{self.base_name}_{i:02}_cluster")
             mc.parent(cluster_handle, f'neck_M_MODULE') 
@@ -297,6 +299,7 @@ class Ik:
                     self.ik_ctrl = rCtrl.Control(parent=self.control_grp, shape="square", side=None, suffix='CTRL', name=f'{self.base_name}_{i:02}', axis='y', group_type='main', rig_type='primary', translate=pos,)
                     ctrl_list.append(self.ik_ctrl.ctrl)
                     offset_list.append(self.ik_ctrl.top)
+                    self.iklist.append(self.ik_ctrl)
                     mc.parent(self.ik_ctrl.top, f'neck_M_IK_CTRL_GRP')
 
                     # Parent cluster to control

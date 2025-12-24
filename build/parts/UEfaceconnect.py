@@ -322,6 +322,7 @@ class UEfaceconnect(UEface):
             mc.parent('TopTeeth_JNT', 'BotTeeth_JNT', 'Tongue_01_JNT', 'head_M_JNT')
             mc.parent('TopTeeth_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
             mc.parent('BotTeeth_M_CTRL_CNST_GRP', 'Tongue_01_01_CTRL_CNST_GRP', 'Jaw_M_root_M_CTRL')
+
             if self.mastermouth:
                 mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'TopTeeth_M_CTRL_CNST_GRP', mo=True)
                 mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
@@ -393,7 +394,7 @@ class UEfaceconnect(UEface):
             #mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_01_M_CTRL_CNST_GRP', mo=True)  
             #mc.parent('Stache_M_01_M_CTRL_CNST_GRP', 'Beard_M_01_M_CTRL_CNST_GRP', 'RIG')
             #mc.parent('Beard_M_01_JNT',  'Stache_M_01_JNT'  ,lower_jnt)     
-            facefin_def = ['LowerHead_JNT', 'UpperHead_JNT', 'Jaw_M_root_JNT', 'Head_M_JNT', 'Horn_L_guide_JNT', 'Horn_R_guide_JNT']
+            facefin_def = ['LowerHead_JNT', 'UpperHead_JNT', 'Jaw_M_root_JNT', 'Head_M_JNT', 'Horn_L_guide_JNT', 'Horn_R_guide_JNT', 'Fin_L_01_JNT', 'Fin_L_02_JNT', 'Fin_L_03_JNT', 'Fin_L_04_JNT', 'Fin_L_05_JNT', 'Fin_L_06_JNT', 'Fin_L_08_JNT', 'Fin_L_09_JNT', 'Fin_R_01_JNT', 'Fin_R_02_JNT', 'Fin_R_03_JNT', 'Fin_R_04_JNT', 'Fin_R_05_JNT', 'Fin_R_06_JNT', 'Fin_R_08_JNT', 'Fin_R_09_JNT',]
             for side in ['L', 'R']:
                 mastercontrol = None
                 for guide in [f'Fin_{side}_Master', f'Fin_{side}_01', f'Fin_{side}_02', f'Fin_{side}_03', f'Fin_{side}_04', f'Fin_{side}_05', f'Fin_{side}_06', f'Fin_{side}_07', f'Fin_{side}_08', f'FinLow_{side}_09']:
@@ -405,7 +406,7 @@ class UEfaceconnect(UEface):
                         CTRL_Size=10,
                         JNT_Size=0.9,
                     )
-                    facefin_def.append(jnt)
+                    #facefin_def.append(jnt)
                     mc.parent(offset, 'head_M_01_CTRL')
                     mc.parent(jnt, 'head_M_JNT')
                     if guide == f'FinLow_{side}_09':

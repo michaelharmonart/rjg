@@ -357,6 +357,7 @@ class UEwing(UEface):
 
     def build_limb(self):
         prefix = self.prefix
+        side = prefix.split('_')[-1]
         ctrlname, grpname = UEwing.get_namestruc(prefix)
         mc.select(clear=True)
         self.fk_group = mc.group(em=True, name=f"{prefix}_FK_{grpname}")
@@ -388,7 +389,9 @@ class UEwing(UEface):
             if pre_jnt != None:
                 mc.parent(joint_name, pre_jnt)
             pre_jnt = joint_name
-        # mc.skinCluster(bind_joints, main_surf)
+            #if obj == f"{prefix}_02_guide":
+            #    mc.setAttr(f'{joint}.rotateOrder', 2)
+               
         pre_jnt = None
 
         parjnts = ["01", "02", "03", "04"]
@@ -592,6 +595,7 @@ class UEwing(UEface):
 
     def build_feathers(self, keep_spacing: bool = True):
         prefix = self.prefix
+        side = prefix.split('_')[-1]
         self.feather_grp = mc.group(em=True, name=f"{self.prefix}_feather", parent=self.mastergrp)
         self.spline_grp = mc.group(em=True, name=f"{self.prefix}_spline", parent=self.mastergrp)
         self.net_grp = mc.group(em=True, name=f"{self.prefix}_net", parent=self.mastergrp)
@@ -716,6 +720,7 @@ class UEwing(UEface):
             mc.parentConstraint(bind_jnt, main.top, mo=True)
             mc.parentConstraint(bind_jnt, mid.top, mo=True)
             mc.parentConstraint(bind_jnt, aim.top, mo=True)
+
 
     @auto_profiler_tag
     def build_wing(self):
