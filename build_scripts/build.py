@@ -1643,7 +1643,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mod2 = mod2 - 1000
 
         if face == False:
-            for obj in ['Eye', 'topteeth', 'botteeth', 'tongue']:
+            for obj in ['Eye', 'topteeth', 'botteeth', 'tongue', 'facefeathers']:
                 mc.skinCluster('head_M_JNT', obj, tsb=True)
 
 

@@ -38,7 +38,7 @@ def Luciana_extras(skin_src, skin_trg_grp):
     sk_g = []
 
     geo = [
-         'facefeathers', 'Spines', 'TailFeathers',
+          'Spines', 'TailFeathers',
     ]
 
     #rUtil.create_pxWrap('Shirt', 'Pants', 'Gretchen_UBM')

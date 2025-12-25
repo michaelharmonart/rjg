@@ -394,7 +394,7 @@ class UEfaceconnect(UEface):
             #mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_01_M_CTRL_CNST_GRP', mo=True)  
             #mc.parent('Stache_M_01_M_CTRL_CNST_GRP', 'Beard_M_01_M_CTRL_CNST_GRP', 'RIG')
             #mc.parent('Beard_M_01_JNT',  'Stache_M_01_JNT'  ,lower_jnt)     
-            facefin_def = ['LowerHead_JNT', 'UpperHead_JNT', 'Jaw_M_root_JNT', 'Head_M_JNT', 'Horn_L_guide_JNT', 'Horn_R_guide_JNT', 'Fin_L_01_JNT', 'Fin_L_02_JNT', 'Fin_L_03_JNT', 'Fin_L_04_JNT', 'Fin_L_05_JNT', 'Fin_L_06_JNT', 'Fin_L_08_JNT', 'Fin_L_09_JNT', 'Fin_R_01_JNT', 'Fin_R_02_JNT', 'Fin_R_03_JNT', 'Fin_R_04_JNT', 'Fin_R_05_JNT', 'Fin_R_06_JNT', 'Fin_R_08_JNT', 'Fin_R_09_JNT',]
+            facefin_def = ['LowerHead_JNT', 'UpperHead_JNT', 'Jaw_M_root_JNT', 'head_M_JNT', 'Horn_L_guide_JNT', 'Horn_R_guide_JNT', 'Fin_L_01_JNT', 'Fin_L_02_JNT', 'Fin_L_03_JNT', 'Fin_L_04_JNT', 'Fin_L_05_JNT', 'Fin_L_06_JNT', 'Fin_L_08_JNT', 'FinLow_L_09_JNT', 'Fin_R_01_JNT', 'Fin_R_02_JNT', 'Fin_R_03_JNT', 'Fin_R_04_JNT', 'Fin_R_05_JNT', 'Fin_R_06_JNT', 'Fin_R_08_JNT', 'FinLow_R_09_JNT',]
             for side in ['L', 'R']:
                 mastercontrol = None
                 for guide in [f'Fin_{side}_Master', f'Fin_{side}_01', f'Fin_{side}_02', f'Fin_{side}_03', f'Fin_{side}_04', f'Fin_{side}_05', f'Fin_{side}_06', f'Fin_{side}_07', f'Fin_{side}_08', f'FinLow_{side}_09']:
@@ -417,10 +417,6 @@ class UEfaceconnect(UEface):
                         if mastercontrol:
                             for axes in ['X', 'Y', 'Z']:
                                 mc.connectAttr(f'{mastercontrol}.rotate{axes}', f'{guide}_{side}_CTRL_SDK_GRP.rotate{axes}')
-            try:
-                mc.skincluster(*facefin_def, 'facefeathers', toSelectedBones=True)
-            except:
-                pass
             mastercontrol = None
             #facefin_def = ['LowerHead_JNT', 'UpperHead_JNT', 'Jaw_M_root_JNT', 'Head_M_JNT', 'Horn_L_guide_JNT', 'Horn_R_guide_JNT']
             for side in ['M', 'L', 'R']:
@@ -442,3 +438,7 @@ class UEfaceconnect(UEface):
                     mastercontrol = ctrl
                     masterjnt = jnt
             mc.hide('Jaw_M_ee_M_CTRL')
+            try:
+                mc.skinCluster(*facefin_def, 'facefeathers', toSelectedBones=True)
+            except Exception as e:
+                print(f"Failed to set: {e}")

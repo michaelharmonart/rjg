@@ -19,7 +19,8 @@ class DragonLeg(rModule.RigModule):
                  guide_list=None,       # [string]. list of names of guides to be iterated over during build.
                  ctrl_scale=None,       # float. base scale value for all controls on this part.
                  model_path=None,       # string. path to model.
-                 guide_path=None):      # string. path to guides.
+                 guide_path=None,
+                 twisty=True):      # string. path to guides.
         
         # initialize super class RigModule
         super().__init__(side=side,
@@ -30,6 +31,7 @@ class DragonLeg(rModule.RigModule):
                      guide_path=guide_path)
         
         self.__dict__.update(locals())
+        self.twisty=twisty
         
         # base name conventions: part_side. used for naming objects.
         self.base_name = self.part + '_' + self.side
@@ -416,6 +418,9 @@ class DragonLeg(rModule.RigModule):
             mc.connectAttr(f'{self.side}_Options_{ctrlnames}.FK_IK_Switch', f'{basename}_bindJNT_parentConstraint1.{basename}_FKW0')
             mc.connectAttr(f'{IK_Reverse}.outputX', f'{basename}_bindJNT_parentConstraint1.{basename}_IKW1')
             bindjnts.append(f'{basename}_bindJNT')
+
+    
+        
         
         #Aim Spaces
         for aim in ['01', '02']:
