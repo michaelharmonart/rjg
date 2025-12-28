@@ -322,11 +322,13 @@ class UEwing(UEface):
         grp_name: str,
         side: str,
         ctrl_scale=1,
+        twisty = True,
     ):
         super().__init__(part="Wing", grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.grp_name = grp_name
         self.prefix = UEface.get_prefix_from_group(self.grp_name)
         self.side = side
+        self.twisty = twisty
         # group='Wing_L_guides'
 
     @staticmethod
@@ -385,7 +387,12 @@ class UEwing(UEface):
             pos = mc.xform(obj, q=True, ws=True, t=True)
             rot = mc.xform(obj, q=True, ws=True, ro=True)
             mc.xform(joint, ws=True, t=pos)
-            mc.xform(joint, ws=True, ro=rot)
+            #mc.xform(joint, ws=True, ro=rot)
+
+            mc.setAttr(f"{joint}.jointOrientX", rot[0])
+            mc.setAttr(f"{joint}.jointOrientY", rot[1])
+            mc.setAttr(f"{joint}.jointOrientZ", rot[2])
+
             if pre_jnt != None:
                 mc.parent(joint_name, pre_jnt)
             pre_jnt = joint_name
@@ -721,6 +728,28 @@ class UEwing(UEface):
             mc.parentConstraint(bind_jnt, mid.top, mo=True)
             mc.parentConstraint(bind_jnt, aim.top, mo=True)
 
+    def build_bendy_wing(self):
+        """
+        Builds bendy + twist joints for the wing using the bind chain
+        """
+
+        # Safety
+        if not self.limb_bind_joints or len(self.limb_bind_joints) < 2:
+            mc.warning("Not enough joints for bendy wing")
+            return
+
+        self.bendy_chain = rChain.Chain(
+            transform_list=self.limb_bind_joints,
+            side=self.side,
+            name=f"{self.prefix}_bendy"
+        )
+
+        # Split each segment (tweak this number later)
+        self.bendy_chain.split_chain(
+            splits=3,              # 3 bendy joints per segment is a good start
+        )
+
+
 
     @auto_profiler_tag
     def build_wing(self):
@@ -732,3 +761,5 @@ class UEwing(UEface):
         self.mastergrp = mc.group(em=True, name=f"{prefix}")
         self.build_limb()
         self.build_feathers()
+        if self.twisty:
+            self.build_bendy_wing()
