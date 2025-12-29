@@ -27,6 +27,19 @@ reload(rXform)
 
 
 def get_curve(node: str) -> str | None:
+    """
+    Return a nurbsCurve shape from a given node.
+
+    If the node itself is a nurbsCurve shape, it is returned directly.
+    Otherwise, the function searches the node's children for a nurbsCurve shape
+    and returns the first match.
+
+    Args:
+        node: Transform or shape node name.
+
+    Returns:
+        The name of the nurbsCurve shape if found, otherwise None.
+    """
     if mc.nodeType(node) == "nurbsCurve":
         return node
     else:
@@ -48,6 +61,24 @@ def spline_from_guides(
     edit_point: bool = True,
     display_reference: bool = False,
 ) -> str:
+    """
+    Create a nurbs curve from a sequence of guide transforms.
+
+    The curve is built using either edit points or CVs, optionally rebuilt,
+    parented, and set to reference display mode for visual clarity.
+
+    Args:
+        name: Name of the resulting curve transform.
+        guides: Ordered guide transforms defining the curve shape.
+        parent: Optional parent transform for the curve.
+        degree: Degree of the curve.
+        rebuild_spans: If provided, rebuilds the curve with this span count.
+        edit_point: Whether to construct the curve using edit points.
+        display_reference: Whether to display the curve as reference geometry.
+
+    Returns:
+        The name of the created curve transform.
+    """
     positions: list[tuple[float, float, float]] = [get_world_position(guide) for guide in guides]
     if edit_point:
         curve: str = mc.curve(name=name, editPoint=positions, degree=degree)
@@ -68,6 +99,21 @@ def spline_from_guides(
 
 
 def closest_point_on_curve(curve: str, guide: str, fraction: bool = True) -> float:
+    """
+    Compute the closest point on a curve to a guide transform.
+
+    The result can be returned as either a normalized arc-length fraction
+    or a raw curve parameter value.
+
+    Args:
+        curve: Curve transform or shape node.
+        guide: Transform used as the query position.
+        fraction: If True, return normalized arc-length (0–1).
+                    If False, return the curve parameter.
+
+    Returns:
+        Closest point value as a fraction or parameter.
+    """
     guide_pos = MPoint(get_world_position(guide))
 
     curve_shape = get_curve(curve)
@@ -88,6 +134,14 @@ def closest_point_on_curve(curve: str, guide: str, fraction: bool = True) -> flo
 
 @dataclass
 class MotionPathPin:
+    """
+    Container for motion path pin data.
+
+    Attributes:
+        pin: Transform driven by the motion path.
+        motion_path: motionPath node driving the pin.
+        orient_attr: Matrix attribute used for orientation output.
+    """
     pin: str
     motion_path: str
     orient_attr: str
@@ -97,6 +151,23 @@ class MotionPathPin:
 def create_pin_on_curve(
     name: str, curve: str, guide: str, parent: str, arc_length: bool = True, normalize_orient: bool = True
 ) -> MotionPathPin:
+    """
+    Create a transform pinned to a curve using a motionPath node.
+
+    The pin is positioned at the closest point to a guide and optionally
+    outputs a normalized orientation matrix.
+
+    Args:
+        name: Name of the pin transform.
+        curve: Curve to attach the pin to.
+        guide: Guide transform used to determine initial placement.
+        parent: Parent transform for the pin.
+        arc_length: Whether to use arc-length parameterization.
+        normalize_orient: Whether to normalize orientation via a PickMatrix (remove scale).
+
+    Returns:
+        A MotionPathPin instance describing the created pin.
+    """
     curve_shape = get_curve(curve)
     pin: str = mc.group(empty=True, name=name, parent=parent)
 
@@ -132,6 +203,24 @@ def create_pin_on_net(
     arc_length: bool = True,
     normalize_orient: bool = True
 ) -> str:
+    """
+    Create a pin constrained to a spline network with orientation blending.
+
+    Orientation is computed by blending backbone tangents and constructing
+    an orthonormal basis aligned to the local spline direction.
+
+    Args:
+        name: Name of the pin locator.
+        curve: Spline curve driving the pin position.
+        backbones_pins: Backbone motion path pins used for orientation blending.
+        guide: Guide transform used for closest-point evaluation.
+        parent: Parent transform for the pin.
+        arc_length: Whether to use arc-length parameterization.
+        normalize_orient: Whether to normalize motion path orientation.
+
+    Returns:
+        The name of the created pin transform.
+    """
     curve_shape = get_curve(curve)
     curve_knots = get_knots(curve_shape)
     pin: str = mc.spaceLocator(name=name)[0]
@@ -237,6 +326,21 @@ def lerp_vectors(start_point: MVector, end_point: MVector, alpha: float) -> MVec
 def create_mid_guides(
     start_guide: str, end_guide: str, mid_num: int, guide_name_prefix: str, parent: str
 ) -> list[str]:
+    """
+    Create evenly spaced intermediate guide transforms between two guides.
+    Guides are positioned via linear interpolation in world space.
+
+    Args:
+        start_guide: Starting guide transform.
+        end_guide: Ending guide transform.
+        mid_num: Number of intermediate guides to create.
+        guide_name_prefix: Prefix used to name new guides.
+        parent: Parent transform for the new guides.
+
+    Returns:
+        List of created mid-guide transform names.
+    """
+    
     start_guide_pos: MVector = MVector(get_world_position(start_guide))
     end_guide_pos: MVector = MVector(get_world_position(end_guide))
     mid_guides: list[str] = []
@@ -255,6 +359,11 @@ def create_mid_guides(
 
 
 class Spline:
+    """
+    Spline wrapper that builds a curve, optional controls, and pin connections.
+
+    CVs can be driven directly by pinned transforms or generated controls.
+    """
     def __init__(
         self,
         name: str,
@@ -265,16 +374,31 @@ class Spline:
         pin_transforms: Sequence[str] | None = None,
         ctrl_scale: float = 1,
         degree: int = 3,
-        rebuild: bool = False,
+        rebuild: int | None = None,
         display_reference=True,
     ) -> None:
+        """
+        Initialize and build a spline system.
+
+        Args:
+            name: Base name for the spline.
+            guides: Transforms defining the spline shape.
+            parent: Parent transform for the spline.
+            build_controls: Whether to generate control objects per CV.
+            control_parent: Parent transform for generated controls.
+            pin_transforms: Optional transforms to drive CVs directly (need to be in same space as the spline).
+            ctrl_scale: Scale multiplier for generated controls.
+            degree: Curve degree.
+            rebuild: Optional rebuild span count.
+            display_reference: Whether to show the spline as reference geometry.
+        """
         self.name = name
         self.spline = spline_from_guides(
             guides=guides,
             name=f"{name}",
             parent=parent,
             degree=degree,
-            rebuild_spans=1 if rebuild else None,
+            rebuild_spans=rebuild,
             edit_point=rebuild,
             display_reference=display_reference,
         )
@@ -611,7 +735,6 @@ class UEwing(UEface):
             parent=self.spline_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
-            rebuild=False,
             degree=1,
         )
         mid_spline = Spline(
@@ -620,7 +743,7 @@ class UEwing(UEface):
             parent=self.spline_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
-            rebuild=True,
+            rebuild=1,
         )
         tip_spline = Spline(
             guides=aim_list,
@@ -628,7 +751,7 @@ class UEwing(UEface):
             parent=self.spline_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
-            rebuild=True,
+            rebuild=1,
         )
         mc.parent(root_spline.spline, mid_spline.spline, tip_spline.spline, self.net_grp)
 
