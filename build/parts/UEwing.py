@@ -95,7 +95,7 @@ class MotionPathPin:
 
 
 def create_pin_on_curve(
-    name: str, curve: str, guide: str, parent: str, arc_length: bool = True, normalize_orient: bool = False
+    name: str, curve: str, guide: str, parent: str, arc_length: bool = True, normalize_orient: bool = True
 ) -> MotionPathPin:
     curve_shape = get_curve(curve)
     pin: str = mc.group(empty=True, name=name, parent=parent)
@@ -126,11 +126,11 @@ def create_pin_on_curve(
 def create_pin_on_net(
     name: str,
     curve: str,
-    backbone_curves: Sequence[str],
     backbones_pins: Sequence[MotionPathPin],
     guide: str,
     parent: str,
     arc_length: bool = True,
+    normalize_orient: bool = True
 ) -> str:
     curve_shape = get_curve(curve)
     curve_knots = get_knots(curve_shape)
@@ -152,12 +152,13 @@ def create_pin_on_net(
     mc.setAttr(f"{motion_path}.follow", True)
     
     motion_path_orient_attr = f"{motion_path}.orientMatrix"
-    #motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
-    #mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
-    #motion_path_orient.use_translate.set(False)
-    #motion_path_orient.use_scale.set(False)
-    #motion_path_orient.use_translate.set(False)
-    #motion_path_orient_attr = motion_path_orient.output_matrix
+    if normalize_orient:
+        motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
+        mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
+        motion_path_orient.use_translate.set(False)
+        motion_path_orient.use_scale.set(False)
+        motion_path_orient.use_translate.set(False)
+        motion_path_orient_attr = motion_path_orient.output_matrix
     
     tangent_node = node.AxisFromMatrixNode(name=f"{name}_tangent")
     mc.connectAttr(motion_path_orient_attr, tangent_node.input)
@@ -671,13 +672,13 @@ class UEwing(UEface):
 
             parent = mc.listRelatives(root_guide, parent=True)[0]
             mid_guides = create_mid_guides(
-                root_guide, mid_guide, 2, f"{prefix}_{feather}_mid_guide_", parent=parent
+                root_pin.pin, tip_guide, 2, f"{prefix}_{feather}_mid_guide_", parent=parent
             )
             guide_mapping = {
-                root_guide: f"{prefix}{feather}_{index:02d}_base_JNT",
+                root_pin.pin: f"{prefix}{feather}_{index:02d}_base_JNT",
                 mid_guides[0]: f"{prefix}{feather}_{index:02d}_mid1_JNT",
                 mid_guides[1]: f"{prefix}{feather}_{index:02d}_mid2_JNT",
-                mid_guide: f"{prefix}{feather}_{index:02d}_ee_JNT",
+                tip_guide: f"{prefix}{feather}_{index:02d}_ee_JNT",
             }
 
             joint_parent = self.spline_grp
@@ -685,19 +686,18 @@ class UEwing(UEface):
                 joint_parent_index = mc.getAttr(f"{root_guide}.parent_joint")
                 joint_parent = self.limb_bind_joints[joint_parent_index]
             split_joints: list[str] = []
-            for guide in [root_guide] + mid_guides + [mid_guide]:
+            for guide in [root_pin.pin] + mid_guides + [tip_guide]:
                 if guide in guide_mapping:
                     joint_name = guide_mapping[guide]
                 else:
-                    joint_name = guide
+                    joint_name = f"{guide}_JNT"
                 joint = mc.joint(name=joint_name)
                 UEface.add_to_face_bind_set(joint)
                 split_joints.append(joint)
                 pin = create_pin_on_net(
                     name=f"{joint}_Pin",
                     curve=feather_spline.spline,
-                    backbone_curves=[root_spline.spline, mid_spline.spline, tip_spline.spline],
-                    backbones_pins=[root_pin, mid_pin, tip_pin],
+                    backbones_pins=[mid_pin, mid_pin, tip_pin],
                     guide=guide,
                     parent=self.spline_grp,
                 )
