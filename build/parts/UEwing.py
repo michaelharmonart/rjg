@@ -376,7 +376,7 @@ class UEwing(UEface):
         ]:
             # Get the base name and generate joint name
             base_name = obj.split("|")[-1].replace("_guide", "")
-            joint_name = f"{base_name}_bind_jnt"
+            joint_name = f"{base_name}_bind_JNT"
 
             # Clear selection before creating the joint to avoid parenting
             mc.select(clear=True)
@@ -469,7 +469,7 @@ class UEwing(UEface):
             armcloses.append(close_offset)
         ########################################################## Come back to this
         for num in ["01", "02", "03", "04"]:
-            mc.parentConstraint(f"{prefix}_{num}_FK_JNT", f"{prefix}_{num}_bind_jnt", mo=True)
+            mc.parentConstraint(f"{prefix}_{num}_FK_JNT", f"{prefix}_{num}_bind_JNT", mo=True)
 
         # ik
         IK_joints = []
@@ -551,16 +551,16 @@ class UEwing(UEface):
         mc.parentConstraint(IK_04_CTL, f"{prefix}_04_IK_jnt", mo=True)
         mc.parent(IK_04_GRP, IK_EE_CTL)
         for num in ["01", "02", "03", "04"]:
-            mc.parentConstraint(f"{prefix}_{num}_IK_jnt", f"{prefix}_{num}_bind_jnt", mo=True)
+            mc.parentConstraint(f"{prefix}_{num}_IK_jnt", f"{prefix}_{num}_bind_JNT", mo=True)
             mc.connectAttr(
                 f"{FKIKSwitch_CTL}.FK_IK",
-                f"{prefix}_{num}_bind_jnt_parentConstraint1.{prefix}_{num}_FK_JNTW0",
+                f"{prefix}_{num}_bind_JNT_parentConstraint1.{prefix}_{num}_FK_JNTW0",
             )
             mc.connectAttr(
                 f"{rev_node}.outputX",
-                f"{prefix}_{num}_bind_jnt_parentConstraint1.{prefix}_{num}_IK_jntW1",
+                f"{prefix}_{num}_bind_JNT_parentConstraint1.{prefix}_{num}_IK_jntW1",
             )
-        mc.pointConstraint(f"{prefix}_01_bind_jnt", FKIKSwitch_GRP, mo=True)
+        mc.pointConstraint(f"{prefix}_01_bind_JNT", FKIKSwitch_GRP, mo=True)
         mc.orientConstraint(f"{prefix}_IK_EE_{ctrlname}", f"{prefix}_03_IK_jnt", mo=True)
 
         max_val = 20
@@ -594,11 +594,16 @@ class UEwing(UEface):
             ctrl_offset,
             self.mastergrp,
         )  # f'{prefix}_upAim_{grpname}'f'{prefix}_Span_{grpname}'f'{prefix}_aimcurve_{grpname}'
-        mc.parent(f"{prefix}_01_bind_jnt", jnt)  # f'{prefix}_root_jnt'
+        mc.parent(f"{prefix}_01_bind_JNT", jnt)  # f'{prefix}_root_jnt'
         mc.parent(jnt, "chest_M_JNT")
         mc.parentConstraint("chest_M_02_CTRL", ctrl_offset, mo=True)
         mc.hide(f"{prefix}_extraOffset_{grpname}")
         mc.parent(self.mastergrp, "RIG")
+
+        #proxy ik / fk switch
+        for control in [f'Wing_{self.side}_IK_04_{self.side}_CTRL', f'Wing_{self.side}_IK_EE_{self.side}_CTRL', f'Wing_{self.side}_IK_Root_{self.side}_CTRL', f'Wing_{self.side}_Scap_{self.side}_CTRL', f'Wing_{self.side}_IK_Aim_{self.side}_CTRL', f'Wing_{self.side}_01_FK_{self.side}_CTRL', f'Wing_{self.side}_02_FK_{self.side}_CTRL', f'Wing_{self.side}_03_FK_{self.side}_CTRL', f'Wing_{self.side}_04_FK_{self.side}_CTRL' ]:
+            mc.addAttr(control, longName='FK_IK_Switch', proxy=f'Wing_{self.side}_FKIKSwitch_{self.side}_CTRL.FK_IK')
+        mc.setAttr(f'Wing_{self.side}_FKIKSwitch_{self.side}_CTRL.FK_IK', 1 )
 
     def build_feathers(self, keep_spacing: bool = True):
         prefix = self.prefix
@@ -728,26 +733,62 @@ class UEwing(UEface):
             mc.parentConstraint(bind_jnt, mid.top, mo=True)
             mc.parentConstraint(bind_jnt, aim.top, mo=True)
 
-    def build_bendy_wing(self):
-        """
-        Builds bendy + twist joints for the wing using the bind chain
-        """
+    def build_bendy_chain(self):
 
-        # Safety
-        if not self.limb_bind_joints or len(self.limb_bind_joints) < 2:
-            mc.warning("Not enough joints for bendy wing")
-            return
-
+        # Collect main leg bind joints only (no toes) 'Wing_L_04_bind_jnt
+        bind_jnts = [
+            f'Wing_{self.side}_01_bind_JNT',
+            f'Wing_{self.side}_02_bind_JNT',
+            f'Wing_{self.side}_03_bind_JNT',
+        ]
+        # Create chain
         self.bendy_chain = rChain.Chain(
-            transform_list=self.limb_bind_joints,
+            transform_list=bind_jnts,
             side=self.side,
-            name=f"{self.prefix}_bendy"
+            name=f'Wing_{self.side}_bendy',
         )
 
-        # Split each segment (tweak this number later)
+        self.bendy_chain.joints = self.bendy_chain.transform_list
+
+        # Split joints for deformation
         self.bendy_chain.split_chain(
-            splits=3,              # 3 bendy joints per segment is a good start
+            segments=4,          # tweak this per creature
         )
+
+        # Build bendy
+        bend = self.bendy_chain.bend_twist_chain(
+            ctrl_scale=50,
+            mirror=self.side == 'R',
+            global_scale=None,
+        )
+
+        # Parent outputs
+        mc.parent(bend['control'], f'Wing_{self.side}')
+        mc.parent(bend['module'], f'Wing_{self.side}')
+
+        self.add_global_twist(main_ctrl=f'Wing_{self.side}')
+
+    def add_global_twist(self, main_ctrl=None):
+        """
+        Adds a global twist attribute to control twist along the whole bendy chain.
+        main_ctrl : str, the main control driving the leg (e.g., FootRoot_CTRL)
+        """
+        if not main_ctrl:
+            main_ctrl = f'Wing_{self.side}'  # fallback to your main leg control
+
+         #Add the twist attribute
+        if not mc.objExists(f"{main_ctrl}.TwistDistribute"):
+            mc.addAttr(main_ctrl, longName="TwistDistribute", attributeType="double",
+                    min=0, max=1, defaultValue=1, keyable=True)
+
+        # Create a multiplyDivide node
+        twist_mdn = mc.createNode('multiplyDivide', n=f'{self.side}_bendyTwist_MDN')
+        mc.setAttr(twist_mdn + '.operation', 2)  # divide
+        mc.connectAttr(f'{main_ctrl}.TwistDistribute', twist_mdn + '.input1X')
+
+        # Connect to all bendy joints’ rotateX
+        #for jnt in self.bendy_chain.joints:
+        #    mc.connectAttr(twist_mdn + '.outputX', f'{jnt}.rotateX')
 
 
 
@@ -760,6 +801,6 @@ class UEwing(UEface):
         side = parts[-1]
         self.mastergrp = mc.group(em=True, name=f"{prefix}")
         self.build_limb()
-        self.build_feathers()
         if self.twisty:
-            self.build_bendy_wing()
+            self.build_bendy_chain()
+        self.build_feathers()

@@ -1408,11 +1408,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.parentConstraint(f'fingerPinky_{side}_04_JNT', f'aim_{side}_08_{side}_CTRL_CNST_GRP', mo=True)
     if character == 'Luciana':
         try:
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers', tsb=False) 
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_SecHigh', tsb=False)
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_SecLow', tsb=False)
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_TerHigh', tsb=False)
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_TerLow', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers', tsb=False) 
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_SecHigh', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_SecLow', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_TerHigh', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_TerLow', tsb=False)
         except:
             pass
         for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow', 'TailFeathers']:
@@ -1626,8 +1626,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectY', at='double', dv=mod2)
                 remapx= mc.createNode('remapValue', name=f'{part}_{side}_remapx')
                 remapy= mc.createNode('remapValue', name=f'{part}_{side}_remapy')
-                mc.connectAttr(f'Wing_{side}_02_bind_jnt.rotateZ', f'{remapx}.inputValue')
-                mc.connectAttr(f'Wing_{side}_02_bind_jnt.rotateZ', f'{remapy}.inputValue')
+                mc.connectAttr(f'Wing_{side}_02_bind_JNT.rotateZ', f'{remapx}.inputValue')
+                mc.connectAttr(f'Wing_{side}_02_bind_JNT.rotateZ', f'{remapy}.inputValue')
                 mc.setAttr(f'{remapy}.inputMax', end)
                 mc.setAttr(f'{remapx}.inputMax', end)
                 mc.setAttr(f'{remapy}.inputMin', startvalue)
