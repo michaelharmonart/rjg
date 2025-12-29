@@ -54,7 +54,7 @@ def get_world_position(transform: str) -> tuple[float, float, float]:
 
 def spline_from_guides(
     name: str,
-    guides: Sequence[str],
+    guides: Sequence[str] | str,
     parent: str | None = None,
     degree: int = 3,
     rebuild_spans: int | None = None,
@@ -69,7 +69,7 @@ def spline_from_guides(
 
     Args:
         name: Name of the resulting curve transform.
-        guides: Ordered guide transforms defining the curve shape.
+        guides: Ordered guide transforms defining the curve shape, or a curve.
         parent: Optional parent transform for the curve.
         degree: Degree of the curve.
         rebuild_spans: If provided, rebuilds the curve with this span count.
@@ -79,11 +79,16 @@ def spline_from_guides(
     Returns:
         The name of the created curve transform.
     """
-    positions: list[tuple[float, float, float]] = [get_world_position(guide) for guide in guides]
-    if edit_point:
-        curve: str = mc.curve(name=name, editPoint=positions, degree=degree)
+    if isinstance(guides, str):
+        curve: str = mc.duplicate(guides, name=f"{name}")[0]
+        mc.parent(curve, parent)
+        mc.makeIdentity(curve, apply=True)
     else:
-        curve: str = mc.curve(name=name, point=positions, degree=degree)
+        positions: list[tuple[float, float, float]] = [get_world_position(guide) for guide in guides]
+        if edit_point:
+            curve: str = mc.curve(name=name, editPoint=positions, degree=degree)
+        else:
+            curve: str = mc.curve(name=name, point=positions, degree=degree)
     curve_shape = get_curve(curve)
     curve_shape = mc.rename(curve_shape, f"{curve}Shape")
     if display_reference:
@@ -367,7 +372,7 @@ class Spline:
     def __init__(
         self,
         name: str,
-        guides: Sequence[str],
+        guides: Sequence[str] | str,
         parent: str,
         build_controls: bool = True,
         control_parent: str | None = None,
@@ -382,7 +387,7 @@ class Spline:
 
         Args:
             name: Base name for the spline.
-            guides: Transforms defining the spline shape.
+            guides: Transform(s) defining the spline shape. Can be points along the spline, CVs, or a curve to be copied.
             parent: Parent transform for the spline.
             build_controls: Whether to generate control objects per CV.
             control_parent: Parent transform for generated controls.
@@ -393,7 +398,8 @@ class Spline:
             display_reference: Whether to show the spline as reference geometry.
         """
         self.name = name
-        self.spline = spline_from_guides(
+        self.guides = guides
+        self.spline: str = spline_from_guides(
             guides=guides,
             name=f"{name}",
             parent=parent,
@@ -727,31 +733,32 @@ class UEwing(UEface):
         mid_list = [guide[1] for guide in guides]
         aim_list = [guide[2] for guide in guides]
         mainguides = root_list
-
+        
+        root_guide_curve = f"{prefix}_Start_Curve"
+        mid_guide_curve = f"{prefix}_Mid_Curve"
+        end_guide_curve = f"{prefix}_End_Curve"
+        
         # Feathershaping
         root_spline = Spline(
-            guides=self.limb_bind_joints,
+            guides=root_guide_curve,
             name=f"{prefix}_Root_Spline",
             parent=self.spline_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
-            degree=1,
         )
         mid_spline = Spline(
-            guides=mid_list,
+            guides=mid_guide_curve,
             name=f"{prefix}_Mid_Spline",
             parent=self.spline_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
-            rebuild=1,
         )
         tip_spline = Spline(
-            guides=aim_list,
+            guides=end_guide_curve,
             name=f"{prefix}_Tip_Spline",
             parent=self.spline_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
-            rebuild=1,
         )
         mc.parent(root_spline.spline, mid_spline.spline, tip_spline.spline, self.net_grp)
 
@@ -831,14 +838,32 @@ class UEwing(UEface):
             split_joint = split_joints[0]
             mc.addAttr(split_joint, longName="split_joints", dataType="string")
             mc.setAttr(f"{split_joint}.split_joints", repr(split_joints), type="string")
-
-        for i, bind_jnt in enumerate(self.limb_bind_joints):
-            main = root_spline.control_list[i]
-            mid = mid_spline.control_list[i]
-            aim = tip_spline.control_list[i]
-            mc.parentConstraint(bind_jnt, main.top, mo=True)
-            mc.parentConstraint(bind_jnt, mid.top, mo=True)
-            mc.parentConstraint(bind_jnt, aim.top, mo=True)
+        
+        
+        bind_joints = self.limb_bind_joints
+        mapping = {
+            0: 0,
+            1: 0,
+            2: 1,
+            3: 1,
+            4: 2,
+            5: 3,
+        }
+        
+        for ctrl_index, joint_index in mapping.items():
+            ctrls = (
+                    root_spline.control_list[ctrl_index],
+                    mid_spline.control_list[ctrl_index],
+                    tip_spline.control_list[ctrl_index],
+                )
+            bind_joint = bind_joints[joint_index]
+            for ctrl in ctrls:
+                mc.parentConstraint(
+                    bind_joint,
+                    ctrl.top,
+                    mo=True
+                )
+            
 
     @auto_profiler_tag
     def build_wing(self):
