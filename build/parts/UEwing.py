@@ -323,12 +323,14 @@ class UEwing(UEface):
         side: str,
         ctrl_scale=1,
         twisty = True,
+        buildlimb=True
     ):
         super().__init__(part="Wing", grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.grp_name = grp_name
         self.prefix = UEface.get_prefix_from_group(self.grp_name)
         self.side = side
         self.twisty = twisty
+        self.buildlimb =buildlimb
         # group='Wing_L_guides'
 
     @staticmethod
@@ -725,6 +727,7 @@ class UEwing(UEface):
             mc.addAttr(split_joint, longName="split_joints", dataType="string")
             mc.setAttr(f"{split_joint}.split_joints", repr(split_joints), type="string")
 
+
         for i, bind_jnt in enumerate(self.limb_bind_joints):
             main = root_spline.control_list[i]
             mid = mid_spline.control_list[i]
@@ -789,6 +792,8 @@ class UEwing(UEface):
         # Connect to all bendy joints’ rotateX
         #for jnt in self.bendy_chain.joints:
         #    mc.connectAttr(twist_mdn + '.outputX', f'{jnt}.rotateX')
+    def connectlimb(self): #bind_joints = [f'arm_{side}_01_JNT', f'arm_{side}_02_JNT', f'arm_{side}_03_JNT', f'arm_{side}_04_JNT', f'arm_{side}_05_JNT', f'arm_{side}_06_JNT', f'arm_{side}_07_JNT', f'arm_{side}_08_JNT']
+        self.limb_bind_joints = [f'arm_{self.side}_01_JNT', f'arm_{self.side}_05_JNT' , f'arm_{self.side}_09_JNT'] 
 
 
 
@@ -800,7 +805,10 @@ class UEwing(UEface):
         parts = prefix.split("_")  # ["wing", "L"]
         side = parts[-1]
         self.mastergrp = mc.group(em=True, name=f"{prefix}")
-        self.build_limb()
-        if self.twisty:
-            self.build_bendy_chain()
+        if self.buildlimb:
+            self.build_limb()
+            if self.twisty:
+                self.build_bendy_chain()
+        else:
+            self.connectlimb()
         self.build_feathers()

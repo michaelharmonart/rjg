@@ -224,7 +224,7 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
                 self.Ikhead.tag_as_controller()
                 if self.segments > 2:
                     mc.parentConstraint(self.Ikhead.ctrl, self.iklist[-1].top, mo=True)
-                    mc.parentConstraint(self.Ikhead.ctrl, self.iklist[-2].top, mo=True)
+                    #mc.parentConstraint(self.Ikhead.ctrl, self.iklist[-2].top, mo=True)
                     mc.addAttr(self.Ikhead.ctrl, longName='Stretchy', at='double', dv=.2, k=True, max=1, min=0 )
 
                     mc.addAttr(self.Ikhead.ctrl, ln='roll', at='double', k=True)

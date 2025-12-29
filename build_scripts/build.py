@@ -258,7 +258,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'RedPanda':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2,)
     if character == 'Domingo':
-        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2, IK_Spline=True)
+        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2, IK_Spline=True, segments=6)
         highcombparent = 'head_M_JNT'
         lowcombparent = 'head_M_JNT'
         combbind = ['head_M_JNT']
@@ -579,11 +579,16 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             #    armshape = rBuild.build_module(module_type='arbitrary2', side=side, part=f'Tarm_{side}_{num}', guide_list=f'Tarm_{side}_{num}', ctrl_scale=5, par_jnt=f'arm_{side}_{num}_JNT', par_ctrl=f'arm_{side}_{num}_JNT')
             from rjg.build.parts.DomingoCorrectives import Build_Correctives
             Build_Correctives(side=side)
-            import rjg.build.parts.DomingoFeathers
-            reload(rjg.build.parts.DomingoFeathers)
-            from rjg.build.parts.DomingoFeathers import DomingoFeathers
-            DomingoFeathers = DomingoFeathers(f'Wing_{side}_guides',)
-            DomingoFeathers.build_wing()
+            #import rjg.build.parts.DomingoFeathers
+            #reload(rjg.build.parts.DomingoFeathers)
+            #from rjg.build.parts.DomingoFeathers import DomingoFeathers
+            #DomingoFeathers = DomingoFeathers(f'Wing_{side}_guides',)
+            #DomingoFeathers.build_wing()
+            import rjg.build.parts.UEwing
+            reload(rjg.build.parts.UEwing)
+            from rjg.build.parts.UEwing import UEwing
+            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=1, side=side, buildlimb=False)
+            UEwing.build_wing()
         Build_Correctives(side='M')
     
     if character == 'Sharkguy':
@@ -1292,7 +1297,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         BuildCorrectives(CorrGuides, CorrParrent)
         #Re-Skin with new correctives
-        from Susaka_Misc import ribbons
+        from rjg.build_scripts.Susaka_Misc import ribbons
         ribbons()
         
 
@@ -1403,9 +1408,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         #TempFix
         for side in ['L', 'R']:
-            mc.parentConstraint(f'fingerPinky_{side}_02_JNT', f'main_{side}_08_{side}_CTRL_CNST_GRP', mo=True)
-            mc.parentConstraint(f'fingerPinky_{side}_03_JNT', f'mid_{side}_08_{side}_CTRL_CNST_GRP', mo=True)
-            mc.parentConstraint(f'fingerPinky_{side}_04_JNT', f'aim_{side}_08_{side}_CTRL_CNST_GRP', mo=True)
+            #mc.parentConstraint(f'fingerPinky_{side}_02_JNT', f'Wing_{side}_Root_Spline_03_CTRL_CNST_GRP', mo=True) #Wing_L_Mid_Spline_03_CTRL
+            mc.parentConstraint(f'fingerPinky_{side}_03_JNT', f'Wing_{side}_Mid_Spline_03_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint(f'fingerPinky_{side}_04_JNT',  f'Wing_{side}_Tip_Spline_03_CTRL_CNST_GRP', mo=True)
     if character == 'Luciana':
         try:
             mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers', tsb=False) 
