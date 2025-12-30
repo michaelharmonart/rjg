@@ -841,17 +841,20 @@ class UEwing(UEface):
         
         
         bind_joints = self.limb_bind_joints
-        mapping = {
-            0: 0,
-            1: 0,
-            2: 1,
-            3: 2,
-            4: 3,
-        }
+        root_mapping = [(0,0),(1,0),(2,1),(3,1),(4,2),(5,3)]
+        wing_mapping = [(0,0),(1,0),(2,1),(3,2),(4,3)]
         
-        for ctrl_index, joint_index in mapping.items():
+        for ctrl_index, joint_index in root_mapping:
+            root_ctrl = root_spline.control_list[ctrl_index]
+            bind_joint = bind_joints[joint_index]
+            mc.parentConstraint(
+                bind_joint,
+                root_ctrl.top,
+                maintainOffset=True
+            )
+        
+        for ctrl_index, joint_index in wing_mapping:
             ctrls = (
-                    root_spline.control_list[ctrl_index],
                     mid_spline.control_list[ctrl_index],
                     tip_spline.control_list[ctrl_index],
                 )
@@ -860,7 +863,7 @@ class UEwing(UEface):
                 mc.parentConstraint(
                     bind_joint,
                     ctrl.top,
-                    mo=True
+                    maintainOffset=True
                 )
                 
         # 50% blend for elbow
