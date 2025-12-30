@@ -845,9 +845,8 @@ class UEwing(UEface):
             0: 0,
             1: 0,
             2: 1,
-            3: 1,
-            4: 2,
-            5: 3,
+            3: 2,
+            4: 3,
         }
         
         for ctrl_index, joint_index in mapping.items():
@@ -863,7 +862,13 @@ class UEwing(UEface):
                     ctrl.top,
                     mo=True
                 )
-            
+                
+        # 50% blend for elbow
+        mc.parentConstraint(
+            bind_joints[0],
+            root_spline.control_list[2].top,
+            mo=True
+        )      
 
     @auto_profiler_tag
     def build_wing(self):
