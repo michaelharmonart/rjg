@@ -1055,13 +1055,34 @@ class UEwing(UEface):
             mc.setAttr(f"{split_joint}.split_joints", repr(split_joints), type="string")
 
 
-        for i, bind_jnt in enumerate(self.limb_bind_joints):
-            main = root_spline.control_list[i]
-            mid = mid_spline.control_list[i]
-            aim = tip_spline.control_list[i]
-            mc.parentConstraint(bind_jnt, main.top, mo=True)
-            mc.parentConstraint(bind_jnt, mid.top, mo=True)
-            mc.parentConstraint(bind_jnt, aim.top, mo=True)
+        root_mapping = [(0, 0), (1, 0), (2, 1), (3, 1), (4, 2), (5, 3)]
+        # orient_mapping = [(0,0),(1,0),(2,1),(3,1),(4,2),(5,3)]
+        wing_mapping = [(0, 0), (1, 0), (2, 1), (3, 2), (4, 3)]
+
+        for ctrl_index, joint_index in root_mapping:
+            root_pin = root_spline.pin_list[ctrl_index]
+            bind_joint = bind_joints[joint_index]
+            mc.parentConstraint(bind_joint, root_pin, maintainOffset=True)
+        # for ctrl_index, joint_index in orient_mapping:
+        #     root_pin = start_spline.pin_list[ctrl_index]
+        #     bind_joint = bind_joints[joint_index]
+        #     mc.parentConstraint(
+        #         bind_joint,
+        #         root_pin,
+        #         maintainOffset=True
+        #     )
+
+        for ctrl_index, joint_index in wing_mapping:
+            ctrls = (
+                mid_spline.control_list[ctrl_index],
+                tip_spline.control_list[ctrl_index],
+            )
+            bind_joint = bind_joints[joint_index]
+            for ctrl in ctrls:
+                mc.parentConstraint(bind_joint, ctrl.top, maintainOffset=True)
+
+        # 50% blend for elbow
+        mc.parentConstraint(bind_joints[0], root_spline.pin_list[2], mo=True)
 
     def build_bendy_chain(self):
 
