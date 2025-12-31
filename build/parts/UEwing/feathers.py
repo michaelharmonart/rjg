@@ -196,7 +196,7 @@ def build_feathers(wing: "UEwing", keep_spacing: bool = True):
                 parent=wing.spline_grp,
             )
             if joint_parent is None:
-                joint_parent = get_closest_split_joint(joint, joint_parent_segment)
+                joint_parent = get_closest_split_joint(pin, joint_parent_segment)
             mc.parent(joint, joint_parent, relative=True)
             matrix_constraint(pin, joint, keep_offset=False)
             joint_parent = joint
