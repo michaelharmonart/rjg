@@ -52,7 +52,7 @@ class UEfaceconnect(UEface):
         # Select the set and get its members
         mc.select('UE_Face_Bind')
         all_joints = mc.ls(selection=True)
-        if self.custom == 'Domingo':
+        if self.custom in ['Domingo', 'Luciana', 'Normal']:
             for joint_name in all_joints:
                 rig_module.tag_bind_joints(joint_name)
 
@@ -202,6 +202,99 @@ class UEfaceconnect(UEface):
             # Connect reverse output to the root weight
             mc.connectAttr(f"{rev}.outputX", f"{constraint_name}.{root_ctrl}W1", f=True)
         
+        if self.custom == 'Normal':
+            mc.parent('Eye_L_look_offset', 'Eye_R_look_offset', 'UpperHead_M_CTRL')
+            look_pos = mc.xform('LookNULL_loc', q=True, os=True, t=True)
+            ctrl_name, top_group = UEface.build_basic_control( name='Look_M', shape='circle', size=2.0, color_rgb=(1, 1, 0), position=look_pos, rotation=(90, 0, 0))
+            mc.parent('Eye_L_Look_L_CTRL_CNST_GRP', 'Eye_R_Look_R_CTRL_CNST_GRP', ctrl_name)
+            mc.group('LookNULL_loc', 'Eye_L_eyelid_look_loc', 'Eye_R_eyelid_look_loc', name='Look_Null')
+            mc.parent('Look_Null', 'head_M_01_CTRL')
+            mc.hide('Look_Null')
+            mc.parent('Look_M_M_CTRL_CNST_GRP', 'RIG')
+            mc.parent('Brow_L_NULL', 'Brow_R_NULL', 'UpperHead_M_CTRL')
+            mc.hide('Brow_L_NULL', 'Brow_R_NULL')
+            mc.parent('Brow_L_Master_L_CTRL_CNST_GRP', 'Brow_R_Master_R_CTRL_CNST_GRP', 'Cheek_R_CheekBone_R_CTRL_CNST_GRP', 'Cheek_L_CheekBone_L_CTRL_CNST_GRP', 'UpperHead_M_CTRL' )
+            mc.parentConstraint('Nose_M_NoseRoot_M_CTRL', 'Cheek_L_NLFold_02_Major_jnt', mo=True)
+            mc.parentConstraint('Nose_M_NoseRoot_M_CTRL', 'Cheek_R_NLFold_02_Major_jnt', mo=True)
+            mc.parentConstraint('Jaw_M_root_M_CTRL', 'Cheek_L_NLFold_05_Major_jnt', mo=True)
+            mc.parentConstraint('Jaw_M_root_M_CTRL', 'Cheek_R_NLFold_05_Major_jnt', mo=True)
+            mc.parent('Cheek_L_Puff_L_CTRL_CNST_GRP', 'Cheek_R_Puff_R_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
+            mc.parent('Nose_Master_Master_CTRL_CNST_GRP', 'head_M_01_CTRL')
+            mc.parent('Jaw_M_root_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
+            mc.parent('TopTeeth_JNT', 'BotTeeth_JNT', 'Tongue_01_JNT', 'head_M_JNT')
+            mc.parent('TopTeeth_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
+            mc.parent('BotTeeth_M_CTRL_CNST_GRP', 'Tongue_01_01_CTRL_CNST_GRP', 'Jaw_M_root_M_CTRL')
+            if self.mastermouth:
+                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'TopTeeth_M_CTRL_CNST_GRP', mo=True)
+                mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
+                mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+
+                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
+                mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
+                mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+
+                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
+                mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
+                mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+            if self.mastermouth:
+                mc.parent('Mouth_M_MasterControl_M_CTRL_CNST_GRP', 'LowerLip_M_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
+            else:
+                mc.parent('LowerLip_M_M_CTRL_CNST_GRP', 'UpperLip_M_M_CTRL_CNST_GRP', 'Major_Mouth_R_CornerLip_Mouth_CTRL_CNST_GRP', 'Major_Mouth_L_CornerLip_Mouth_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
+            mc.parentConstraint('Jaw_M_root_M_CTRL', 'LowerLip_M_M_CTRL_CNST_GRP', mo=True)
+            pos = mc.xform('Mouth_M_center', q=True, ws=True, t=True)
+            loc = mc.spaceLocator(name='Mouth_NULL_loc')[0]
+            # Move it to the desired world position
+            mc.xform(loc, worldSpace=True, translation=pos)
+            for side in ['L', 'R']:
+                mc.pointConstraint('LowerLip_M_M_CTRL_CNST_GRP', f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_CNST_GRP', mo=True)
+                mc.pointConstraint(loc, f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_CNST_GRP', mo=True)
+                mc.parentConstraint(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', f'NLFold_{side}_{side}_CTRL_CNST_GRP', mo=True)
+                try:
+                    mc.parent(f'Ear_{side}_Root_JNT', 'head_M_JNT')
+                    mc.parent(f'Ear_{side}_Root_{side}_CTRL_CNST_GRP', 'head_M_01_CTRL')
+                except:
+                    print('no ear controls')
+            if self.mastermouth:
+                mc.parent(loc, 'Mouth_M_MasterControl_M_CTRL')
+            else:
+                mc.parent(loc, 'LowerHead_M_CTRL')
+
+            mc.parent('Eye_L_JNT', 'Eye_R_JNT' ,'UpperHead_JNT' )
+            mc.hide('Eye_L_Eyelid_InnerCorner_Major_JNT', 'Eye_L_Eyelid_Lower_Major_JNT', 'Eye_L_Eyelid_OuterCorner_Major_JNT', 'Eye_L_Eyelid_Upper_Major_JNT', 'Eye_R_Eyelid_Upper_Major_JNT', 'Eye_R_Eyelid_OuterCorner_Major_JNT', 'Eye_R_Eyelid_Lower_Major_JNT', 'Eye_R_Eyelid_InnerCorner_Major_JNT', 'Mouth_NULL_loc')
+            mc.parentConstraint('LowerHead_M_CTRL', 'Jaw_M_larynx_M_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint('neck_M_02_fk_CTRL', 'Jaw_M_larynx_M_CTRL_CNST_GRP', mo=True)
+            mc.parent('Jaw_M_larynx_M_CTRL_CNST_GRP', 'RIG')
+            
+            # === 1️⃣ Define your control variables ===
+            look_ctrl = "Look_M_M_CTRL"          # the one user animates
+            look_offset = "Look_M_M_CTRL_SDK_GRP"  # the group above it
+            head_ctrl = "head_M_01_CTRL"
+            root_ctrl = "global_M_CTRL"
+
+            # === 2️⃣ Add the space switch attribute ===
+            attr_name = "spaceSwitch"
+
+            if not mc.attributeQuery(attr_name, node=look_ctrl, exists=True):
+                mc.addAttr(look_ctrl, longName=attr_name, attributeType="bool", keyable=True)
+
+            # === 3️⃣ Create the parent constraint (Head + Root → Look Offset) ===
+            constraint_name = mc.parentConstraint(head_ctrl, root_ctrl, look_offset, maintainOffset=True)[0]
+
+            # === 4️⃣ Create the reverse node ===
+            rev = mc.createNode("reverse", name=f"{look_ctrl}_spaceSwitch_REV")
+
+            # === 5️⃣ Hook up the connections ===
+            # Connect the look control's attr to head weight and reverse input
+            mc.connectAttr(f"{look_ctrl}.{attr_name}", f"{rev}.inputX", f=True)
+            mc.connectAttr(f"{look_ctrl}.{attr_name}", f"{constraint_name}.{head_ctrl}W0", f=True)
+
+            # Connect reverse output to the root weight
+            mc.connectAttr(f"{rev}.outputX", f"{constraint_name}.{root_ctrl}W1", f=True)
+
+
         elif self.custom == 'Domingo':
             mc.parent('Eye_L_look_offset', 'Eye_R_look_offset', 'UpperHead_M_CTRL')
             look_pos = mc.xform('LookNULL_loc', q=True, os=True, t=True)

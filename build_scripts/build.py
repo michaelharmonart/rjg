@@ -61,7 +61,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     ## Setting parameters for individual Characters (splitting off groups)
     not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'NPC', 'Fisherman'] else True
-    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy', 'RedPanda']) else True
+    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy', 'RedPanda', 'Basemesh']) else True
 
     body_mesh = f'{character}_UBM'
 
@@ -87,6 +87,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Luciana':
         neckList = ['Neck', 'Neck1', 'Neck2','Neck3','Neck4', 'Neck5', 'Head']
         neckik = False
+    elif character == 'Basemesh':
+        neckList = ['Neck', 'Neck1', 'Neck2', 'Head']
     else:
         neckList = ['Neck', 'Neck1', 'Head']
         neckik = True
@@ -116,7 +118,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             joint_num=7,
             chestoffset = True
         )
-    elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer', 'SharkGuy']:
+    elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer', 'SharkGuy', 'Basemesh']:
+        if character in ['Basemesh']:
+            split_weights = True
+        else:
+            split_weights = False
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
@@ -138,6 +144,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             spine_end_guide="Spine2",
             ctrl_scale=1.5,
             joint_num=7,
+            split_weights = split_weights
         )
     elif character == 'Sharkguy':
         hip = rBuild.build_module(
@@ -178,6 +185,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Luciana':
         neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=5,)
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = True)
+    elif character in ['Basemesh']:
+        neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=3, )
+        head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50,)
     else:    
         neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = False)
@@ -226,7 +236,39 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     #
-    
+    if character == 'Basemesh':
+        if face:
+            for side in ['L', 'R']:
+                from rjg.build.parts.UEeye import UEeye
+                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['Eyes', 'Corneas'])
+                eye.build()
+                from rjg.build.parts.UEbrow import UEbrow
+                brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1, split=True)
+                brow.build()
+                from rjg.build.parts.UEcheek import UEcheek
+                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1, NL=True)
+                cheek.build()
+                from rjg.build.parts.UEear import UEear
+                ear = UEear(f'Ear_{side}_guides', ctrl_scale=1)
+                ear.build()
+
+            from rjg.build.parts.UEnose import UEnose
+            nose = UEnose('Nose_guides', ctrl_scale=1)
+            nose.build()
+            from rjg.build.parts.UEjaw import UEjaw
+            jaw = UEjaw('Jaw_M_guides', ctrl_scale=1)
+            jaw.build()
+            from rjg.build.parts.UEmouth import UEmouth
+            mouth = UEmouth('Mouth_guides', ctrl_scale=1,)
+            mouth.build()
+            from rjg.build.parts.UEteeth import UEteeth
+            teeth = UEteeth('Tongue_M_guides', ctrl_scale=1, skin=['tongue', 'topteeth', 'botteeth'])
+            teeth.build()
+
+
+            from rjg.build.parts.UEfaceconnect import UEfaceconnect
+            faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1, custom='Normal')
+            faceconnect.build() 
     if character in ["Luciana"]:
         tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 13)], ctrl_scale=10, pad=2, IK_Spline=True)
         if face:
@@ -1004,6 +1046,14 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if not_previs:
            try: 
                 rc.Luciana_extras(body_mesh, extras)
+           except Exception as e:
+                mc.warning(e)
+    if character in ['Basemesh', 'somefin']:
+        import rjg.build_scripts.base_misc as rc
+        reload(rc)
+        if not_previs:
+           try: 
+                rc.base_extras(body_mesh, extras, character)
            except Exception as e:
                 mc.warning(e)
 

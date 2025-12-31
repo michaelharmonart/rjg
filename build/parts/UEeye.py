@@ -940,7 +940,8 @@ class UEeye(UEface):
             mc.skinCluster(*combined, self.skin[0])
             if self.eyetype == 'Human':
                 mc.skinCluster(*combined, self.skin[1])
-                mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[2])
+                if len(self.skin) > 2:
+                    mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[2])
             if self.eyetype == 'lizzard':
                 mc.skinCluster('Eye_R_JNT', 'Eye_L_JNT', self.skin[1])
         mc.parent(f'Eye_{side}_Lower_Blink_{side}_CTRL_CNST_GRP', f'Eye_{side}_Upper_Blink_{side}_CTRL_CNST_GRP', f'Eye_{side}_MasterControl_{side}_CTRL')

@@ -137,6 +137,16 @@ class RigBuildUI(QtWidgets.QDialog):
                 "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/chicken.png",
             },
 
+            "Basemesh" : {
+                "mp" : f"{groups}/bobo/character/Rigs/Basemesh/Basemesh_Model.mb",
+                "gp" : f"{groups}/bobo/character/Rigs/Basemesh/Basemesh_Guides.mb",
+                "ep" : f"{groups}/bobo/character/Rigs/Basemesh/Basemesh_Extras.mb",
+                "cp" : None, 
+                "sp" : f"{groups}/bobo/character/Rigs/Basemesh/SkinFiles/Basemesh_Skin.json",  
+                "pp" : None,
+                "im" : None, #f"{groups}/Bobo/character/Rigs/Rig_Icon/Bee.jpg",
+            },
+
             "Fisherman" : {
                 "mp" : f"{groups}/bobo/character/Rigs/Fisherman/Fisherman_Model.mb",
                 "gp" : f"{groups}/bobo/character/Rigs/Fisherman/Fisherman_Guides.mb",
@@ -177,7 +187,7 @@ class RigBuildUI(QtWidgets.QDialog):
         
     def create_widgets(self):
         self.char_options = QtWidgets.QComboBox()
-        self.char_options.addItems([ 'Bobo', 'Gretchen', 'Luciana', 'Domingo', 'Susaka', 'Drummer', 'Fisherman', 'Rayden', 'Robin', 'DungeonMonster', 'Skeleton', 'Jett', 'Blitz', 'Sharkguy', 'RedPanda'])
+        self.char_options.addItems([ 'Bobo', 'Gretchen', 'Luciana', 'Domingo', 'Basemesh', 'Susaka', 'Drummer', 'Fisherman', 'Rayden', 'Robin', 'DungeonMonster', 'Skeleton', 'Jett', 'Blitz', 'Sharkguy', 'RedPanda'])
         self.char_options.setFixedWidth(200)
         
         self.model_label = QtWidgets.QLabel('Model:')
