@@ -176,7 +176,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         )
         
     if character == 'Luciana':
-        neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False , spinejnt_count = 6, )
+        neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=5,)
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = True)
     else:    
         neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
@@ -258,7 +258,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'RedPanda':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 9)], ctrl_scale=10, pad=2,)
     if character == 'Domingo':
-        tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2,)
+        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 7)], ctrl_scale=10, pad=2, IK_Spline=True, segments=6)
         highcombparent = 'head_M_JNT'
         lowcombparent = 'head_M_JNT'
         combbind = ['head_M_JNT']
@@ -579,11 +579,16 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             #    armshape = rBuild.build_module(module_type='arbitrary2', side=side, part=f'Tarm_{side}_{num}', guide_list=f'Tarm_{side}_{num}', ctrl_scale=5, par_jnt=f'arm_{side}_{num}_JNT', par_ctrl=f'arm_{side}_{num}_JNT')
             from rjg.build.parts.DomingoCorrectives import Build_Correctives
             Build_Correctives(side=side)
-            import rjg.build.parts.DomingoFeathers
-            reload(rjg.build.parts.DomingoFeathers)
-            from rjg.build.parts.DomingoFeathers import DomingoFeathers
-            DomingoFeathers = DomingoFeathers(f'Wing_{side}_guides',)
-            DomingoFeathers.build_wing()
+            #import rjg.build.parts.DomingoFeathers
+            #reload(rjg.build.parts.DomingoFeathers)
+            #from rjg.build.parts.DomingoFeathers import DomingoFeathers
+            #DomingoFeathers = DomingoFeathers(f'Wing_{side}_guides',)
+            #DomingoFeathers.build_wing()
+            import rjg.build.parts.UEwing
+            reload(rjg.build.parts.UEwing)
+            from rjg.build.parts.UEwing import UEwing
+            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=1, side=side, buildlimb=False)
+            UEwing.build_wing()
         Build_Correctives(side='M')
     
     if character == 'Sharkguy':
@@ -1292,7 +1297,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         BuildCorrectives(CorrGuides, CorrParrent)
         #Re-Skin with new correctives
-        from Susaka_Misc import ribbons
+        from rjg.build_scripts.Susaka_Misc import ribbons
         ribbons()
         
 
@@ -1395,21 +1400,27 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.skinCluster('arm_L_01_JNT', 'PrimaryFeathers', tsb=False) 
         mc.skinCluster('arm_L_01_JNT', 'SecondaryFeathers', tsb=False)
         if face:
-            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'PrimaryFeathers', 'SecondaryFeathers', 'comb', 'Mouth_UpperLip_surf', 'Mouth_LowerLip_surf', 'Stache_L_ribbon', 'Stache_R_ribbon', 'botteeth', 'topteeth']: #'Mouth_LowerLip_surf',
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'PrimaryFeathers', 'SecondaryFeathers', 'comb', 'Mouth_UpperLip_surf', 'Mouth_LowerLip_surf', 'Stache_L_ribbon', 'Stache_R_ribbon', 'botteeth', 'topteeth', 'corneas', 'FaceFeathers', 'HandFeathers', 'PrimaryFeathers']: #'Mouth_LowerLip_surf',
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
         else:
             for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'PrimaryFeathers', 'SecondaryFeathers', 'comb']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+
+        #TempFix
+        for side in ['L', 'R']:
+            #mc.parentConstraint(f'fingerPinky_{side}_02_JNT', f'Wing_{side}_Root_Spline_03_CTRL_CNST_GRP', mo=True) #Wing_L_Mid_Spline_03_CTRL
+            mc.parentConstraint(f'fingerPinky_{side}_03_JNT', f'Wing_{side}_Mid_Spline_03_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint(f'fingerPinky_{side}_04_JNT',  f'Wing_{side}_Tip_Spline_03_CTRL_CNST_GRP', mo=True)
     if character == 'Luciana':
         try:
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers', tsb=False) 
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_SecHigh', tsb=False)
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_SecLow', tsb=False)
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_TerHigh', tsb=False)
-            mc.skinCluster('Wing_L_01_bind_jnt', 'Feathers_TerLow', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers', tsb=False) 
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_SecHigh', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_SecLow', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_TerHigh', tsb=False)
+            mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_TerLow', tsb=False)
         except:
             pass
-        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow']:
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow', 'TailFeathers']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
 
 
@@ -1601,10 +1612,44 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Luciana':
-        mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
-        mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
+        #mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
+        #mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
         mc.setAttr("perspShape.nearClipPlane", 1)
         mc.setAttr("perspShape.farClipPlane", 100000)
+
+        for side in ['L', 'R']:
+            startvalue = 0
+            if side == 'L':
+                end = -90
+                mod=-1000
+            else:
+                end = -90
+                mod=1000
+            mod2=-500
+            for part in ['Mid', 'Tip']:
+                mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectX', at='double', dv=mod)
+                mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectY', at='double', dv=mod2)
+                remapx= mc.createNode('remapValue', name=f'{part}_{side}_remapx')
+                remapy= mc.createNode('remapValue', name=f'{part}_{side}_remapy')
+                mc.connectAttr(f'Wing_{side}_02_bind_JNT.rotateZ', f'{remapx}.inputValue')
+                mc.connectAttr(f'Wing_{side}_02_bind_JNT.rotateZ', f'{remapy}.inputValue')
+                mc.setAttr(f'{remapy}.inputMax', end)
+                mc.setAttr(f'{remapx}.inputMax', end)
+                mc.setAttr(f'{remapy}.inputMin', startvalue)
+                mc.setAttr(f'{remapx}.inputMin', startvalue)
+                mc.setAttr(f'{remapx}.outputMax', mod)
+                mc.setAttr(f'{remapy}.outputMax', mod2)
+                mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateY')
+                mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateX')
+                if side == 'L':
+                    mod = mod - 1000
+                else:
+                    mod = mod + 1000
+                mod2 = mod2 - 1000
+
+        if face == False:
+            for obj in ['Eye', 'topteeth', 'botteeth', 'tongue', 'facefeathers']:
+                mc.skinCluster('head_M_JNT', obj, tsb=True)
 
 
 
@@ -1628,6 +1673,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     print(f"Failed to set {attr}: {e}")
             else:
                 print(f"{attr} does not exist on {sc}")
+            if character in ['Luciana', 'Domingo']:
+                mc.setAttr(f'{sc}.skinningMethod', 0)
     except Exception as e:
         print(f"Failed")
     try:

@@ -235,6 +235,14 @@ class comb(UEface):
         mc.parent(ik_handle, handlegrp)
         mc.parent(curve, handlegrp)
 
+        #mc.addAttr(masterikctrl, ln='twist', at='double', k=True)
+        mc.addAttr(masterikctrl, ln='roll', at='double', k=True)
+        mc.connectAttr(f'{masterikctrl}.roll', f'{ik_handle}.roll')
+        rev = mc.createNode("multiplyDivide", name=f'{masterikctrl}_revmd')
+        mc.setAttr(f'{rev}.input2X', -1)
+        mc.connectAttr(f'{masterikctrl}.rotateZ', f'{rev}.input1X')
+        mc.connectAttr(f'{rev}.outputX', f'{ik_handle}.twist')
+
 
         # Step 2: For each CV on the curve, create cluster + control
         cvs = mc.ls(f"{curve}.cv[*]", fl=True)

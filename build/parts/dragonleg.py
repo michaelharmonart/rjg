@@ -19,7 +19,8 @@ class DragonLeg(rModule.RigModule):
                  guide_list=None,       # [string]. list of names of guides to be iterated over during build.
                  ctrl_scale=None,       # float. base scale value for all controls on this part.
                  model_path=None,       # string. path to model.
-                 guide_path=None):      # string. path to guides.
+                 guide_path=None,
+                 twisty=True):      # string. path to guides.
         
         # initialize super class RigModule
         super().__init__(side=side,
@@ -30,6 +31,7 @@ class DragonLeg(rModule.RigModule):
                      guide_path=guide_path)
         
         self.__dict__.update(locals())
+        self.twisty=twisty
         
         # base name conventions: part_side. used for naming objects.
         self.base_name = self.part + '_' + self.side
@@ -416,6 +418,9 @@ class DragonLeg(rModule.RigModule):
             mc.connectAttr(f'{self.side}_Options_{ctrlnames}.FK_IK_Switch', f'{basename}_bindJNT_parentConstraint1.{basename}_FKW0')
             mc.connectAttr(f'{IK_Reverse}.outputX', f'{basename}_bindJNT_parentConstraint1.{basename}_IKW1')
             bindjnts.append(f'{basename}_bindJNT')
+
+    
+        
         
         #Aim Spaces
         for aim in ['01', '02']:
@@ -512,6 +517,92 @@ class DragonLeg(rModule.RigModule):
         
         mc.setAttr(f'{self.side}_Options_{ctrlnames}.FootRoot', 1)
 
+        #proxy
+        for control in [f'{self.side}_FootRoot_{ctrlnames}', f'{self.side}_Foot_{ctrlnames}', f'{self.side}_Huck_{ctrlnames}', f'{self.side}_Hip_{ctrlnames}', f'{self.side}_IKAim01_{ctrlnames}', f'{self.side}_IKAim02_{ctrlnames}', f'{self.side}_FootRoll_{ctrlnames}', f'Leg_{self.side}_01_{ctrlnames}', f'Leg_{self.side}_02_{ctrlnames}',f'Leg_{self.side}_03_{ctrlnames}',f'Leg_{self.side}_04_{ctrlnames}', f'Foot_{self.side}_{ctrlnames}']:
+            mc.addAttr(control, longName = 'IK_Fk_Switch', proxy=f'{self.side}_Options_{ctrlnames}.FK_IK_Switch')
+        mc.addAttr(f'{self.side}_IKAim01_{ctrlnames}', longName='parentspace', proxy=f'{self.side}_Options_{ctrlnames}.Aim_01')
+        mc.addAttr(f'{self.side}_IKAim02_{ctrlnames}', longName='parentspace', proxy=f'{self.side}_Options_{ctrlnames}.Aim_02')
+        mc.addAttr(f'{self.side}_FootRoot_{ctrlnames}', longName='parentspace', proxy=f'{self.side}_Options_{ctrlnames}.FootRoot')
+        mc.addAttr(f'{self.side}_FootRoot_{ctrlnames}', longName='Roll', proxy=f'{self.side}_FootRoll_{ctrlnames}.translateZ')
+        mc.addAttr(f'{self.side}_FootRoot_{ctrlnames}', longName='Bank', proxy=f'{self.side}_FootRoll_{ctrlnames}.translateX')
+        mc.addAttr(f'{self.side}_FootRoot_{ctrlnames}', longName='FullFootRoll', proxy=f'{self.side}_FootRoll_{ctrlnames}.FullRoll_Switch')
+
+        #reset Defaults
+
+        mc.setAttr(f'{self.side}_FootRoll_{ctrlnames}.FullRoll_Switch', 1)
+
+        if self.side == 'L':
+            sidelong = 'Left'
+        else:
+            sidelong='Right'
+
+        for toe in ['Index', 'Middle', 'Ring', 'Pinky', 'Thumb']:
+            mc.setAttr(f"{sidelong}{toe}Toe_IK_IK_CTRL.FollowFoot", 1)
+            mc.addAttr(f'{self.side}_Foot_{ctrlnames}', longName=f'{toe}_Follow', proxy=f"{sidelong}{toe}Toe_IK_IK_CTRL.FollowFoot")
+
+        
+
+        
+    
+    def build_bendy_chain(self):
+
+        # Collect main leg bind joints only (no toes)
+        bind_jnts = [
+            f'Leg_{self.side}_01_bindJNT',
+            f'Leg_{self.side}_02_bindJNT',
+            f'Leg_{self.side}_03_bindJNT',
+            f'Leg_{self.side}_04_bindJNT',
+        ]
+
+        # Create chain
+        self.bendy_chain = rChain.Chain(
+            transform_list=bind_jnts,
+            side=self.side,
+            name=f'Leg_{self.side}_bendy',
+        )
+
+        self.bendy_chain.joints = self.bendy_chain.transform_list
+
+        # Split joints for deformation
+        self.bendy_chain.split_chain(
+            segments=4,          # tweak this per creature
+        )
+
+        # Build bendy
+        bend = self.bendy_chain.bend_twist_chain(
+            ctrl_scale=50,
+            mirror=self.side == 'R',
+            global_scale=None,
+        )
+
+        # Parent outputs
+        mc.parent(bend['control'], self.control_grp)
+        mc.parent(bend['module'], self.module_grp)
+        self.add_global_twist(main_ctrl=self.module_grp)
+
+    def add_global_twist(self, main_ctrl=None):
+        """
+        Adds a global twist attribute to control twist along the whole bendy chain.
+        main_ctrl : str, the main control driving the leg (e.g., FootRoot_CTRL)
+        """
+        if not main_ctrl:
+            main_ctrl = self.main_ctrl  # fallback to your main leg control
+
+        # Add the twist attribute
+        if not mc.objExists(f"{main_ctrl}.TwistDistribute"):
+            mc.addAttr(main_ctrl, longName="TwistDistribute", attributeType="double",
+                    min=0, max=1, defaultValue=1, keyable=True)
+
+        # Create a multiplyDivide node
+        twist_mdn = mc.createNode('multiplyDivide', n=f'{self.side}_bendyTwist_MDN')
+        mc.setAttr(twist_mdn + '.operation', 2)  # divide
+        mc.connectAttr(f'{main_ctrl}.TwistDistribute', twist_mdn + '.input1X')
+
+        # Connect to all bendy joints’ rotateX
+        for jnt in self.bendy_chain.joints:
+            mc.connectAttr(twist_mdn + '.outputX', f'{jnt}.rotateX')
+
+
         
     @auto_profiler_tag
     def create_module(self):
@@ -520,30 +611,12 @@ class DragonLeg(rModule.RigModule):
         self.control_rig()
         self.output_rig()
         self.skeleton()
+        if self.twisty:
+            self.build_bendy_chain()
+
         self.add_plugs()
         # create extra attributes to be used during finalization stage (see ../post/finalize.py)
-    
-    
-    """def add_plugs(self):
-            # skeletonPlugs
-            # indicate input/output joints in order to connect skeleton components
-            # rAttr.Attribute(node=self.part_grp, type='plug', value=['PARENT_JNT'], name='skeletonPlugs', children_name=['CONNECTED_CHILD_JNT'])
 
-            # hideRigPlugs, deleteRigPlugs
-            # indicate controls to be hidden or deleted during finalization
-            #                                                        space separated list
-            # rAttr.Attribute(node=self.part_grp, type='plug', value=[' '.join(hide_list)], name='hideRigPlugs', children_name=['hideNodes'])
 
-            # pacRigPlugs, pacPocRigPlugs, pocRigPlugs, orcRigPlugs
-            # parent,      parent no rotate, point,     orient     
-            # given a list of drivers and drivens, set up constraints based on these plug attrs
-            # rAttr.Attribute(node=self.part_grp, type='plug', value=[driver1, driver2], name='pacRigPlugs', children_name=[driven1, driven2])
+    #####Foot Roll, we need to create a toe pivot to parent the ik toes to instead of directly to the foot control, then we can hook up to roll logic to that
 
-            # switchRigPlugs
-            # give an object this plug attribute if it has IKFK switch attributes to be connected to the switch control
-            # rAttr.Attribute(node=self.part_grp, type='plug', value=[switch_attr], name='switchRigPlugs', children_name=['ikFkSwitch'])
-
-            # transferAttributes
-            # tell an object which attributes to transfer to other objects and where
-            # rAttr.Attribute(node=self.part_grp, type='plug', value=['transfer target'], name='transferAttributes', children_name=['obj to transfer'])
-            pass"""

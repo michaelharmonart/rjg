@@ -14,13 +14,14 @@ reload(rChain)
 reload(rFk)
 
 class SplineTail(rModule.RigModule, rFk.Fk):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=1, model_path=None, guide_path=None, pad='auto', remove_last=True, fk_shape='circle', IK_Spline = True):
+    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=1, model_path=None, guide_path=None, pad='auto', remove_last=True, fk_shape='circle', IK_Spline = True, segments=12):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
 
         self.__dict__.update(locals())
         self.gimbal = None
         self.offset = None
         self.IK_Spline = IK_Spline
+        self.segments = segments
 
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -231,6 +232,14 @@ class SplineTail(rModule.RigModule, rFk.Fk):
                 mc.setAttr(f"{cond}.colorIfTrueR", 1)
                 mc.setAttr(f"{cond}.colorIfFalseR", 0)
                 mc.connectAttr(f"{cond}.outColorR", f"{pc}.{weights[idx]}")
+
+        proxylist = ['Tail_IK_01_M_CTRL', 'Tail_IK_02_M_CTRL', 'Tail_IK_03_M_CTRL', 'Tail_IK_04_M_CTRL']
+        for i in range(1, self.segments, 1):
+            proxylist.append(f'Tail{i}_M_CTRL')
+        for ctrl in proxylist:
+            mc.addAttr(ctrl, longName='FK_IK_Switch', proxy='Tail_M.Tail_M_IKFK')
+
+        
 
 
 

@@ -81,11 +81,111 @@ class Ik:
             self.pv_ctrl.tag_as_controller()
 
         return self.pv_ctrl.ctrl
+    
+    def build_ikspline_controls(self):
+        """
+        Build controls for IK spline setup.
+        Creates start / mid / end controls, no PV.
+        """
+
+        self.ikspline_ctrls: list[rCtrl.Control] = []
+        attr_util = rAttr.Attribute(add=False)
+
+        # control group
+        self.ik_ctrl_grp = mc.group(
+            empty=True,
+            name=self.base_name + "_IK_CTRL_GRP"
+        )
+
+        # ---------- START CTRL ----------
+        self.start_ctrl = rCtrl.Control(
+            parent=self.ik_ctrl_grp,
+            shape='cube',
+            side=None,
+            suffix='CTRL',
+            name=self.base_name + "_IKSPLINE_START",
+            axis='y',
+            group_type='main',
+            rig_type='primary',
+            translate=self.guide_list[0],
+            ctrl_scale=self.ctrl_scale
+        )
+
+        self.ikspline_ctrls.append(self.start_ctrl)
+        attr_util.lock_and_hide(
+            node=self.start_ctrl.ctrl,
+            translate=False,
+            rotate=False
+        )
+        self.start_ctrl.tag_as_controller()
+
+        # ---------- MID CTRL (optional) ----------
+        if len(self.guide_list) > 2:
+            mid_index = len(self.guide_list) // 2
+            self.mid_ctrl = rCtrl.Control(
+                parent=self.ik_ctrl_grp,
+                shape='cube',
+                side=None,
+                suffix='CTRL',
+                name=self.base_name + "_IKSPLINE_MID",
+                axis='y',
+                group_type='main',
+                rig_type='secondary',
+                translate=self.guide_list[mid_index],
+                ctrl_scale=self.ctrl_scale
+            )
+
+            self.ikspline_ctrls.append(self.mid_ctrl)
+            attr_util.lock_and_hide(
+                node=self.mid_ctrl.ctrl,
+                translate=False,
+                rotate=False
+            )
+            self.mid_ctrl.tag_as_controller()
+
+        # ---------- END CTRL ----------
+        self.end_ctrl = rCtrl.Control(
+            parent=self.ik_ctrl_grp,
+            shape='cube',
+            side=None,
+            suffix='CTRL',
+            name=self.base_name + "_IKSPLINE_END",
+            axis='y',
+            group_type='main',
+            rig_type='primary',
+            translate=self.guide_list[-1],
+            ctrl_scale=self.ctrl_scale
+        )
+
+        self.ikspline_ctrls.append(self.end_ctrl)
+        attr_util.lock_and_hide(
+            node=self.end_ctrl.ctrl,
+            translate=False,
+            rotate=False
+        )
+        self.end_ctrl.tag_as_controller()
+
+        return [ctrl.ctrl for ctrl in self.ikspline_ctrls]
+
 
     def build_ik_chain(self, force_planar: bool = False):
         self.ik_chain = rChain.Chain(transform_list=self.guide_list, side=self.side, suffix=self.s_name + '_JNT', name=self.part)
         self.ik_chain.create_from_transforms(static=True, force_planar=force_planar)
         self.ik_joints = self.ik_chain.joints
+
+    def build_ikspline_chain(self):
+        """
+        Builds a joint chain for IK spline deformation.
+        """
+        self.ikspline_chain = rChain.Chain(
+            transform_list=self.guide_list,
+            side=self.side,
+            suffix=self.s_name + '_JNT',
+            name=self.part
+        )
+
+        self.ikspline_chain.create_from_transforms(static=True)
+        self.ikspline_joints = self.ikspline_chain.joints
 
     def build_ikh(self, scale_attr=None, constrain=True):
         self.ikh = mc.ikHandle(name=self.base_name + "_IKH", startJoint=self.ik_joints[0], endEffector=self.ik_joints[-1], sticky=self.sticky, solver=self.solver)[0]
@@ -161,3 +261,106 @@ class Ik:
             #     mc.connectAttr(stretch_bta + '.output', joint + '.scaleY')
             for joint in self.ik_joints[:-1]:
                 mc.connectAttr(mult + '.outputX', joint + '.scaleY')
+
+    def build_spline_ikh(self):
+        """
+        Creates IK spline handle and curve.
+        """
+        self.ikh, self.ikeff, self.spline_curve = mc.ikHandle(
+            name=self.base_name + "_IKSPLINE_IKH",
+            startJoint=self.ikspline_joints[0],
+            endEffector=self.ikspline_joints[-1],
+            solver='ikSplineSolver',
+            createCurve=True,
+            parentCurve=False
+        )
+
+        mc.parent(self.ikh, self.spline_curve, 'neck_M_MODULE')
+
+        #mc.rename(self.spline_curve, self.base_name + "_IKSPLINE_CRV")
+        buildControls = True
+        cvs = mc.ls(f"{self.spline_curve }.cv[*]", fl=True)
+        ctrl_list = []
+        offset_list = []
+        self.iklist = []
+
+        for i, cv in enumerate(cvs, start=1):
+            # Make cluster for the CV
+            #ctrl_list = []
+            cluster_list = []
+            cluster, cluster_handle = mc.cluster(cv, n=f"{self.base_name}_{i:02}_cluster")
+            mc.parent(cluster_handle, f'neck_M_MODULE') 
+            # Get cluster position
+            pos = mc.pointPosition(cv, w=True)
+            if buildControls:
+                    # Make control
+                    ctrl_name = f"{self.base_name}_{i:02}"
+                    #ctrl_name = f"{prefix}_Main_Feather_aim_{i:02}"
+                    self.ik_ctrl = rCtrl.Control(parent=self.control_grp, shape="square", side=None, suffix='CTRL', name=f'{self.base_name}_{i:02}', axis='y', group_type='main', rig_type='primary', translate=pos,)
+                    ctrl_list.append(self.ik_ctrl.ctrl)
+                    offset_list.append(self.ik_ctrl.top)
+                    self.iklist.append(self.ik_ctrl)
+                    mc.parent(self.ik_ctrl.top, f'neck_M_IK_CTRL_GRP')
+
+                    # Parent cluster to control
+                    mc.parentConstraint(self.ik_ctrl.ctrl, cluster_handle, mo=True)
+
+
+        mc.addAttr(ctrl_list[-1], longName='Stretchy', at='double', dv=1, k=True, max=1, min=0 )
+        Stretch_attr = f'{ctrl_list[-1]}.Stretchy'
+
+        mc.addAttr(ctrl_list[-1], ln='twist', at='double', k=True)
+        mc.addAttr(ctrl_list[-1], ln='roll', at='double', k=True)
+        mc.connectAttr(f'{ctrl_list[-1]}.roll', f'{self.ikh}.roll')
+        mc.connectAttr(f'{ctrl_list[-1]}.twist', f'{self.ikh}.twist')
+
+        if Stretch_attr:
+            postcurve = mc.listRelatives(self.spline_curve , s=True, ni=True)[0]
+            precurve = mc.listRelatives(self.spline_curve , s=True, ni=False, type='nurbsCurve')
+            precurve_shapes = mc.listRelatives(self.spline_curve, s=True, ni=False, type='nurbsCurve')
+            if not precurve_shapes:
+                raise RuntimeError(f"No curve shapes found under {self.spline_curve}")
+            precurve = precurve_shapes[0]
+
+            postci = mc.createNode("curveInfo", name=f"{self.spline_curve }_postci")
+            preci = mc.createNode("curveInfo", name=f"{self.spline_curve }_preci")
+            mc.connectAttr(f"{postcurve}.worldSpace[0]", f"{postci}.inputCurve", force=True)
+            mc.connectAttr(f"{precurve}.worldSpace[0]", f"{preci}.inputCurve", force=True)
+            value = mc.getAttr(f"{postci}.arcLength")
+
+            frac = mc.createNode("multiplyDivide", name=f"{self.spline_curve }_Frac")
+
+            # Set the operation to DIVIDE (2)
+            mc.setAttr(f"{frac}.operation", 2)
+
+            # Connect inputs
+            mc.connectAttr(f"{postci}.arcLength", f"{frac}.input1X", force=True)
+            #mc.connectAttr(f"{preci}.arcLength", f"{frac}.input2X", force=True)
+            mc.setAttr(f"{frac}.input2X", value) 
+
+            md = mc.createNode("remapValue", name=f"{self.spline_curve }_remap")
+
+            mc.connectAttr(f"{frac}.outputX", f"{md}.outputMax", force=True)
+            mc.connectAttr(Stretch_attr, f"{md}.inputValue", force=True)
+            mc.setAttr(f"{md}.outputMin", 1)
+
+            for newjnt in self.ikspline_chain.joints:
+                mc.connectAttr(f"{md}.outValue", f"{newjnt}.scaleY")
+
+            
+
+
+    def attach_controls_to_spline(self):
+        """
+        Creates clusters on spline CVs and parents them under controls.
+        """
+        cvs = mc.ls(self.spline_curve + '.cv[*]', fl=True)
+
+        self.spline_clusters = []
+
+        for i, ctrl in enumerate(self.ikspline_ctrls):
+            clust = mc.cluster(cvs[i], name=f'{ctrl.name}_CLUSTER')[1]
+            mc.parentConstraint( ctrl.ctrl, clust, mo=True)
+            mc.hide(clust)
+            mc.parent(clust, self.limb_grp)
+            self.spline_clusters.append(clust)

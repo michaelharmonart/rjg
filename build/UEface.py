@@ -67,11 +67,11 @@ class UEface:
 
         if not mc.objExists(set_name):
             mc.sets(name=set_name)
-            print(f"Created set: {set_name}")
+            #print(f"Created set: {set_name}")
 
         if mc.objExists(obj_name):
             mc.sets(obj_name, add=set_name)
-            print(f"Added {obj_name} to {set_name}")
+            #print(f"Added {obj_name} to {set_name}")
         else:
             print(f"Object '{obj_name}' does not exist.")
 
@@ -217,7 +217,7 @@ class UEface:
             mc.connectAttr(mult_node + ".outputY", driver_joint + ".rotateY", force=True)
             mc.connectAttr(mult_node + ".outputZ", driver_joint + ".rotateZ", force=True)
 
-        print("✅ Driver joints created successfully.")
+        #print("✅ Driver joints created successfully.")
 
 
     @staticmethod
@@ -270,7 +270,7 @@ class UEface:
                         mc.parent(grp_name, prev_ctrl)
                 prev_ctrl = ctrl_name  # we parent GRP, but track CTRL for next
 
-        print(f"[INFO] Chained {'joints' if joints else ''} {'and' if joints and controls else ''} {'controls' if controls else ''} for {len(chain_names)} items.")
+        #print(f"[INFO] Chained {'joints' if joints else ''} {'and' if joints and controls else ''} {'controls' if controls else ''} for {len(chain_names)} items.")
 
     @staticmethod
     def strip_suffix_from_guide(suffix, guide_name):

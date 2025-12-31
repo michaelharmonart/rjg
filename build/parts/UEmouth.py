@@ -19,12 +19,13 @@ reload (rGuide)
 reload(rXform)
 
 class UEmouth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=True):
+    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=True, mastercontrol=True):
         super().__init__(part='Mouth', grp_name=grp_name, ctrl_scale=ctrl_scale,)
         self.Major_Mouth = Major_Mouth
         self.Major_2 = Major_2
         self.rib_mouth = rib_mouth
         self.cornerhelper = cornerhelper
+        self.mastercontrol = mastercontrol 
 
     def get_ordered_lip_guides(self, prefix, guides, guide_base, has_mid=True):
         """
@@ -200,6 +201,10 @@ class UEmouth(UEface):
         loc2 = f'{prefix}_M_center'
         pos = mc.xform(loc2, q=True, ws=True, t=True)
         mc.select(clear=True)
+
+        if self.mastercontrol:
+            masterctrl, masteroffset = UEface.build_basic_control(name='Mouth_M_MasterControl', shape='brackets', position=pos, size = 1)
+
         upper_ctrl, upper_offset = UEface.build_basic_control(
             name='UpperLip_M',
             position=pos,
@@ -267,3 +272,8 @@ class UEmouth(UEface):
                 jnt, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(f'Mouth_{side}_CornerLip', orient=False, check_side=True, CTRL_Size=.2, overwrite=True, overwrite_name=f'Mouth_{side}_CornerLip_Helper')
                 mc.parentConstraint(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', ctrl_offset, mo=True)
                 mc.parent(ctrl_offset, 'Mouth_Extras_offsets')
+        
+        if self.mastercontrol:
+            mc.parent('Major_Mouth_L_CornerLip_Mouth_CTRL_CNST_GRP', 'Major_Mouth_R_CornerLip_Mouth_CTRL_CNST_GRP', 'UpperLip_M_M_CTRL_CNST_GRP', masterctrl)
+            mc.connectAttr(f"{masterctrl}.translate", 'LowerLip_M_M_CTRL_OFF_GRP.translate')
+            mc.connectAttr(f"{masterctrl}.rotate", 'LowerLip_M_M_CTRL_OFF_GRP.rotate')
