@@ -204,7 +204,7 @@ def create_pin_on_curve(
 
 
 def create_swing_pin_on_curve(
-    name: str, curve: str, guide: str, orient_guide: str, parent: str, arc_length: bool = True
+    name: str, curve: str, guide: str, orient_guide: str, parent: str, orient_driver: str | None, arc_length: bool = True
 ):
     pin_offset = mc.group(empty=True, name=f"{name}_Offset", parent=parent)
     pin: str = mc.spaceLocator(name=f"{name}_Pin")[0]
@@ -215,6 +215,8 @@ def create_swing_pin_on_curve(
     guide_pos = mc.xform(guide, query=True, worldSpace=True, translation=True)
     rXform.match_transform(pin_offset, orient_guide)
     mc.xform(pin_offset, worldSpace=True, translation=guide_pos)
+    if orient_driver is not None:
+        rXform.matrix_constraint(orient_driver, pin_offset)
 
     curve_pin = create_pin_on_curve(
         name=f"{name}_Curve_Pin",
@@ -886,6 +888,12 @@ class UEwing(UEface):
             zip(root_list, mid_list, aim_list), start=1
         ):
             name = root_guide.replace("guide", "Spline")
+            
+            joint_parent = self.spline_grp
+            if mc.attributeQuery("parent_joint", node=root_guide, exists=True):
+                joint_parent_index = mc.getAttr(f"{root_guide}.parent_joint")
+                joint_parent = self.limb_bind_joints[joint_parent_index]
+            
             root_pin = create_pin_on_curve(
                 name=f"{root_guide}_Pin",
                 curve=root_spline.spline,
@@ -931,6 +939,7 @@ class UEwing(UEface):
                 parent=self.spline_grp,
                 guide=root_pin.pin,
                 orient_guide=root_guide,
+                orient_driver=joint_parent,
                 arc_length=keep_spacing,
             )
 
@@ -944,11 +953,6 @@ class UEwing(UEface):
                 mid_guides[1]: f"{prefix}{feather}_{index:02d}_mid2_JNT",
                 tip_guide: f"{prefix}{feather}_{index:02d}_ee_JNT",
             }
-
-            joint_parent = self.spline_grp
-            if mc.attributeQuery("parent_joint", node=root_guide, exists=True):
-                joint_parent_index = mc.getAttr(f"{root_guide}.parent_joint")
-                joint_parent = self.limb_bind_joints[joint_parent_index]
             split_joints: list[str] = []
             for guide in [root_pin.pin] + mid_guides + [tip_guide]:
                 if guide in guide_mapping:
