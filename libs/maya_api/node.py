@@ -3,12 +3,11 @@ from typing import Final
 import maya.cmds as cmds
 from rjg.libs.maya_api.attribute import (
     AimMatrixAxisAttribute,
-    Attribute,
     BooleanAttribute,
     EnumAttribute,
-    IndexableAttribute,
     IndexableBlendMatrixTargetAttribute,
     IndexableMatrixAttribute,
+    IndexableScalarAttribute,
     IndexableWtMatrixAttribute,
     IntegerAttribute,
     MatrixAttribute,
@@ -274,7 +273,7 @@ class MultiplyNode(Node):
         super().__init__("multiply", name)
 
     def _setup_attributes(self) -> None:
-        self.input: IndexableAttribute = IndexableAttribute(f"{self.name}.input")
+        self.input: IndexableScalarAttribute = IndexableScalarAttribute(f"{self.name}.input")
         self.output: ScalarAttribute = ScalarAttribute(f"{self.name}.output")
 
 
@@ -414,7 +413,7 @@ class SumNode(Node):
         super().__init__("sum", name)
 
     def _setup_attributes(self) -> None:
-        self.input: IndexableAttribute = IndexableAttribute(f"{self.name}.input")
+        self.input: IndexableScalarAttribute = IndexableScalarAttribute(f"{self.name}.input")
         self.output: ScalarAttribute = ScalarAttribute(f"{self.name}.output")
 
 

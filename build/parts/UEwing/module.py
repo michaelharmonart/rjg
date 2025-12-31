@@ -8,6 +8,7 @@ import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.transform as rXform
 from rjg.build.parts.UEwing import feathers, limb
+from rjg.build.parts.UEwing.spline_system import Spline
 from rjg.build.UEface import UEface
 from rjg.libs.profile import auto_profiler_tag
 
@@ -142,6 +143,29 @@ class UEwing(UEface):
     def build_feathers(self, keep_spacing: bool = True):
         feathers.build_feathers(self, keep_spacing)
 
+    def connect_feathers(self, root_spline: Spline, mid_spline: Spline, tip_spline: Spline):
+        bind_joints = self.limb_bind_joints
+
+        root_mapping = [(0, 0), (1, 0), (2, 1), (3, 1), (4, 2), (5, 3)]
+        wing_mapping = [(0, 0), (1, 0), (2, 1), (3, 2), (4, 3)]
+
+        for ctrl_index, joint_index in root_mapping:
+            root_pin = root_spline.pin_list[ctrl_index]
+            bind_joint = bind_joints[joint_index]
+            mc.parentConstraint(bind_joint, root_pin, maintainOffset=True)
+
+        for ctrl_index, joint_index in wing_mapping:
+            ctrls = (
+                mid_spline.control_list[ctrl_index],
+                tip_spline.control_list[ctrl_index],
+            )
+            bind_joint = bind_joints[joint_index]
+            for ctrl in ctrls:
+                mc.parentConstraint(bind_joint, ctrl.top, maintainOffset=True)
+
+        # 50% blend for elbow
+        mc.parentConstraint(bind_joints[0], root_spline.pin_list[2], mo=True)
+
     @auto_profiler_tag
     def build_wing(self):
         prefix = self.prefix
@@ -157,3 +181,6 @@ class UEwing(UEface):
         else:
             self.connectlimb()
         self.build_feathers()
+        self.connect_feathers(
+            root_spline=self.root_spline, mid_spline=self.mid_spline, tip_spline=self.tip_spline
+        )
