@@ -2,6 +2,7 @@ from typing import Final
 
 import maya.cmds as cmds
 from rjg.libs.maya_api.attribute import (
+    AimMatrixAxisAttribute,
     Attribute,
     BooleanAttribute,
     EnumAttribute,
@@ -48,6 +49,10 @@ class Node:
             "standard": "multiplyPointByMatrix",
             "DL": "multiplyPointByMatrixDL",
         },
+        "multiplyVectorByMatrix": {
+            "standard": "multiplyVectorByMatrix",
+            "DL": "multiplyVectorByMatrixDL",
+        },
         "normalize": {"standard": "normalize", "DL": "normalizeDL"},
     }
 
@@ -91,6 +96,19 @@ class Node:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name='{self.name}')"
+
+
+class AimMatrixNode(Node):
+    """Maya aimMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "aimMatrix") -> None:
+        super().__init__("aimMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_matrix = MatrixAttribute(f"{self.name}.inputMatrix")
+        self.primary = AimMatrixAxisAttribute(f"{self.name}.primary", "primary")
+        self.secondary = AimMatrixAxisAttribute(f"{self.name}.secondary", "secondary")
+        self.output_matrix = MatrixAttribute(f"{self.name}.outputMatrix")
 
 
 class AxisFromMatrixNode(Node):
@@ -250,6 +268,18 @@ class MultiplyPointByMatrixNode(Node):
 
     def _setup_attributes(self) -> None:
         self.input_point = Vector3Attribute(f"{self.name}.input")
+        self.input_matrix = MatrixAttribute(f"{self.name}.matrix")
+        self.output = Vector3Attribute(f"{self.name}.output")
+
+
+class MultiplyVectorByMatrixNode(Node):
+    """Maya multiplyVectorByMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "multiplyVectorByMatrix") -> None:
+        super().__init__("multiplyVectorByMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_vector = Vector3Attribute(f"{self.name}.input")
         self.input_matrix = MatrixAttribute(f"{self.name}.matrix")
         self.output = Vector3Attribute(f"{self.name}.output")
 

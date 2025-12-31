@@ -1,8 +1,6 @@
-import math
 import re
 from dataclasses import dataclass
 from importlib import reload
-from tkinter import Scale
 from typing import Sequence
 
 import maya.cmds as mc
@@ -199,6 +197,38 @@ def create_pin_on_curve(
     return MotionPathPin(pin, motion_path, orient_attr)
 
 
+def create_swing_pin_on_curve(name: str, curve: str, guide: str, orient_guide: str, parent: str, arc_length: bool = True):
+    pin_offset = mc.group(empty=True, name=f"{name}_Offset", parent=parent)
+    pin: str = mc.spaceLocator(name=f"{name}_Pin")[0]
+    pin_shape = mc.listRelatives(pin, shapes=True, children=True)[0]
+    mc.setAttr(f"{pin_shape}.localScale",40,40,40, type="double3")
+    mc.parent(pin, pin_offset, relative=True)
+    #pin = mc.group(empty=True, name=f"{name}_Pin", parent=pin_offset)
+    guide_pos = mc.xform(guide, query=True, worldSpace=True, translation=True)
+    rXform.match_transform(pin_offset, orient_guide)
+    mc.xform(pin_offset, worldSpace=True, translation=guide_pos)
+    
+    curve_pin = create_pin_on_curve(name=f"{name}_Curve_Pin", curve=curve, guide=guide, parent=parent, arc_length=arc_length, normalize_orient=False)
+    tangent_vector = node.AxisFromMatrixNode(name=f"{name}_Tangent")
+    mc.connectAttr(curve_pin.orient_attr, tangent_vector.input)
+    tangent_vector.axis.set(1)
+    
+    localize_matrix = node.MultMatrixNode(f"{name}_LocalizeMatrix")
+    mc.connectAttr(f"{parent}.worldMatrix[0]", localize_matrix.matrix_in[0])
+    mc.connectAttr(f"{pin_offset}.worldInverseMatrix[0]", localize_matrix.matrix_in[1])
+    
+    tangent_local = node.MultiplyVectorByMatrixNode(name=f"{name}_TangentLocal")
+    mc.connectAttr(tangent_vector.output, tangent_local.input_vector)
+    mc.connectAttr(localize_matrix.matrix_sum, tangent_local.input_matrix)
+    
+    swing_matrix = node.AimMatrixNode(name=f"{name}_Swing_Matrix")
+    mc.connectAttr(tangent_local.output, swing_matrix.primary.target_vector)
+    swing_matrix.primary.input_axis.set((0,1,0))
+    rXform.drive_transform_with_matrix(swing_matrix.output_matrix, pin, translate=False)
+    rXform.matrix_constraint(curve_pin.pin, pin, keep_offset=False, rotate=False, shear=False, scale=False)
+    
+    return pin
+
 def create_pin_on_net(
     name: str,
     curve: str,
@@ -374,9 +404,10 @@ class Spline:
         name: str,
         guides: Sequence[str] | str,
         parent: str,
-        build_controls: bool = True,
+        create_controls: bool = True,
         control_parent: str | None = None,
         pin_transforms: Sequence[str] | None = None,
+        create_pins: bool = False,
         ctrl_scale: float = 1,
         degree: int = 3,
         rebuild: int | None = None,
@@ -416,10 +447,15 @@ class Spline:
             self.pin_list = list(pin_transforms)
         for index, cv in enumerate(cvs):
             position = (cv.x, cv.y, cv.z)
-            if build_controls:
-                ctrl_name = f"{name}_{index:02d}"
+            cv_name = f"{name}_{index:02d}"
+            if create_pins:
+                pin = mc.group(empty=True, name=f"{cv_name}_Pin", parent=parent)
+                mc.xform(pin, worldSpace=True, translation=position)
+                self.pin_list.append(pin)
+            if create_controls:
+                name = f"{cv_name}_{index:02d}"
                 ctrl = rCtrl.Control(
-                    name=ctrl_name,
+                    name=name,
                     shape="ZTsphere",
                     parent=control_parent,
                     side=None,
@@ -430,7 +466,7 @@ class Spline:
                     ctrl_scale=ctrl_scale * 0.25,
                 )
                 if not pin_transforms:
-                    ctrl_pin = mc.group(empty=True, name=f"{ctrl_name}_Pin", parent=parent)
+                    ctrl_pin = mc.group(empty=True, name=f"{cv_name}_Pin", parent=parent)
                     rXform.matrix_constraint(
                         ctrl.ctrl,
                         ctrl_pin,
@@ -734,7 +770,8 @@ class UEwing(UEface):
         aim_list = [guide[2] for guide in guides]
         mainguides = root_list
         
-        root_guide_curve = f"{prefix}_Start_Curve"
+        root_guide_curve = f"{prefix}_Root_Curve"
+        start_guide_curve = f"{prefix}_Start_Curve"
         mid_guide_curve = f"{prefix}_Mid_Curve"
         end_guide_curve = f"{prefix}_End_Curve"
         
@@ -743,24 +780,32 @@ class UEwing(UEface):
             guides=root_guide_curve,
             name=f"{prefix}_Root_Spline",
             parent=self.spline_grp,
-            control_parent=self.feather_grp,
+            create_controls=False,
+            create_pins=True,
             ctrl_scale=self.ctrl_scale,
         )
+        # start_spline = Spline(
+        #     guides=start_guide_curve,
+        #     name=f"{prefix}_Start_Spline",
+        #     parent=self.net_grp,
+        #     create_controls=False,
+        #     create_pins=True,
+        #     ctrl_scale=self.ctrl_scale,
+        # )
         mid_spline = Spline(
             guides=mid_guide_curve,
             name=f"{prefix}_Mid_Spline",
-            parent=self.spline_grp,
+            parent=self.net_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
         )
         tip_spline = Spline(
             guides=end_guide_curve,
             name=f"{prefix}_Tip_Spline",
-            parent=self.spline_grp,
+            parent=self.net_grp,
             control_parent=self.feather_grp,
             ctrl_scale=self.ctrl_scale,
         )
-        mc.parent(root_spline.spline, mid_spline.spline, tip_spline.spline, self.net_grp)
 
         # Build Feather :)
         def_jnts = []
@@ -775,6 +820,13 @@ class UEwing(UEface):
                 guide=root_guide,
                 arc_length=keep_spacing,
             )
+            # start_pin = create_pin_on_curve(
+            #     name=f"{root_guide}_Start_Pin",
+            #     curve=start_spline.spline,
+            #     parent=self.spline_grp,
+            #     guide=root_guide,
+            #     arc_length=keep_spacing,
+            # )
             mid_pin = create_pin_on_curve(
                 name=f"{mid_guide}_Pin",
                 curve=mid_spline.spline,
@@ -794,11 +846,18 @@ class UEwing(UEface):
                 guides=[root_pin.pin, mid_pin.pin, tip_pin.pin],
                 parent=self.spline_grp,
                 control_parent=self.feather_grp,
-                build_controls=False,
+                create_controls=False,
                 pin_transforms=[root_pin.pin, mid_pin.pin, tip_pin.pin],
                 degree=2,
             )
             mc.parent(feather_spline.spline, self.net_grp)
+            
+            root_swing_pin = create_swing_pin_on_curve(name=f"{root_guide}_Swing_Pin",
+            curve=feather_spline.spline,
+            parent=self.spline_grp,
+            guide=root_pin.pin,
+            orient_guide=root_guide,
+            arc_length=keep_spacing,)
 
             parent = mc.listRelatives(root_guide, parent=True)[0]
             mid_guides = create_mid_guides(
@@ -842,16 +901,25 @@ class UEwing(UEface):
         
         bind_joints = self.limb_bind_joints
         root_mapping = [(0,0),(1,0),(2,1),(3,1),(4,2),(5,3)]
+        #orient_mapping = [(0,0),(1,0),(2,1),(3,1),(4,2),(5,3)]
         wing_mapping = [(0,0),(1,0),(2,1),(3,2),(4,3)]
         
         for ctrl_index, joint_index in root_mapping:
-            root_ctrl = root_spline.control_list[ctrl_index]
+            root_pin = root_spline.pin_list[ctrl_index]
             bind_joint = bind_joints[joint_index]
             mc.parentConstraint(
                 bind_joint,
-                root_ctrl.top,
+                root_pin,
                 maintainOffset=True
             )
+        # for ctrl_index, joint_index in orient_mapping:
+        #     root_pin = start_spline.pin_list[ctrl_index]
+        #     bind_joint = bind_joints[joint_index]
+        #     mc.parentConstraint(
+        #         bind_joint,
+        #         root_pin,
+        #         maintainOffset=True
+        #     )
         
         for ctrl_index, joint_index in wing_mapping:
             ctrls = (
@@ -869,7 +937,7 @@ class UEwing(UEface):
         # 50% blend for elbow
         mc.parentConstraint(
             bind_joints[0],
-            root_spline.control_list[2].top,
+            root_spline.pin_list[2],
             mo=True
         )      
 
