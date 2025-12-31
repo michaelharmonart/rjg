@@ -12,6 +12,7 @@ from rjg.libs.maya_api.attribute import (
     IndexableWtMatrixAttribute,
     IntegerAttribute,
     MatrixAttribute,
+    QuatAttribute,
     ScalarAttribute,
     Vector3Attribute,
     Vector4Attribute,
@@ -173,6 +174,23 @@ class CrossProductNode(Node):
         self.output = Vector3Attribute(f"{self.name}.output")
 
 
+
+class DecomposeMatrixNode(Node):
+    """Maya decomposeMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "decomposeMatrix") -> None:
+        super().__init__("decomposeMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_matrix = MatrixAttribute(f"{self.name}.inputMatrix")
+        self.input_rotate_order = EnumAttribute(f"{self.name}.inputRotateOrder")
+        self.output_quat = Vector4Attribute(f"{self.name}.outputQuat")
+        self.output_rotate = Vector3Attribute(f"{self.name}.outputRotate")
+        self.output_scale = Vector3Attribute(f"{self.name}.outputScale")
+        self.output_shear = Vector3Attribute(f"{self.name}.outputShear")
+        self.output_translate = Vector3Attribute(f"{self.name}.outputTranslate")
+
+
 class DistanceBetweenNode(Node):
     """Maya distanceBetween node with enhanced interface."""
 
@@ -305,6 +323,39 @@ class NormalizeNode(Node):
         self.input = Vector3Attribute(f"{self.name}.input")
         self.output = Vector3Attribute(f"{self.name}.output")
 
+
+class QuatInvertNode(Node):
+    """Maya quatInvert node with enhanced interface."""
+
+    def __init__(self, name: str = "quatInvert") -> None:
+        super().__init__("quatInvert", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_quat = QuatAttribute(f"{self.name}.inputQuat")
+        self.output_quat = QuatAttribute(f"{self.name}.outputQuat")
+
+
+class QuatProdNode(Node):
+    """Maya quatProd node with enhanced interface."""
+
+    def __init__(self, name: str = "quatProd") -> None:
+        super().__init__("quatProd", name)
+
+    def _setup_attributes(self) -> None:
+        self.input1_quat = QuatAttribute(f"{self.name}.input1Quat")
+        self.input2_quat = QuatAttribute(f"{self.name}.input2Quat")
+        self.output_quat = QuatAttribute(f"{self.name}.outputQuat")
+        
+class QuatToEulerNode(Node):
+    """Maya quatToEuler node with enhanced interface."""
+
+    def __init__(self, name: str = "quatToEuler") -> None:
+        super().__init__("quatToEuler", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_quat = QuatAttribute(f"{self.name}.inputQuat")
+        self.input_rotate_order = EnumAttribute(f"{self.name}.inputRotateOrder")
+        self.output_rotate = Vector3Attribute(f"{self.name}.outputRotate")
 
 class PickMatrixNode(Node):
     """Maya pickMatrix node with enhanced interface."""

@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass
 from importlib import reload
 from typing import Sequence
+from typing_extensions import Literal
 
 import maya.cmds as mc
 import rjg.build.chain as rChain
@@ -207,7 +208,7 @@ def create_swing_pin_on_curve(
     name: str, curve: str, guide: str, orient_guide: str, parent: str, orient_driver: str | None, arc_length: bool = True
 ):
     pin_offset = mc.group(empty=True, name=f"{name}_Offset", parent=parent)
-    pin: str = mc.spaceLocator(name=f"{name}_Pin")[0]
+    pin: str = mc.spaceLocator(name=f"{name}")[0]
     pin_shape = mc.listRelatives(pin, shapes=True, children=True)[0]
     mc.setAttr(f"{pin_shape}.localScale", 40, 40, 40, type="double3")
     mc.parent(pin, pin_offset, relative=True)
@@ -390,12 +391,12 @@ def create_pin_on_net(
     curve_shape = get_curve(curve)
     curve_knots = get_knots(curve_shape)
 
-    fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
     parameter = closest_point_on_curve(curve_shape, guide, fraction=False)
     weights = point_on_spline_weights(
-        cvs=list(backbone_pins), t=parameter, knots=curve_knots, normalize=False, degree=2
+        cvs=[i for i, _ in enumerate(backbone_pins)], t=parameter, knots=curve_knots, normalize=False, degree=2, filter_weights=False,
     )
-    root_weight = weights[0][1]
+    weight_dict = {i: weight for i, weight in weights}
+    root_weight = weight_dict[0]
     
     driver_matrix = pin_matrix
     if root_weight > 0:
@@ -466,6 +467,49 @@ def create_mid_guides(
         mid_guides.append(mid_guide)
     return mid_guides
 
+
+def create_swing_transform(name: str, driver: str, parent: str, twist_axis: Literal["x", "y", "z"] = "y") -> str:
+    driver_parents = mc.listRelatives(driver, parent=True)
+    if driver_parents:
+        driver_parent = driver_parents[0]
+    else:
+        driver_parent = None
+        
+    swing_offset = mc.group(empty=True, name=f"{name}_Offset", parent=parent)
+    rXform.match_transform(swing_offset, driver)
+    if driver_parent is not None:
+        rXform.matrix_constraint(driver_parent, swing_offset)
+    
+    driver_local_offset =     rXform.get_parent_matrix(driver) * rXform.get_world_matrix(driver).inverse()
+    driver_local_matrix = node.MultMatrixNode(name=f"{name}_DriverLocal")
+    mc.connectAttr(f"{driver}.matrix", driver_local_matrix.matrix_in[0])
+    mc.setAttr(driver_local_matrix.matrix_in[1], driver_local_offset, type="matrix")
+        
+    swing_transform = mc.group(empty=True, name=f"{name}", parent=swing_offset)
+    
+    quat_node = node.DecomposeMatrixNode(name=f"{name}_Quat")
+    mc.connectAttr(driver_local_matrix.matrix_sum, quat_node.input_matrix)
+    
+    inverse = node.QuatInvertNode(name=f"{name}_Twist_Inverse")
+    if twist_axis == "x":
+        mc.connectAttr(quat_node.output_quat.x, inverse.input_quat.x)
+    elif twist_axis == "y":
+        mc.connectAttr(quat_node.output_quat.y, inverse.input_quat.y)
+    elif twist_axis == "z":
+        mc.connectAttr(quat_node.output_quat.z, inverse.input_quat.z)
+    mc.connectAttr(quat_node.output_quat.w, inverse.input_quat.w)
+    
+    swing_quat = node.QuatProdNode(f"{name}_Swing")
+    mc.connectAttr(inverse.output_quat, swing_quat.input1_quat)
+    mc.connectAttr(quat_node.output_quat, swing_quat.input2_quat)
+    
+    swing_euler = node.QuatToEulerNode(f"{name}_Swing_Euler")
+    mc.connectAttr(swing_quat.output_quat, swing_euler.input_quat)
+    
+    mc.connectAttr(f"{swing_transform}.rotateOrder", swing_euler.input_rotate_order)
+    mc.connectAttr(swing_euler.output_rotate, f"{swing_transform}.rotate")
+    
+    return swing_transform
 
 class Spline:
     """
@@ -844,6 +888,11 @@ class UEwing(UEface):
         mid_list = [guide[1] for guide in guides]
         aim_list = [guide[2] for guide in guides]
         mainguides = root_list
+        
+        bind_joints = self.limb_bind_joints
+        end_joint = bind_joints[2]
+        swing_transform = create_swing_transform(name=f"{end_joint}_Swing", parent=self.spline_grp, driver=end_joint)
+        swing_mapping: dict[str, str] = {end_joint: swing_transform}
 
         root_guide_curve = f"{prefix}_Root_Curve"
         start_guide_curve = f"{prefix}_Start_Curve"
@@ -884,6 +933,7 @@ class UEwing(UEface):
 
         # Build Feather :)
         def_jnts = []
+        last_index = 3
         for index, (root_guide, mid_guide, tip_guide) in enumerate(
             zip(root_list, mid_list, aim_list), start=1
         ):
@@ -893,6 +943,9 @@ class UEwing(UEface):
             if mc.attributeQuery("parent_joint", node=root_guide, exists=True):
                 joint_parent_index = mc.getAttr(f"{root_guide}.parent_joint")
                 joint_parent = self.limb_bind_joints[joint_parent_index]
+            
+            
+                
             
             root_pin = create_pin_on_curve(
                 name=f"{root_guide}_Pin",
@@ -932,21 +985,23 @@ class UEwing(UEface):
                 degree=2,
             )
             mc.parent(feather_spline.spline, self.net_grp)
-
+            
+            orient_driver = swing_mapping.get(joint_parent, joint_parent)
             root_swing_pin = create_swing_pin_on_curve(
                 name=f"{root_guide}_Swing_Pin",
                 curve=feather_spline.spline,
                 parent=self.spline_grp,
                 guide=root_pin.pin,
                 orient_guide=root_guide,
-                orient_driver=joint_parent,
+                orient_driver=orient_driver,
                 arc_length=keep_spacing,
             )
 
             parent = mc.listRelatives(root_guide, parent=True)[0]
             mid_guides = create_mid_guides(
-                root_pin.pin, tip_guide, 2, f"{prefix}_{feather}_mid_guide_", parent=parent
+                root_pin.pin, tip_pin.pin, 2, f"{prefix}_{feather}_mid_guide_", parent=parent
             )
+
             guide_mapping = {
                 root_pin.pin: f"{prefix}{feather}_{index:02d}_base_JNT",
                 mid_guides[0]: f"{prefix}{feather}_{index:02d}_mid1_JNT",
@@ -978,7 +1033,7 @@ class UEwing(UEface):
             mc.addAttr(split_joint, longName="split_joints", dataType="string")
             mc.setAttr(f"{split_joint}.split_joints", repr(split_joints), type="string")
 
-        bind_joints = self.limb_bind_joints
+        
         root_mapping = [(0, 0), (1, 0), (2, 1), (3, 1), (4, 2), (5, 3)]
         # orient_mapping = [(0,0),(1,0),(2,1),(3,1),(4,2),(5,3)]
         wing_mapping = [(0, 0), (1, 0), (2, 1), (3, 2), (4, 3)]

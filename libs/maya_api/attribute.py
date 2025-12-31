@@ -183,6 +183,18 @@ class Vector4Attribute(Attribute):
         self.y = ScalarAttribute(f"{attr_path}Y")
         self.z = ScalarAttribute(f"{attr_path}Z")
         self.w = ScalarAttribute(f"{attr_path}W")
+        
+        
+class QuatAttribute(Attribute):
+    """A Maya attribute of the compound Quaternion type (XYZW)"""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+        self.x = ScalarAttribute(f"{attr_path}X")
+        self.y = ScalarAttribute(f"{attr_path}Y")
+        self.z = ScalarAttribute(f"{attr_path}Z")
+        self.w = ScalarAttribute(f"{attr_path}W")
 
 
 class IndexableAttribute(Attribute, Generic[AttributeType]):
