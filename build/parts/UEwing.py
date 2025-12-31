@@ -82,7 +82,9 @@ def spline_from_guides(
         mc.parent(curve, parent)
         mc.makeIdentity(curve, apply=True)
     else:
-        positions: list[tuple[float, float, float]] = [get_world_position(guide) for guide in guides]
+        positions: list[tuple[float, float, float]] = [
+            get_world_position(guide) for guide in guides
+        ]
         if edit_point:
             curve: str = mc.curve(name=name, editPoint=positions, degree=degree)
         else:
@@ -145,14 +147,19 @@ class MotionPathPin:
         motion_path: motionPath node driving the pin.
         orient_attr: Matrix attribute used for orientation output.
     """
+
     pin: str
     motion_path: str
     orient_attr: str
 
 
-
 def create_pin_on_curve(
-    name: str, curve: str, guide: str, parent: str, arc_length: bool = True, normalize_orient: bool = True
+    name: str,
+    curve: str,
+    guide: str,
+    parent: str,
+    arc_length: bool = True,
+    normalize_orient: bool = True,
 ) -> MotionPathPin:
     """
     Create a transform pinned to a curve using a motionPath node.
@@ -180,7 +187,7 @@ def create_pin_on_curve(
     mc.connectAttr(f"{curve_shape}.local", f"{motion_path}.geometryPath")
     mc.connectAttr(f"{motion_path}.allCoordinates", f"{pin}.translate")
     mc.connectAttr(f"{motion_path}.rotate", f"{pin}.rotate")
-    
+
     if normalize_orient:
         motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
         mc.connectAttr(f"{motion_path}.orientMatrix", motion_path_orient.input_matrix)
@@ -190,56 +197,66 @@ def create_pin_on_curve(
         orient_attr = str(motion_path_orient.output_matrix)
     else:
         orient_attr = f"{motion_path}.orientMatrix"
-    
 
     fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
     mc.setAttr(f"{motion_path}.uValue", fraction)
     return MotionPathPin(pin, motion_path, orient_attr)
 
 
-def create_swing_pin_on_curve(name: str, curve: str, guide: str, orient_guide: str, parent: str, arc_length: bool = True):
+def create_swing_pin_on_curve(
+    name: str, curve: str, guide: str, orient_guide: str, parent: str, arc_length: bool = True
+):
     pin_offset = mc.group(empty=True, name=f"{name}_Offset", parent=parent)
     pin: str = mc.spaceLocator(name=f"{name}_Pin")[0]
     pin_shape = mc.listRelatives(pin, shapes=True, children=True)[0]
-    mc.setAttr(f"{pin_shape}.localScale",40,40,40, type="double3")
+    mc.setAttr(f"{pin_shape}.localScale", 40, 40, 40, type="double3")
     mc.parent(pin, pin_offset, relative=True)
-    #pin = mc.group(empty=True, name=f"{name}_Pin", parent=pin_offset)
+    # pin = mc.group(empty=True, name=f"{name}_Pin", parent=pin_offset)
     guide_pos = mc.xform(guide, query=True, worldSpace=True, translation=True)
     rXform.match_transform(pin_offset, orient_guide)
     mc.xform(pin_offset, worldSpace=True, translation=guide_pos)
-    
-    curve_pin = create_pin_on_curve(name=f"{name}_Curve_Pin", curve=curve, guide=guide, parent=parent, arc_length=arc_length, normalize_orient=False)
+
+    curve_pin = create_pin_on_curve(
+        name=f"{name}_Curve_Pin",
+        curve=curve,
+        guide=guide,
+        parent=parent,
+        arc_length=arc_length,
+        normalize_orient=False,
+    )
     tangent_vector = node.AxisFromMatrixNode(name=f"{name}_Tangent")
     mc.connectAttr(curve_pin.orient_attr, tangent_vector.input)
     tangent_vector.axis.set(1)
-    
+
     localize_matrix = node.MultMatrixNode(f"{name}_LocalizeMatrix")
     mc.connectAttr(f"{parent}.worldMatrix[0]", localize_matrix.matrix_in[0])
     mc.connectAttr(f"{pin_offset}.worldInverseMatrix[0]", localize_matrix.matrix_in[1])
-    
+
     tangent_local = node.MultiplyVectorByMatrixNode(name=f"{name}_TangentLocal")
     mc.connectAttr(tangent_vector.output, tangent_local.input_vector)
     mc.connectAttr(localize_matrix.matrix_sum, tangent_local.input_matrix)
-    
+
     swing_matrix = node.AimMatrixNode(name=f"{name}_Swing_Matrix")
     mc.connectAttr(tangent_local.output, swing_matrix.primary.target_vector)
-    swing_matrix.primary.input_axis.set((0,1,0))
+    swing_matrix.primary.input_axis.set((0, 1, 0))
     rXform.drive_transform_with_matrix(swing_matrix.output_matrix, pin, translate=False)
-    rXform.matrix_constraint(curve_pin.pin, pin, keep_offset=False, rotate=False, shear=False, scale=False)
-    
+    rXform.matrix_constraint(
+        curve_pin.pin, pin, keep_offset=False, rotate=False, shear=False, scale=False
+    )
+
     return pin
 
-def create_pin_on_net(
+
+def create_pin_on_net_matrix(
     name: str,
     curve: str,
-    backbones_pins: Sequence[MotionPathPin],
+    backbone_pins: Sequence[MotionPathPin],
     guide: str,
-    parent: str,
     arc_length: bool = True,
-    normalize_orient: bool = True
-) -> str:
+    normalize_orient: bool = True,
+):
     """
-    Create a pin constrained to a spline network with orientation blending.
+    Create a matrix for a pin constrained to a spline network with orientation blending.
 
     Orientation is computed by blending backbone tangents and constructing
     an orthonormal basis aligned to the local spline direction.
@@ -247,26 +264,22 @@ def create_pin_on_net(
     Args:
         name: Name of the pin locator.
         curve: Spline curve driving the pin position.
-        backbones_pins: Backbone motion path pins used for orientation blending.
+        backbone_pins: Backbone motion path pins used for orientation blending.
         guide: Guide transform used for closest-point evaluation.
         parent: Parent transform for the pin.
         arc_length: Whether to use arc-length parameterization.
         normalize_orient: Whether to normalize motion path orientation.
 
     Returns:
-        The name of the created pin transform.
+        The path the created pin matrix attribute.
     """
     curve_shape = get_curve(curve)
     curve_knots = get_knots(curve_shape)
-    pin: str = mc.spaceLocator(name=name)[0]
-    pin_shape = mc.listRelatives(pin, shapes=True, children=True)[0]
-    mc.setAttr(f"{pin_shape}.localScale",20,20,20, type="double3")
-    mc.parent(pin, parent, relative=True)
 
     fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
     parameter = closest_point_on_curve(curve_shape, guide, fraction=False)
     weights = point_on_spline_weights(
-        cvs=list(backbones_pins), t=parameter, knots=curve_knots, normalize=False, degree=2
+        cvs=list(backbone_pins), t=parameter, knots=curve_knots, normalize=False, degree=2
     )
 
     motion_path = mc.createNode("motionPath", name=f"{name}_motionPathPin")
@@ -274,7 +287,7 @@ def create_pin_on_net(
     mc.connectAttr(f"{curve_shape}.local", f"{motion_path}.geometryPath")
     mc.setAttr(f"{motion_path}.uValue", fraction)
     mc.setAttr(f"{motion_path}.follow", True)
-    
+
     motion_path_orient_attr = f"{motion_path}.orientMatrix"
     if normalize_orient:
         motion_path_orient = node.PickMatrixNode(name=f"{name}_motionPathOrient")
@@ -283,39 +296,36 @@ def create_pin_on_net(
         motion_path_orient.use_scale.set(False)
         motion_path_orient.use_translate.set(False)
         motion_path_orient_attr = motion_path_orient.output_matrix
-    
+
     tangent_node = node.AxisFromMatrixNode(name=f"{name}_tangent")
     mc.connectAttr(motion_path_orient_attr, tangent_node.input)
     tangent_node.axis.value = 1
-    
 
     # Pin
     matrix_blend = node.WtAddMatrixNode(name=f"{name}_tangentBlend")
     for index, (backbone_pin, weight) in enumerate(weights):
-        mc.connectAttr(
-            backbone_pin.orient_attr, matrix_blend.weight_matrix[index].matrix_in
-        )
+        mc.connectAttr(backbone_pin.orient_attr, matrix_blend.weight_matrix[index].matrix_in)
         mc.setAttr(matrix_blend.weight_matrix[index].weight_in, weight)
 
     backbone_tangent_node = node.AxisFromMatrixNode(name=f"{name}_backboneTangent")
     mc.connectAttr(matrix_blend.matrix_sum, backbone_tangent_node.input)
     backbone_tangent_node.axis.value = 1
-    
+
     cross_product_node = node.CrossProductNode(f"{name}_tangentCross")
     mc.connectAttr(tangent_node.output, cross_product_node.input1)
     mc.connectAttr(backbone_tangent_node.output, cross_product_node.input2)
-    
+
     backbone_tangent_ortho = node.CrossProductNode(f"{name}_backboneTangentOrtho")
     mc.connectAttr(cross_product_node.output, backbone_tangent_ortho.input1)
     mc.connectAttr(tangent_node.output, backbone_tangent_ortho.input2)
-    
+
     x_normalize = node.NormalizeNode(f"{name}_xNormalized")
     mc.connectAttr(backbone_tangent_ortho.output, x_normalize.input)
     y_normalize = node.NormalizeNode(f"{name}_yNormalized")
     mc.connectAttr(tangent_node.output, y_normalize.input)
     z_normalize = node.NormalizeNode(f"{name}_zNormalized")
     mc.connectAttr(cross_product_node.output, z_normalize.input)
-    
+
     basis_matrix_node = node.FourByFourMatrixNode(f"{name}_BasisMatrix")
     mc.connectAttr(x_normalize.output.x, basis_matrix_node.in_00)
     mc.connectAttr(x_normalize.output.y, basis_matrix_node.in_01)
@@ -329,18 +339,55 @@ def create_pin_on_net(
     mc.connectAttr(f"{motion_path}.allCoordinates.xCoordinate", basis_matrix_node.in_30)
     mc.connectAttr(f"{motion_path}.allCoordinates.yCoordinate", basis_matrix_node.in_31)
     mc.connectAttr(f"{motion_path}.allCoordinates.zCoordinate", basis_matrix_node.in_32)
-    
-    #pick_matrix_node = node.PickMatrixNode(f"{name}_PinMatrix")
-    #mc.connectAttr(basis_matrix_node.output, pick_matrix_node.input_matrix)
-    #pick_matrix_node.use_scale.value = False
-    #pick_matrix_node.use_shear.value = False
-    
-    rXform.drive_transform_with_matrix(basis_matrix_node.output, pin, scale=True, shear=True)
-    
-    #mc.connectAttr(f"{motion_path}.allCoordinates", f"{pin}.translate")
-    #mc.connectAttr(f"{motion_path}.rotate", f"{pin}.rotate")
 
+    return basis_matrix_node.output
+
+
+def create_pin_on_net(
+    name: str,
+    curve: str,
+    backbone_pins: Sequence[MotionPathPin],
+    guide: str,
+    parent: str,
+    arc_length: bool = True,
+    normalize_orient: bool = True,
+) -> str:
+    """
+    Create a pin constrained to a spline network with orientation blending.
+
+    Orientation is computed by blending backbone tangents and constructing
+    an orthonormal basis aligned to the local spline direction.
+
+    Args:
+        name: Name of the pin locator.
+        curve: Spline curve driving the pin position.
+        backbone_pins: Backbone motion path pins used for orientation blending.
+        guide: Guide transform used for closest-point evaluation.
+        parent: Parent transform for the pin.
+        arc_length: Whether to use arc-length parameterization.
+        normalize_orient: Whether to normalize motion path orientation.
+
+    Returns:
+        The name of the created pin transform.
+    """
+    pin: str = mc.spaceLocator(name=name)[0]
+    pin_shape = mc.listRelatives(pin, shapes=True, children=True)[0]
+    mc.setAttr(f"{pin_shape}.localScale", 20, 20, 20, type="double3")
+    mc.parent(pin, parent, relative=True)
+
+    pin_matrix = create_pin_on_net_matrix(
+        name=name,
+        curve=curve,
+        backbone_pins=backbone_pins,
+        guide=guide,
+        arc_length=arc_length,
+        normalize_orient=normalize_orient,
+    )
+
+    rXform.drive_transform_with_matrix(pin_matrix, pin, scale=True, shear=True)
     return pin
+
+
 
 
 def get_guide_index(guide: str) -> int:
@@ -375,7 +422,7 @@ def create_mid_guides(
     Returns:
         List of created mid-guide transform names.
     """
-    
+
     start_guide_pos: MVector = MVector(get_world_position(start_guide))
     end_guide_pos: MVector = MVector(get_world_position(end_guide))
     mid_guides: list[str] = []
@@ -399,6 +446,7 @@ class Spline:
 
     CVs can be driven directly by pinned transforms or generated controls.
     """
+
     def __init__(
         self,
         name: str,
@@ -619,7 +667,7 @@ class UEwing(UEface):
                 pre_jnt = jnt
                 pre_ctrl = ctrl
                 mc.parent(ctrl_offset, self.fk_group)
-                
+
             armjnts.append(jnt)
             armoffsets.append(ctrl_offset)
             armctrls.append(ctrl)
@@ -769,12 +817,12 @@ class UEwing(UEface):
         mid_list = [guide[1] for guide in guides]
         aim_list = [guide[2] for guide in guides]
         mainguides = root_list
-        
+
         root_guide_curve = f"{prefix}_Root_Curve"
         start_guide_curve = f"{prefix}_Start_Curve"
         mid_guide_curve = f"{prefix}_Mid_Curve"
         end_guide_curve = f"{prefix}_End_Curve"
-        
+
         # Feathershaping
         root_spline = Spline(
             guides=root_guide_curve,
@@ -851,13 +899,15 @@ class UEwing(UEface):
                 degree=2,
             )
             mc.parent(feather_spline.spline, self.net_grp)
-            
-            root_swing_pin = create_swing_pin_on_curve(name=f"{root_guide}_Swing_Pin",
-            curve=feather_spline.spline,
-            parent=self.spline_grp,
-            guide=root_pin.pin,
-            orient_guide=root_guide,
-            arc_length=keep_spacing,)
+
+            root_swing_pin = create_swing_pin_on_curve(
+                name=f"{root_guide}_Swing_Pin",
+                curve=feather_spline.spline,
+                parent=self.spline_grp,
+                guide=root_pin.pin,
+                orient_guide=root_guide,
+                arc_length=keep_spacing,
+            )
 
             parent = mc.listRelatives(root_guide, parent=True)[0]
             mid_guides = create_mid_guides(
@@ -886,7 +936,7 @@ class UEwing(UEface):
                 pin = create_pin_on_net(
                     name=f"{joint}_Pin",
                     curve=feather_spline.spline,
-                    backbones_pins=[mid_pin, mid_pin, tip_pin],
+                    backbone_pins=[mid_pin, mid_pin, tip_pin],
                     guide=guide,
                     parent=self.spline_grp,
                 )
@@ -897,21 +947,16 @@ class UEwing(UEface):
             split_joint = split_joints[0]
             mc.addAttr(split_joint, longName="split_joints", dataType="string")
             mc.setAttr(f"{split_joint}.split_joints", repr(split_joints), type="string")
-        
-        
+
         bind_joints = self.limb_bind_joints
-        root_mapping = [(0,0),(1,0),(2,1),(3,1),(4,2),(5,3)]
-        #orient_mapping = [(0,0),(1,0),(2,1),(3,1),(4,2),(5,3)]
-        wing_mapping = [(0,0),(1,0),(2,1),(3,2),(4,3)]
-        
+        root_mapping = [(0, 0), (1, 0), (2, 1), (3, 1), (4, 2), (5, 3)]
+        # orient_mapping = [(0,0),(1,0),(2,1),(3,1),(4,2),(5,3)]
+        wing_mapping = [(0, 0), (1, 0), (2, 1), (3, 2), (4, 3)]
+
         for ctrl_index, joint_index in root_mapping:
             root_pin = root_spline.pin_list[ctrl_index]
             bind_joint = bind_joints[joint_index]
-            mc.parentConstraint(
-                bind_joint,
-                root_pin,
-                maintainOffset=True
-            )
+            mc.parentConstraint(bind_joint, root_pin, maintainOffset=True)
         # for ctrl_index, joint_index in orient_mapping:
         #     root_pin = start_spline.pin_list[ctrl_index]
         #     bind_joint = bind_joints[joint_index]
@@ -920,26 +965,18 @@ class UEwing(UEface):
         #         root_pin,
         #         maintainOffset=True
         #     )
-        
+
         for ctrl_index, joint_index in wing_mapping:
             ctrls = (
-                    mid_spline.control_list[ctrl_index],
-                    tip_spline.control_list[ctrl_index],
-                )
+                mid_spline.control_list[ctrl_index],
+                tip_spline.control_list[ctrl_index],
+            )
             bind_joint = bind_joints[joint_index]
             for ctrl in ctrls:
-                mc.parentConstraint(
-                    bind_joint,
-                    ctrl.top,
-                    maintainOffset=True
-                )
-                
+                mc.parentConstraint(bind_joint, ctrl.top, maintainOffset=True)
+
         # 50% blend for elbow
-        mc.parentConstraint(
-            bind_joints[0],
-            root_spline.pin_list[2],
-            mo=True
-        )      
+        mc.parentConstraint(bind_joints[0], root_spline.pin_list[2], mo=True)
 
     @auto_profiler_tag
     def build_wing(self):

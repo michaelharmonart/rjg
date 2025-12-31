@@ -5,6 +5,7 @@
       "language_servers": [
         "!ty",
         "basedpyright", // Disable basedpyright
+        "ruff",
       ]
     }
   }

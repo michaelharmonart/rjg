@@ -151,7 +151,7 @@ class Vector3Attribute(Attribute):
         self.x = ScalarAttribute(f"{attr_path}X")
         self.y = ScalarAttribute(f"{attr_path}Y")
         self.z = ScalarAttribute(f"{attr_path}Z")
-        
+
     def get(self) -> tuple[float, float, float]:
         """Get the value of this attribute."""
         return_list = cmds.getAttr(self.attr_path)
