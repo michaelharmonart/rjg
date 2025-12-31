@@ -1,4 +1,7 @@
+import ast
+from collections.abc import Collection
 from typing import TYPE_CHECKING
+from maya.api.OpenMaya import MPoint, MVector
 import maya.cmds as mc
 
 from rjg.build.parts.UEwing.spline_system import (
@@ -8,12 +11,43 @@ from rjg.build.parts.UEwing.spline_system import (
     create_pin_on_net,
     create_swing_pin_on_curve,
     create_swing_transform,
+    get_world_position,
 )
 from rjg.build.UEface import UEface
 from rjg.libs.transform import matrix_constraint
 
 if TYPE_CHECKING:
     from rjg.build.parts.UEwing.module import UEwing
+
+
+def get_split_joints(joint: str) -> list[str] | None:
+    if mc.objExists(f"{joint}.split_joints"):
+        value = mc.getAttr(f"{joint}.split_joints")
+        evaluated = ast.literal_eval(value)
+        if not isinstance(evaluated, list):
+            return None
+        return evaluated
+ 
+def get_closest_transform(transform: str, target_transforms: Collection[str]) -> str:
+    transform_position: MPoint = MPoint(get_world_position(transform))
+    closest: str | None = None
+    min_dist: float | None = None
+    for target_transform in target_transforms:
+        target_position: MPoint = MPoint(get_world_position(target_transform))
+        distance = transform_position.distanceTo(target_position)
+        if min_dist is None:
+            min_dist = distance
+            closest = target_transform
+        elif distance < min_dist:
+            min_dist = distance
+            closest = target_transform
+    return closest            
+
+def get_closest_split_joint(transform: str, joint: str) -> str:
+    split_joints = get_split_joints(joint)
+    if split_joints is not None:
+        return get_closest_transform(transform, split_joints)
+    return joint
 
 def build_feathers(wing: "UEwing", keep_spacing: bool = True):
     prefix = wing.prefix
@@ -76,10 +110,10 @@ def build_feathers(wing: "UEwing", keep_spacing: bool = True):
     ):
         name = root_guide.replace("guide", "Spline")
 
-        joint_parent = wing.spline_grp
+        joint_parent_segment = wing.spline_grp
         if mc.attributeQuery("parent_joint", node=root_guide, exists=True):
             joint_parent_index = mc.getAttr(f"{root_guide}.parent_joint")
-            joint_parent = wing.limb_bind_joints[joint_parent_index]
+            joint_parent_segment = wing.limb_bind_joints[joint_parent_index]
 
         root_pin = create_pin_on_curve(
             name=f"{root_guide}_Pin",
@@ -120,7 +154,8 @@ def build_feathers(wing: "UEwing", keep_spacing: bool = True):
         )
         mc.parent(feather_spline.spline, wing.net_grp)
 
-        orient_driver = swing_mapping.get(joint_parent, joint_parent)
+        orient_driver_base = swing_mapping.get(joint_parent_segment, joint_parent_segment)
+        orient_driver = get_closest_split_joint(root_pin.pin, orient_driver_base)
         root_swing_pin = create_swing_pin_on_curve(
             name=f"{root_guide}_Swing_Pin",
             curve=feather_spline.spline,
@@ -131,9 +166,9 @@ def build_feathers(wing: "UEwing", keep_spacing: bool = True):
             arc_length=keep_spacing,
         )
 
-        parent = mc.listRelatives(root_guide, parent=True)[0]
+        guide_parent = mc.listRelatives(root_guide, parent=True)[0]
         mid_guides = create_mid_guides(
-            root_pin.pin, tip_pin.pin, 2, f"{prefix}_{feather}_mid_guide_", parent=parent
+            root_pin.pin, tip_pin.pin, 2, f"{prefix}_{feather}_mid_guide_", parent=guide_parent
         )
 
         guide_mapping = {
@@ -143,6 +178,7 @@ def build_feathers(wing: "UEwing", keep_spacing: bool = True):
             tip_guide: f"{prefix}{feather}_{index:02d}_ee_JNT",
         }
         split_joints: list[str] = []
+        joint_parent: str | None = None
         for guide in [root_pin.pin] + mid_guides + [tip_guide]:
             if guide in guide_mapping:
                 joint_name = guide_mapping[guide]
@@ -159,6 +195,8 @@ def build_feathers(wing: "UEwing", keep_spacing: bool = True):
                 guide=guide,
                 parent=wing.spline_grp,
             )
+            if joint_parent is None:
+                joint_parent = get_closest_split_joint(joint, joint_parent_segment)
             mc.parent(joint, joint_parent, relative=True)
             matrix_constraint(pin, joint, keep_offset=False)
             joint_parent = joint
