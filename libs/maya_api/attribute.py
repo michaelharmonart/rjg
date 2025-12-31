@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Generic, Iterator, TypeVar
+from abc import abstractmethod
+from typing import Any, Generic, Iterator, TypeVar, cast
 
 import maya.cmds as cmds
 
@@ -65,7 +66,7 @@ class ScalarAttribute(Attribute):
 
     def set(self, value: float | int) -> None:
         """Set the value of this attribute."""
-        cmds.setAttr(self.attr_path, value)
+        cmds.setAttr(self.attr_path, cast(Any,value))
 
     @property
     def value(self) -> float:
@@ -88,9 +89,9 @@ class IntegerAttribute(ScalarAttribute):
         """Get the value of this attribute."""
         return int(cmds.getAttr(self.attr_path))
 
-    def set(self, value: int) -> None:
+    def set(self, value: float | int) -> None:
         """Set the value of this attribute."""
-        cmds.setAttr(self.attr_path, value)
+        cmds.setAttr(self.attr_path, cast(Any, int(value)))
 
     @property
     def value(self) -> int:
@@ -110,7 +111,7 @@ class EnumAttribute(IntegerAttribute):
         super().__init__(attr_path)
 
 
-class BooleanAttribute(IntegerAttribute):
+class BooleanAttribute(Attribute):
     """A Maya attribute of a bool type."""
 
     def __init__(self, attr_path: str):
@@ -122,15 +123,15 @@ class BooleanAttribute(IntegerAttribute):
 
     def set(self, value: bool) -> None:
         """Set the value of this attribute."""
-        cmds.setAttr(self.attr_path, 1 if value else 0)
+        cmds.setAttr(self.attr_path, cast(Any, 1 if value else 0))
 
     @property
-    def value(self) -> int:
+    def value(self) -> bool:
         """Get the value of this attribute."""
         return self.get()
 
     @value.setter
-    def value(self, val: int) -> None:
+    def value(self, val: bool) -> None:
         """Set the value of this attribute."""
         self.set(val)
 
@@ -160,7 +161,7 @@ class Vector3Attribute(Attribute):
 
     def set(self, value: tuple[float, float, float]) -> None:
         """Set the value of this attribute."""
-        cmds.setAttr(self.attr_path, *value)
+        cmds.setAttr(self.attr_path, *value) # type: ignore
 
     @property
     def value(self) -> tuple[float, float, float]:
@@ -183,8 +184,8 @@ class Vector4Attribute(Attribute):
         self.y = ScalarAttribute(f"{attr_path}Y")
         self.z = ScalarAttribute(f"{attr_path}Z")
         self.w = ScalarAttribute(f"{attr_path}W")
-        
-        
+
+
 class QuatAttribute(Attribute):
     """A Maya attribute of the compound Quaternion type (XYZW)"""
 
@@ -200,9 +201,9 @@ class QuatAttribute(Attribute):
 class IndexableAttribute(Attribute, Generic[AttributeType]):
     """A Maya attribute that supports indexing with bracket notation."""
 
+    @abstractmethod
     def __getitem__(self, index: int) -> AttributeType:
         """Return the indexed attribute path: attr.input[0], attr.input[1], etc."""
-        return Attribute(attr_path=f"{self.attr_path}[{index}]")
 
     def __len__(self) -> int:
         """Get the number of elements in this array."""
@@ -224,7 +225,7 @@ class IndexableMatrixAttribute(IndexableAttribute[MatrixAttribute]):
 
     def __getitem__(self, index: int) -> MatrixAttribute:
         """Return the indexed attribute path: attr.input[0], attr.input[1], etc."""
-        return BlendMatrixTargetAttribute(attr_path=f"{self.attr_path}[{index}]")
+        return MatrixAttribute(attr_path=f"{self.attr_path}[{index}]")
 
 
 class BlendMatrixTargetAttribute(Attribute):
