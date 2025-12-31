@@ -409,6 +409,8 @@ def create_pin_on_net(
         mc.connectAttr(root_localize.matrix_sum, root_blend.target[0].target_matrix)
         root_blend.target[0].weight.set(root_weight)
         root_blend.target[0].translate_weight.set(0)
+        root_blend.target[0].scale_weight.set(0)
+        root_blend.target[0].shear_weight.set(0)
         driver_matrix = root_blend.output_matrix
     
     
