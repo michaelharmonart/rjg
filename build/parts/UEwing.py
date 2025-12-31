@@ -347,6 +347,7 @@ def create_pin_on_net(
     name: str,
     curve: str,
     backbone_pins: Sequence[MotionPathPin],
+    root_pin: str,
     guide: str,
     parent: str,
     arc_length: bool = True,
@@ -383,8 +384,32 @@ def create_pin_on_net(
         arc_length=arc_length,
         normalize_orient=normalize_orient,
     )
+    
+    curve_shape = get_curve(curve)
+    curve_knots = get_knots(curve_shape)
 
-    rXform.drive_transform_with_matrix(pin_matrix, pin, scale=True, shear=True)
+    fraction = closest_point_on_curve(curve_shape, guide, fraction=arc_length)
+    parameter = closest_point_on_curve(curve_shape, guide, fraction=False)
+    weights = point_on_spline_weights(
+        cvs=list(backbone_pins), t=parameter, knots=curve_knots, normalize=False, degree=2
+    )
+    root_weight = weights[0][1]
+    
+    driver_matrix = pin_matrix
+    if root_weight > 0:
+        root_localize = node.MultMatrixNode(name=f"{name}_RootLocalize")
+        mc.connectAttr(f"{root_pin}.worldMatrix[0]", root_localize.matrix_in[0])
+        mc.connectAttr(f"{pin}.parentInverseMatrix", root_localize.matrix_in[1])
+        
+        root_blend = node.BlendMatrixNode(name=f"{name}_RootBlend")
+        mc.connectAttr(pin_matrix, root_blend.input_matrix)
+        mc.connectAttr(root_localize.matrix_sum, root_blend.target[0].target_matrix)
+        root_blend.target[0].weight.set(root_weight)
+        driver_matrix = root_blend.output_matrix
+    
+    
+
+    rXform.drive_transform_with_matrix(driver_matrix, pin, scale=True, shear=True)
     return pin
 
 
@@ -937,6 +962,7 @@ class UEwing(UEface):
                     name=f"{joint}_Pin",
                     curve=feather_spline.spline,
                     backbone_pins=[mid_pin, mid_pin, tip_pin],
+                    root_pin=root_swing_pin,
                     guide=guide,
                     parent=self.spline_grp,
                 )
