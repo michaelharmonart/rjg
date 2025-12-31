@@ -1084,7 +1084,7 @@ class UEwing(UEface):
         # 50% blend for elbow
         mc.parentConstraint(bind_joints[0], root_spline.pin_list[2], mo=True)
 
-    def build_bendy_chain(self):
+    def build_bendy_chain(self, bend_axis: tuple[int, int, int] = (0,0,1)):
 
         # Collect main leg bind joints only (no toes) 'Wing_L_04_bind_jnt
         bind_jnts = [
@@ -1111,6 +1111,7 @@ class UEwing(UEface):
             ctrl_scale=50,
             mirror=self.side == 'R',
             global_scale=None,
+            sec_axis=bend_axis
         )
 
         # Parent outputs

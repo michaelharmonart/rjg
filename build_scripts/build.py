@@ -1627,8 +1627,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mod=1000
             mod2=-500
             for part in ['Mid', 'Tip']:
-                mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectX', at='double', dv=mod)
-                mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectY', at='double', dv=mod2)
+                #mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectX', at='double', dv=mod)
+                #mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectY', at='double', dv=mod2)
                 remapx= mc.createNode('remapValue', name=f'{part}_{side}_remapx')
                 remapy= mc.createNode('remapValue', name=f'{part}_{side}_remapy')
                 mc.connectAttr(f'Wing_{side}_02_bind_JNT.rotateZ', f'{remapx}.inputValue')
@@ -1639,8 +1639,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.setAttr(f'{remapx}.inputMin', startvalue)
                 mc.setAttr(f'{remapx}.outputMax', mod)
                 mc.setAttr(f'{remapy}.outputMax', mod2)
-                mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateY')
-                mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateX')
+                #mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateY')
+                #mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateX')
                 if side == 'L':
                     mod = mod - 1000
                 else:
