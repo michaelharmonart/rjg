@@ -575,9 +575,8 @@ class Spline:
                 mc.xform(pin, worldSpace=True, translation=position)
                 self.pin_list.append(pin)
             if create_controls:
-                ctrl_name = f"{cv_name}_{index:02d}"
                 ctrl = rCtrl.Control(
-                    name=ctrl_name,
+                    name=cv_name,
                     shape="ZTsphere",
                     parent=control_parent,
                     side=None,
