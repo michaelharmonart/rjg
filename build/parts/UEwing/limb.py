@@ -1,12 +1,48 @@
+from importlib import reload
 from typing import TYPE_CHECKING
 import maya.cmds as mc
 from rjg.build.UEface import UEface
+import rjg.build.chain as rChain
+
+reload(rChain)
 
 if TYPE_CHECKING:
     from rjg.build.parts.UEwing.module import UEwing
 
 
-def build_limb(wing: "UEwing", ctrl_group: str, part_group: str):
+def build_bendy_chain(wing: "UEwing", bend_axis: tuple[int, int, int] = (0, 0, 1)):
+    # Collect main leg bind joints only (no toes) 'Wing_L_04_bind_jnt
+    bind_jnts = [
+        f"Wing_{wing.side}_01_bind_JNT",
+        f"Wing_{wing.side}_02_bind_JNT",
+        f"Wing_{wing.side}_03_bind_JNT",
+    ]
+    # Create chain
+    wing.bendy_chain = rChain.Chain(
+        transform_list=bind_jnts,
+        side=wing.side,
+        name=f"Wing_{wing.side}_bendy",
+    )
+
+    wing.bendy_chain.joints = wing.bendy_chain.transform_list
+
+    # Split joints for deformation
+    wing.bendy_chain.split_chain(
+        segments=4,  # tweak this per creature
+    )
+
+    # Build bendy
+    bend = wing.bendy_chain.bend_twist_chain(
+        ctrl_scale=50, mirror=wing.side == "R", global_scale=None, sec_axis=bend_axis
+    )
+
+    # Parent outputs
+    mc.parent(bend["control"], f"Wing_{wing.side}")
+    mc.parent(bend["module"], f"Wing_{wing.side}")
+
+    wing.add_global_twist(main_ctrl=f"Wing_{wing.side}")
+
+def build_limb(wing: "UEwing", ctrl_group: str, part_group: str, bendy: bool = True):
     prefix = wing.prefix
     side = prefix.split("_")[-1]
     ctrlname, grpname = (ctrl_group, part_group)
@@ -267,3 +303,6 @@ def build_limb(wing: "UEwing", ctrl_group: str, part_group: str):
             proxy=f"Wing_{wing.side}_FKIKSwitch_{wing.side}_CTRL.FK_IK",
         )
     mc.setAttr(f"Wing_{wing.side}_FKIKSwitch_{wing.side}_CTRL.FK_IK", 1)
+    
+    if bendy:
+        build_bendy_chain(wing)

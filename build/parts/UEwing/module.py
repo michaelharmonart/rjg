@@ -64,43 +64,12 @@ class UEwing(UEface):
             valid_guides.append((guide, mid_guide, tip_guide))
         return valid_guides
 
-    def build_limb(self):
+    def build_limb(self, bendy: bool = True):
         prefix = self.prefix
         side = prefix.split("_")[-1]
         ctrlname, grpname = UEwing.get_namestruc(prefix)
-        limb.build_limb(self, ctrlname, grpname)
+        limb.build_limb(self, ctrlname, grpname, bendy)
 
-    def build_bendy_chain(self, bend_axis: tuple[int, int, int] = (0, 0, 1)):
-        # Collect main leg bind joints only (no toes) 'Wing_L_04_bind_jnt
-        bind_jnts = [
-            f"Wing_{self.side}_01_bind_JNT",
-            f"Wing_{self.side}_02_bind_JNT",
-            f"Wing_{self.side}_03_bind_JNT",
-        ]
-        # Create chain
-        self.bendy_chain = rChain.Chain(
-            transform_list=bind_jnts,
-            side=self.side,
-            name=f"Wing_{self.side}_bendy",
-        )
-
-        self.bendy_chain.joints = self.bendy_chain.transform_list
-
-        # Split joints for deformation
-        self.bendy_chain.split_chain(
-            segments=4,  # tweak this per creature
-        )
-
-        # Build bendy
-        bend = self.bendy_chain.bend_twist_chain(
-            ctrl_scale=50, mirror=self.side == "R", global_scale=None, sec_axis=bend_axis
-        )
-
-        # Parent outputs
-        mc.parent(bend["control"], f"Wing_{self.side}")
-        mc.parent(bend["module"], f"Wing_{self.side}")
-
-        self.add_global_twist(main_ctrl=f"Wing_{self.side}")
 
     def add_global_twist(self, main_ctrl=None):
         """
@@ -175,9 +144,7 @@ class UEwing(UEface):
         side = parts[-1]
         self.mastergrp = mc.group(em=True, name=f"{prefix}")
         if self.buildlimb:
-            self.build_limb()
-            if self.twisty:
-                self.build_bendy_chain()
+            self.build_limb(self.twisty)
         else:
             self.connectlimb()
         self.build_feathers()
