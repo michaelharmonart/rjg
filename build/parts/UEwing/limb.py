@@ -30,7 +30,6 @@ def build_bendy_chain(wing: "UEwing", bend_axis: tuple[int, int, int] = (0, 0, 1
     wing.bendy_chain.split_chain(
         segments=4,  # tweak this per creature
     )
-
     # Build bendy
     bend = wing.bendy_chain.bend_twist_chain(
         ctrl_scale=50, mirror=wing.side == "R", global_scale=None, sec_axis=bend_axis

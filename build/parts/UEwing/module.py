@@ -114,13 +114,16 @@ class UEwing(UEface):
 
     def connect_feathers(self, root_spline: Spline, mid_spline: Spline, tip_spline: Spline):
         bind_joints = self.limb_bind_joints
-
-        root_mapping = [(0, 0), (1, 0), (2, 1), (3, 1), (4, 2), (5, 3)]
+        
+        chain_bendy_controls: list[rCtrl.Control] = self.bendy_chain.bendy_controls
+        root_bind = [ctrl.ctrl for ctrl in chain_bendy_controls] + bind_joints[-2:]
+        root_mapping = [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7)]
+        
         wing_mapping = [(0, 0), (1, 0), (2, 1), (3, 2), (4, 3)]
 
         for ctrl_index, joint_index in root_mapping:
             root_pin = root_spline.pin_list[ctrl_index]
-            bind_joint = bind_joints[joint_index]
+            bind_joint = root_bind[joint_index]
             mc.parentConstraint(bind_joint, root_pin, maintainOffset=True)
 
         for ctrl_index, joint_index in wing_mapping:
