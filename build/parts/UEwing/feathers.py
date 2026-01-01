@@ -65,11 +65,13 @@ def build_feathers(wing: "UEwing", keep_spacing: bool = True):
 
     bind_joints = wing.limb_bind_joints
     end_joint = bind_joints[2]
-    swing_transform = create_swing_transform(
-        name=f"{end_joint}_Swing", parent=wing.spline_grp, driver=end_joint
-    )
-    swing_mapping: dict[str, str] = {end_joint: swing_transform}
-
+    
+    # swing_transform = create_swing_transform(
+    #     name=f"{end_joint}_Swing", parent=wing.spline_grp, driver=end_joint
+    # )
+    #swing_mapping: dict[str, str] = {end_joint: swing_transform}
+    swing_mapping: dict[str, str] = {}
+    
     root_guide_curve = f"{prefix}_Root_Curve"
     start_guide_curve = f"{prefix}_Start_Curve"
     mid_guide_curve = f"{prefix}_Mid_Curve"
