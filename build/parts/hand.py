@@ -24,6 +24,7 @@ class Hand(rModule.RigModule):
         guide_path=None,
         expression_control=True,
         bendy_visibility: bool | None = None,
+        handroll = False
     ):
         super().__init__(
             side=side,
@@ -39,6 +40,7 @@ class Hand(rModule.RigModule):
 
         self.local_orient = local_orient
         self.bendy_visibility = bendy_visibility
+        self.handroll = handroll
         
         self.create_module()
 
@@ -92,13 +94,81 @@ class Hand(rModule.RigModule):
                     name="handBendyVisibility",
                     value=1 if self.bendy_visibility else 0,
                 ).attr
+
+        if self.handroll:
+            if self.side == 'L':
+                sidelong= 'Left'
+            else:
+                sidelong='Right'
+
+            mc.addAttr(self.hand_01.ctrl, longName='roll', at='double', k=True)
+            rollattr = f'{self.hand_01.ctrl}.roll'
+            mc.addAttr(self.hand_01.ctrl, longName='bank', at='double', k=True)
+            bankattr = f'{self.hand_01.ctrl}.bank'
+            prejnt=False
+            for guide in [f'HandRollBack', f'HandRollFront', f'HandRollMid', f'HandBankIn', f'HandBankOut', f'Hand']:
+                pos = mc.xform(f'{sidelong}{guide}', q=True, ws=True, t=True)
+                rot = mc.xform(f'{sidelong}{guide}', q=True, ws=True, ro=True)
+
+                mc.select(clear=True)
+                jnt = mc.joint(name=f'{self.side}_{guide}_PV', p=pos, o=rot)
+                if prejnt:
+                    mc.parent(jnt, prejnt)
+                prejnt=jnt
+
+
+            self.rollpiv = f'{self.side}_Hand_PV'
+            remap_HandRollBack = mc.createNode('remapValue', name=f'{self.side}_HandRollBack_remap')
+            mc.setAttr(f'{remap_HandRollBack}.inputMax', -90)
+            mc.setAttr(f'{remap_HandRollBack}.outputMax', -90)
+            mc.connectAttr(rollattr, f'{remap_HandRollBack}.inputValue')
+            mc.connectAttr(f'{remap_HandRollBack}.outValue', f'{self.side}_HandRollBack_PV.rotateX')
+
+            remap_HandRollMid = mc.createNode('remapValue', name=f'{self.side}_HandRollMid_remap')
+            mc.setAttr(f'{remap_HandRollMid}.inputMax', 40)
+            mc.setAttr(f'{remap_HandRollMid}.outputMax', 40)
+            mc.connectAttr(rollattr, f'{remap_HandRollMid}.inputValue')
+            mc.connectAttr(f'{remap_HandRollMid}.outValue', f'{self.side}_HandRollMid_PV.rotateX')
+
+            remap_HandRollFront = mc.createNode('remapValue', name=f'{self.side}_HandRollFront_remap')
+            mc.setAttr(f'{remap_HandRollFront}.inputMax', 90)
+            mc.setAttr(f'{remap_HandRollFront}.inputMin', 40)
+            mc.setAttr(f'{remap_HandRollFront}.outputMax', 50)
+            mc.connectAttr(rollattr, f'{remap_HandRollFront}.inputValue')
+            mc.connectAttr(f'{remap_HandRollFront}.outValue', f'{self.side}_HandRollFront_PV.rotateX')
+
+            remap_HandBankIn = mc.createNode('remapValue', name=f'{self.side}_HandBankIn_remap')
+            mc.setAttr(f'{remap_HandBankIn}.inputMax', -90)
+            mc.setAttr(f'{remap_HandBankIn}.outputMax', 90)
+            mc.connectAttr(bankattr, f'{remap_HandBankIn}.inputValue')
+            mc.connectAttr(f'{remap_HandBankIn}.outValue', f'{self.side}_HandBankIn_PV.rotateZ')
+
+
+            remap_HandBankOut = mc.createNode('remapValue', name=f'{self.side}_HandBankOut_remap')
+            mc.setAttr(f'{remap_HandBankOut}.inputMax', 90)
+            mc.setAttr(f'{remap_HandBankOut}.outputMax', -90)
+            mc.connectAttr(bankattr, f'{remap_HandBankOut}.inputValue')
+            mc.connectAttr(f'{remap_HandBankOut}.outValue', f'{self.side}_HandBankOut_PV.rotateZ')
+
+            self.rollroot = mc.joint(name=f'{self.side}_HandRootRoll_PV', p=pos, o=rot)
+            mc.parent(f'{self.side}_HandRollBack_PV', self.rollroot)
+            mc.hide(self.rollroot) 
+            #mc.parent(self.rootroll, self.module_grp)
+
+            
+
+
             
 
     def output_rig(self):
         ik_jnt = mc.joint(self.hand_local.ctrl, name=self.hand_01.ctrl.replace("CTRL", "ik_JNT"))
         fk_jnt = mc.joint(self.hand_local.ctrl, name=self.hand_01.ctrl.replace("CTRL", "JNT"))
 
-        mc.parentConstraint(self.hand_local.ctrl, ik_jnt, mo=True)
+        if self.handroll:
+            mc.parentConstraint(self.rollpiv, ik_jnt, mo=True)
+            mc.parentConstraint(self.hand_local.ctrl, self.rollroot, mo=True)
+        else:    
+            mc.parentConstraint(self.hand_local.ctrl, ik_jnt, mo=True)
         mc.parentConstraint(self.hand_fk.ctrl, fk_jnt, mo=True)
         mc.connectAttr(self.hand_local.ctrl + '.scale', ik_jnt + '.scale')
         mc.connectAttr(self.hand_fk.ctrl + '.scale', fk_jnt + '.scale')

@@ -37,6 +37,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         bendy_vis_attr: str | None = None,
         curl: bool = True,
         curlaxis: str = 'Z',
+        handroll=False
     ):
         super().__init__(
             side=side,
@@ -58,6 +59,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.bendy_vis_attr = bendy_vis_attr
         self.curl = curl
         self.curlaxis = curlaxis
+        self.handroll=handroll
         
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -234,4 +236,26 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
                     mc.connectAttr(f'{self.curl_ctrl.ctrl}.rotate{ax}', f'{self.base_name}_02_fk_CTRL_SDK_GRP.rotate{ax}')
             if self.expression_control:
                 mc.addAttr(f'hand_{self.side}_express_CTRL', longName=f'{self.base_name}curl', proxy=f'{self.curl_ctrl.ctrl}.rotate{self.curlaxis}')
+        
+        if self.handroll:
+            rollattr = f'hand_{self.side}_01_CTRL.roll'
+            remap_HandRollFront = mc.createNode('remapValue', name=f'{self.base_name}_HandRollFront_remap')
+            remap_HandRollMid = mc.createNode('remapValue', name=f'{self.base_name}_HandRollMid_remap')
+            mc.setAttr(f'{remap_HandRollMid}.inputMax', 40)
+            mc.setAttr(f'{remap_HandRollMid}.outputMax', 40)
+            
+            mc.setAttr(f'{remap_HandRollFront}.inputMax', 90)
+            mc.setAttr(f'{remap_HandRollFront}.inputMin', 40)
+            mc.setAttr(f'{remap_HandRollFront}.outputMax', -40)
+
+
+            mc.connectAttr(rollattr, f'{remap_HandRollFront}.inputValue') #fingerMiddle_L_02_fk_CTRL_OFF_GRP
+            mc.connectAttr(rollattr, f'{remap_HandRollMid}.inputValue')
+
+            adddl = mc.createNode('addDL', name=f'{self.base_name}_RolladdDL')
+
+            mc.connectAttr(f'{remap_HandRollFront}.outValue', f'{adddl}.input1')
+            mc.connectAttr(f'{remap_HandRollMid}.outValue', f'{adddl}.input2')
+            mc.connectAttr(f'{adddl}.output', f'{self.base_name}_02_fk_CTRL_OFF_GRP.rotateZ')
+
 

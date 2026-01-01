@@ -470,6 +470,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         )
         
         #Bendy Fingers
+        if character in ['Luciana', 'Extra']:
+            handroll = True
+        else:
+            handroll = False
         if character in ['Domingo', 'Sharkguy', 'Bobo']:
             bendbo = True
             bendy_switch=True
@@ -478,9 +482,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             bendy_switch=None
         # Hand
         if character == 'Bobo':
-            hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = False)
+            hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = False, handroll=handroll)
         else:
-            hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = bendy_switch)
+            hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = bendy_switch, handroll = handroll)
         if hand.bendy_vis_attr is not None:
             for control in [arm.fk_ctrls[-1], arm.main_ctrl]:
                 mc.addAttr(control.ctrl, longName="handBendyVisibility", proxy=hand.bendy_vis_attr)
@@ -560,7 +564,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 bendy=bendbo,
                 create_ik=False,
                 bendy_vis_attr = hand.bendy_vis_attr,
-                curlaxis = curlaxis
+                curlaxis = curlaxis,
+                handroll = handroll
             )
             fingers.append(finger)
 
