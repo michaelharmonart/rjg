@@ -85,6 +85,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         body_mesh = mc.listRelatives('dungeonmonster_FINAL_GEO', children=True)
 
     if character == 'Luciana':
+        mc.setAttr("perspShape.nearClipPlane", 1)
+        mc.setAttr("perspShape.farClipPlane", 100000)
+        mc.modelEditor(twoSidedLighting=True, displayAppearance='smoothShaded', modelPanel='modelPanel4')
         neckList = ['Neck', 'Neck1', 'Neck2','Neck3','Neck4', 'Neck5', 'Head']
         neckik = False
     else:
@@ -1614,8 +1617,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Luciana':
         #mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
         #mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
-        mc.setAttr("perspShape.nearClipPlane", 1)
-        mc.setAttr("perspShape.farClipPlane", 100000)
+        
 
         for side in ['L', 'R']:
             startvalue = 0
