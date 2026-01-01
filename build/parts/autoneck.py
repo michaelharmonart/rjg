@@ -228,9 +228,10 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
                     mc.addAttr(self.Ikhead.ctrl, longName='Stretchy', at='double', dv=.2, k=True, max=1, min=0 )
 
                     mc.addAttr(self.Ikhead.ctrl, ln='roll', at='double', k=True)
+                    mc.addAttr(self.Ikhead.ctrl, ln='twist', at='double', k=True)
                     mc.connectAttr(f'{self.Ikhead.ctrl}.Stretchy', f'{self.iklist[-1].ctrl}.Stretchy')
                     mc.connectAttr(f'{self.Ikhead.ctrl}.roll', f'{self.iklist[-1].ctrl}.roll')
-                    mc.connectAttr(f'{self.Ikhead.ctrl}.rotateZ', f'{self.iklist[-1].ctrl}.twist')
+                    mc.connectAttr(f'{self.Ikhead.ctrl}.twist', f'{self.iklist[-1].ctrl}.twist')
                     mc.hide(self.iklist[-1].ctrl)
 
         

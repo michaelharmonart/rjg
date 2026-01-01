@@ -158,5 +158,14 @@ class UEbrow(UEface):
         mc.hide(f'{prefix}_Inner_major_JNT', f'{prefix}_01_Major_JNT', f'{prefix}_02_Major_JNT', f'{prefix}_Outer_major_JNT', f'{prefix}_Brow_ribbon')
         mc.parent(creaseoffset, f'{prefix}_extras_offset_grp')
 
+        if self.split:
+            split_joint = f'{prefix}_01_JNT'
+            split_joints: list[str] = [f'{prefix}_01_JNT',f'{prefix}_02_JNT',f'{prefix}_03_JNT', f'{prefix}_04_JNT', f'{prefix}_05_JNT']
+            #mc.addAttr(basejnt, longName="split_joints", niceName="Split Joints", dataType="string")
+            #value = f"['{basejnt}','{midjnt}','{eejnt}']"
+            #mc.setAttr(f'{basejnt}.split_joints', value, type='string')
+            mc.addAttr(split_joint, longName="split_joints", dataType="string")
+            mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
+
 #        for object in [f'{prefix}_Brow_ribbon', f'{prefix}_01_{side}_CTRL_CNST_GRP', f'{prefix}_02_{side}_CTRL_CNST_GRP', f'{prefix}_03_{side}_CTRL_CNST_GRP', f'{prefix}_04_{side}_CTRL_CNST_GRP', f'{prefix}_05_{side}_CTRL_CNST_GRP', f'{prefix}_01_Major_JNT', f'{prefix}_02_Major_JNT', f'{prefix}_Inner_major_JNT', f'{prefix}_Outer_major_JNT']:
 #            mc.parent(object, f'{prefix}_extras_offset_grp')

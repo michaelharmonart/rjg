@@ -138,15 +138,29 @@ class UEfaceconnect(UEface):
                 mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
-                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
-                mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
+                #mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
+                #mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
-                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
-                mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
+                #mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
+                #mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']:
+                    mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
+                    mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
+                    mc.addAttr(control, longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0)
+                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch')
+                    for axes in ['X', 'Y','Z']:
+                        mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.translate{axes}", f'{mdnodetranslate}.input1{axes}')
+                        mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.rotate{axes}", f'{mdnoderotate}.input1{axes}')
+                        mc.connectAttr(f'{control}.MouthMaster_spaceswitch', f'{mdnodetranslate}.input2{axes}')
+                        mc.connectAttr(f'{control}.MouthMaster_spaceswitch', f'{mdnoderotate}.input2{axes}')
+                    #for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']: 
+                    mc.connectAttr(f'{mdnodetranslate}.input1', f'{control}_OFF_GRP.translate')
+                    mc.connectAttr(f'{mdnoderotate}.input1', f'{control}_OFF_GRP.rotate')
+            
             if self.mastermouth:
                 mc.parent('Mouth_M_MasterControl_M_CTRL_CNST_GRP', 'LowerLip_M_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
             else:
@@ -230,15 +244,28 @@ class UEfaceconnect(UEface):
                 mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
-                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
-                mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
+                #mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
+                #mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
-                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
-                mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
+                #mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
+                #mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']:
+                    mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
+                    mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
+                    mc.addAttr(control, longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0)
+                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch')
+                    for axes in ['X', 'Y','Z']:
+                        mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.translate{axes}", f'{mdnodetranslate}.input1{axes}')
+                        mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.rotate{axes}", f'{mdnoderotate}.input1{axes}')
+                        mc.connectAttr(f'{control}.MouthMaster_spaceswitch', f'{mdnodetranslate}.input2{axes}')
+                        mc.connectAttr(f'{control}.MouthMaster_spaceswitch', f'{mdnoderotate}.input2{axes}')
+                    #for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']: 
+                    mc.connectAttr(f'{mdnodetranslate}.input1', f'{control}_OFF_GRP.translate')
+                    mc.connectAttr(f'{mdnoderotate}.input1', f'{control}_OFF_GRP.rotate')
             if self.mastermouth:
                 mc.parent('Mouth_M_MasterControl_M_CTRL_CNST_GRP', 'LowerLip_M_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
             else:
@@ -314,19 +341,32 @@ class UEfaceconnect(UEface):
             mc.parent('BotTeeth_M_CTRL_CNST_GRP', 'Tongue_01_01_CTRL_CNST_GRP', 'Jaw_M_root_M_CTRL')
             if self.mastermouth:
                 mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'TopTeeth_M_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=1) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
                 mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
-                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=1) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
-                mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
+                #mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
+                #mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
-                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=1) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
-                mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
+                #mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
+                #mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']:
+                    mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
+                    mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
+                    mc.addAttr(control, longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0)
+                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch')
+                    for axes in ['X', 'Y','Z']:
+                        mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.translate{axes}", f'{mdnodetranslate}.input1{axes}')
+                        mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.rotate{axes}", f'{mdnoderotate}.input1{axes}')
+                        mc.connectAttr(f'{control}.MouthMaster_spaceswitch', f'{mdnodetranslate}.input2{axes}')
+                        mc.connectAttr(f'{control}.MouthMaster_spaceswitch', f'{mdnoderotate}.input2{axes}')
+                    #for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']: 
+                    mc.connectAttr(f'{mdnodetranslate}.input1', f'{control}_OFF_GRP.translate')
+                    mc.connectAttr(f'{mdnoderotate}.input1', f'{control}_OFF_GRP.rotate')
             #mc.parent('LowerLip_M_M_CTRL_CNST_GRP', 'UpperLip_M_M_CTRL_CNST_GRP', 'Major_Mouth_R_CornerLip_Mouth_CTRL_CNST_GRP', 'Major_Mouth_L_CornerLip_Mouth_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
             if self.mastermouth:
                 mc.parent('Mouth_M_MasterControl_M_CTRL_CNST_GRP', 'LowerLip_M_M_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
@@ -422,15 +462,28 @@ class UEfaceconnect(UEface):
                 mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
-                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
-                mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
+                #mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
+                #mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
-                mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
-                mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
-                mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
+                #mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
+                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
+                #mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
+                for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']:
+                    mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
+                    mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
+                    mc.addAttr(control, longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0)
+                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch')
+                    for axes in ['X', 'Y','Z']:
+                        mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.translate{axes}", f'{mdnodetranslate}.input1{axes}')
+                        mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.rotate{axes}", f'{mdnoderotate}.input1{axes}')
+                        mc.connectAttr(f'{control}.MouthMaster_spaceswitch', f'{mdnodetranslate}.input2{axes}')
+                        mc.connectAttr(f'{control}.MouthMaster_spaceswitch', f'{mdnoderotate}.input2{axes}')
+                    #for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']: 
+                    mc.connectAttr(f'{mdnodetranslate}.input1', f'{control}_OFF_GRP.translate')
+                    mc.connectAttr(f'{mdnoderotate}.input1', f'{control}_OFF_GRP.rotate')
     
             #mc.parent('LowerLip_M_M_CTRL_CNST_GRP', 'UpperLip_M_M_CTRL_CNST_GRP', 'Major_Mouth_R_CornerLip_Mouth_CTRL_CNST_GRP', 'Major_Mouth_L_CornerLip_Mouth_CTRL_CNST_GRP', 'LowerHead_M_CTRL')
             if self.mastermouth:

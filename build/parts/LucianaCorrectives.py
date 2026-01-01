@@ -14,44 +14,47 @@ def Build_Correctives(side='L'):
         
         
         guidelist = [
-        f'{SideLong}AnkleBack',
-        f'{SideLong}AnkleFront',
-        f'{SideLong}KneeFront',
-        f'{SideLong}KneeBack',
-        f'{SideLong}Trap',
-        f'{SideLong}ArmPit',
-        f'{SideLong}Pec',
-        f'{SideLong}Scap',
-        f'{SideLong}Bicep',
         f'{SideLong}ElbowIn',
+        f'{SideLong}ElbowOut',
+        f'{SideLong}WristTop',
+        f'{SideLong}WristBot',
         f'{SideLong}WristIn',
-        f'{SideLong}WristHigh',
-        f'{SideLong}WristLow',
-        f'{SideLong}LegIn',
-        f'{SideLong}LegOut',
-        f'{SideLong}LegFront',
-        f'{SideLong}LegBack',
-
+        f'{SideLong}WristOut',
+        f'{SideLong}Pec',
+        f'{SideLong}Pit',
+        f'{SideLong}ShoulderOut',
+        f'{SideLong}Trap',
+        f'{SideLong}WingElbowFront', #Start here Leg_L_01_bindJNT  Leg_L_02_bindJNT Leg_L_03_bindJNT
+        f'{SideLong}UpKneeFront',
+        f'{SideLong}UpKneeBack',
+        f'{SideLong}LowKneeFront',
+        f'{SideLong}LowKneeBack',
+        f'{SideLong}HipBack',
+        f'{SideLong}HipFront',
+        f'{SideLong}HipUp',
+        f'{SideLong}HipIn',
         ]
         
         parlist = [
-        f"leg_{SideShort}_08_JNT",   # AnkleFrontBack
-        f"leg_{SideShort}_08_JNT",   # LeftAnkleFront 
-        f"leg_{SideShort}_05_JNT",    # LeftKneeFront
-        f"leg_{SideShort}_05_JNT",    # LeftKneeBack
-        f"chest_M_JNT", # LeftTrap
-        f"chest_M_JNT", # LeftArmPit
-        f"chest_M_JNT", # LeftPec
-        f"chest_M_JNT", # LeftScap
-        f"clavicle_{SideShort}_01_JNT", # LeftBicep
-        f"arm_{SideShort}_04_JNT",    # LeftElbowIn
-        f"arm_{SideShort}_08_JNT",    # LeftWristIn
-        f"arm_{SideShort}_08_JNT",    # LeftWristHigh
-        f"arm_{SideShort}_08_JNT",    # LeftWristLow
-        f"leg_{SideShort}_01_JNT",    # LeftLegIn
-        "COG_M_JNT",                  # LeftLegOut
-        "COG_M_JNT",                  # LeftLegFront
-        "COG_M_JNT",                   # LeftLegBack
+        f"arm_{SideShort}_04_JNT",   # AnkleFrontBack
+        f"arm_{SideShort}_04_JNT",
+        f"arm_{SideShort}_08_JNT",
+        f"arm_{SideShort}_08_JNT",
+        f"arm_{SideShort}_08_JNT",
+        f"arm_{SideShort}_08_JNT",
+        f"chest_M_JNT",
+        f"chest_M_JNT",
+        f"arm_{SideShort}_01_JNT",
+        f"clavicle_{SideShort}_01_JNT",
+        f"Wing_{SideShort}_02_bind_JNT",
+        f"Leg_{SideShort}_02_bindJNT",
+        f"Leg_{SideShort}_02_bindJNT",
+        f"Leg_{SideShort}_03_bindJNT",
+        f"Leg_{SideShort}_03_bindJNT",
+        f"COG_M_JNT",
+        f"COG_M_JNT",
+        f"Leg_{SideShort}_01_bindJNT",
+        f"Leg_{SideShort}_01_bindJNT",
         ]
             
         for guide, param in zip(guidelist, parlist):

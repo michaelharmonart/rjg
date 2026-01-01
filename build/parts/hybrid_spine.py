@@ -497,8 +497,9 @@ class HybridSpine(rModule.RigModule):
         self.tag_bind_joints(self.bind_joints)
 
         if self.split_weights:
+            splitlist =self.bind_joints[:-1]
             split_joint: str = self.bind_joints[0]
-            split_joints: list[str] = self.bind_joints
+            split_joints: list[str] = splitlist
             mc.addAttr(split_joint, longName="split_joints", dataType="string")
             mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
 

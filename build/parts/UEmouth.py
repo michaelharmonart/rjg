@@ -15,7 +15,7 @@ reload(rAttr)
 reload(rModule)
 reload(rChain)
 reload(rCtrl)
-reload (rGuide)
+reload(rGuide)
 reload(rXform)
 
 class UEmouth(UEface):

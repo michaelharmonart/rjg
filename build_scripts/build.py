@@ -632,6 +632,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=1, side=side, buildlimb=False)
             UEwing.build_wing()
         Build_Correctives(side='M')
+    if character == 'Luciana':
+        for side in ['L', 'R']:
+            from rjg.build.parts.LucianaCorrectives import Build_Correctives
+            Build_Correctives(side=side)
     
     if character == 'Sharkguy':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail01', 'Tail02', 'Tail03', 'Tail04', 'Tail05', 'Tail06', 'TailFin01', 'TailFin02', 'TailFin03'], ctrl_scale=10, pad=2)
@@ -1746,7 +1750,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     if character in ['Bobo', 'Gretchen']:
         auto_split_all_weights('MODEL')
-    if character in ['Luciana', 'Domingo']:
+    if character in ['Luciana', 'Domingo', 'Basemesh']:
         auto_split_all_weights('MODEL')
     #if character == 'Domingo':
     #    auto_split_all_weights('tail')
