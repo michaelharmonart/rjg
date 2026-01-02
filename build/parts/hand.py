@@ -124,18 +124,33 @@ class Hand(rModule.RigModule):
             mc.connectAttr(rollattr, f'{remap_HandRollBack}.inputValue')
             mc.connectAttr(f'{remap_HandRollBack}.outValue', f'{self.side}_HandRollBack_PV.rotateX')
 
-            remap_HandRollMid = mc.createNode('remapValue', name=f'{self.side}_HandRollMid_remap')
-            mc.setAttr(f'{remap_HandRollMid}.inputMax', 40)
-            mc.setAttr(f'{remap_HandRollMid}.outputMax', 40)
-            mc.connectAttr(rollattr, f'{remap_HandRollMid}.inputValue')
-            mc.connectAttr(f'{remap_HandRollMid}.outValue', f'{self.side}_HandRollMid_PV.rotateX')
-
             remap_HandRollFront = mc.createNode('remapValue', name=f'{self.side}_HandRollFront_remap')
-            mc.setAttr(f'{remap_HandRollFront}.inputMax', 90)
-            mc.setAttr(f'{remap_HandRollFront}.inputMin', 40)
+            mc.setAttr(f'{remap_HandRollFront}.inputMax', 140)
+            mc.setAttr(f'{remap_HandRollFront}.inputMin', 90)
             mc.setAttr(f'{remap_HandRollFront}.outputMax', 50)
             mc.connectAttr(rollattr, f'{remap_HandRollFront}.inputValue')
             mc.connectAttr(f'{remap_HandRollFront}.outValue', f'{self.side}_HandRollFront_PV.rotateX')
+
+            remap_HandRollMid = mc.createNode('remapValue', name=f'{self.side}_HandRollMid_remap')
+            remap_HandRollMid2 = mc.createNode('remapValue', name=f'{self.side}_HandRollMid2_remap')
+            mc.setAttr(f'{remap_HandRollMid}.inputMax', 40)
+            mc.setAttr(f'{remap_HandRollMid}.outputMax', 40)
+            mc.setAttr(f'{remap_HandRollMid2}.inputMax', 90)
+            mc.setAttr(f'{remap_HandRollMid2}.inputMin', 40)
+            mc.setAttr(f'{remap_HandRollMid2}.outputMax', -40)
+            mc.connectAttr(rollattr, f'{remap_HandRollMid}.inputValue')
+            mc.connectAttr(rollattr, f'{remap_HandRollMid2}.inputValue')
+
+            adddl = mc.createNode('addDL', name=f'{self.base_name}_RolladdDL')
+
+            mc.connectAttr(f'{remap_HandRollMid}.outValue', f'{adddl}.input1')
+            mc.connectAttr(f'{remap_HandRollMid2}.outValue', f'{adddl}.input2')
+            mc.connectAttr(f'{adddl}.output', f'{self.side}_HandRollMid_PV.rotateX')
+
+
+            #mc.connectAttr(f'{remap_HandRollMid}.outValue', f'{self.side}_HandRollMid_PV.rotateX')
+
+
 
             remap_HandBankIn = mc.createNode('remapValue', name=f'{self.side}_HandBankIn_remap')
             mc.setAttr(f'{remap_HandBankIn}.inputMax', -90)
