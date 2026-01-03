@@ -259,7 +259,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             jaw = UEjaw('Jaw_M_guides', ctrl_scale=1)
             jaw.build()
             from rjg.build.parts.UEmouth import UEmouth
-            mouth = UEmouth('Mouth_guides', ctrl_scale=1,)
+            mouth = UEmouth('Mouth_guides', ctrl_scale=1, Major_Mouth=4)
             mouth.build()
             from rjg.build.parts.UEteeth import UEteeth
             teeth = UEteeth('Tongue_M_guides', ctrl_scale=1, skin=['tongue', 'topteeth', 'botteeth'])
@@ -414,6 +414,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     #Mirrored Base Rig Parts
     fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo'] else 'lollipop'
     curlaxis = 'Z' if character != 'Gretchen' else 'X'
+    if character in ['Basemesh']:
+        clavshape = 'Arch'
+    else:
+        clavshape = 'box'
+
+
+
     for fs in ["Left", "Right"]:
         side = fs[0]
         if character == "Bobo":
@@ -437,6 +444,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 guide_list=[fs + piece for piece in ["Shoulder", "Arm"]],
                 local_orient=False,
                 ctrl_scale=9,
+                shape = clavshape
             )
         if character in ['Luciana']:
             prop_control = False
@@ -470,7 +478,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         )
         
         #Bendy Fingers
-        if character in ['Luciana', 'Extra']:
+        if character in ['Luciana', 'Basemesh']:
             handroll = True
         else:
             handroll = False
@@ -492,7 +500,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         Fexpress = True if character in ['Bobo', 'Domingo'] else False
 
         if character == 'Luciana':
-            leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_MId', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
+            leg = rBuild.build_module(module_type='dragonleg', side=fs[0], part='dragonleg', guide_list=[fs + piece for piece in ['UpLeg', 'Leg', 'Knee', 'Foot', 'ToeBase', 'MiddleToe_Root', 'MiddleToe_Mid', 'MiddleToe_EE', 'IndexToe_Root', 'IndexToe_Mid', 'IndexToe_EE', 'RingToe_Root', 'RingToe_Mid', 'RingToe_EE', 'PinkyToe_Root', 'PinkyToe_Mid', 'PinkyToe_EE', 'ThumbToe_Root', 'ThumbToe_Mid', 'ThumbToe_EE']])
         else:
             leg = rBuild.build_module(
                 module_type="biped_limb",

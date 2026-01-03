@@ -20,7 +20,8 @@ class DragonLeg(rModule.RigModule):
                  ctrl_scale=None,       # float. base scale value for all controls on this part.
                  model_path=None,       # string. path to model.
                  guide_path=None,
-                 twisty=True):      # string. path to guides.
+                 twisty=True,
+                 iktoes = False):      # string. path to guides.
         
         # initialize super class RigModule
         super().__init__(side=side,
@@ -32,6 +33,7 @@ class DragonLeg(rModule.RigModule):
         
         self.__dict__.update(locals())
         self.twisty=twisty
+        self.iktoes
         
         # base name conventions: part_side. used for naming objects.
         self.base_name = self.part + '_' + self.side
@@ -161,7 +163,7 @@ class DragonLeg(rModule.RigModule):
         huckctrl, huckoffset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Huck', shape='ZTArrows', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.parentConstraint(huckctrl, ikh1, mo=True)
 
-        pos = mc.xform(f'{sidelong}Foot', q=True, ws=True, t=True)
+        pos = mc.xform(f'{sidelong}ToeBase', q=True, ws=True, t=True)
         footctrl, footoffset_grp = DragonLeg.build_basic_control(name=f'{self.side}_Foot', shape='ZTArrows', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0), getside = False, sidetype=self.side)
         mc.parentConstraint(footctrl, ikh2, mo=True)
         mc.orientConstraint(footctrl, f'Leg_{self.side}_04_IK', mo=True)
@@ -214,6 +216,7 @@ class DragonLeg(rModule.RigModule):
         rollheel = mc.shadingNode('remapValue', asUtility=True, name=f'{self.side}rollheel')
         rollend = mc.shadingNode('remapValue', asUtility=True, name=f'{self.side}rollend')
         rollmid = mc.shadingNode('remapValue', asUtility=True, name=f'{self.side}rollmid')
+        rollmidrev = mc.shadingNode('remapValue', asUtility=True, name=f'{self.side}rollmidrev')
         if self.side == 'L':
             mod = 1
         if self.side == 'R':
@@ -229,47 +232,104 @@ class DragonLeg(rModule.RigModule):
         mc.setAttr(f'{rollheel}.outputMax', -90)
         mc.setAttr(f'{rollend}.outputMax', 45)
         mc.setAttr(f'{rollmid}.outputMax', 45)
+        mc.setAttr(f'{rollmidrev}.inputMin', 200)
+        mc.setAttr(f'{rollmidrev}.inputMax', 400)
+        mc.setAttr(f'{rollmidrev}.outputMax', -45)
         for remap in [bankin, bankout]:
             mc.connectAttr(f'{ctrl}.translateX', f'{remap}.inputValue')
-        for remap in [rollheel, rollend, rollmid]:
+        for remap in [rollheel, rollend, rollmid, rollmidrev]:
             mc.connectAttr(f'{ctrl}.translateZ', f'{remap}.inputValue')
         mc.connectAttr(f'{bankin}.outValue', f'{self.side}_inner_bank.rotateZ')
         mc.connectAttr(f'{bankout}.outValue', f'{self.side}_outer_bank.rotateZ')
         mc.connectAttr(f'{rollheel}.outValue', f'{self.side}_heel_roll.rotateX')
         mc.connectAttr(f'{rollend}.outValue', f'{self.side}_Toe_EE_roll.rotateX')
-        mc.connectAttr(f'{rollmid}.outValue', f'{self.side}_Mid_roll.rotateX')
+        
+        add = mc.createNode('addDL', name=f'{self.side}Foot_RolladdDL')
+        mc.connectAttr(f'{rollmid}.outValue', f'{add}.input1')
+        mc.connectAttr(f'{rollmidrev}.outValue', f'{add}.input2')
+        mc.connectAttr(f'{add}.output', f'{self.side}_Mid_roll.rotateX')
+        #mc.connectAttr(f'{rollmid}.outValue', f'{self.side}_Mid_roll.rotateX')
 
         mc.parent(offset_grp, rootctrl)
 
         #IK Toes
-        slide1 = mc.shadingNode('remapValue', asUtility=True, name=f'{self.side}toeslide1')
-        slide2 = mc.shadingNode('remapValue', asUtility=True, name=f'{self.side}toeslide2')
-        mc.setAttr(f'{slide1}.inputMax', 40)
-        mc.setAttr(f'{slide1}.outputMax', 10)
-        mc.setAttr(f'{slide2}.inputMax', -20)
-        mc.setAttr(f'{slide2}.outputMax', -10)
-        mc.connectAttr(f'{ctrl}.translateZ', f'{slide1}.inputValue')
-        mc.connectAttr(f'{ctrl}.translateZ', f'{slide2}.inputValue')
+        if self.iktoes:
+            slide1 = mc.shadingNode('remapValue', asUtility=True, name=f'{self.side}toeslide1')
+            slide2 = mc.shadingNode('remapValue', asUtility=True, name=f'{self.side}toeslide2')
+            mc.setAttr(f'{slide1}.inputMax', 40)
+            mc.setAttr(f'{slide1}.outputMax', 10)
+            mc.setAttr(f'{slide2}.inputMax', -20)
+            mc.setAttr(f'{slide2}.outputMax', -10)
+            mc.connectAttr(f'{ctrl}.translateZ', f'{slide1}.inputValue')
+            mc.connectAttr(f'{ctrl}.translateZ', f'{slide2}.inputValue')
 
-        for toe in ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']:
-            ikhtoe, efftoe = mc.ikHandle(sj=f'{sidelong}{toe}Toe_Root_IK', ee=f'{sidelong}{toe}Toe_EE_IK', sol=f"ikRPsolver", n=f"{self.side}{toe}_IKHandle")
-            pos = mc.xform(f'{sidelong}{toe}Toe_EE_IK', q=True, ws=True, t=True)
-            ctrl, offset_grp = DragonLeg.build_basic_control(name=f'{sidelong}{toe}Toe_IK', shape='circle', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0))
-            mc.parentConstraint(ctrl, ikhtoe, mo=True)
-            mc.parent(offset_grp, rootctrl)
-            if toe == 'Thumb':
-                slide = slide2
-            else:
-                slide = slide1
-            grp = mc.group(em=True, name=f'{sidelong}{toe}Toe_IK_Slide')
-            mc.xform(grp, ws=True, t=pos)
-            mc.parent(grp, offset_grp)
-            mc.parent(ctrl, grp)
-            mc.connectAttr(f'{slide}.outValue', f'{grp}.translateZ')
-            pc = mc.parentConstraint(footctrl, offset_grp, mo=True)
-            mc.addAttr(ctrl, longName="FollowFoot", attributeType="bool", defaultValue=False, keyable=True)
-            weights = mc.parentConstraint(pc[0], q=True, wal=True)[0]
-            mc.connectAttr(f'{ctrl}.FollowFoot', f'{pc[0]}.{weights}')
+            for toe in ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']:
+                ikhtoe, efftoe = mc.ikHandle(sj=f'{sidelong}{toe}Toe_Root_IK', ee=f'{sidelong}{toe}Toe_EE_IK', sol=f"ikRPsolver", n=f"{self.side}{toe}_IKHandle")
+                pos = mc.xform(f'{sidelong}{toe}Toe_EE_IK', q=True, ws=True, t=True)
+                ctrl, offset_grp = DragonLeg.build_basic_control(name=f'{sidelong}{toe}Toe_IK', shape='circle', size=10.0, color_rgb=(1, 1, 0), position=pos, rotation=(0,0,0))
+                mc.parentConstraint(ctrl, ikhtoe, mo=True)
+                mc.parent(offset_grp, rootctrl)
+                if toe == 'Thumb':
+                    slide = slide2
+                else:
+                    slide = slide1
+                grp = mc.group(em=True, name=f'{sidelong}{toe}Toe_IK_Slide')
+                mc.xform(grp, ws=True, t=pos)
+                mc.parent(grp, offset_grp)
+                mc.parent(ctrl, grp)
+                mc.connectAttr(f'{slide}.outValue', f'{grp}.translateZ')
+                pc = mc.parentConstraint(footctrl, offset_grp, mo=True)
+                mc.addAttr(ctrl, longName="FollowFoot", attributeType="bool", defaultValue=False, keyable=True)
+                weights = mc.parentConstraint(pc[0], q=True, wal=True)[0]
+                mc.connectAttr(f'{ctrl}.FollowFoot', f'{pc[0]}.{weights}')
+        else:
+            guide = f"{sidelong}ToeBase"
+            pos = mc.xform(guide, q=True, ws=True, t=True)
+            rot = mc.xform(guide, q=True, ws=True, ro=True)
+            self.iktoeroot = rCtrl.Control(parent=None, shape="square", side=None, suffix='CTRL', name=f'Toe_{self.side}_Root', axis='y', group_type='main', rig_type='primary', translate=guide, rotate=guide, ctrl_scale=1)
+            mc.parentConstraint(f'{self.side}_Foot_{self.side}_CTRL', self.iktoeroot.top, mo=True)
+            mc.parent(self.iktoeroot.top, f'{self.side}_FootRoot_{self.side}_CTRL')
+            toerootmd = mc.createNode('multiplyDivide', name=f'{self.side}_toeroot_md')
+            mc.connectAttr(f'{add}.output', f'{toerootmd}.input1X')
+            mc.connectAttr(f'{toerootmd}.outputX', f"Toe_{self.side}_Root_CTRL_SDK_GRP.rotateX", )
+            #mc.setAttr(f'{toerootremap}.inputMax')
+            #mc.connectAttr(f'{add}.output', f'{self.side}_Mid_roll.rotateX')
+
+            for toe in ['IndexToe', 'MiddleToe', 'RingToe', 'PinkyToe', 'ThumbToe']:
+                if toe == 'ThumbToe':
+                    parent = f'{self.side}_Foot_{self.side}_CTRL'
+                    hir = f'{self.side}_IK_{self.side}_CTRL_CNST_GRP'
+                else:
+                    parent = self.iktoeroot.ctrl
+                    hir = f'{self.side}_IK_{self.side}_CTRL_CNST_GRP'
+
+                toelist = []
+
+                partparent = None
+                for part in ['Root', 'Mid', 'EE']:
+                    guide = f'{sidelong}{toe}_{part}'
+                    print(guide)
+                    toectrl = rCtrl.Control(parent=None, shape="square", side=None, suffix='CTRL', name=f'{toe}_{self.side}_{part}_IK', axis='y', group_type='main', rig_type='primary', translate=guide, rotate=guide, ctrl_scale=1)
+                    #LeftRingToe_Root_IK
+                    mc.parentConstraint(toectrl.ctrl, f'{sidelong}{toe}_{part}_IK', mo=True)
+
+                    if partparent:
+                        mc.parent(toectrl.top, partparent.ctrl)
+
+                    partparent = toectrl
+
+                
+                    if part == 'Root':
+                        mc.parentConstraint(parent, toectrl.top, mo=True)
+
+
+
+
+            
+
+
+
+
 
     # create rig systems and joints
     def output_rig(self):
@@ -456,8 +516,10 @@ class DragonLeg(rModule.RigModule):
                 mc.setAttr(f"{cond3}.colorIfTrueR", 1)
                 mc.setAttr(f"{cond3}.colorIfFalseR", 0)
                 mc.connectAttr(f"{cond3}.outColorR", f'{self.side}_IKAim{aim}_{grpname}_parentConstraint1.{weights[2]}')
-            
-        mc.group(f'Leg_{self.side}_01_FK', f'Leg_{self.side}_01_IK', f'{self.side}_leg_IK1', f'{self.side}_leg_IK2', f'{self.side}_leg_IK1', f'{self.side}_bankrollparent', f'{self.side}Thumb_IKHandle', f'{self.side}Index_IKHandle', f'{self.side}Middle_IKHandle', f'{self.side}Ring_IKHandle', f'{self.side}Pinky_IKHandle', name=f'{self.side}_extra_GRP')
+        if self.iktoes:
+            mc.group(f'Leg_{self.side}_01_FK', f'Leg_{self.side}_01_IK', f'{self.side}_leg_IK1', f'{self.side}_leg_IK2', f'{self.side}_leg_IK1', f'{self.side}_bankrollparent', f'{self.side}Thumb_IKHandle', f'{self.side}Index_IKHandle', f'{self.side}Middle_IKHandle', f'{self.side}Ring_IKHandle', f'{self.side}Pinky_IKHandle', name=f'{self.side}_extra_GRP')
+        else:
+            mc.group(f'Leg_{self.side}_01_FK', f'Leg_{self.side}_01_IK', f'{self.side}_leg_IK1', f'{self.side}_leg_IK2', f'{self.side}_leg_IK1', f'{self.side}_bankrollparent', name=f'{self.side}_extra_GRP')
         mc.hide(f'{self.side}_extra_GRP')
         mc.group(f'{self.side}_extra_GRP', f'{self.side}_FK_{grpname}', f'{self.side}_IK_{grpname}', f'{self.side}_Options_{grpname}', name = f'leg_{self.side}')
         #Plugs f'Leg_{self.side}_01_bindJNT' f'{self.side}_Hip_{grpname}' f'{self.side}_FootRoot_{grpname}' f'Leg_{self.side}_01_{grpname}'
@@ -536,9 +598,16 @@ class DragonLeg(rModule.RigModule):
         else:
             sidelong='Right'
 
-        for toe in ['Index', 'Middle', 'Ring', 'Pinky', 'Thumb']:
-            mc.setAttr(f"{sidelong}{toe}Toe_IK_IK_CTRL.FollowFoot", 1)
-            mc.addAttr(f'{self.side}_Foot_{ctrlnames}', longName=f'{toe}_Follow', proxy=f"{sidelong}{toe}Toe_IK_IK_CTRL.FollowFoot")
+
+        if self.iktoes:
+            for toe in ['Index', 'Middle', 'Ring', 'Pinky', 'Thumb']:
+                mc.setAttr(f"{sidelong}{toe}Toe_IK_IK_CTRL.FollowFoot", 1)
+                mc.addAttr(f'{self.side}_Foot_{ctrlnames}', longName=f'{toe}_Follow', proxy=f"{sidelong}{toe}Toe_IK_IK_CTRL.FollowFoot")
+        else:
+            mc.parent(f'Toe_{self.side}_Root_CTRL_CNST_GRP', f'{self.side}_IK_{self.side}_CTRL_CNST_GRP')
+            for toe in ['Index', 'Middle', 'Ring', 'Pinky', 'Thumb']:
+                mc.parent(f'{toe}Toe_{self.side}_Root_IK_CTRL_CNST_GRP', f'{self.side}_IK_{self.side}_CTRL_CNST_GRP') #
+        
 
         
 

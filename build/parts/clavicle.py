@@ -37,6 +37,7 @@ class Clavicle(rModule.RigModule):
         auto_clav_down: float = 0,
         auto_clav_forward: float = 0.25,
         auto_clav_back: float = 0.25,
+        shape = 'box'
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.auto_clavicle = auto_clavicle
@@ -50,6 +51,7 @@ class Clavicle(rModule.RigModule):
         self.auto_clav_down = auto_clav_down
         self.auto_clav_forward = auto_clav_forward
         self.auto_clav_back = auto_clav_back
+        self.shape = shape
         self.create_module()
 
     def create_module(self):
@@ -82,7 +84,7 @@ class Clavicle(rModule.RigModule):
             rotate = (0, 0, 0) if self.side=='L' else (0, 180, 180)
 
         # create controls
-        self.main_ctrl = rCtrl.Control(parent=self.control_grp, shape='cube', side=self.side, suffix='CTRL', name='clavicle', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=rotate, ctrl_scale=self.ctrl_scale)
+        self.main_ctrl = rCtrl.Control(parent=self.control_grp, shape=self.shape, side=self.side, suffix='CTRL', name='clavicle', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=rotate, ctrl_scale=self.ctrl_scale)
         self.main_ctrl.tag_as_controller()
 
         attr_util = rAttr.Attribute(add=False)

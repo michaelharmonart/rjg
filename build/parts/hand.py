@@ -126,8 +126,8 @@ class Hand(rModule.RigModule):
 
             remap_HandRollFront = mc.createNode('remapValue', name=f'{self.side}_HandRollFront_remap')
             mc.setAttr(f'{remap_HandRollFront}.inputMax', 140)
-            mc.setAttr(f'{remap_HandRollFront}.inputMin', 90)
-            mc.setAttr(f'{remap_HandRollFront}.outputMax', 50)
+            mc.setAttr(f'{remap_HandRollFront}.inputMin', 40)
+            mc.setAttr(f'{remap_HandRollFront}.outputMax', 90)
             mc.connectAttr(rollattr, f'{remap_HandRollFront}.inputValue')
             mc.connectAttr(f'{remap_HandRollFront}.outValue', f'{self.side}_HandRollFront_PV.rotateX')
 
@@ -168,7 +168,7 @@ class Hand(rModule.RigModule):
             self.rollroot = mc.joint(name=f'{self.side}_HandRootRoll_PV', p=pos, o=rot)
             mc.parent(f'{self.side}_HandRollBack_PV', self.rollroot)
             mc.hide(self.rollroot) 
-            #mc.parent(self.rootroll, self.module_grp)
+            mc.parent(self.rollroot, f'hand_{self.side}_MODULE')
 
             
 
