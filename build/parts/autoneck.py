@@ -55,7 +55,8 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
         pv_guide="auto",
         slide_pv=None,
         spinejnt_count = 4,
-        split=True
+        split=True,
+        fkauto = True
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.create_ik = create_ik
@@ -79,6 +80,7 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
         self.fk_ctrls = []
         self.ik_ctrls = []  # always define, even if empty
         self.split=split
+        self.fkauto = fkauto
 
         if self.pad == "auto":
             self.pad = len(str(len(self.guide_list))) + 1
@@ -109,6 +111,28 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
         if self.create_fk:
             self.build_fk_controls()
             mc.parent(self.fk_ctrls[0].top, self.control_grp)
+            if self.fkauto:
+                self.fkauto_ctrl = rCtrl.Control(parent=None, shape="ZTArrows", side=None, suffix='CTRL', name=f'Head_M', axis='y', group_type='main', rig_type='primary', translate='Head', rotate='Head')
+                md = mc.createNode('multiplyDivide',name=f'AutoNeck_rotDist_md')
+                distribute_value = 1 / self.segments
+                mc.addAttr(self.fkauto_ctrl.ctrl, longName="Auto_Amount", at='double', dv=distribute_value, k=True)
+                rev = mc.createNode('multiplyDivide',name=f'AutoNeck_rotDist_rev')
+                mc.parentConstraint(self.fk_ctrls[-1].ctrl, self.fkauto_ctrl.top, mo=True)
+                mc.parent(self.fkauto_ctrl.top, self.control_grp)
+                for axe in ['X', 'Y', 'Z']:
+                    mc.connectAttr(f'{self.fkauto_ctrl.ctrl}.rotate{axe}', f'{md}.input1{axe}')
+                    mc.connectAttr(f'{self.fkauto_ctrl.ctrl}.Auto_Amount', f'{md}.input2{axe}')
+                    mc.setAttr(f'{rev}.input2{axe}', -1)
+                    mc.connectAttr(f'{self.fkauto_ctrl.ctrl}.rotate{axe}', f'{rev}.input1{axe}')
+                    mc.connectAttr( f'{rev}.output{axe}', f'Head_M_CTRL_OFF_GRP.rotate{axe}')
+                for i in range(1, self.segments + 1, 1): #neck_M_01_fk_CTRL_OFF_GRP
+                    for axe in ['X', 'Y', 'Z']:
+                        mc.connectAttr(f'{md}.output{axe}', f'neck_M_0{i}_fk_CTRL_OFF_GRP.rotate{axe}')
+                    
+
+
+
+
         # ik
         if self.create_ik:
             if self.segments == 2:
@@ -339,6 +363,8 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
 
             # Store attribute name for reference
             self.ik_switch_attr = f"{self.limb_grp}.{switch_attr_name}"
+            if self.fkauto:
+                mc.connectAttr('neck_M_01_fk_CTRL_CNST_GRP.visibility', f'{self.fkauto_ctrl.top}.visibility')
 
         mc.parentConstraint('chest_top_M_CTRL', 'neck_M_IK_CTRL_GRP', mo=True)
         mc.parentConstraint('chest_top_M_CTRL', self.Ikhead.top, mo=True)
@@ -346,6 +372,7 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
             ikfkswitchattr = []
             ikfkswitchattr.extend(self.iklist)
             ikfkswitchattr.append(self.Ikhead)
+            ikfkswitchattr.append(self.fkauto_ctrl)
             ikfkswitchattr.extend(self.fk_ctrls)
             for ctrl in ikfkswitchattr:
                 mc.addAttr(ctrl.ctrl, longName='FK_IK_Switch', proxy='neck_M.switch')
