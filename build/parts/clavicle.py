@@ -37,7 +37,7 @@ class Clavicle(rModule.RigModule):
         auto_clav_down: float = 0,
         auto_clav_forward: float = 0.25,
         auto_clav_back: float = 0.25,
-        shape = 'box'
+        shape = 'cube'
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.auto_clavicle = auto_clavicle

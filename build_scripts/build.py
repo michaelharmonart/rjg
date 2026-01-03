@@ -87,7 +87,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Luciana':
         neckList = ['Neck', 'Neck1', 'Neck2','Neck3','Neck4', 'Neck5', 'Head']
         neckik = False
-    elif character == 'Basemesh':
+    elif character in ['Basemesh', 'Drummer']:
         neckList = ['Neck', 'Neck1', 'Neck2', 'Head']
     else:
         neckList = ['Neck', 'Neck1', 'Head']
@@ -185,7 +185,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Luciana':
         neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=5,)
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = True)
-    elif character in ['Basemesh']:
+    elif character in ['Basemesh', 'Drummer']:
         neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=3, )
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50,)
     else:    
@@ -236,7 +236,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     #
-    if character == 'Basemesh':
+    if character in ['Basemesh', 'Drummer']:
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
@@ -358,7 +358,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         mc.skinCluster(*combbind, 'comb', tsb=True)
 
-    if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy', 'Drummer']:
+    if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy',]:
         for side in ['L', 'R']:
             from rjg.build.parts.UEeye import UEeye
             eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1)
@@ -414,10 +414,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     #Mirrored Base Rig Parts
     fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo', 'Basemesh'] else 'lollipop'
     curlaxis = 'Z' if character != 'Gretchen' else 'X'
-    if character in ['Basemesh']:
+    if character in ['Basemesh', 'Drummer']:
         clavshape = 'Arch'
     else:
-        clavshape = 'box'
+        clavshape = 'cube'
 
 
 
@@ -1472,6 +1472,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         else:
             for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'PrimaryFeathers', 'SecondaryFeathers', 'comb']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
+    
 
         #TempFix
         for side in ['L', 'R']:
@@ -1490,6 +1491,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow', 'TailFeathers']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
 
+    if character in ['Basemesh'] and face:
+            for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon',]: #'Mouth_LowerLip_surf',
+                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
 
     if character == 'Luciana':
         #if mc.objExists('switch_CTRL'):
