@@ -1464,13 +1464,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Domingo':
-        mc.skinCluster('arm_L_01_JNT', 'PrimaryFeathers', tsb=False) 
-        mc.skinCluster('arm_L_01_JNT', 'SecondaryFeathers', tsb=False)
+        mc.skinCluster('arm_L_01_JNT', 'ArmFeathers', tsb=False)
         if face:
-            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'PrimaryFeathers', 'SecondaryFeathers', 'comb', 'Mouth_UpperLip_surf', 'Mouth_LowerLip_surf', 'Stache_L_ribbon', 'Stache_R_ribbon', 'botteeth', 'topteeth', 'corneas', 'FaceFeathers', 'HandFeathers', 'PrimaryFeathers']: #'Mouth_LowerLip_surf',
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'ArmFeathers', 'comb', 'Mouth_UpperLip_surf', 'Mouth_LowerLip_surf', 'Stache_L_ribbon', 'Stache_R_ribbon', 'botteeth', 'topteeth', 'corneas', 'FaceFeathers']: #'Mouth_LowerLip_surf',
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
         else:
-            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'PrimaryFeathers', 'SecondaryFeathers', 'comb']:
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'ArmFeathers', 'comb']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
     
 
