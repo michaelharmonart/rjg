@@ -2,15 +2,16 @@ from typing import Final
 
 import maya.cmds as cmds
 from rjg.libs.maya_api.attribute import (
-    Attribute,
+    AimMatrixAxisAttribute,
     BooleanAttribute,
     EnumAttribute,
-    IndexableAttribute,
     IndexableBlendMatrixTargetAttribute,
     IndexableMatrixAttribute,
+    IndexableScalarAttribute,
     IndexableWtMatrixAttribute,
     IntegerAttribute,
     MatrixAttribute,
+    QuatAttribute,
     ScalarAttribute,
     Vector3Attribute,
     Vector4Attribute,
@@ -47,6 +48,10 @@ class Node:
         "multiplyPointByMatrix": {
             "standard": "multiplyPointByMatrix",
             "DL": "multiplyPointByMatrixDL",
+        },
+        "multiplyVectorByMatrix": {
+            "standard": "multiplyVectorByMatrix",
+            "DL": "multiplyVectorByMatrixDL",
         },
         "normalize": {"standard": "normalize", "DL": "normalizeDL"},
     }
@@ -91,6 +96,19 @@ class Node:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name='{self.name}')"
+
+
+class AimMatrixNode(Node):
+    """Maya aimMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "aimMatrix") -> None:
+        super().__init__("aimMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_matrix = MatrixAttribute(f"{self.name}.inputMatrix")
+        self.primary = AimMatrixAxisAttribute(f"{self.name}.primary", "primary")
+        self.secondary = AimMatrixAxisAttribute(f"{self.name}.secondary", "secondary")
+        self.output_matrix = MatrixAttribute(f"{self.name}.outputMatrix")
 
 
 class AxisFromMatrixNode(Node):
@@ -153,6 +171,23 @@ class CrossProductNode(Node):
         self.input1 = Vector3Attribute(f"{self.name}.input1")
         self.input2 = Vector3Attribute(f"{self.name}.input2")
         self.output = Vector3Attribute(f"{self.name}.output")
+
+
+
+class DecomposeMatrixNode(Node):
+    """Maya decomposeMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "decomposeMatrix") -> None:
+        super().__init__("decomposeMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_matrix = MatrixAttribute(f"{self.name}.inputMatrix")
+        self.input_rotate_order = EnumAttribute(f"{self.name}.inputRotateOrder")
+        self.output_quat = Vector4Attribute(f"{self.name}.outputQuat")
+        self.output_rotate = Vector3Attribute(f"{self.name}.outputRotate")
+        self.output_scale = Vector3Attribute(f"{self.name}.outputScale")
+        self.output_shear = Vector3Attribute(f"{self.name}.outputShear")
+        self.output_translate = Vector3Attribute(f"{self.name}.outputTranslate")
 
 
 class DistanceBetweenNode(Node):
@@ -238,7 +273,7 @@ class MultiplyNode(Node):
         super().__init__("multiply", name)
 
     def _setup_attributes(self) -> None:
-        self.input: IndexableAttribute = IndexableAttribute(f"{self.name}.input")
+        self.input: IndexableScalarAttribute = IndexableScalarAttribute(f"{self.name}.input")
         self.output: ScalarAttribute = ScalarAttribute(f"{self.name}.output")
 
 
@@ -250,6 +285,18 @@ class MultiplyPointByMatrixNode(Node):
 
     def _setup_attributes(self) -> None:
         self.input_point = Vector3Attribute(f"{self.name}.input")
+        self.input_matrix = MatrixAttribute(f"{self.name}.matrix")
+        self.output = Vector3Attribute(f"{self.name}.output")
+
+
+class MultiplyVectorByMatrixNode(Node):
+    """Maya multiplyVectorByMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "multiplyVectorByMatrix") -> None:
+        super().__init__("multiplyVectorByMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_vector = Vector3Attribute(f"{self.name}.input")
         self.input_matrix = MatrixAttribute(f"{self.name}.matrix")
         self.output = Vector3Attribute(f"{self.name}.output")
 
@@ -275,6 +322,39 @@ class NormalizeNode(Node):
         self.input = Vector3Attribute(f"{self.name}.input")
         self.output = Vector3Attribute(f"{self.name}.output")
 
+
+class QuatInvertNode(Node):
+    """Maya quatInvert node with enhanced interface."""
+
+    def __init__(self, name: str = "quatInvert") -> None:
+        super().__init__("quatInvert", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_quat = QuatAttribute(f"{self.name}.inputQuat")
+        self.output_quat = QuatAttribute(f"{self.name}.outputQuat")
+
+
+class QuatProdNode(Node):
+    """Maya quatProd node with enhanced interface."""
+
+    def __init__(self, name: str = "quatProd") -> None:
+        super().__init__("quatProd", name)
+
+    def _setup_attributes(self) -> None:
+        self.input1_quat = QuatAttribute(f"{self.name}.input1Quat")
+        self.input2_quat = QuatAttribute(f"{self.name}.input2Quat")
+        self.output_quat = QuatAttribute(f"{self.name}.outputQuat")
+        
+class QuatToEulerNode(Node):
+    """Maya quatToEuler node with enhanced interface."""
+
+    def __init__(self, name: str = "quatToEuler") -> None:
+        super().__init__("quatToEuler", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_quat = QuatAttribute(f"{self.name}.inputQuat")
+        self.input_rotate_order = EnumAttribute(f"{self.name}.inputRotateOrder")
+        self.output_rotate = Vector3Attribute(f"{self.name}.outputRotate")
 
 class PickMatrixNode(Node):
     """Maya pickMatrix node with enhanced interface."""
@@ -333,7 +413,7 @@ class SumNode(Node):
         super().__init__("sum", name)
 
     def _setup_attributes(self) -> None:
-        self.input: IndexableAttribute = IndexableAttribute(f"{self.name}.input")
+        self.input: IndexableScalarAttribute = IndexableScalarAttribute(f"{self.name}.input")
         self.output: ScalarAttribute = ScalarAttribute(f"{self.name}.output")
 
 

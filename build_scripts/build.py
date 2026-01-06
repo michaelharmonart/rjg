@@ -85,6 +85,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         body_mesh = mc.listRelatives('dungeonmonster_FINAL_GEO', children=True)
 
     if character == 'Luciana':
+        mc.setAttr("perspShape.nearClipPlane", 1)
+        mc.setAttr("perspShape.farClipPlane", 100000)
+        mc.modelEditor(twoSidedLighting=True, displayAppearance='smoothShaded', modelPanel='modelPanel4')
         neckList = ['Neck', 'Neck1', 'Neck2','Neck3','Neck4', 'Neck5', 'Head']
         neckik = False
     elif character in ['Basemesh', 'Drummer']:
@@ -1684,8 +1687,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Luciana':
         #mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
         #mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
-        mc.setAttr("perspShape.nearClipPlane", 1)
-        mc.setAttr("perspShape.farClipPlane", 100000)
+        
 
         for side in ['L', 'R']:
             startvalue = 0
@@ -1697,8 +1699,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mod=1000
             mod2=-500
             for part in ['Mid', 'Tip']:
-                mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectX', at='double', dv=mod)
-                mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectY', at='double', dv=mod2)
+                #mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectX', at='double', dv=mod)
+                #mc.addAttr(f'Wing_{side}_{part}_Spline_01_CTRL', longName=f'{part}_autocorrectY', at='double', dv=mod2)
                 remapx= mc.createNode('remapValue', name=f'{part}_{side}_remapx')
                 remapy= mc.createNode('remapValue', name=f'{part}_{side}_remapy')
                 mc.connectAttr(f'Wing_{side}_02_bind_JNT.rotateZ', f'{remapx}.inputValue')
@@ -1709,8 +1711,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.setAttr(f'{remapx}.inputMin', startvalue)
                 mc.setAttr(f'{remapx}.outputMax', mod)
                 mc.setAttr(f'{remapy}.outputMax', mod2)
-                mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateY')
-                mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateX')
+                #mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateY')
+                #mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateX')
                 if side == 'L':
                     mod = mod - 1000
                 else:

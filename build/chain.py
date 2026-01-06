@@ -295,10 +295,12 @@ class Chain:
             mirror = 1
         rig_grp = mc.group(empty=True, name=f"{self.name}_Bend_GRP")
         ctrl_grp = mc.group(empty=True, name=f"{self.name}_Bend_CTRL_GRP")
+        self.bendy_controls: list[rCtrl.Control] = []
         if bendy_vis_attr is not None:
             mc.connectAttr(bendy_vis_attr, f"{ctrl_grp}.visibility")
         prev_end_ctrl = None
         segments = self.joints[:-1]
+        
         for index, joint in enumerate(segments):
 
             segment_ctl = mc.group(empty=True, name=f"{joint}_Bend_CTRL_GRP", parent=ctrl_grp)
@@ -346,6 +348,7 @@ class Chain:
             attr_util.lock_and_hide(node=start_ctrl.ctrl, translate=False, rotate=False, scale=False)
             attr_util.lock_and_hide(node=mid_ctrl.ctrl, translate=False, rotate=False, scale=False)
             attr_util.lock_and_hide(node=end_ctrl.ctrl, translate=False, rotate=False, scale=False)
+            self.bendy_controls.extend((start_ctrl, mid_ctrl, end_ctrl))
 
             # Twist for mid joint
             end_jnt_twist = mc.group(empty=True, parent=segment_grp, name=f"{end_jnt}_Twist")
