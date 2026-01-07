@@ -601,7 +601,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             if fs == 'Left':
                 for guide in ['ButtonPin01', 'ButtonPin02', 'CollarPin01', 'CollarPin02']:
                     rPin.build_pin_part(
-                        geo_to_pin='shirt1',
+                        geo_to_pin='shirtlow',
                         guide=guide,
                         pintype='UVpin',
                         parjnt='chest_M_JNT')
@@ -1789,7 +1789,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.parent('pantslow', 'bootslow', 'shirtlow', 'gloveslow', 'ClothingProxy')
         mc.hide('ClothingProxy')
 
-        if face:
+        """if face:
             try:
                 #mc.delete('Gretch_extra')
                 mesh = 'Gretch_extra_clone'
@@ -1800,7 +1800,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 reskinres = mc.skinCluster('faceRoot_JNT', mesh, tsb=False)
             except Exception as e:
                 print(e)
-            rWeightNgIO.read_skin('Gretch_extra_clone', f'{groups}/bobo/character/Rigs/Gretchen_face', 'Gretchen_Extras_Tweaks_Face_Skin')
+            rWeightNgIO.read_skin('Gretch_extra_clone', f'{groups}/bobo/character/Rigs/Gretchen_face', 'Gretchen_Extras_Tweaks_Face_Skin')"""
 
         #mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
         #mc.delete('ArmTwist_L', 'ArmTwist_R')

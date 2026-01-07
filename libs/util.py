@@ -18,6 +18,52 @@ def create_pxWrap(*argv):
     mc.setAttr(pxWrap[0] + '.falloffScale', 15.0)
 
 
+def create_shirt_pxWrap(driven_mesh, driver_mesh):
+    """
+    Create a proximityWrap specifically for the shirt.
+    Ensures only the *non-Orig* shapes are connected as driver and driven,
+    avoiding the common Orig-shape wiring bug.
+
+    Args:
+        driven_mesh (str): The name of the driven mesh transform (e.g., 'shirt1').
+        driver_mesh (str): The name of the driver mesh transform (e.g., 'shirtlow').
+
+    Returns:
+        str: The name of the created proximityWrap node.
+    """
+
+    def get_non_orig_shape(mesh_transform):
+        """Return the first shape under mesh_transform that does NOT contain 'Orig' in its name."""
+        shapes = mc.listRelatives(mesh_transform, shapes=True, noIntermediate=True) or []
+        for shape in shapes:
+            if 'Orig' not in shape:
+                return shape
+        raise RuntimeError(f"No valid non-Orig shape found under {mesh_transform}")
+
+    driven_shape = get_non_orig_shape(driven_mesh)
+    driver_shape = get_non_orig_shape(driver_mesh)
+
+    # Select driven shape explicitly
+    mc.select(driven_mesh, r=True)
+
+    # Create proximityWrap node with only driven selected
+    pxWrap = mc.proximityWrap()
+
+    # Explicitly connect the correct driver shape to drivers[0]
+    # Force connection to override any wrong auto-connections
+    mc.connectAttr(f"{driver_shape}.worldMesh[0]", f"{pxWrap[0]}.drivers[0].driverGeometry", force=True)
+
+    # Explicitly connect the driven Orig shape to originalGeometry for safety
+    driven_orig_shapes = [s for s in mc.listRelatives(driven_mesh, shapes=True) if 'Orig' in s]
+    if driven_orig_shapes:
+        mc.connectAttr(f"{driven_orig_shapes[0]}.worldMesh[0]", f"{pxWrap[0]}.originalGeometry[0]", force=True)
+
+    # Optionally set falloff scale as your original function did
+    mc.setAttr(f"{pxWrap[0]}.falloffScale", 15.0)
+
+    return pxWrap[0]
+
+
 def create_pxPin(x, y, z, target_vtx, n='default', ctrl=False, prop=None):
     pin = mc.spaceLocator(n=n)
     mc.move(x, y, z, r=True, os=True, wd=True)
