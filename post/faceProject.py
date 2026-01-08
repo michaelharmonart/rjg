@@ -29,9 +29,6 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
         for f in f_ex_list[:0:-1]:
             try:
                 f = mc.rename(f, f[len(f_extras):]+'_clone')
-                if mc.objExists('Fingernails_clone'):
-                    mc.delete('Fingernails_clone')
-                    continue
                 mc.blendShape(f, f[:-6], name=f[:-6]+'Projection', w=[(0, 1.0)], foc=True)
                 mc.parent(f, "HIDE_FACE_EXTRAS")
 
@@ -79,29 +76,6 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
             print(e)
             continue
 
-
-#####################################3 
-    '''
-    Bobo Custom Connection needs
-    Ribbon Set up
-    Influence Constraint Set up
-    Cornea Vis
-
-    '''
-    #Ribbon FIX
-
-    try:
-        pass
-
-    except Exception as e:
-        print(e)
-
-
-
-
-
-
-
 ######################################
 
 
@@ -145,6 +119,20 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
         for s in ['R', 'L']:
             for attr in ['Blink', 'Blink_Height', 'Blink_Influence', 'Eyelid_Follow', s + '_Iris_Scale']:
                 mc.connectAttr(f'{s}_eyeCTRL.{attr}', f'{s}_eyeCTRL_clone.{attr}')
+    except Exception as e:
+        print(e)
+
+    try:
+        for s in ['R', 'L']:
+            #for attr in [f'{s}_Eye_mid_05_ctrl.Wrinkle']:
+            mc.connectAttr(f'{s}_Eye_mid_05_ctrl.Wrinkle', f'{s}_Eye_mid_05_ctrl_clone.Wrinkle')
+            mc.connectAttr(f'{s}_InBrow_ctrl.Crease', f'{s}_InBrow_ctrl_clone.Crease')
+            mc.connectAttr(f'{s}_Corner_Main_Mouth_ctrl.Crease', f'{s}_Corner_Main_Mouth_ctrl_clone.Crease')
+            mc.connectAttr(f'{s}_InBrow_ctrl.Forehead_Crease', f'{s}_InBrow_ctrl_clone.Forehead_Crease')
+            for control in ['Mouth_ctrl', 'Mouth_n_Teeth']:
+                mc.connectAttr[f'{control}.{s}_Corner_Stretch', f'{control}_clone.{s}_Corner_Stretch']
+                mc.connectAttr[f'{control}.{s}_Pucker', f'{control}_clone.{s}_Pucker']
+
     except Exception as e:
         print(e)
 
@@ -240,30 +228,6 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
             mc.connectAttr(f'{side}_NLF_ctrl.{side}_NLF_Crease', f'{side}_NLF_ctrl_clone.{side}_NLF_Crease')
     except Exception as e:
         print(e)
-
-    # try:
-    #     orig = mc.select('*ShapeOrig1')
-    #     orig = mc.ls(selection=True)
-    #     clean_o, broken_o = [], []
-    #     for o in orig:
-    #         if '_' not in o:
-    #             clean_o.append(o)
-
-    #     for o1 in clean_o:
-    #         if mc.objExists(o1[:-1]):
-    #             broken_o.append(o1)
-            
-    #     for o in broken_o:
-    #         conn = mc.listConnections(o, d=True)
-    #         skc = conn[0]
-    #         bs = conn[1]
-    #         o_new = o[:-1]
-    #         mc.connectAttr(o_new + '.outMesh', bs + '.originalGeometry[0]', f=True)
-    #         mc.connectAttr(o_new + '.outMesh', skc + '.originalGeometry[0]', f=True)
-    #         mc.connectAttr(o_new + '.worldMesh[0]', bs + '.input[0].inputGeometry', f=True)
-    #         mc.delete(o)
-    # except Exception as e:
-    #     print(e)
 
     mc.select(cl=True)
             

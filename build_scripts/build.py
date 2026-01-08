@@ -942,9 +942,14 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             face = rFile.import_hierarchy(groups + f'/bobo/anim/Rigs/{character}Face.mb')
             import rjg.post.faceProject as rFaceProj
             reload(rFaceProj)
+            #children = mc.listRelatives(f'F_EXTRAS', children=True)
+
             rFaceProj.project(body=body_mesh, char='ROOT', f_model='FaceAtOrigin', f_rig='face_M', extras=f'{character}_Extras', f_extras='F_EXTRAS', f_skel='faceRoot_JNT')#, tY=1.103)
-            mc.delete(face)
-            
+            mc.hide(face)
+            mc.parent(face, 'RIG')
+
+
+            mc.select(clear=True)
             mc.joint(n='root_root_JNT')
             mc.parent('root_root_JNT', 'SKEL')
             mc.parent('root_M_JNT', 'faceRoot_JNT', 'root_root_JNT')
@@ -997,16 +1002,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         import rjg.build_scripts.Gretchen_misc as rc
         reload(rc)
 
-        if not_previs:
-            try: 
-                rc.Gretchen_extras(body_mesh, extras)
-            except:
-                pass
-        #else:
-        #    try:
-        #        rc.Gretchen_misc_pvis(body_mesh, ['Bandanna','Shirt','Boots','Hair', 'Glasses', 'Pants', 'banddanna2','knot1','knot2', 'knot', 'boots', 'loopleather', 'beltLeather', 'pockets', 'metalclip', 'pantsCreased1', 'beltloops', 'button1', 'shirt1', 'hair', 'bun', 'eyebrows', 'topeyelashes', 'bottomlash', 'earings', 'Righteye', 'Lefteye'])
-        #    except:
-        #        pass
+        rc.Gretchen_extras(body_mesh, extras)
 
     #### RAYDEN SPECIFICS
     if character == 'Rayden':
@@ -1084,7 +1080,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 rWeightNgIO.init_skc(s)
             except Exception as e:
                 print(e)
-    if not_previs and not bony:
+
+    if not_previs and character in ['Rayden, Robin']:
         try:
             mc.blendShape(n='breath_blendshapes', foc=True, ip=groups + f'/dungeons/character/Rigging/Rigs/{character}/Skin/breath_shapes.shp')
             mc.select('chest_M_01_CTRL')
@@ -1137,34 +1134,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if pp and not_previs and not bony:
         import rjg.libs.util as rUtil
         rUtil.import_poseInterpolator(pp)
-        #if character == 'Gretchen':
-            #mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenShirtPoses6.shp', at = True, name = 'Shirt_Edits')
-            #mc.blendShape(ip = '/groups/bobo/character/Rigs/Gretchen/Poses/GretchenPantsPoses.shp', at = True, name = 'Pants_Edits')
-
-            #pose_edit_shapes = mc.listAttr('Pose_Edits' + '.w', m=True)
-            #pants_edit_shapes = mc.listAttr('Pants_Edits' + '.w', m=True)
-            #shirt_edit_shapes = mc.listAttr('Shirt_Edits' + '.w', m=True)
-
-
-            #for shapes in pose_edit_shapes:
-            #    for edits in pants_edit_shapes:
-            #        if shapes == edits:
-            #            mc.connectAttr('Pose_Edits.' + shapes, 'Pants_Edits.' + edits)
-
-            #for shapes in pose_edit_shapes:
-            #    for edits in shirt_edit_shapes:
-            #        if shapes == edits:
-            #            mc.connectAttr('Pose_Edits.' + shapes, 'Shirt_Edits.' + edits) 
-
-            #shirt_skin = mc.skinCluster(bind_joints, 'shirt1', tsb=True, skinMethod=1, n='clothingSkc')[0]
-            #pants_skin = mc.skinCluster(bind_joints, 'pants', tsb=True, skinMethod=1, n='clothingSkc')[0]
-            #shoes_skin = mc.skinCluster(bind_joints, 'boots', tsb=True, skinMethod=1, n='clothingSkc')[0]
-            #rWeightNgIO.init_skc(shirt_skin)
-            #rWeightNgIO.init_skc(pants_skin)
-            #rWeightNgIO.init_skc(shoes_skin)
-            #rWeightNgIO.read_skin("shirt1", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shirt_Weights")
-            #rWeightNgIO.read_skin("pants", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Pants_Weights")
-            #rWeightNgIO.read_skin("boots", "/groups/bobo/character/Rigs/Gretchen/Weights/", "Gretchen_Shoes_Weights")
 
         
     if character == 'Rayden':
@@ -1174,7 +1143,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes");')
     
     # create groom bust
-    if not bony:
+    if not bony and character in ['Rayden', 'Robin']:
         create_groom_bust(body_mesh)
         
     # set up textures
@@ -1184,15 +1153,16 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.rename(item, item[:-1])
     rTex.set_textures(character)
 
-    try:
-        mc.disconnectAttr('standardSurface1.outColor', 'initialParticleSE.surfaceShader')
-        mc.disconnectAttr('standardSurface1.outColor', 'initialShadingGroup.surfaceShader')
-        mc.select('GemHeartRocks_GEO')
-    except Exception as e:
-        print(e)
+    if character in ['DM', 'Robin', 'Rayden']:
+        try:
+            mc.disconnectAttr('standardSurface1.outColor', 'initialParticleSE.surfaceShader')
+            mc.disconnectAttr('standardSurface1.outColor', 'initialShadingGroup.surfaceShader')
+            mc.select('GemHeartRocks_GEO')
+        except Exception as e:
+            print(e)
     
     #Pre-vis shapes
-    if not not_previs and not bony:
+    if not not_previs and not bony and character in ['Rayden', 'Robin']:
         try:
             mc.blendShape(character + '_UBM', name = 'pvis_shapes', foc=True)
             mc.blendShape('pvis_shapes', e=True, ip=f'{groups}/dungeons/character/Rigging/Rigs/{character}/Skin/pvis_shapes.shp')
@@ -1203,7 +1173,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         
 
     #Previs Face Fix
-    if not not_previs and not bony:
+    if not not_previs and not bony and character in ['Rayden', 'Robin']:
         try:
             for o in ['lipLeft_M_M_CTRL_SDK_GRP.', 'lipRight_M_M_CTRL_SDK_GRP.']:
                 for a in ['translateY', 'rotateX']:
@@ -1221,17 +1191,16 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.setAttr('jaw_M_M_CTRL.rotateX', 0)
         except:
             pass
-        
-    try:
-        mc.BakeAllNonDefHistory()
-        mc.bakePartialHistory(all=True)    
-    except Exception as e:
-        mc.warning("Delete history error:", e)
-        
+        try:
+            mc.BakeAllNonDefHistory()
+            mc.bakePartialHistory(all=True)    
+        except Exception as e:
+            mc.warning("Delete history error:", e)
+            
     rUSD.connectUSDAttr()
     
     ### TEMP Clean Up ###
-    try:
+    """try:
         if character == 'Rayden' and not not_previs:
             mc.hide('Eyelashes')
     except:
@@ -1256,12 +1225,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.disconnectAttr('Robin_S_file.outColor', 'Robin_Silk.baseColor')
         mc.setAttr('Robin_Silk.baseColor', 0.124521, 0.0142565, 0.00418706, type='double3')
     except Exception as e:
-        print(e)
+        print(e)"""
         
     if character == 'DungeonMonster':
         mc.setAttr('switch_CTRL.armL_IKFK', 0)
         mc.setAttr('switch_CTRL.armR_IKFK', 0)
-    try:
+    
+    """try:
         orig = mc.select('*ShapeOrig1')
         orig = mc.ls(selection=True)
         clean_o, broken_o = [], []
@@ -1287,7 +1257,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if character == 'Robin' and face:
             run(character, mp=mp, gp=gp, ep=ep, cp=cp, sp=sp, pp=pp, face=face, previs=previs)
             print("attempt etc.")
-            return
+            return"""
     if character == 'Robin':
         ext = rFile.import_hierarchy(f'{groups}/dungeons/character/Rigging/Rigs/Robin/robin_hand_fix.mb')
         mc.blendShape('robin_skin_hands_ears', 'Robin_UBM', n='fix_shape')
@@ -1322,148 +1292,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
         import rjg.post.unrealJntRename as rUEJnt
         rUEJnt.unrealJntRename()
+    
+    if character in ['Susaka', 'Fisherman', 'NPC', 'Sharkguy']:
+        from rjg.build_scripts.miscSteveProjects import run_ue_correctives
 
-    #New UE Corrective Fixes
-    if character in ['Susaka', 'NPC', 'Fisherman']: #Drumkmer
-        #Rebuild Skeleton to supoort UE name Scheme and Correctives
-        import rjg.post.unrealJntRename as rUEJnt
-        rUEJnt.unrealJntRename()
-        # Build UE Correctives 
-        CorrGuides2 = ["upperarm_twistCor_01", "lowerarm_correctiveRoot", "upperarm_correctiveRoot", "thigh_correctiveRoot", "calf_correctiveRoot"]
-        CorrParrent2 = ["upperarm_l", "lowerarm_l", "upperarm_l", "thigh_l", "calf_l"]
-        build_parents(CorrGuides2, CorrParrent2)
+        run_ue_correctives(character, groups, sp)
 
-        CorrGuides = ["lowerarm_out", "lowerarm_fwd", "lowerarm_in", "lowerarm_bck", "lowerarm_twist_01", "lowerarm_twist_02", 
-                    "wrist_outer", "wrist_inner",
-                    "upperarm_bicep", "upperarm_tricep",
-                    "upperarm_out", "upperarm_bck", "upperarm_fwd", "upperarm_in", "upperarm_twist_02", 
-                    "clavicle_out", "clavicle_scap",
-                    "clavicle_pec", "spine_04_latissimus",
-                    "thigh_fwd", "thigh_fwd_lwr", "thigh_in", "thigh_bck", "thigh_out", "thigh_bck_lwr", "thigh_twist_01", "thigh_twist_02", "pelv_in",
-                    "calf_knee", "calf_kneeBack", "calf_twist_01", "calf_twist_02",
-                    "HandThumb0_Bot", "HandThumb1_Bot", "HandThumb1_TOP", "HandThumb2_Bot", "HandThumb2_TOP", "HandThumb3_Bot", "HandThumb3_TOP",
-                    "HandIndex0_BOT", "HandIndex1_BOT", "HandIndex1_TOP","HandIndex2_BOT", "HandIndex2_TOP", "HandIndex3_BOT", "HandIndex3_TOP",
-                    "HandMiddle0_BOT", "HandMiddle1_BOT", "HandMiddle1_TOP","HandMiddle2_BOT", "HandMiddle2_TOP", "HandMiddle3_BOT", "HandMiddle3_TOP",
-                    "HandRing0_BOT", "HandRing1_BOT", "HandRing1_TOP","HandRing2_BOT", "HandRing2_TOP", "HandRing3_BOT", "HandRing3_TOP",
-                    "HandPinky0_BOT", "HandPinky1_BOT", "HandPinky1_TOP","HandPinky2_BOT", "HandPinky2_TOP", "HandPinky3_BOT", "HandPinky3_TOP",
-                    "ankle_fwd", "ankle_bck",
-                    ]
-
-        CorrParrent = ["lowerarm_correctiveRoot_l", "lowerarm_correctiveRoot_l", "lowerarm_correctiveRoot_l", "lowerarm_correctiveRoot_l", "lowerarm_correctiveRoot_l", "lowerarm_correctiveRoot_l",
-                    "hand_l", "hand_l",
-                    "upperarm_twistCor_01_l", "upperarm_twistCor_01_l", 
-                    "upperarm_correctiveRoot_l", "upperarm_correctiveRoot_l", "upperarm_correctiveRoot_l", "upperarm_correctiveRoot_l", "upperarm_correctiveRoot_l",
-                    "clavicle_l", "clavicle_l",
-                    "spine_05", "spine_05",
-                    "spine_M_01_JNT", "thigh_correctiveRoot_l", "thigh_correctiveRoot_l", "spine_M_01_JNT", "thigh_correctiveRoot_l", "thigh_correctiveRoot_l", "thigh_correctiveRoot_l", "thigh_correctiveRoot_l", "spine_M_01_JNT",
-                    "calf_correctiveRoot_l", "calf_correctiveRoot_l", "calf_correctiveRoot_l", "calf_correctiveRoot_l",
-                    "thumb_01_l", "thumb_01_l", "thumb_01_l", "thumb_02_l", "thumb_02_l", "thumb_03_l", "thumb_03_l",
-                    "index_metacarpal_l", "index_01_l", "index_01_l", "index_02_l", "index_02_l", "index_03_l", "index_03_l",
-                    "middle_metacarpal_l", "middle_01_l", "middle_01_l", "middle_02_l", "middle_02_l", "middle_03_l", "middle_03_l", 
-                    "ring_metacarpal_l", "ring_01_l", "ring_01_l", "ring_02_l", "ring_02_l", "ring_03_l", "ring_03_l", 
-                    "pinky_metacarpal_l", "pinky_01_l", "pinky_01_l", "pinky_02_l", "pinky_02_l", "pinky_03_l", "pinky_03_l",
-                    "foot_l", "foot_l", 
-                    ]
-
-        BuildCorrectives(CorrGuides, CorrParrent)
-        #Re-Skin with new correctives
-        from rjg.build_scripts.Susaka_Misc import ribbons
-        ribbons()
-        
-
-        bindjoints = mc.select(mc.listRelatives("SKEL", ad=True, type="joint"))
-        mc.select(f'{character}_UBM')
-        mc.skinCluster(f'{character}_UBM', edit=True, unbind=True)
-        skc = mc.skinCluster('root', f'{character}_UBM', tsb=False, skinMethod=1, bindMethod=0)[0]
-        mc.setAttr(skc + '.dqsSupportNonRigid', 1)
-        if sp:
-            sp_div = sp.split('/')
-            dir = '/'.join(sp_div[:-1])
-            rWeightNgIO.read_skin(f'{character}_UBM', dir, sp_div[-1][:-5])
-        if character == 'Susaka':
-            geo = ['Wrap', 'Glove', 'UnderPantLayer', 'TempHair', 'Nails', 'TempBrows', 'RightEye', 'RightCornea', 'LeftEye', 'LeftCornea', 'Pants2', 'Belt', 'Scarf', 'CowlBase', 'Hood', 'Straps', 'Collar', 'Shirt', 'Pants', 'ArmBand', 'Kneepad', 'RShoe', 'LShoe', 'RoboArm', 'ClothCover' ]
-        elif character == 'Drummer':
-            geo = ['HeadHigher', 'HandsHigher', 'BotTeeth', 'Cigar', 'Coat', 'CoatPocketLiner', 'Glassess', 'HeadBand', 'LeftCornea', 'LeftEye', 'Lenses', 'Nails', 'Neckless', 'Overalls', 'Pants', 'RightCornea', 'RightEye', 'Scarf', 'Shoes', 'Socks', 'Sweater', 'Hair', 'TopTeeth', 'Tounge']
-        elif character == 'NPC':
-            geo = ['RightEye', 'RightCornea', 'LeftEye', 'LeftCornea', 'TopTeeth', 'BotTeeth', 'Tounge', 'ClothesGEO', 'Brows', 'Brow', 'Hair']
-        elif character == 'Fisherman':
-            geo = ['lowShirtGEOlow', 'lowBootGEOlow', 'lowPegLegGEOlow', 'lowHeadGEOlow', 'lowFingerNailsGEOlow', 'lowBeltGEOlow', 'lowPipeGEOlow', 'lowREyeGEOlow', 'lowLEyeGEOlow', 'lowCoatGEOlow', 'lowHandsGEOlowpolySurface2', 'lowFisherManCleanUplow', 'lowSmokeGEOlow', 'lowTempHairGEOlow', 'lowpolySurface1HandsGEOlow', 'HatGEOlowlow']
-
-        
-        else:
-            geo = []
-        
-        for g in geo:
-            sk = mc.skinCluster('root', g, tsb=False, skinMethod=1, n=f'clothingSkc{g}')[0]
-            mc.copySkinWeights(ss='skinCluster11', ds=f'clothingSkc{g}', surfaceAssociation='closestPoint', noMirror=True, )
-        if character == 'Susaka':
-            for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'Hood', 'Scarf', 'Collar', 'TempHair', 'RoboArm' ]:
-                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
-        if character == 'Fisherman':
-            for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', ]:
-                import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Susaka/SkinFiles')
-
-
-        try:
-            driver_controls = ['Major_Mouth_M_LowerLip_01_Mouth_CTRL', 'Major_Mouth_R_LowerLip_03_Mouth_CTRL', 'Major_Mouth_R_UpperLip_03_Mouth_CTRL', 'Major_Mouth_R_CornerLip_Mouth_CTRL', 'Major_Mouth_L_LowerLip_03_Mouth_CTRL', 'Major_Mouth_L_UpperLip_03_Mouth_CTRL', 'Major_Mouth_M_UpperLip_01_Mouth_CTRL', 'Major_Mouth_L_CornerLip_Mouth_CTRL', 'Eye_L_Upper_Major_L_CTRL', 'Eye_L_Lower_Major_L_CTRL', 'Eye_R_Lower_Major_R_CTRL', 'Eye_R_Upper_Major_R_CTRL', 'Brow_R_01_Major_R_CTRL', 'Brow_R_02_Major_R_CTRL', 'Brow_R_Inner_R_CTRL', 'Brow_R_Outer_R_CTRL', 'Brow_R_Master_R_CTRL', 'Brow_L_02_Major_L_CTRL', 'Brow_L_01_Major_L_CTRL', 'Brow_L_Inner_L_CTRL', 'Brow_L_Outer_L_CTRL', 'Brow_L_Master_L_CTRL', 'Jaw_M_root_M_CTRL']
-            create_driver_joints(default_mult=10.0, ctrl_suffix="_CTRL", joint_suffix="_Driver", controls=driver_controls, parent='head')
-        except:
-            print('couldnt create driver joints')
-
-
-        '''
-        # Import UE Pose Interp Poses
-        if character == 'Susaka':
-            POSE_FILE = r"G:/bobo/character/Rigs/Susaka/Poses/Poses_01.json"
-            sys.path.append(f'{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/build_scripts')
-            from UEPoseImport import CleanImport
-            CleanImport(POSE_FILE)
-        #mc.delete("UE_Correctives")
-        '''
-
-        
-        #Fixing/Reskinning Facial Geo 
-        print("ExtraSkins")
-        try:
-            try:
-                mc.select('LeftEye', 'RightEye', 'LeftCornea', 'RightCornea', 'BotTeeth', 'TopTeeth', 'Tounge')
-                mel.eval('doDetachSkin 3 { "1", "1", "1" };')
-                mc.skinCluster('Eye_L_JNT', 'LeftCornea', mi=1, tsb=True)
-                mc.skinCluster('Eye_R_JNT', 'RightCornea', mi=1, tsb=True)
-                mc.skinCluster('Eye_L_JNT', 'LeftEye', mi=1, tsb=True)
-                mc.skinCluster('Eye_R_JNT', 'RightEye', mi=1, tsb=True)
-                mc.skinCluster('BotTeeth_JNT', 'BotTeeth', mi=1, tsb=True)
-                mc.skinCluster('Tongue_01_JNT', 'Tongue_02_JNT', 'Tongue_03_JNT', 'Tongue_04_JNT', 'Tongue_05_JNT', 'Tounge', mi=1, tsb=True)
-                mc.skinCluster('TopTeeth_JNT', 'TopTeeth', mi=1, tsb=True)
-                print('Reskinned')
-            except Exception as e:
-                print(e)
-        except Exception as e:
-            print(e)
-        
-
-    if character == 'Sharkguy':
-        import sys
-
-        from rjg.build_scripts.Sharkguy_Build_Scripts import ribbons
-        ribbons()
-        bindjoints = mc.select(mc.listRelatives("SKEL", ad=True, type="joint"))
-        mc.select(f'{character}_UBM')
-        mc.skinCluster(f'{character}_UBM', edit=True, unbind=True)
-        skc = mc.skinCluster('root_M_JNT', f'{character}_UBM', tsb=False, skinMethod=1, bindMethod=0)[0]
-        mc.setAttr(skc + '.dqsSupportNonRigid', 1)
-        if sp:
-            sp_div = sp.split('/')
-            dir = '/'.join(sp_div[:-1])
-            rWeightNgIO.read_skin(f'{character}_UBM', dir, sp_div[-1][:-5])
-        geo = ['MouthGEO', 'RopesGEO', 'ShirtGEO', 'SwordGEO', 'PauldrenGEO', 'ChestGEO', 'RGautletGEO', 'BeltGEO', 'PantsGEO', 'LGautletGEO', 'OtherEyeBitGEO', 'EyesGEO']
-        for g in geo:
-            sk = mc.skinCluster('root_M_JNT', g, tsb=False, skinMethod=1, n=f'clothingSkc{g}')[0]
-            mc.copySkinWeights(ss='skinCluster11', ds=f'clothingSkc{g}', surfaceAssociation='closestPoint', noMirror=True, )
-        mc.delete("Extras_Guides")
-        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'MouthGEO', 'RopesGEO', 'ShirtGEO', 'SwordGEO', 'PauldrenGEO', 'ChestGEO', 'RGautletGEO', 'BeltGEO', 'PantsGEO', 'LGautletGEO', 'OtherEyeBitGEO', 'EyesGEO']:
-            import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
-        mc.parentConstraint('neck_02_FK_M_CTRL', 'Fin01_M_M_CTRL_CNST_GRP', mo=True)
+    
 
 
     if character == 'Domingo':
@@ -1540,38 +1375,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             pass
 
     #Fixing/Reskinning Facial Geo for Bobo
-    if not not_previs and character == 'Bobo':
-        try:
-            try:
-                mc.select('LeftEye', 'RightEye', 'LeftCornea', 'RightCornea', 'BotTeeth', 'TopTeeth', 'Tounge', 'LeftPupil', 'RightPupil')
-                mel.eval('doDetachSkin 3 { "1", "1", "1" };')
-                mc.skinCluster('eye_L_JNT', 'LeftCornea', mi=1, tsb=True)
-                mc.skinCluster('eye_R_JNT', 'RightCornea', mi=1, tsb=True)
-                mc.skinCluster('eye_L_JNT', 'LeftEye', mi=1, tsb=True)
-                mc.skinCluster('eye_R_JNT', 'RightEye', mi=1, tsb=True)
-                mc.skinCluster('eye_L_JNT', 'LeftPupil', mi=1, tsb=True)
-                mc.skinCluster('eye_R_JNT', 'RightPupil', mi=1, tsb=True)
-                mc.skinCluster('jaw_M_JNT', 'BotTeeth', mi=1, tsb=True)
-                mc.skinCluster('jaw_M_JNT', 'Tounge', mi=1, tsb=True)
-                mc.skinCluster('head_M_JNT', 'TopTeeth', mi=1, tsb=True)
-                print('Reskinned')
-            except Exception as e:
-                print(e)
-            
-            try:
-                for joint in ["eye_L_JNT", "eye_R_JNT"]:
-                    offset_grp = mc.group(empty=True, name=f"{joint}_Sheeroffset")
-                    # Match position and orientation
-                    mc.delete(mc.parentConstraint(joint, offset_grp))
-                    # Parent the joint under the group
-                    mc.parent(joint, offset_grp)
-                    # Scale the group on Z-axis
-                    mc.setAttr(f"{offset_grp}.scaleZ", 0.75)
-                    mc.parent(f"{offset_grp}", 'lookEyes_M_JNT_GRP')
-            except Exception as e:
-                print(e)
-        except:
-            pass
 
     if not_previs and character == 'Bobo':
         try:
@@ -1789,18 +1592,6 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.parent('pantslow', 'bootslow', 'shirtlow', 'gloveslow', 'ClothingProxy')
         mc.hide('ClothingProxy')
 
-        """if face:
-            try:
-                #mc.delete('Gretch_extra')
-                mesh = 'Gretch_extra_clone'
-                skin = mc.ls(mc.listHistory(mesh), type='skinCluster')
-                mc.delete(mesh, ch=True)
-                if skin:
-                    mc.delete(skin)
-                reskinres = mc.skinCluster('faceRoot_JNT', mesh, tsb=False)
-            except Exception as e:
-                print(e)
-            rWeightNgIO.read_skin('Gretch_extra_clone', f'{groups}/bobo/character/Rigs/Gretchen_face', 'Gretchen_Extras_Tweaks_Face_Skin')"""
 
         #mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
         #mc.delete('ArmTwist_L', 'ArmTwist_R')

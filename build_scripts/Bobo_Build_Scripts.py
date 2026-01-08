@@ -147,6 +147,42 @@ def Clean_Fur():
         except Exception as e:
             print(f"Failed to connect {full_attr} -> {obj}.visibility: {e}")
 
+        try:
+            options_ctrl = "Options_ctrl"
+
+            # Add the attribute
+            mc.addAttr(
+                options_ctrl,
+                longName="Fur_Opacity",
+                attributeType="double",
+                min=0,
+                max=1,
+                defaultValue=0,
+                keyable=True
+            )
+
+            # Connect the attribute to the Fur transparency channels
+            mc.connectAttr(
+                f"{options_ctrl}.Fur_Opacity",
+                "Fur.transparencyR",
+                force=True
+            )
+
+            mc.connectAttr(
+                f"{options_ctrl}.Fur_Opacity",
+                "Fur.transparencyG",
+                force=True
+            )
+
+            mc.connectAttr(
+                f"{options_ctrl}.Fur_Opacity",
+                "Fur.transparencyB",
+                force=True
+            )
+
+        except Exception as e:
+            print(f"{e}")
+
     #proxywrap_fur(['HeadFur', 'ArmsFur', 'LegFur', 'BellyFur', 'SnoutFur', 'FootFur', 'HandFur'])
 
 
