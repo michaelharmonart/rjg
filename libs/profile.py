@@ -17,7 +17,7 @@ def auto_profiler_tag(build_method):
         return result
     return wrapper
         
-def add_profiler_tag(node: str | list[str], tag_name: str, tag_color: tuple[float, float, float] | None = None):
+def add_profiler_tag(node: str | list[str], tag_name: str, tag_color: tuple[float, float, float] | None = None, allow_mesh: bool = False):
     """
     Add a profiler tag to a node for rig speed profiling based on part/name.
 
@@ -39,10 +39,13 @@ def add_profiler_tag(node: str | list[str], tag_name: str, tag_color: tuple[floa
     
     for node in nodes:
         try:
+            if not allow_mesh and cmds.nodeType(node) == "mesh":
+                continue
+                
             # Add metadata channels only if they don't yet exist
             extant_metadata: list[str] = (cmds.addMetadata(node, q=True, channelName=True) or [])
             if "ProfileTag" in extant_metadata and "ProfileTagColor" in extant_metadata:
-                return
+                continue
             if "ProfileTag" not in extant_metadata:
                 cmds.addMetadata(node, streamName="ProfileTagStream", channelName="ProfileTag", structure="NodeProfileStruct")
             if "ProfileTagColor" not in extant_metadata:

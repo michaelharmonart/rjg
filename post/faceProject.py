@@ -1,12 +1,42 @@
+from importlib import reload
+
 import maya.cmds as mc
 import maya.mel as mel
-
-from importlib import reload
-import rjg.libs.file as rFile
 import rjg.libs.control.ctrl as rCtrl
+import rjg.libs.file as rFile
 from rjg.libs.profile import add_profiler_tag
+
 reload(rFile)
 reload(rCtrl)
+
+def get_shapes(transform: str) -> list[str]:
+    return mc.listRelatives(transform, children=True, shapes=True)
+
+
+def copy_mesh_connections(source_shape: str, driven_shape: str, force: bool = True):
+    connections_to_copy = [
+        (f"{source_shape}.inMesh", f"{driven_shape}.inMesh"),
+        (
+            f"{source_shape}.instObjGroups[0].objectGroups[0].objectGroupId",
+            f"{driven_shape}.instObjGroups[0].objectGroups[0].objectGroupId",
+        ),
+        (
+            f"{source_shape}.instObjGroups[0].objectGroups[0].objectGrpColor",
+            f"{driven_shape}.instObjGroups[0].objectGroups[0].objectGrpColor",
+        ),
+    ]
+    
+    for source_attr, driven_attr in connections_to_copy:
+        source_connections = mc.listConnections(
+            source_attr, source=True, destination=False, plugs=True
+        )
+    
+        if source_connections:
+            mc.connectAttr(source_connections[0], driven_attr, force=force)
+            
+def drive_shape(source_shape: str, driven_shape: str, force: bool = True, use_blendshape: bool = True):
+    copy_mesh_connections(source_shape, driven_shape, force)
+
 
 def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=None, f_extras=None, rig_par='head_M_02_CTRL_CNST_GRP', tY=0):
     before_nodes = set(mc.ls())
@@ -20,23 +50,17 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
     # project the face rig as an always-on blendShape
     #mc.xform(f_skel, t=[0, tY, 0])
     mc.blendShape(f_model, body, name='main_blendshapes', w=[(0, 1.0)], foc=True)
+    mc.group(em=True, name='HIDE_FACE_EXTRAS', parent='HIDE_FACE')
+    extras_names = mc.listRelatives(f_extras, allDescendents=True, type="transform")
+    extras_paths = mc.listRelatives(f_extras, allDescendents=True, type="transform", path=True)
+    for extra, path in zip(extras_names, extras_paths):
+        extra_rename = mc.rename(path, f"{extra}_clone")
+        mc.parent(extra_rename, "HIDE_FACE_EXTRAS")
+        extra_shapes = get_shapes(extra)
+        extra_rename_shapes = get_shapes(extra_rename)
+        for extra_shape, extra_rename_shape in zip(extra_shapes, extra_rename_shapes):
+            drive_shape(extra_rename_shape, extra_shape)
 
-    try:
-        mc.select(f_extras, hi=True)
-        f_ex_list = mc.ls(selection=True, type='transform')
-        mc.group(em=True, name='HIDE_FACE_EXTRAS')
-        mc.parent('HIDE_FACE_EXTRAS', 'HIDE_FACE')
-        for f in f_ex_list[:0:-1]:
-            try:
-                f = mc.rename(f, f[len(f_extras):]+'_clone')
-                mc.blendShape(f, f[:-6], name=f[:-6]+'Projection', w=[(0, 1.0)], foc=True)
-                mc.parent(f, "HIDE_FACE_EXTRAS")
-
-                mc.hyperShade(f, assign='standardSurface1')
-            except Exception as e:
-                print(f, ':', e)
-    except Exception as e:
-        mc.warning('faceProject 42:', e)
 
     
 
@@ -236,4 +260,5 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
     after_nodes = set(mc.ls())
     added_nodes = after_nodes - before_nodes
     for node in added_nodes:
-        add_profiler_tag(node, "face")
+        if mc.nodeType(node) not in ["mesh"]:
+            add_profiler_tag(node, "face")

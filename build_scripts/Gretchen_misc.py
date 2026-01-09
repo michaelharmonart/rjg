@@ -68,7 +68,7 @@ def Gretchen_extras(skin_src, skin_trg_grp):
     #for g in classic_sk:
     #    sk_gloves = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=0, n='clothingSkc')[0]
     for g in geohead:
-        mc.skinCluster('head_M_JNT', g, tsb=True, skinMethod=1,)
+        mc.skinCluster('head_M_JNT', g, tsb=True, skinMethod=1, multi=True)
 
     #mc.skinCluster('head_M_JNT', 'Hair', tsb=True, skinMethod=1, n='hairSkc') #skin the hair to only the head joint in order to avoid weird stretching
 
