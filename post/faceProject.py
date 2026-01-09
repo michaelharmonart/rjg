@@ -34,11 +34,17 @@ def copy_mesh_connections(source_shape: str, driven_shape: str, force: bool = Tr
         if source_connections:
             mc.connectAttr(source_connections[0], driven_attr, force=force)
             
-def drive_shape(source_shape: str, driven_shape: str, force: bool = True, use_blendshape: bool = True):
-    copy_mesh_connections(source_shape, driven_shape, force)
+def drive_mesh(source_mesh: str, driven_mesh: str, force: bool = True, use_blendshape: bool = False):
+    if use_blendshape:
+        mc.blendShape(source_mesh, driven_mesh, name=f"{driven_mesh}Projection", w=[(0, 1.0)], foc=True)
+    else:
+        source_shapes = get_shapes(source_mesh)
+        driven_shapes = get_shapes(driven_mesh)
+        for source_shape, driven_shape in zip(source_shapes, driven_shapes):
+            copy_mesh_connections(source_shape, driven_shape, force)
 
 
-def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=None, f_extras=None, rig_par='head_M_02_CTRL_CNST_GRP', tY=0):
+def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=None, f_extras=None, rig_par='head_M_02_CTRL_CNST_GRP', tY=0, use_legacy: bool = False):
     before_nodes = set(mc.ls())
     # reparent face sections to main rig
     mc.group(em=True, name='HIDE_FACE')
@@ -51,18 +57,29 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
     #mc.xform(f_skel, t=[0, tY, 0])
     mc.blendShape(f_model, body, name='main_blendshapes', w=[(0, 1.0)], foc=True)
     mc.group(em=True, name='HIDE_FACE_EXTRAS', parent='HIDE_FACE')
-    extras_names = mc.listRelatives(f_extras, allDescendents=True, type="transform")
-    extras_paths = mc.listRelatives(f_extras, allDescendents=True, type="transform", path=True)
-    for extra, path in zip(extras_names, extras_paths):
-        extra_rename = mc.rename(path, f"{extra}_clone")
-        mc.parent(extra_rename, "HIDE_FACE_EXTRAS")
-        extra_shapes = get_shapes(extra)
-        extra_rename_shapes = get_shapes(extra_rename)
-        for extra_shape, extra_rename_shape in zip(extra_shapes, extra_rename_shapes):
-            drive_shape(extra_rename_shape, extra_shape)
 
+    if not use_legacy:
+        extras_names = mc.listRelatives(f_extras, allDescendents=True, type="transform")
+        extras_paths = mc.listRelatives(f_extras, allDescendents=True, type="transform", path=True)
+        for extra, path in zip(extras_names, extras_paths):
+            extra_rename = mc.rename(path, f"{extra}_clone")
+            mc.parent(extra_rename, "HIDE_FACE_EXTRAS")
+            drive_mesh(extra_rename, extra, use_blendshape=use_blendshape)
+    else:
+        try:
+            mc.select(f_extras, hi=True)
+            f_ex_list = mc.ls(selection=True, type='transform')
+            for f in f_ex_list[:0:-1]:
+                try:
+                    f = mc.rename(f, f[len(f_extras):]+'_clone')
+                    mc.blendShape(f, f[:-6], name=f[:-6]+'Projection', w=[(0, 1.0)], foc=True)
+                    mc.parent(f, "HIDE_FACE_EXTRAS")
+                    mc.hyperShade(f, assign='standardSurface1')
+                except Exception as e:
+                    print(f, ':', e)
+        except Exception as e:
+            mc.warning('faceProject 42:', e)
 
-    
 
     
     # duplcicate the face rig controls and constrain their root to rig_par

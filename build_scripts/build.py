@@ -1099,7 +1099,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         face = rFile.import_hierarchy(groups + f'/dungeons/anim/Rigs/{character}Face.mb')
         import rjg.post.faceProject as rFaceProj
         reload(rFaceProj)
-        rFaceProj.project(body=body_mesh, char='ROOT', f_model='FaceAtOrigin', f_rig='face_M', extras=f'{character}_Extras', f_extras='F_EXTRAS', f_skel='faceRoot_JNT')#, tY=1.103)
+        rFaceProj.project(body=body_mesh, char='ROOT', f_model='FaceAtOrigin', f_rig='face_M', extras=f'{character}_Extras', f_extras='F_EXTRAS', f_skel='faceRoot_JNT', use_legacy=True)#, tY=1.103)
         mc.delete(face)
         mc.joint(n='root_root_JNT')
         mc.parent('root_root_JNT', 'SKEL')
