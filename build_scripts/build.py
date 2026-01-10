@@ -479,6 +479,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             twist_distribute_name="shoulder",
             enable_prop_control=prop_control,
         )
+        if character == 'Domingo':
+            data = arm.export_limb_descriptor()
         
         #Bendy Fingers
         if character in ['Luciana', 'Basemesh']:
@@ -645,7 +647,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             import rjg.build.parts.UEwing
             reload(rjg.build.parts.UEwing)
             from rjg.build.parts.UEwing import UEwing
-            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=1, side=side, buildlimb=False)
+            UEwing = UEwing(f'Wing_{side}_guides', ctrl_scale=1, side=side, buildlimb=False, limb_descriptor=data)
             UEwing.build_wing()
         Build_Correctives(side='M')
     if character == 'Luciana':

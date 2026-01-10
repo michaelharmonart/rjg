@@ -142,6 +142,16 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
         self.create_orient_spaces()
         self.add_plugs()
 
+    def export_limb_descriptor(self):
+        return {
+            "bind_joints": list(self.bind_joints),
+            "bendy_controls": list(self.src_chain.bendy_controls) if hasattr(self.src_chain, "bendy_controls") else [],
+            "bendy_joints": list(self.src_chain.joints) if hasattr(self.src_chain, "joints") else [],
+            "side": self.side,
+            "part": self.part,
+            "limb_grp": self.limb_grp,
+        }
+
     def create_inputs(self, group: str) -> None:
         self.input_group = mc.group(empty=True, name=f"{self.base_name}_INPUTS", parent=group)
         self.orient_input = mc.group(

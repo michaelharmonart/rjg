@@ -64,7 +64,7 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
         for extra, path in zip(extras_names, extras_paths):
             extra_rename = mc.rename(path, f"{extra}_clone")
             mc.parent(extra_rename, "HIDE_FACE_EXTRAS")
-            drive_mesh(extra_rename, extra, use_blendshape=use_blendshape)
+            drive_mesh(extra_rename, extra, use_blendshape=use_legacy)
     else:
         try:
             mc.select(f_extras, hi=True)
