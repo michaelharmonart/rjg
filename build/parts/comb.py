@@ -50,9 +50,13 @@ class comb(UEface):
         #Groups
         if mc.objExists("comb_M"):
             mastergroup = "comb_M"
+            mastersplingroup = "comb_splines"
         else:
             mastergroup = mc.group(empty=True, name = "comb_M")
+            mastersplingroup = mc.group(empty=True, name = "comb_splines")
             mc.parent(mastergroup, 'RIG')
+            mc.parent(mastersplingroup, mastergroup)
+            mc.hide(mastersplingroup)
         
         fkgrp = mc.group(empty=True, name=f'{prefix}_FK')
         ikgrp = mc.group(empty=True, name=f'{prefix}_IK')
@@ -200,7 +204,8 @@ class comb(UEface):
                 if prejnt:
                     mc.parent(jnt, prejnt)
                 else:
-                    mc.parent(jnt, handlegrp)
+                    mc.parent(jnt, mastersplingroup)
+                    #mc.parent(jnt, handlegrp)
                 
                 prejnt = jnt
                 prepos = pos

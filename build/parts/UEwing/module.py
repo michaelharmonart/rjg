@@ -11,6 +11,8 @@ from rjg.build.parts.UEwing import feathers, limb
 from rjg.build.parts.UEwing.spline_system import Spline
 from rjg.build.UEface import UEface
 from rjg.libs.profile import auto_profiler_tag
+from collections.abc import Collection
+from maya.api.OpenMaya import MPoint
 
 reload(rAttr)
 reload(rChain)
@@ -108,6 +110,30 @@ class UEwing(UEface):
         self.bendy_chain.bendy_controls = data["bendy_controls"]
         self.bendy_chain.joints = data["bendy_joints"]
 
+    def get_world_position(self, obj):
+        return mc.xform(obj, q=True, ws=True, t=True)
+
+    def get_closest_transform(self, transform: str, target_transforms: Collection[str]) -> str:
+        transform_position: MPoint = MPoint(self.get_world_position(transform))
+        closest: str | None = None
+        min_dist: float | None = None
+        for target_transform in target_transforms:
+            target_position: MPoint = MPoint(self.get_world_position(target_transform))
+            distance = transform_position.distanceTo(target_position)
+            if min_dist is None:
+                min_dist = distance
+                closest = target_transform
+            elif distance < min_dist:
+                min_dist = distance
+                closest = target_transform
+        return closest       
+
+    def parent_to_closest_joint(self, joint: str, parent_joints: list[str]):
+        closest = self.get_closest_transform(joint, parent_joints)
+        if closest:
+            mc.parent(joint, closest, relative=True)
+        return closest
+
 
     def connectlimb(
         self,
@@ -121,7 +147,7 @@ class UEwing(UEface):
     def build_feathers(self, keep_spacing: bool = True):
         feathers.build_feathers(self, keep_spacing)
 
-    def connect_feathers(self, root_spline: Spline, mid_spline: Spline, tip_spline: Spline):
+    def connect_feathers(self, root_spline: Spline, mid_spline: Spline, tip_spline: Spline, side='L'):
         if self.buildlimb:
             bind_joints = self.limb_bind_joints
             
@@ -152,57 +178,26 @@ class UEwing(UEface):
             mid_spline = self.mid_spline
             tip_spline = self.tip_spline
 
-            root_bind = self.limb_bind_joints
 
-            # mapping tables (your existing logic)
-            root_mapping = [
-                (0, 0),
-                (1, 1),
-                (2, 2),
-            ]
+            for part in ['Mid', 'Tip']:
+                mc.parentConstraint(f'arm_{side}_01_switch_Start_CTRL', f'Wing_{side}_{part}_Spline_00_CTRL_CNST_GRP', mo=True) #arm_L_01_switch_Start_CTRL
+                mc.parentConstraint(f'arm_{side}_01_switch_Mid_CTRL', f'Wing_{side}_{part}_Spline_01_CTRL_CNST_GRP', mo=True) #Wing_L_Root_Spline_00_Pin
+                mc.parentConstraint(f'arm_{side}_02_switch_End_CTRL', f'Wing_{side}_{part}_Spline_02_CTRL_CNST_GRP', mo=True) 
+                mc.parentConstraint(f'arm_{side}_02_switch_Mid_CTRL', f'Wing_{side}_{part}_Spline_03_CTRL_CNST_GRP', mo=True)
+                mc.parentConstraint(f'arm_{side}_03_switch_End_CTRL', f'Wing_{side}_{part}_Spline_04_CTRL_CNST_GRP', mo=True) 
+            mc.parentConstraint(f'arm_{side}_01_switch_Start_CTRL', f'Wing_{side}_Root_Spline_00_Pin', mo=True) #arm_L_01_switch_Start_CTRL
+            mc.parentConstraint(f'arm_{side}_01_switch_Mid_CTRL', f'Wing_{side}_Root_Spline_01_Pin', mo=True) #Wing_L_Root_Spline_00_Pin
+            mc.parentConstraint(f'arm_{side}_02_switch_End_CTRL', f'Wing_{side}_Root_Spline_02_Pin', mo=True) 
+            mc.parentConstraint(f'arm_{side}_02_switch_Mid_CTRL', f'Wing_{side}_Root_Spline_03_Pin', mo=True) #fingerPinky_L_02_fk_CTRL fingerPinky_L_03_fk_CTRL fingerPinky_L_04_fk_CTRL
+            mc.parentConstraint(f'arm_{side}_03_switch_End_CTRL', f'Wing_{side}_Root_Spline_04_Pin', mo=True)
+            mc.parentConstraint(f'fingerPinky_{side}_02_fk_CTRL', f'Wing_{side}_Root_Spline_05_Pin', mo=True)
+            mc.parentConstraint(f'fingerPinky_{side}_03_fk_CTRL', f'Wing_{side}_Mid_Spline_05_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint(f'fingerPinky_{side}_04_fk_CTRL', f'Wing_{side}_Tip_Spline_05_CTRL_CNST_GRP', mo=True)
 
-            wing_mapping = [
-                (0, 1),
-                (1, 2),
-                (2, 2),
-            ]
-
-            # ---------------- ROOT ----------------
-            for ctrl_index, joint_index in root_mapping:
-
-                if not self.buildlimb:
-                    if ctrl_index >= len(root_spline.pin_list):
-                        continue
-                    if joint_index >= len(root_bind):
-                        continue
-
-                root_pin = root_spline.pin_list[ctrl_index]
-                bind_joint = root_bind[joint_index]
-
-                mc.parentConstraint(bind_joint, root_pin, mo=True)
-
-            # ---------------- MID / TIP ----------------
-            for ctrl_index, joint_index in wing_mapping:
-
-                if not self.buildlimb:
-                    if ctrl_index >= len(mid_spline.control_list):
-                        continue
-                    if ctrl_index >= len(tip_spline.control_list):
-                        continue
-                    if joint_index >= len(root_bind):
-                        continue
-
-                mid_ctrl = mid_spline.control_list[ctrl_index]
-                tip_ctrl = tip_spline.control_list[ctrl_index]
-
-                bind_joint = root_bind[joint_index]
-
-                mc.parentConstraint(bind_joint, mid_ctrl.top, mo=True)
-                mc.parentConstraint(bind_joint, tip_ctrl.top, mo=True)
-
-            root_pin = root_spline.pin_list[ctrl_index]
-            bind_joint = root_bind[joint_index]
-            mc.parentConstraint(bind_joint, root_pin, maintainOffset=True)
+            for i in range(1, 14, 1):
+                self.parent_to_closest_joint(f'Wing_{side}MainFeather_{i:02d}_base_JNT', [f'arm_{side}_01_JNT', f'arm_{side}_02_JNT',f'arm_{side}_03_JNT',f'arm_{side}_04_JNT', f'arm_{side}_05_JNT', f'arm_{side}_07_JNT', f'arm_{side}_08_JNT', f'arm_{side}_09_JNT',])
+            mc.parent(f'Wing_{side}', 'RIG')
+                
     
 
 
@@ -225,6 +220,6 @@ class UEwing(UEface):
             self.limb_bind_joints = [f'arm_{side}_01_JNT', f'arm_{side}_05_JNT', f'arm_{side}_09_JNT']
         self.build_feathers()
         self.connect_feathers(
-            root_spline=self.root_spline, mid_spline=self.mid_spline, tip_spline=self.tip_spline
+            root_spline=self.root_spline, mid_spline=self.mid_spline, tip_spline=self.tip_spline, side=side
         )
 

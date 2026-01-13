@@ -360,6 +360,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 combbind.append(jnt)
 
         mc.skinCluster(*combbind, 'comb', tsb=True)
+        mc.parentConstraint(highcombparent, "comb_splines", mo=True)
 
     if character in ['Susaka', 'NPC','Fisherman', 'Sharkguy',]:
         for side in ['L', 'R']:

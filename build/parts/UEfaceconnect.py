@@ -437,6 +437,7 @@ class UEfaceconnect(UEface):
             mc.pointConstraint('LowerLip_M_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
             mc.orientConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
             mc.parent('Beard_M_01_JNT', lower_jnt)
+            mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL', mo=True)
 
         elif self.custom == 'Luciana':
             mc.parent('Eye_L_look_offset', 'Eye_R_look_offset', 'UpperHead_M_CTRL')
