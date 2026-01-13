@@ -119,6 +119,26 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
 
 ######################################
 
+    if use_legacy:
+        pass
+    else:
+        for side in ['L', 'R']:
+            mc.connectAttr(f'{side}_InBrow_ctrl.Crease', f'{side}_InBrow_ctrl_clone.Crease')
+            mc.connectAttr(f'{side}_InBrow_ctrl.Forehead_Crease', f'{side}_InBrow_ctrl_clone.Forehead_Crease')
+            mc.addAttr(f'{side}_InBrow_ctrl', longName='Legacy_Rig_Switch', at='bool', k=True )
+            mc.connectAttr(f'{side}_InBrow_ctrl.Legacy_Rig_Switch', f'{side}_InBrow_ctrl_clone.Legacy_Control')
+            #mc.connectAttr(f'{side}_InBrow_ctrl.Legacy_Control', f'{side}_InBrow_ctrl_clone.Legacy_Control')
+            mc.createNode('reverse', name=f'{side}_Brow_switch_REV')
+            mc.connectAttr(f'{side}_InBrow_ctrl.Legacy_Rig_Switch', f'{side}_Brow_switch_REV.inputX')
+            mc.connectAttr(f'{side}_Brow_switch_REV.outputX', f'Modern_{side}_grp.visibility')
+            mc.connectAttr(f'{side}_InBrow_ctrl.Legacy_Rig_Switch', f'Legacy_{side}_grp.visibility')
+            mc.connectAttr(f'{side}_Eye_mid_05_ctrl.Wrinkle', f'{side}_Eye_mid_05_ctrl_clone.Wrinkle')
+            mc.connectAttr(f'{side}_Corner_Main_Mouth_ctrl.Crease', f'{side}_Corner_Main_Mouth_ctrl_clone.Crease')
+            mc.addAttr(f'{side}_Eyebrow_main_ctrl', longName='Legacy_Rig_Switch', proxy=f'{side}_InBrow_ctrl.Legacy_Rig_Switch')
+
+    
+
+
 
     try:
         mc.rename('squashAndStretch_clone|squashStretch_Wire', 'squashStretch_Wire_clone')
@@ -279,3 +299,33 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
     for node in added_nodes:
         if mc.nodeType(node) not in ["mesh"]:
             add_profiler_tag(node, "face")
+
+
+
+
+####Gretchen Fixes
+"""
+connectAttr -f L_InBrow_ctrl.Crease L_InBrow_ctrl_clone.Crease;
+// Result: Connected L_InBrow_ctrl.Crease to L_InBrow_ctrl_clone.Crease.
+connectAttr -f L_InBrow_ctrl.Forehead_Crease L_InBrow_ctrl_clone.Forehead_Crease;
+// Result: Connected L_InBrow_ctrl.Forehead_Crease to L_InBrow_ctrl_clone.Forehead_Crease.
+connectAttr -f L_InBrow_ctrl.Legacy_Control L_InBrow_ctrl_clone.Legacy_Control;
+// Result: Connected L_InBrow_ctrl.Legacy_Control to L_InBrow_ctrl_clone.Legacy_Control.
+connectAttr -f L_InBrow_ctrl.Legacy_Control Legacy_L_grp.visibility;
+// Result: Connected L_InBrow_ctrl.Legacy_Control to Legacy_L_grp.visibility.
+shadingNode -asUtility reverse;
+// Result: reverse3
+select -r Modern_L_grp ;
+connectAttr -f L_InBrow_ctrl.Legacy_Control reverse3.inputX;
+// Result: Connected L_InBrow_ctrl.Legacy_Control to reverse3.input.inputX.
+connectAttr -f reverse3.outputX Modern_L_grp.visibility;
+// Result: Connected reverse3.output.outputX to Modern_L_grp.visibility.
+connectAttr -f L_Eye_mid_05_ctrl.Wrinkle L_Eye_mid_05_ctrl_clone.Wrinkle;
+// Result: Connected L_Eye_mid_05_ctrl.Wrinkle to L_Eye_mid_05_ctrl_clone.Wrinkle.
+connectAttr -f L_Corner_Main_Mouth_ctrl.Crease L_Corner_Main_Mouth_ctrl_clone.Crease;
+// Result: Connected L_Corner_Main_Mouth_ctrl.Crease to L_Corner_Main_Mouth_ctrl_clone.Crease.
+
+import maya.cmds as mc
+mc.addAttr('L_Eyebrow_main_ctrl', longName='Legacy_Switch', proxy='L_InBrow_ctrl.Legacy_Control')
+
+"""

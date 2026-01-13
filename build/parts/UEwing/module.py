@@ -159,13 +159,12 @@ class UEwing(UEface):
                 (0, 0),
                 (1, 1),
                 (2, 2),
-                (3, 3),
             ]
 
             wing_mapping = [
                 (0, 1),
                 (1, 2),
-                (2, 3),
+                (2, 2),
             ]
 
             # ---------------- ROOT ----------------
@@ -204,6 +203,9 @@ class UEwing(UEface):
             root_pin = root_spline.pin_list[ctrl_index]
             bind_joint = root_bind[joint_index]
             mc.parentConstraint(bind_joint, root_pin, maintainOffset=True)
+    
+
+
 
 
     @auto_profiler_tag
@@ -220,7 +222,9 @@ class UEwing(UEface):
             #self.connectlimb()
             if self.limb_descriptor:
                 self.apply_limb_descriptor(self.limb_descriptor)
+            self.limb_bind_joints = [f'arm_{side}_01_JNT', f'arm_{side}_05_JNT', f'arm_{side}_09_JNT']
         self.build_feathers()
         self.connect_feathers(
             root_spline=self.root_spline, mid_spline=self.mid_spline, tip_spline=self.tip_spline
         )
+
