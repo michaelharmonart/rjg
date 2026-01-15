@@ -243,16 +243,6 @@ class UEfaceconnect(UEface):
                 mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
                 mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
-
-                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
-                #mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
-                #mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
-
-                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
-                #mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
-                #mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
                 for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']:
                     mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
                     mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
@@ -320,6 +310,37 @@ class UEfaceconnect(UEface):
 
             # Connect reverse output to the root weight
             mc.connectAttr(f"{rev}.outputX", f"{constraint_name}.{root_ctrl}W1", f=True)
+
+            #auto mouth Fixes
+            for side in ['L', 'R']:
+                mod = -1 if side == "R" else 1
+
+                mc.addAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', longName='AutoMouth', dv=5 * mod)
+                for axe in ['X', 'Z']:
+                    num = -2 * mod if axe == "X" else 2.5
+                    nl = mc.createNode('remapValue', name = f'nl{axe}_{side}_remap')
+                    mc.addAttr(f'NLFold_{side}_{side}_CTRL', longName=f'{axe}_mult', at='double', dv=num,)
+                    mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.AutoMouth', f'{nl}.inputMax')
+                    mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.translateX', f'{nl}.inputValue')
+                    mc.connectAttr(f'NLFold_{side}_{side}_CTRL.{axe}_mult', f'{nl}.outputMax') #NLFold_L_L_CTRL_SDK_GRP
+                    mc.connectAttr(f'{nl}.outValue', f'NLFold_{side}_{side}_CTRL_SDK_GRP.translate{axe}')
+                mc.addAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', longName='AutoMouthMult', dv=25 * mod)
+                rotremap = mc.createNode('remapValue', name = f'cornerRot_{side}_remap')
+                mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.AutoMouth', f'{rotremap}.inputMax')
+                mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.AutoMouthMult', f'{rotremap}.outputMax')
+                mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.translateX', f'{rotremap}.inputValue')
+                mc.connectAttr(f'{rotremap}.outValue', f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_SDK_GRP.rotateY')
+                nly = mc.createNode('multiplyDivide', name=f'nly_{side}_MD')
+                mc.setAttr(f'{nly}.input2Y', -.5)
+                mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.translateY',f'{nly}.input1Y')
+                mc.connectAttr(f'{nly}.outputY', f'NLFold_{side}_{side}_CTRL_SDK_GRP.translateY')
+
+
+
+
+            if mc.objExists('Tongue_M_Curl_CTRL_CNST_GRP'):
+                mc.parentConstraint('LowerHead_M_CTRL', 'Tongue_M_Curl_CTRL_CNST_GRP', mo=True)
+                
 
 
         elif self.custom == 'Domingo':

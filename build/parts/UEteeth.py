@@ -18,9 +18,11 @@ reload(rXform)
 
 
 class UEteeth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, skin=None):
+    def __init__(self, grp_name=None, ctrl_scale=1, skin=None, toungecurl=True, tongue_spit = True):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.skin = skin
+        self.toungecurl = toungecurl
+        self.tongue_spit = tongue_spit
 
     @auto_profiler_tag
     def build(self):
@@ -72,6 +74,22 @@ class UEteeth(UEface):
 
 
         bindjnts = []
+        if self.toungecurl:
+            curlcontrol =  rCtrl.Control(parent=None, shape="square", side=None, suffix='CTRL', name=f'Tongue_M_Curl', axis='y', group_type='main', rig_type='primary', translate=f'Tongue_01', rotate=None)
+            mc.parent(curlcontrol.top, 'RIG')
+        if self.tongue_spit:
+            split_joint = 'Tongue_01_JNT'
+
+
+        """split_joint = basejnt
+                split_joints: list[str] = [basejnt,mid1jnt,eejnt]
+                #mc.addAttr(basejnt, longName="split_joints", niceName="Split Joints", dataType="string")
+                #value = f"['{basejnt}','{midjnt}','{eejnt}']"
+                #mc.setAttr(f'{basejnt}.split_joints', value, type='string')
+                mc.addAttr(split_joint, longName="split_joints", dataType="string")
+                mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")"""
+            
+
         while True:
             guide_name = f'Tongue_{index:02d}'  # formats as 01, 02, 03, etc.
             if mc.objExists(guide_name):
@@ -90,6 +108,11 @@ class UEteeth(UEface):
                 if index != 1:
                     old_index = index - 1 
                     mc.parent(f'{guide_name}_0{index}_CTRL_CNST_GRP', f'{last_guide}_0{old_index}_CTRL')
+                    if self.toungecurl:
+                        mc.connectAttr(f'{curlcontrol.ctrl}.translate', f'Tongue_{index:02d}_{index:02d}_CTRL_OFF_GRP.translate')
+                        mc.connectAttr(f'{curlcontrol.ctrl}.rotate', f'Tongue_{index:02d}_{index:02d}_CTRL_OFF_GRP.rotate')
+
+
 
                 last_guide = guide_name
                 index += 1
@@ -99,6 +122,10 @@ class UEteeth(UEface):
         UEface.chain_parts(guides, joints=True, controls=True)
         print(bindjnts)
         mc.skinCluster(*bindjnts, f'tongue')
+        if self.tongue_spit:
+            split_joints: list[str] = bindjnts
+            mc.addAttr(split_joint, longName="split_joints", dataType="string")
+            mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
 
 
 

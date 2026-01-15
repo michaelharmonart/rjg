@@ -11,12 +11,13 @@ reload(rChain)
 reload(rCtrl)
 
 class Head(rModule.RigModule):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, model_path=None, guide_path=None, head_shape='circle', longneck = False):
+    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=None, model_path=None, guide_path=None, head_shape='circle', longneck = False, autoneckik=False):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.__dict__.update(locals())
 
         self.base_name = self.part + '_' + self.side
         self.longneck = longneck
+        self.autoneckik = True
 
         self.create_module()
 
@@ -85,3 +86,6 @@ class Head(rModule.RigModule):
         rAttr.Attribute(node=self.part_grp, type='plug', value=[self.head_01.ctrl], name='transferAttributes', children_name=['neck_M_tip_CTRL'])
 
         rAttr.Attribute(node=self.part_grp, type='plug', value=['mc.ls("neck_M_??_driver_JNT", "neck_M_??_fk_offset_CTRL")[-1]'], name='pocRigPlugs', children_name=[self.head_jnt])
+        if self.autoneckik:
+            mc.orientConstraint('Head_M_ik_CTRL', 'head_M_01_CTRL_SDK_GRP', mo=True)
+            mc.connectAttr('neck_M_REV.outputZ', 'head_M_01_CTRL_SDK_GRP_orientConstraint1.Head_M_ik_CTRLW0')
