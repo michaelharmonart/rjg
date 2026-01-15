@@ -56,7 +56,7 @@ class UEstache(UEface):
                     pregrp=sub_ctrl
                 else:
                     mc.parent(sub_jnt, prejnt)
-                    mc.parent(sub_offset, sub_ctrl)
+                    mc.parent(sub_offset, pregrp)
                     prejnt=sub_jnt
                     pregrp=sub_ctrl
 
