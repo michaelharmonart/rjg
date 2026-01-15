@@ -32,8 +32,121 @@ class UEstache(UEface):
         maingrp = mc.group(empty=True, name=f'{prefix}_M')
         mc.parent(subgrp, maingrp)
         mc.parent(maingrp, "RIG")
+
+        pos = mc.xform('Stache_M_01', q=True, ws=True, t=True)
+        mc.select(clear=True)
+        main_jnt = mc.joint(name='Stache_M_01_JNT', p=pos)
+        bindjnts = []
+
+        for side in ['L', 'R']:
+            prejnt=None
+            pregrp=None
+            for num in ['04', '05', '06', '07']:
+                sub_jnt, sub_ctrl, sub_offset = UEface.Simple_joint_and_Control(
+                        guide=f'Stache_{side}_{num}',
+                        orient=True,
+                        CTRL_Size=.5,
+                        JNT_Size=0.5,
+                        bind=False)
+
+                if prejnt is None:
+                    mc.parent(sub_jnt, main_jnt)
+                    mc.parent(sub_offset, maingrp)
+                    prejnt=sub_jnt
+                    pregrp=sub_ctrl
+                else:
+                    mc.parent(sub_jnt, prejnt)
+                    mc.parent(sub_offset, sub_ctrl)
+                    prejnt=sub_jnt
+                    pregrp=sub_ctrl
+
+                bindjnts.append(sub_jnt)
+            
+        if self.skin:
+            for jnt in ['Cheek_L_NLFold_01_JNT', 'Cheek_L_NLFold_02_JNT', 'Cheek_L_NLFold_03_JNT', 'Cheek_L_NLFold_04_JNT', 'Cheek_L_NLFold_05_JNT', 'Cheek_R_NLFold_01_JNT', 'Cheek_R_NLFold_02_JNT', 'Cheek_R_NLFold_03_JNT', 'Cheek_R_NLFold_04_JNT', 'Cheek_R_NLFold_05_JNT', 'lowermouth_JNT', 'uppermouth_JNT', 'Mouth_L_CornerLip_JNT', 'Mouth_R_CornerLip_JNT', 'Mouth_L_UpperLip_05_JNT', 'Mouth_R_UpperLip_05_JNT', 'Mouth_L_UpperLip_04_JNT', 'Mouth_R_UpperLip_04_JNT',]:
+                bindjnts.append(jnt)
+            mc.skinCluster(*bindjnts, 'mustache', tsb=True)
+
         
-        main_jnt, main_ctrl, main_offset = UEface.Simple_joint_and_Control(
+        
+
+        if self.beard:
+            guidelist = []
+            jntlist = []
+            prejnt = None
+            bindjnts = []
+            for i in ['01', '02', '03']:
+                guidelist.append(f"Beard_M_{i}")
+
+                if i in ['01', '03']:
+                    guide = f"Beard_M_{i}"
+                    maj_jnt, maj_ctrl, maj_offset = UEface.Simple_joint_and_Control(
+                        guide=guide,
+                        overwrite=True,
+                        overwrite_name=f"{guide}_Major",
+                        orient=True,
+                        CTRL_Size=.5,
+                        JNT_Size=0.5,
+                        bind=False)
+                    mc.parent(maj_jnt, maj_offset, maingrp)
+                    mc.hide(maj_jnt)
+                    jntlist.append(maj_jnt)
+                    
+
+
+
+
+            upper_curve = UEface.build_curve(guidelist, prefix + '_Upper')
+            mc.xform(upper_curve, ws=False, t=(1, 0, 0))
+            
+            lower_curve = UEface.build_curve(guidelist, prefix + '_Lower')
+            mc.xform(lower_curve, ws=False, t=(-1, 0, 0))
+
+            loft_surface = mc.loft(upper_curve, lower_curve, ch=True, u=True, c=False, ar=True, d=3, ss=1, rn=False, po=0)[0]
+            loft_surface = mc.rename(loft_surface, f'Beard_{side}_ribbon')
+            mc.parent(loft_surface, maingrp)
+            mc.hide(loft_surface)
+            mc.delete(upper_curve, lower_curve)
+
+            mc.select([loft_surface] + jntlist)
+            mc.skinCluster(tsb=True)
+
+
+            for guide in guidelist:
+                sub_jnt, sub_ctrl, sub_offset = UEface.Simple_joint_and_Control(
+                        guide=guide,
+                        overwrite=True,
+                        overwrite_name=guide,
+                        orient=True,
+                        CTRL_Size=.5,
+                        JNT_Size=0.5,
+                        bind=False)
+
+                if prejnt is None:
+                    prejnt=sub_jnt
+                else:
+                    mc.parent(sub_jnt, prejnt)
+                    prejnt=sub_jnt
+                
+                mc.parent(sub_offset, subgrp)
+                bindjnts.append(sub_jnt)
+
+                mc.select(clear=True)
+                mc.select(loft_surface)
+                mc.select(sub_offset, add=True)
+                mc.UVPin()
+
+            if self.skin:
+                for jnt in ['Cheek_L_NLFold_01_JNT', 'Cheek_L_NLFold_02_JNT', 'Cheek_L_NLFold_03_JNT', 'Cheek_L_NLFold_04_JNT', 'Cheek_L_NLFold_05_JNT', 'Cheek_R_NLFold_01_JNT', 'Cheek_R_NLFold_02_JNT', 'Cheek_R_NLFold_03_JNT', 'Cheek_R_NLFold_04_JNT', 'Cheek_R_NLFold_05_JNT', 'lowermouth_JNT', 'uppermouth_JNT', 'Mouth_L_CornerLip_JNT', 'Mouth_R_CornerLip_JNT', 'Mouth_L_UpperLip_05_JNT', 'Mouth_R_UpperLip_05_JNT', 'Mouth_L_UpperLip_04_JNT', 'Mouth_R_UpperLip_04_JNT',]:
+                    bindjnts.append(jnt)
+                mc.skinCluster(*bindjnts, 'beard', tsb=True)
+
+
+            
+
+
+
+"""main_jnt, main_ctrl, main_offset = UEface.Simple_joint_and_Control(
             guide='Stache_M_01',
             overwrite=True,
             overwrite_name='Stache_M_01_Major',
@@ -134,85 +247,7 @@ class UEstache(UEface):
         if self.skin:
             for jnt in ['Cheek_L_NLFold_01_JNT', 'Cheek_L_NLFold_02_JNT', 'Cheek_L_NLFold_03_JNT', 'Cheek_L_NLFold_04_JNT', 'Cheek_L_NLFold_05_JNT', 'Cheek_R_NLFold_01_JNT', 'Cheek_R_NLFold_02_JNT', 'Cheek_R_NLFold_03_JNT', 'Cheek_R_NLFold_04_JNT', 'Cheek_R_NLFold_05_JNT', 'lowermouth_JNT', 'uppermouth_JNT', 'Mouth_L_CornerLip_JNT', 'Mouth_R_CornerLip_JNT', 'Mouth_L_UpperLip_05_JNT', 'Mouth_R_UpperLip_05_JNT', 'Mouth_L_UpperLip_04_JNT', 'Mouth_R_UpperLip_04_JNT',]:
                 bindjnts.append(jnt)
-            mc.skinCluster(*bindjnts, 'mustache', tsb=True)
-
-        if self.beard:
-            guidelist = []
-            jntlist = []
-            prejnt = None
-            bindjnts = []
-            for i in ['01', '02', '03']:
-                guidelist.append(f"Beard_M_{i}")
-
-                if i in ['01', '03']:
-                    guide = f"Beard_M_{i}"
-                    maj_jnt, maj_ctrl, maj_offset = UEface.Simple_joint_and_Control(
-                        guide=guide,
-                        overwrite=True,
-                        overwrite_name=f"{guide}_Major",
-                        orient=True,
-                        CTRL_Size=.5,
-                        JNT_Size=0.5,
-                        bind=False)
-                    mc.parent(maj_jnt, maj_offset, maingrp)
-                    mc.hide(maj_jnt)
-                    jntlist.append(maj_jnt)
-                    
-
-
-
-
-            upper_curve = UEface.build_curve(guidelist, prefix + '_Upper')
-            mc.xform(upper_curve, ws=False, t=(1, 0, 0))
-            
-            lower_curve = UEface.build_curve(guidelist, prefix + '_Lower')
-            mc.xform(lower_curve, ws=False, t=(-1, 0, 0))
-
-            loft_surface = mc.loft(upper_curve, lower_curve, ch=True, u=True, c=False, ar=True, d=3, ss=1, rn=False, po=0)[0]
-            loft_surface = mc.rename(loft_surface, f'Beard_{side}_ribbon')
-            mc.parent(loft_surface, maingrp)
-            mc.hide(loft_surface)
-            mc.delete(upper_curve, lower_curve)
-
-            mc.select([loft_surface] + jntlist)
-            mc.skinCluster(tsb=True)
-
-
-            for guide in guidelist:
-                sub_jnt, sub_ctrl, sub_offset = UEface.Simple_joint_and_Control(
-                        guide=guide,
-                        overwrite=True,
-                        overwrite_name=guide,
-                        orient=True,
-                        CTRL_Size=.5,
-                        JNT_Size=0.5,
-                        bind=False)
-
-                if prejnt is None:
-                    prejnt=sub_jnt
-                else:
-                    mc.parent(sub_jnt, prejnt)
-                    prejnt=sub_jnt
-                
-                mc.parent(sub_offset, subgrp)
-                bindjnts.append(sub_jnt)
-
-                mc.select(clear=True)
-                mc.select(loft_surface)
-                mc.select(sub_offset, add=True)
-                mc.UVPin()
-
-            if self.skin:
-                for jnt in ['Cheek_L_NLFold_01_JNT', 'Cheek_L_NLFold_02_JNT', 'Cheek_L_NLFold_03_JNT', 'Cheek_L_NLFold_04_JNT', 'Cheek_L_NLFold_05_JNT', 'Cheek_R_NLFold_01_JNT', 'Cheek_R_NLFold_02_JNT', 'Cheek_R_NLFold_03_JNT', 'Cheek_R_NLFold_04_JNT', 'Cheek_R_NLFold_05_JNT', 'lowermouth_JNT', 'uppermouth_JNT', 'Mouth_L_CornerLip_JNT', 'Mouth_R_CornerLip_JNT', 'Mouth_L_UpperLip_05_JNT', 'Mouth_R_UpperLip_05_JNT', 'Mouth_L_UpperLip_04_JNT', 'Mouth_R_UpperLip_04_JNT',]:
-                    bindjnts.append(jnt)
-                mc.skinCluster(*bindjnts, 'beard', tsb=True)
-
-
-            
-
-
-
-
+            mc.skinCluster(*bindjnts, 'mustache', tsb=True)"""
 
 
 

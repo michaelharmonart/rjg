@@ -630,21 +630,40 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         for toe in ['Innertoe', 'Middletoe', 'Outertoe']:
             for side in ['L', 'R']:
                 toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=10, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT', express=True)
+    
+    
     if character == 'Domingo':
-        for toe in ['Innertoe', 'Middletoe', 'Outertoe']:
-            for side in ['L', 'R']:
-                toes = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_{toe}', guide_list=f'{side}_{toe}', ctrl_scale=3, par_jnt=f'foot_{side}_02_JNT', par_ctrl=f'foot_{side}_02_switch_JNT', express=True)
         for side in ['L', 'R']:
-            backtoe = rBuild.build_module(module_type='Toe', side=side, part=f'{side}_Backtoe', guide_list=f'{side}_Backtoe', ctrl_scale=3, par_jnt=f'foot_{side}_01_JNT', par_ctrl=f'foot_{side}_01_switch_JNT')
-            #for num in ['01', '02', '03','04', '06', '07', '08',]:
-            #    armshape = rBuild.build_module(module_type='arbitrary2', side=side, part=f'Tarm_{side}_{num}', guide_list=f'Tarm_{side}_{num}', ctrl_scale=5, par_jnt=f'arm_{side}_{num}_JNT', par_ctrl=f'arm_{side}_{num}_JNT')
+            if side == 'L':
+                sidelong = 'Left'
+                longside = 'Left'
+            else:
+                sidelong = 'Right'
+                longside = 'Right'
+
+            for toe in ['Indextoe', 'Middletoe', 'Ringtoe']:
+                toes = rBuild.build_module(module_type="MetaToe",side=side,part=toe, guide_list=[sidelong + "Foot" + toe + str(num)for num in range(5)],
+                ctrl_scale=1,
+                fk_shape='circle',
+                bendy=False,
+                create_ik=False,
+                curlaxis = 'Z',
+                handroll = False,
+                curl=True,
+                expression_control=True
+            )
+            backtoe = rBuild.build_module(module_type="MetaToe",side=side,part='Backtoe', guide_list=[sidelong + "Foot" + "Backtoe" + str(num)for num in range(5)],
+                ctrl_scale=1,
+                fk_shape='circle',
+                bendy=False,
+                create_ik=False,
+                curlaxis = 'Z',
+                handroll = False,
+                curl=True,
+                expression_control=False
+            )
             from rjg.build.parts.DomingoCorrectives import Build_Correctives
             Build_Correctives(side=side)
-            #import rjg.build.parts.DomingoFeathers
-            #reload(rjg.build.parts.DomingoFeathers)
-            #from rjg.build.parts.DomingoFeathers import DomingoFeathers
-            #DomingoFeathers = DomingoFeathers(f'Wing_{side}_guides',)
-            #DomingoFeathers.build_wing()
             import rjg.build.parts.UEwing
             reload(rjg.build.parts.UEwing)
             from rjg.build.parts.UEwing import UEwing
@@ -1523,7 +1542,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mod2 = mod2 - 1000
 
         if face == False:
-            for obj in ['Eye', 'topteeth', 'botteeth', 'tongue', 'facefeathers', 'Corneas']:
+            for obj in ['Eye', 'topteeth', 'botteeth', 'tongue', 'FaceFeathers', 'Corneas']:
                 mc.skinCluster('head_M_JNT', obj, tsb=True)
 
     if character == 'Domingo':

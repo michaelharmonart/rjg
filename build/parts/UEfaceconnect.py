@@ -429,9 +429,9 @@ class UEfaceconnect(UEface):
             #mc.parent('Stache_M_01_M_CTRL_CNST_GRP', 'Beard_M_01_M_CTRL_CNST_GRP', 'RIG')
             #mc.parent('Beard_M_01_JNT',  'Stache_M_01_JNT'  ,lower_jnt)     
 
-            mc.parentConstraint('UpperLip_M_M_CTRL', 'Stache_M_01_Major_M_CTRL_CNST_GRP', mo=True)
-            mc.parentConstraint('Major_Mouth_L_CornerLip_Mouth_CTRL','Stache_L_03_Major_L_CTRL_CNST_GRP', mo=True)
-            mc.parentConstraint('Major_Mouth_R_CornerLip_Mouth_CTRL','Stache_R_03_Major_R_CTRL_CNST_GRP', mo=True)
+            #fmc.parentConstraint('UpperLip_M_M_CTRL', 'Stache_M_01_Major_M_CTRL_CNST_GRP', mo=True)
+            mc.parentConstraint('Major_Mouth_L_CornerLip_Mouth_CTRL','Stache_L_04_L_CTRL_SDK_GRP', mo=True)
+            mc.parentConstraint('Major_Mouth_R_CornerLip_Mouth_CTRL','Stache_R_04_R_CTRL_SDK_GRP', mo=True)
             mc.parent('Stache_M_01_JNT', upper_jnt)
             mc.parentConstraint('LowerLip_M_M_CTRL', 'Beard_M_01_Major_M_CTRL_CNST_GRP', mo=True, )
             mc.pointConstraint('LowerLip_M_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )

@@ -258,4 +258,4 @@ class Foot(rModule.RigModule):
         rAttr.Attribute(node=self.part_grp, type='plug', value=[switch_attr], name='switchRigPlugs', children_name=['ikFkSwitch'])
         
         if self.express:
-            mc.parentConstraint(f'foot_' + self.side + '_03_switch_JNT', self.foot_express.top)
+            mc.parentConstraint(f'foot_' + self.side + '_03_switch_JNT', self.foot_express.top, mo=True)

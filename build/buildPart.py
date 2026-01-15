@@ -23,6 +23,7 @@ import rjg.build.parts.hinge as rHinge
 import rjg.build.parts.arbit as rArbit
 import rjg.build.parts.arbit2 as rArbit2
 import rjg.build.parts.toe as rToe
+import rjg.build.parts.metatoe as rMetaToe
 import rjg.build.parts.lookEyes as rLookEyes
 import rjg.build.parts.unreal_corrective_bones as rUeCorr
 import rjg.build.parts.ear as rEar
@@ -57,6 +58,7 @@ reload(rHinge)
 reload(rArbit)
 reload(rArbit2)
 reload(rToe)
+reload(rMetaToe)
 reload(rLookEyes)
 reload(rUeCorr)
 reload(rEar)
@@ -93,6 +95,7 @@ MODULE_DICT = {
                'arbitrary' : rArbit.Arbitrary,
                'arbitrary2' : rArbit2.Arbitrary2,
                'Toe' : rToe.Toe,
+               'MetaToe' : rMetaToe.MetaToe,
                'look_eyes' : rLookEyes.LookEyes,
                'UeCorrective' : rUeCorr.Unreal_Correctives,
                'ear' : rEar.Ear,
