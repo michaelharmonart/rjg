@@ -7,7 +7,7 @@ import rjg.build.guide as rGuide
 import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.transform as rXform
-from rjg.build.parts.UEwing import feathers, limb
+from rjg.build.parts.UEwing import feathers, limb, domfeathers
 from rjg.build.parts.UEwing.spline_system import Spline
 from rjg.build.UEface import UEface
 from rjg.libs.profile import auto_profiler_tag
@@ -146,6 +146,9 @@ class UEwing(UEface):
 
     def build_feathers(self, keep_spacing: bool = True):
         feathers.build_feathers(self, keep_spacing)
+    
+    def build_domfeathers(self, keep_spacing: bool = True):
+        domfeathers.build_feathers(self, keep_spacing)
 
     def connect_feathers(self, root_spline: Spline, mid_spline: Spline, tip_spline: Spline, side='L'):
         if self.buildlimb:
@@ -194,8 +197,8 @@ class UEwing(UEface):
             mc.parentConstraint(f'fingerPinky_{side}_03_fk_CTRL', f'Wing_{side}_Mid_Spline_05_CTRL_CNST_GRP', mo=True)
             mc.parentConstraint(f'fingerPinky_{side}_04_fk_CTRL', f'Wing_{side}_Tip_Spline_05_CTRL_CNST_GRP', mo=True)
 
-            for i in range(1, 14, 1):
-                self.parent_to_closest_joint(f'Wing_{side}MainFeather_{i:02d}_base_JNT', [f'arm_{side}_01_JNT', f'arm_{side}_02_JNT',f'arm_{side}_03_JNT',f'arm_{side}_04_JNT', f'arm_{side}_05_JNT', f'arm_{side}_07_JNT', f'arm_{side}_08_JNT', f'arm_{side}_09_JNT',])
+            #for i in range(1, 14, 1):
+            #    self.parent_to_closest_joint(f'Wing_{side}MainFeather_{i:02d}_base_JNT', [f'arm_{side}_01_JNT', f'arm_{side}_02_JNT',f'arm_{side}_03_JNT',f'arm_{side}_04_JNT', f'arm_{side}_05_JNT', f'arm_{side}_07_JNT', f'arm_{side}_08_JNT', f'arm_{side}_09_JNT',])
             mc.parent(f'Wing_{side}', 'RIG')
                 
     
@@ -213,12 +216,14 @@ class UEwing(UEface):
         self.mastergrp = mc.group(em=True, name=f"{prefix}")
         if self.buildlimb:
             self.build_limb(self.twisty)
+            self.build_feathers()
         else:
             #self.connectlimb()
             if self.limb_descriptor:
                 self.apply_limb_descriptor(self.limb_descriptor)
             self.limb_bind_joints = [f'arm_{side}_01_JNT', f'arm_{side}_05_JNT', f'arm_{side}_09_JNT']
-        self.build_feathers()
+            self.build_domfeathers()
+        #self.build_feathers()
         self.connect_feathers(
             root_spline=self.root_spline, mid_spline=self.mid_spline, tip_spline=self.tip_spline, side=side
         )

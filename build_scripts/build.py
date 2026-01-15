@@ -1491,10 +1491,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     if character == 'Luciana':
-        #mc.addAttr('switch_CTRL', longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
-        #mc.connectAttr('switch_CTRL.Tail_M_IKFK', 'Tail_M.Tail_M_IKFK')
-        
-
+        #Fix Wing shape at elbow bend
         for side in ['L', 'R']:
             startvalue = 0
             if side == 'L':
@@ -1517,8 +1514,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mc.setAttr(f'{remapx}.inputMin', startvalue)
                 mc.setAttr(f'{remapx}.outputMax', mod)
                 mc.setAttr(f'{remapy}.outputMax', mod2)
-                #mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateY')
-                #mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_01_CTRL_SDK_GRP.translateX')
+                mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateY')
+                mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateX')
                 if side == 'L':
                     mod = mod - 1000
                 else:
@@ -1526,8 +1523,65 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 mod2 = mod2 - 1000
 
         if face == False:
-            for obj in ['Eye', 'topteeth', 'botteeth', 'tongue', 'facefeathers']:
+            for obj in ['Eye', 'topteeth', 'botteeth', 'tongue', 'facefeathers', 'Corneas']:
                 mc.skinCluster('head_M_JNT', obj, tsb=True)
+
+    if character == 'Domingo':
+        #Fix Wing shape at elbow bend
+        for side in ['L', 'R']:
+            if side == 'L':
+                midx=-10
+                midy=10
+                midz=2.5
+                tipx=-20
+                tipy=15
+                tipz=2
+            else:
+                midx=10
+                midy=10
+                midz=2.5
+                tipx=20
+                tipy=15
+                tipz=2
+            part = 'Mid'
+            remapx= mc.createNode('remapValue', name=f'{part}_{side}_remapx')
+            remapy= mc.createNode('remapValue', name=f'{part}_{side}_remapy')
+            remapz= mc.createNode('remapValue', name=f'{part}_{side}_remapz')
+            mc.connectAttr(f'arm_{side}_05_JNT.rotateX', f'{remapx}.inputValue')
+            mc.connectAttr(f'arm_{side}_05_JNT.rotateX', f'{remapy}.inputValue')
+            mc.connectAttr(f'arm_{side}_05_JNT.rotateX', f'{remapz}.inputValue')
+            mc.setAttr(f'{remapx}.inputMax', 80)
+            mc.setAttr(f'{remapy}.inputMax', 80)
+            mc.setAttr(f'{remapz}.inputMax', 80)
+            mc.setAttr(f'{remapx}.inputMin', 0)
+            mc.setAttr(f'{remapy}.inputMin', 0)
+            mc.setAttr(f'{remapz}.inputMin', 0)
+            mc.setAttr(f'{remapx}.outputMax', midx)
+            mc.setAttr(f'{remapy}.outputMax', midy)
+            mc.setAttr(f'{remapz}.outputMax', midz)
+            mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateY')
+            mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateX')
+            mc.connectAttr(f'{remapz}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateZ')
+            part = 'Tip'
+            remapx= mc.createNode('remapValue', name=f'{part}_{side}_remapx')
+            remapy= mc.createNode('remapValue', name=f'{part}_{side}_remapy')
+            remapz= mc.createNode('remapValue', name=f'{part}_{side}_remapz')
+            mc.connectAttr(f'arm_{side}_05_JNT.rotateX', f'{remapx}.inputValue')
+            mc.connectAttr(f'arm_{side}_05_JNT.rotateX', f'{remapy}.inputValue')
+            mc.connectAttr(f'arm_{side}_05_JNT.rotateX', f'{remapz}.inputValue')
+            mc.setAttr(f'{remapx}.inputMax', 80)
+            mc.setAttr(f'{remapy}.inputMax', 80)
+            mc.setAttr(f'{remapz}.inputMax', 80)
+            mc.setAttr(f'{remapx}.inputMin', 0)
+            mc.setAttr(f'{remapy}.inputMin', 0)
+            mc.setAttr(f'{remapz}.inputMin', 0)
+            mc.setAttr(f'{remapx}.outputMax', tipx)
+            mc.setAttr(f'{remapy}.outputMax', tipy)
+            mc.setAttr(f'{remapz}.outputMax', tipz)
+            mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateY')
+            mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateX')
+            mc.connectAttr(f'{remapz}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateZ')
+
 
 
 
