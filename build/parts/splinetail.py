@@ -100,8 +100,7 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         # Step 2: For each CV on the curve, create cluster + control
         cvs = mc.ls(f"{ik_curve}.cv[*]", fl=True)
 
-        ik_ctrls = []
-        ik_offsets = []
+        ik_ctrls: list[rCtrl.Control] = []
 
         for i, cv in enumerate(cvs, start=1):
             # Make cluster for the CV
@@ -120,14 +119,13 @@ class SplineTail(rModule.RigModule, rFk.Fk):
                 ctrl_scale=10 * self.ctrl_scale,
                 translate=pos,
             )
+            ik_ctrls.append(ik_ctrl)
 
-            ik_ctrls.append(ik_ctrl.ctrl)
-            ik_offsets.append(ik_ctrl.top)
 
             # Parent cluster to control
             mc.parentConstraint(ik_ctrl.ctrl, cluster_handle, mo=True)
 
-        return ik_handle, ik_curve, ik_ctrls, ik_offsets, ctrl_group
+        return ik_ctrls
 
     def create_module(self):
         super().create_module()
@@ -151,6 +149,7 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         ik_joints = []
         lastjnt = None
         last_ik_jnt = None
+        self.fk_controls: list[rCtrl.Control] = []
         for guide in self.guide_list:
             # World position (translation)
             pos = mc.xform(guide, q=True, ws=True, t=True)   # [x, y, z]
@@ -158,7 +157,7 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             rot = mc.xform(guide, q=True, ws=True, ro=True)  # [rx, ry, rz]
             
             fk_ctrl = rCtrl.Control(name=guide, shape="circle", ctrl_scale=5 * self.ctrl_scale, translate=guide, rotate=guide)
-            
+            self.fk_controls.append(fk_ctrl)
             if precontrol is not None:
                 mc.parent(fk_ctrl.top, precontrol.ctrl)
                 precontrol = fk_ctrl
@@ -183,7 +182,7 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             ik_joints.append(ik_joint)
             
         #ik rig
-        self.build_ik_spline_with_controls(
+        self.ik_controls = self.build_ik_spline_with_controls(
             name=self.base_name,
             parent=ik_group,
             guides=self.guide_list,
@@ -266,8 +265,7 @@ class SplineTail(rModule.RigModule, rFk.Fk):
                 mc.setAttr(f"{cond}.colorIfFalseR", 0)
                 mc.connectAttr(f"{cond}.outColorR", f"{pc}.{weights[idx]}")
 
-        proxylist = ['Tail_IK_01_M_CTRL', 'Tail_IK_02_M_CTRL', 'Tail_IK_03_M_CTRL', 'Tail_IK_04_M_CTRL']
-        for i in range(1, self.segments, 1):
-            proxylist.append(f'Tail{i}_M_CTRL')
+        proxylist = [control.ctrl for control in self.ik_controls] + [control.ctrl for control in self.fk_controls]
+
         for ctrl in proxylist:
             mc.addAttr(ctrl, longName='FK_IK_Switch', proxy=f'{switch}.Tail_M_IKFK')
