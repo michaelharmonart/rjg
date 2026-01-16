@@ -261,13 +261,12 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         #mc.parentConstraint('waist_M_CTRL', )
         mc.parent('Tail1_jnt', 'COG_M_JNT')
 
+        mc.parentConstraint('waist_M_CTRL', self.fk_controls[0].ctrl, mo=True)
 
-        mc.parentConstraint('waist_M_CTRL', 'Tail1_M_CTRL_CNST_GRP', mo=True)
-
-        mc.addAttr("Tail_IK_01_M_CTRL", ln="TailSpace", at="enum", en="Waist:Root:World", k=True)
-
-        for num in ["01", "02", "03", "04"]:
-            grp = f"Tail_IK_{num}_M_CTRL_CNST_GRP"
+        mc.addAttr(self.ik_controls[0].ctrl, ln="TailSpace", at="enum", en="Waist:Root:World", k=True)
+        
+        for control in self.ik_controls:
+            grp = control.top
 
             # make one parentConstraint with all drivers
             pc = mc.parentConstraint("waist_M_CTRL", "global_M_CTRL", grp, mo=True)[0]
@@ -275,8 +274,8 @@ class SplineTail(rModule.RigModule, rFk.Fk):
 
             # loop through drivers and make condition per driver
             for idx, driver in enumerate(["waist_M_CTRL", "global_M_CTRL"]):
-                cond = mc.createNode("condition", n=f"TailCond_{num}_{driver}")
-                mc.connectAttr("Tail_IK_01_M_CTRL.TailSpace", f"{cond}.firstTerm")
+                cond = mc.createNode("condition", n=f"{control.ctrl}_{driver}_cond")
+                mc.connectAttr(f"{self.ik_controls[0].ctrl}.TailSpace", f"{cond}.firstTerm")
                 mc.setAttr(f"{cond}.secondTerm", idx)       # match enum index
                 mc.setAttr(f"{cond}.operation", 0)          # Equal
                 mc.setAttr(f"{cond}.colorIfTrueR", 1)
