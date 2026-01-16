@@ -98,7 +98,7 @@ class Chain:
             mc.error("Must use padding on chains with more than one joint to avoid naming conflicts.")
 
         # place joints at each position in the transform list
-        self.joints = []
+        self.joints: list[str] = []
         split_dict: dict[str, list[str]] = {}
         joint_mapping: dict[str, str] = {}
         for i, (guide_name, matrix) in enumerate(new_poses):

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from collections.abc import Sequence
 
 import maya.cmds as mc
 from maya.api.OpenMaya import (
@@ -62,11 +63,13 @@ def match_pose(node, translate=None, rotate=None, scale=None):
     else:
         mc.error("Input for scale not valid. Please give coordinates or provide a valid object.")
 
-'''
-populates an OrderedDict with {node : world space matrix}
-'''
-def read_pose(nodes):
-    if not isinstance(nodes, list):
+
+def read_pose(nodes: Sequence[str] | str) -> OrderedDict[str, list[float]]:
+    '''
+    populates an OrderedDict with {node : world space matrix}
+    '''    
+    
+    if isinstance(nodes, str):
         nodes = [nodes]
     pose_dict = OrderedDict()
 
@@ -74,10 +77,11 @@ def read_pose(nodes):
         pose_dict[node] = mc.xform(node, q=True, worldSpace=True, matrix=True)
     return pose_dict
 
-'''
-sets worldspace matrix of an object
-'''
-def set_pose(node, matrix):
+
+def set_pose(node: str, matrix: list[float]):
+    '''
+    sets worldspace matrix of an object
+    '''
     mc.xform(node, worldSpace=True, matrix=matrix)
 
 '''
