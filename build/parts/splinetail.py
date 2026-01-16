@@ -1,21 +1,64 @@
-
-from turtle import clear
-import maya.cmds as mc
+from collections.abc import Sequence
 from importlib import reload
 
-import rjg.build.rigModule as rModule
-import rjg.libs.attribute as rAttr
+import maya.cmds as mc
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
+import rjg.build.rigModule as rModule
+import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
+
 reload(rModule)
 reload(rAttr)
 reload(rChain)
 reload(rFk)
 
+def get_world_position(transform: str) -> tuple[float, float, float]:
+    return mc.xform(transform, query=True, translation=True, worldSpace=True)
+
+def spline_from_guides(
+    name: str,
+    guides: Sequence[str],
+    parent: str | None = None,
+    degree: int = 3,
+    rebuild_spans: int | None = None,
+    edit_point: bool = True,
+) -> str:
+    positions: list[tuple[float, float, float]] = [get_world_position(guide) for guide in guides]
+    if edit_point:
+        curve: str = mc.curve(name=name, editPoint=positions, degree=degree)
+    else:
+        curve: str = mc.curve(name=name, point=positions, degree=degree)
+    if rebuild_spans is not None:
+        mc.rebuildCurve(spans=rebuild_spans, keepRange=2, degree=degree)
+        mc.delete(curve, constructionHistory=True)
+    if parent is not None: 
+        mc.parent(curve, parent)
+    return curve
+
 class SplineTail(rModule.RigModule, rFk.Fk):
-    def __init__(self, side=None, part=None, guide_list=None, ctrl_scale=1, model_path=None, guide_path=None, pad='auto', remove_last=True, fk_shape='circle', IK_Spline = True, segments=12):
-        super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
+    def __init__(
+        self,
+        side=None,
+        part=None,
+        guide_list=None,
+        ctrl_scale=1,
+        model_path=None,
+        guide_path=None,
+        pad="auto",
+        remove_last=True,
+        fk_shape="circle",
+        IK_Spline=True,
+        segments=12,
+    ):
+        super().__init__(
+            side=side,
+            part=part,
+            guide_list=guide_list,
+            ctrl_scale=ctrl_scale,
+            model_path=model_path,
+            guide_path=guide_path,
+        )
 
         self.__dict__.update(locals())
         self.gimbal = None
@@ -23,29 +66,30 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         self.IK_Spline = IK_Spline
         self.segments = segments
 
-        if self.pad == 'auto':
+        if self.pad == "auto":
             self.pad = len(str(len(self.guide_list))) + 1
 
         self.create_module()
 
 
-    def build_ik_spline_with_controls(self, aim_joints=None, prefix=None, sub=False):
+    def build_ik_spline_with_controls(self, guides: Sequence[str], aim_joints=None, prefix=None, sub=False):
         ctrlname, grpname = 'M_CTRL', 'M_CTRL_CNST_GRP'
-        mc.group(name = f'{prefix}_handle_{grpname}', empty=True )
+        spline_group = mc.group(name = f'{prefix}_handle_{grpname}', empty=True )
         # Step 1: Create IK spline
-        ik_handle, effector, curve = mc.ikHandle(
-            sj=aim_joints[0],
-            ee=aim_joints[-1],
-            sol='ikSplineSolver',
-            ccv=True,
-            pcv=False
+        ik_curve = spline_from_guides(name=f'{prefix}_curve', guides=guides, rebuild_spans=1, parent=spline_group)
+        ik_handle, effector = mc.ikHandle(
+            startJoint=aim_joints[0],
+            endEffector=aim_joints[-1],
+            solver='ikSplineSolver',
+            parentCurve=False,
+            curve=ik_curve,
+            createCurve=False,
         )
-        curve = mc.rename(curve, f'{prefix}_curve')
+        
         ik_handle = mc.rename(ik_handle, f'{prefix}_ik_handle')
-        mc.parent(ik_handle, f'{prefix}_handle_{grpname}')
-        mc.parent(curve, f'{prefix}_handle_{grpname}')
+        mc.parent(ik_handle, spline_group)
         # Step 2: For each CV on the curve, create cluster + control
-        cvs = mc.ls(f"{curve}.cv[*]", fl=True)
+        cvs = mc.ls(f"{ik_curve}.cv[*]", fl=True)
         
         ik_ctrls = []
         ik_offsets = []
@@ -69,17 +113,13 @@ class SplineTail(rModule.RigModule, rFk.Fk):
 
                 # Parent cluster to control
                 mc.parentConstraint(ik_ctrl.ctrl, cluster_handle, mo=True)
-                mc.hide(ik_handle,curve,f'{prefix}_handle_{grpname}')
+                mc.hide(ik_handle,ik_curve,f'{prefix}_handle_{grpname}')
                 try:
                     mc.parent(f'{prefix}_handle_{grpname}', ikgroup)
                 except:
                     pass
 
-        return ik_handle, curve, ik_ctrls, ik_offsets, ikgroup
-
-
-
-
+        return ik_handle, ik_curve, ik_ctrls, ik_offsets, ikgroup
 
     def create_module(self):
         super().create_module()
@@ -128,14 +168,14 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             else:
                 last_ik_jnt = ik_joint
             ik_joints.append(ik_joint)
+            
         #ik rig
-            #curve = SplineTail.build_curve(self.guide_list, prefix='Tail', degree=3)
-        ikstuffs = self.build_ik_spline_with_controls(aim_joints=ik_joints, prefix="Tail", sub=False)
+        ikstuffs = self.build_ik_spline_with_controls(guides=self.guide_list, aim_joints=ik_joints, prefix="Tail", sub=False)
         mc.parent(ikstuffs[4],'Tail_IK_GRP')
         mc.parent('Tail1_FK', 'Tail_FK_GRP')
         mc.hide('Tail1_FK', 'Tail1_IK')
         mc.parent('Tail1_IK', 'Tail_IK_GRP')
-        #switch
+
 
     def output_rig(self):
         for guide in self.guide_list:
