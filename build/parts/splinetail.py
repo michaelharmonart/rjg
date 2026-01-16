@@ -13,8 +13,10 @@ reload(rAttr)
 reload(rChain)
 reload(rFk)
 
+
 def get_world_position(transform: str) -> tuple[float, float, float]:
     return mc.xform(transform, query=True, translation=True, worldSpace=True)
+
 
 def spline_from_guides(
     name: str,
@@ -32,9 +34,10 @@ def spline_from_guides(
     if rebuild_spans is not None:
         mc.rebuildCurve(spans=rebuild_spans, keepRange=2, degree=degree)
         mc.delete(curve, constructionHistory=True)
-    if parent is not None: 
+    if parent is not None:
         mc.parent(curve, parent)
     return curve
+
 
 class SplineTail(rModule.RigModule, rFk.Fk):
     def __init__(
@@ -120,7 +123,6 @@ class SplineTail(rModule.RigModule, rFk.Fk):
                 translate=pos,
             )
             ik_ctrls.append(ik_ctrl)
-
 
             # Parent cluster to control
             mc.parentConstraint(ik_ctrl.ctrl, cluster_handle, mo=True)
