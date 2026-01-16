@@ -134,22 +134,17 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         self.skeleton()
         self.output_rig()
         self.add_plugs()
-
-    def control_rig(self):
+    
+    def create_fk_control_rig(self):
         fk_group = mc.group(empty=True, name=f"{self.base_name}_FK_GRP", parent=self.module_grp)
-        ik_group = mc.group(empty=True, name=f"{self.base_name}_IK_GRP", parent=self.module_grp)
-        
         fk_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_FK_CTRL_GRP", parent=self.control_grp)
-        ik_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_IK_CTRL_GRP", parent=self.control_grp)
         self.fk_ctrl_group = fk_ctrl_group
-        self.ik_ctrl_group = ik_ctrl_group
-        
         #fk rig and skel
         precontrol: None | rCtrl.Control = None
-        ik_joints = []
         lastjnt = None
-        last_ik_jnt = None
+        
         self.fk_controls: list[rCtrl.Control] = []
+        fk_joints: list[str] = []
         for guide in self.guide_list:
             # World position (translation)
             pos = mc.xform(guide, q=True, ws=True, t=True)   # [x, y, z]
@@ -166,12 +161,29 @@ class SplineTail(rModule.RigModule, rFk.Fk):
                 mc.parent(fk_ctrl.top, fk_ctrl_group)
             mc.select(clear=True)
             fk_joint = mc.joint(p=pos, o=rot, name=f'{guide}_FK')
+            fk_joints.append(fk_joint)
             if lastjnt:
                 mc.parent(fk_joint, lastjnt)
                 lastjnt = fk_joint
             else:
                 lastjnt = fk_joint
             mc.parentConstraint(fk_ctrl.ctrl, fk_joint, mo=True)
+            mc.select(clear=True)
+
+        mc.parent(fk_joints[0], fk_group)
+    
+    def create_ik_control_rig(self):
+        ik_group = mc.group(empty=True, name=f"{self.base_name}_IK_GRP", parent=self.module_grp)
+        ik_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_IK_CTRL_GRP", parent=self.control_grp)
+        self.ik_ctrl_group = ik_ctrl_group
+        last_ik_jnt: str | None = None
+        ik_joints: list[str] = []
+        for guide in self.guide_list:
+            # World position (translation)
+            pos = mc.xform(guide, q=True, ws=True, t=True)   # [x, y, z]
+            # World rotation (Euler angles, degrees)
+            rot = mc.xform(guide, q=True, ws=True, ro=True)  # [rx, ry, rz]
+            
             mc.select(clear=True)
             ik_joint = mc.joint(p=pos, o=rot, name=f'{guide}_IK')
             if last_ik_jnt:
@@ -180,7 +192,7 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             else:
                 last_ik_jnt = ik_joint
             ik_joints.append(ik_joint)
-            
+        
         #ik rig
         self.ik_controls = self.build_ik_spline_with_controls(
             name=self.base_name,
@@ -191,9 +203,13 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             ctrl_group=ik_ctrl_group,
             ctrl_prefix="Tail",
         )
-        mc.parent('Tail1_FK', fk_group)
+        
         mc.hide('Tail1_FK', 'Tail1_IK')
         mc.parent('Tail1_IK', ik_group)
+    
+    def control_rig(self):
+        self.create_fk_control_rig()
+        self.create_ik_control_rig()
 
 
     def output_rig(self):
