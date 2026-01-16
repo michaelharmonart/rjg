@@ -187,13 +187,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         
     if character == 'Luciana':
         neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=5,)
-        head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = True)
+        head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = True,  autoneckik=True)
     elif character in ['Basemesh', 'Drummer']:
         neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=3, )
-        head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50,)
+        head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50,  autoneckik=True)
     else:    
         neck = rBuild.build_module(module_type='biped_limb', side='M', part='neck', guide_list=neckList, ctrl_scale=10, bendy=False, twisty=False, stretchy=False, segments=1, create_ik=False)
-        head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = False)
+        head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = False,  autoneckik=False)
 
     if character == "Skeleton":
         jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=10, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
