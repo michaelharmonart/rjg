@@ -277,7 +277,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
-                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['Eye', 'Cornea',], eyetype='lizzard')
+                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['Eye', 'Cornea',], eyetype='lizzard', socket=False)
                 eye.build()
                 from rjg.build.parts.UEbrow import UEbrow
                 brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1)
@@ -290,7 +290,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             jaw = UEjaw('Jaw_M_guides', ctrl_scale=1)
             jaw.build()
             from rjg.build.parts.UEmouth import UEmouth
-            mouth = UEmouth('Mouth_guides', ctrl_scale=1, Major_Mouth=5, rib_mouth=10, Major_2=8)
+            mouth = UEmouth('Mouth_guides', ctrl_scale=1, Major_Mouth=5, rib_mouth=10, Major_2=8, cornerhelper=False)
             mouth.build()
             from rjg.build.parts.UEteeth import UEteeth
             teeth = UEteeth('Tongue_M_guides', ctrl_scale=1, skin=['tongue', 'topteeth', 'botteeth'])
@@ -1347,7 +1347,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.skinCluster('Wing_L_01_bind_JNT', 'Feathers_TerLow', tsb=False)
         except:
             pass
-        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'tongue', 'Eye', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow', 'TailFeathers']:
+        for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'tongue', 'Eye', 'Cornea', 'Spines', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow', 'TailFeathers', 'hornrings', 'facefeathers']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
 
     if character in ['Basemesh'] and face:

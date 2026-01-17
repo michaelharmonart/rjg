@@ -16,10 +16,11 @@ reload (rGuide)
 reload(rXform)
 
 class UEeye(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, skin=None, eyetype='Human'):
+    def __init__(self, grp_name=None, ctrl_scale=1, skin=None, eyetype='Human', socket=True):
         super().__init__(part='Eye', grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.skin = skin
         self.eyetype = eyetype
+        self.socket = socket
         
     def get_sorted_eyelid_guides(self, prefix):
         prefix = UEface.get_prefix_from_group(self.grp_name)

@@ -38,7 +38,7 @@ def Luciana_extras(skin_src, skin_trg_grp):
     sk_g = []
 
     geo = [
-          'Spines', 'TailFeathers',
+          'Spines', 'TailFeathers', 'hornrings'
     ]
 
     #rUtil.create_pxWrap('Shirt', 'Pants', 'Gretchen_UBM')
@@ -68,7 +68,7 @@ def Luciana_misc_pvis(skin_src, skin_trg_grp):
 
     sk_g = []
     geo = [
-        'feathers', 'corneas', 'eyes', 'irises', 'tongue', 'topteeth', 'botteeth', 'facefins', 'backspines', 'hornrings', 'tailfeathers'
+        'feathers', 'corneas', 'eyes', 'irises', 'tongue', 'topteeth', 'botteeth', 'facefins', 'backspines', 'hornrings', 'tailfeathers',
     ]
     for g in geo:
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]

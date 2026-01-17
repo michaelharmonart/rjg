@@ -574,6 +574,7 @@ class UEfaceconnect(UEface):
                         CTRL_Size=10,
                         JNT_Size=0.9,
                     )
+                    rig_module.tag_bind_joints(jnt)
                     #facefin_def.append(jnt)
                     mc.parent(offset, 'head_M_01_CTRL')
                     mc.parent(jnt, 'head_M_JNT')
@@ -596,6 +597,7 @@ class UEfaceconnect(UEface):
                         CTRL_Size=10,
                         JNT_Size=0.9,
                     )
+                rig_module.tag_bind_joints(jnt)
                 if mastercontrol:
                     mc.parent(offset, mastercontrol)
                     mc.parent(jnt, masterjnt)
@@ -610,3 +612,54 @@ class UEfaceconnect(UEface):
                 mc.skinCluster(*facefin_def, 'facefeathers', toSelectedBones=True)
             except Exception as e:
                 print(f"Failed to set: {e}")
+
+
+            # Face Auto
+
+            for side in ['L', 'R']:
+                mod = -1 if side == "R" else 1
+
+                sneerX = mc.createNode('remapValue', name = f'SneerX_{side}_remap')
+                sneerY = mc.createNode('remapValue', name = f'SneerY_{side}_remap')
+                mc.setAttr(f'{sneerX}.inputMax', 40)
+                mc.setAttr(f'{sneerY}.inputMax', 40)
+                mc.setAttr(f'{sneerX}.outputMax', -25 * mod)
+                mc.setAttr(f'{sneerY}.outputMax', 25)
+                mc.connectAttr(f'Major_Mouth_{side}_UpperLip_08_Mouth_CTRL.translateY', f'{sneerX}.inputValue')
+                mc.connectAttr(f'Major_Mouth_{side}_UpperLip_08_Mouth_CTRL.translateY', f'{sneerY}.inputValue')
+                mc.connectAttr(f'{sneerX}.outValue', f'Cheek_{side}_CheekBone_{side}_CTRL_SDK_GRP.translateX')
+                mc.connectAttr(f'{sneerY}.outValue', f'Cheek_{side}_CheekBone_{side}_CTRL_SDK_GRP.translateY')
+
+
+                pullrot = mc.createNode('remapValue', name = f'pullrot_{side}_remap')
+                mc.setAttr(f'{pullrot}.inputMax', -90)
+                mc.setAttr(f'{pullrot}.outputMax', 40 * mod)
+                mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.translateZ', f'{pullrot}.inputValue')
+                mc.connectAttr(f'{pullrot}.outValue', f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_OFF_GRP.rotateY')
+
+                pullpuffY = mc.createNode('remapValue', name = f'pullpuffY_{side}_remap')
+                mc.setAttr(f'{pullpuffY}.inputMax', -90)
+                mc.setAttr(f'{pullpuffY}.outputMax', 20)
+                mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.translateZ', f'{pullpuffY}.inputValue')
+                mc.connectAttr(f'{pullpuffY}.outValue', f'Cheek_{side}_Puff_{side}_CTRL_OFF_GRP.translateY')
+
+                pullpuffZ = mc.createNode('remapValue', name = f'pullpuffZ_{side}_remap')
+                mc.setAttr(f'{pullpuffZ}.inputMax', -90)
+                mc.setAttr(f'{pullpuffZ}.outputMax', 20 * mod)
+                mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.translateZ', f'{pullpuffZ}.inputValue')
+                mc.connectAttr(f'{pullpuffZ}.outValue', f'Cheek_{side}_Puff_{side}_CTRL_OFF_GRP.translateZ')
+
+                pullpuffX = mc.createNode('multiplyDivide', name = f'pullpuffZ_{side}_MD')
+                mc.setAttr(f'{pullpuffX}.input2X', -.5 * mod)
+                mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.translateY', f'{pullpuffX}.input1X')
+                mc.connectAttr(f'{pullpuffX}.outputX', f'Cheek_{side}_Puff_{side}_CTRL_OFF_GRP.translateX')
+
+                #kill socket controls
+                try:
+                    mc.delete(f'Eye_{side}_socket_controls', f'Eye_{side}_Socket_Upper_JNT', f'Eye_{side}_Socket_OuterUpper01_JNT', f'Eye_{side}_Socket_OuterLower01_JNT', f'Eye_{side}_Socket_OuterCorner_JNT', f'Eye_{side}_Socket_Lower_JNT', f'Eye_{side}_Socket_InnerUpper01_JNT', f'Eye_{side}_Socket_InnerLower01_JNT', f'Eye_{side}_Socket_InnerCorner_JNT')
+                except:
+                    pass
+
+            for ctrl in ['Eye_R_Lower_Blink_R_CTRL', 'Eye_L_Upper_Blink_L_CTRL', 'Eye_L_Lower_Blink_L_CTRL', 'Eye_R_Upper_Blink_R_CTRL']:
+                mc.setAttr(f'{ctrl}.blink_mult2', -.1)
+                mc.setAttr(f'{ctrl}.blink_mult', -1)
