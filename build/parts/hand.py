@@ -5,6 +5,7 @@ import rjg.build.chain as rChain
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
+import rjg.libs.transform as rXform
 
 reload(rAttr)
 reload(rModule)
@@ -200,8 +201,9 @@ class Hand(rModule.RigModule):
 
     def skeleton(self):
         jnt = mc.joint(self.skel, name=self.base_name + '_JNT')
-        mc.parentConstraint(self.blend_chain.joints[0], jnt, mo=False)
-        mc.connectAttr(self.blend_chain.joints[0] + '.scale', jnt + '.scale')
+        #mc.parentConstraint(self.blend_chain.joints[0], jnt, mo=False)
+        #mc.connectAttr(self.blend_chain.joints[0] + '.scale', jnt + '.scale')
+        rXform.matrix_constraint(self.blend_chain.joints[0], jnt, keep_offset=False)
         self.bind_joints = [jnt]
         self.tag_bind_joints(self.bind_joints)
 

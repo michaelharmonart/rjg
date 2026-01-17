@@ -41,6 +41,7 @@ class Chain:
         orient_constraint=False,
         point_constraint=False,
         scale_constraint=True,
+        matrix_constraint=False,
         connect_scale=False,
         parent=False,
         static=False,
@@ -147,10 +148,14 @@ class Chain:
         if not static:
             if point_constraint or orient_constraint:
                 parent_constraint = False
-
+            if matrix_constraint:
+                scale_constraint = False
+            
             self.constraints = []
             for src, jnt in zip(pose_dict, self.joints):
-                if parent_constraint:
+                if matrix_constraint:
+                    rXform.matrix_constraint(src, jnt, keep_offset=False)
+                elif parent_constraint:
                     pac = mc.parentConstraint(src, jnt, mo=True)[0]
                     self.constraints.append(pac)
                 elif orient_constraint and point_constraint:

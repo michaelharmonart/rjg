@@ -5,6 +5,7 @@ import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 import rjg.build.chain as rChain
 import rjg.libs.control.ctrl as rCtrl
+import rjg.libs.transform as rXform
 reload(rAttr)
 reload(rModule)
 reload(rChain)
@@ -41,13 +42,14 @@ class Head(rModule.RigModule):
 
         self.head_jnt = mc.joint(head_jnt_grp, name=self.head_02.ctrl.replace('CTRL', 'JNT'))
         #mc.parentConstraint(self.head_02.ctrl, self.head_jnt, mo=True)
-        mc.pointConstraint(self.head_02.ctrl, self.head_jnt, maintainOffset=True)
-        mc.orientConstraint(self.head_02.ctrl, self.head_jnt, maintainOffset=True)
-        mc.scaleConstraint(self.head_02.ctrl, self.head_jnt, maintainOffset=True)
+        #mc.pointConstraint(self.head_02.ctrl, self.head_jnt, maintainOffset=True)
+        #mc.orientConstraint(self.head_02.ctrl, self.head_jnt, maintainOffset=True)
+        #mc.scaleConstraint(self.head_02.ctrl, self.head_jnt, maintainOffset=True)
+        rXform.matrix_constraint(self.head_02.ctrl,  self.head_jnt, keep_offset=False)
 
     def skeleton(self):
         head_chain = rChain.Chain(transform_list=[self.head_jnt], side=self.side, suffix='JNT', name=self.part)
-        head_chain.create_from_transforms(parent=self.skel, pad=False)
+        head_chain.create_from_transforms(parent=self.skel, pad=False, matrix_constraint=True)
         self.bind_joints = head_chain.joints
         self.tag_bind_joints(self.bind_joints)
 
