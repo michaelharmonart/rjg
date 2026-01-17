@@ -228,10 +228,10 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         ik_group = mc.group(
             empty=True,
             name=f"{self.base_name}_compat_IK_GRP",
-            parent=ctrl_parent if ctrl_parent is not None else self.module_grp,
+            parent=self.module_grp,
         )
         ik_ctrl_group = mc.group(
-            empty=True, name=f"{self.base_name}_compat_IK_CTRL_GRP", parent=self.control_grp
+            empty=True, name=f"{self.base_name}_compat_IK_CTRL_GRP", parent=ctrl_parent if ctrl_parent is not None else self.control_grp
         )
         self.compat_ik_ctrl_group = ik_ctrl_group
 
@@ -255,10 +255,10 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         ik_group = mc.group(
             empty=True,
             name=f"{self.base_name}_IK_GRP",
-            parent=ctrl_parent if ctrl_parent is not None else self.module_grp,
+            parent=self.module_grp,
         )
         ik_ctrl_group = mc.group(
-            empty=True, name=f"{self.base_name}_IK_CTRL_GRP", parent=self.control_grp
+            empty=True, name=f"{self.base_name}_IK_CTRL_GRP", parent=ctrl_parent if ctrl_parent is not None else self.control_grp
         )
         self.ik_ctrl_group = ik_ctrl_group
 
@@ -281,10 +281,10 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         )
 
     def control_rig(self):
-        self.ik_ctrl_parent_group = mc.group(name=f"{self.base_name}_IK_CTLS")
+        self.ik_ctrl_parent_group = mc.group(empty=True, name=f"{self.base_name}_IK_CTLS", parent=self.control_grp)
         self.create_fk_control_rig()
-        self.create_compat_ik_control_rig()
-        self.create_ik_control_rig()
+        self.create_compat_ik_control_rig(ctrl_parent=self.ik_ctrl_parent_group)
+        self.create_ik_control_rig(ctrl_parent=self.ik_ctrl_parent_group)
 
     def output_rig(self):
         ik_blend_group = mc.group(
@@ -386,9 +386,11 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             space_transforms=["waist_M_CTRL", "global_M_CTRL"],
         )
 
-        proxylist = [control.ctrl for control in self.compat_ik_controls] + [
-            control.ctrl for control in self.fk_controls
-        ]
+        proxylist = (
+            [control.ctrl for control in self.compat_ik_controls]
+            + [control.ctrl for control in self.ik_controls]
+            + [control.ctrl for control in self.fk_controls]
+        )
 
         for ctrl in proxylist:
             mc.addAttr(ctrl, longName="FK_IK_Switch", proxy=f"{switch}.Tail_M_IKFK")
