@@ -227,8 +227,9 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             chain_b=self.ik_chain.joints,
             handle_offsets=True,
         )
+        self.ik_blend_chain = ik_blend_chain
         for guide, fk_joint, ik_joint in zip(
-            self.guide_list, self.fk_chain.joints, self.compat_ik_chain.joints
+            self.guide_list, self.fk_chain.joints, ik_blend_chain.joints
         ):
             mc.parentConstraint(fk_joint, f"{guide}_jnt", mo=True)
             mc.parentConstraint(ik_joint, f"{guide}_jnt", mo=True)
@@ -268,7 +269,7 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         mc.connectAttr(f'{switch}.Tail_M_IKFK',f'{self.fk_ctrl_group}.visibility')
         mc.connectAttr(f'{rev}.outputX',f'{self.ik_ctrl_group}.visibility')
 
-        for joint, fk_joint, ik_joint in zip(self.joints, self.fk_chain.joints, self.compat_ik_chain.joints):
+        for joint, fk_joint, ik_joint in zip(self.joints, self.fk_chain.joints, self.ik_blend_chain.joints):
             mc.connectAttr(f'{switch}.Tail_M_IKFK', f"{joint}_parentConstraint1.{fk_joint}W0")
             mc.connectAttr(f'{rev}.outputX', f"{joint}_parentConstraint1.{ik_joint}W1")
 
