@@ -542,8 +542,9 @@ class Chain:
         scale: bool = True,
         shear: bool = True,
         handle_offsets: bool = False,
+        parent: str | None = None,
     ):
-        self.create_from_transforms(static=True)
+        self.create_from_transforms(static=True, parent=parent if parent is not None else False)
 
         self.switch = rAttr.Attribute(
             node=switch_node, type="double", min=0, max=1, keyable=True, name="switch"

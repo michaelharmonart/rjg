@@ -273,7 +273,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             faceconnect = UEfaceconnect('UEFace_Guides', ctrl_scale=1, custom='Normal')
             faceconnect.build() 
     if character in ["Luciana"]:
-        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 13)], ctrl_scale=10, pad=2, IK_Spline=True)
+        tail = rBuild.build_module(module_type='splinetail', side='M', part='tail', guide_list=['Tail' + str(t) for t in range(1, 13)], ctrl_scale=10, pad=2, ik_spline="tail_curve")
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
