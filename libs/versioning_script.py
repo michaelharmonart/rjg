@@ -56,8 +56,12 @@ else:
                 version_attribute(f"{rig_namespace}{control}.hipTwistDistribute", 0)
             update_version(5)
         if scene_rig_version < 6:
-            #Gretchen 
-            if rig_name = 'Gretchen'
+            # Gretchen Chest Offset
+            if rig_name == "Gretchen":
                 for control in ["Chest_Offset_CTRL"]:
                     version_attribute(f"{rig_namespace}{control}.CounterTwist_mult", 0)
             update_version(6)
+        if scene_rig_version < 7:
+            if rig_name == "Luciana":
+                for control in ["tail_M_IK_Blend_GRP"]:
+                    version_attribute(f"{rig_namespace}{control}.switch", 1)
