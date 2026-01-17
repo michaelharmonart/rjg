@@ -7,6 +7,7 @@ import rjg.build.fk as rFk
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
+from rjg.libs.maya_api import node
 
 reload(rModule)
 reload(rAttr)
@@ -37,6 +38,43 @@ def spline_from_guides(
     if parent is not None:
         mc.parent(curve, parent)
     return curve
+
+
+def create_space_switch(
+    host_node: str,
+    switch_attr_name: str,
+    driven_transforms: Sequence[str] | str,
+    space_names: Sequence[str],
+    space_transforms: Sequence[str],
+):
+    mc.addAttr(
+        host_node,
+        longName=switch_attr_name,
+        attributeType="enum",
+        enumName=":".join(space_names),
+        keyable=True,
+    )
+
+    if isinstance(driven_transforms, str):
+        driven = [driven_transforms]
+    else:
+        driven = driven_transforms
+
+    for driven_transform in driven:
+        # make one parentConstraint with all drivers
+        pc = mc.parentConstraint(*space_transforms, driven_transform, maintainOffset=True)[0]
+        weights = mc.parentConstraint(pc, query=True, weightAliasList=True)
+
+        # loop through drivers and make condition per driver
+        for idx, driver in enumerate(space_transforms):
+            cond = mc.createNode("condition", n=f"{driven_transform}_{driver}_cond")
+            mc.connectAttr(f"{host_node}.{switch_attr_name}", f"{cond}.firstTerm")
+            mc.setAttr(f"{cond}.secondTerm", idx)  # match enum index
+            mc.setAttr(f"{cond}.operation", 0)  # Equal
+            mc.setAttr(f"{cond}.colorIfTrueR", 1)
+            mc.setAttr(f"{cond}.colorIfFalseR", 0)
+            mc.connectAttr(f"{cond}.outColorR", f"{pc}.{weights[idx]}")
+    pass
 
 
 class SplineTail(rModule.RigModule, rFk.Fk):
@@ -85,16 +123,29 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         ctrl_prefix: str | None = None,
         curve: str | None = None,
         spans: int = 1,
+        set_curve_templated: bool = False,
+        curve_parent: str | None = None,
     ) -> list[rCtrl.Control]:
         spline_group = mc.group(name=f"{name}_spline_GRP", empty=True, parent=parent)
+        if curve_parent is not None:
+            spline_parent = curve_parent
+        else:
+            spline_parent = spline_group
         # Step 1: Create IK spline
         if curve is None:
             ik_curve = spline_from_guides(
-                name=f"{name}_curve", guides=guides, rebuild_spans=spans, parent=spline_group
+                name=f"{name}_curve", guides=guides, rebuild_spans=spans, parent=spline_parent
             )
         else:
             ik_curve = mc.duplicate(curve, name=f"{name}_curve")[0]
-            mc.parent(ik_curve, spline_group)
+            mc.parent(ik_curve, spline_parent)
+
+        ik_curve_shape = mc.listRelatives(ik_curve, shapes=True, children=True)[0]
+        if set_curve_templated:
+            mc.setAttr(f"{ik_curve_shape}.overrideEnabled", 1)
+            mc.setAttr(f"{ik_curve_shape}.overrideDisplayType", 1)
+            mc.displaySmoothness(ik_curve_shape, pointsWire=16)
+
         ik_handle, effector = mc.ikHandle(
             startJoint=start_joint,
             endEffector=end_joint,
@@ -142,40 +193,54 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         self.skeleton()
         self.output_rig()
         self.add_plugs()
-    
+
     def create_fk_control_rig(self):
         fk_group = mc.group(empty=True, name=f"{self.base_name}_FK_GRP", parent=self.module_grp)
-        fk_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_FK_CTRL_GRP", parent=self.control_grp)
+        fk_ctrl_group = mc.group(
+            empty=True, name=f"{self.base_name}_FK_CTRL_GRP", parent=self.control_grp
+        )
         self.fk_ctrl_group = fk_ctrl_group
-        #fk rig and skel
+        # fk rig and skel
         precontrol: None | rCtrl.Control = None
         lastjnt = None
-        
+
         fk_chain = rChain.Chain(transform_list=self.guide_list, suffix="FK", name=self.part)
         fk_chain.create_from_transforms(static=True, parent=fk_group)
         self.fk_chain = fk_chain
-        fk_joints  = fk_chain.joints
-        
+        fk_joints = fk_chain.joints
+
         self.fk_controls: list[rCtrl.Control] = []
         control_parent = fk_ctrl_group
         for guide, fk_joint in zip(self.guide_list, fk_joints):
-            fk_ctrl = rCtrl.Control(name=guide, shape="circle", ctrl_scale=5 * self.ctrl_scale, translate=guide, rotate=guide)
+            fk_ctrl = rCtrl.Control(
+                name=guide,
+                shape="circle",
+                ctrl_scale=5 * self.ctrl_scale,
+                translate=guide,
+                rotate=guide,
+            )
             mc.parent(fk_ctrl.top, control_parent)
             self.fk_controls.append(fk_ctrl)
             mc.parentConstraint(fk_ctrl.ctrl, fk_joint, mo=True)
             control_parent = fk_ctrl.ctrl
-    
-    def create_compat_ik_control_rig(self):
-        ik_group = mc.group(empty=True, name=f"{self.base_name}_compat_IK_GRP", parent=self.module_grp)
-        ik_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_compat_IK_CTRL_GRP", parent=self.control_grp)
-        self.ik_ctrl_group = ik_ctrl_group
-        
+
+    def create_compat_ik_control_rig(self, ctrl_parent: str | None = None):
+        ik_group = mc.group(
+            empty=True,
+            name=f"{self.base_name}_compat_IK_GRP",
+            parent=ctrl_parent if ctrl_parent is not None else self.module_grp,
+        )
+        ik_ctrl_group = mc.group(
+            empty=True, name=f"{self.base_name}_compat_IK_CTRL_GRP", parent=self.control_grp
+        )
+        self.compat_ik_ctrl_group = ik_ctrl_group
+
         ik_chain = rChain.Chain(transform_list=self.guide_list, suffix="compat_IK", name=self.part)
         ik_chain.create_from_transforms(static=True, parent=ik_group)
-        
+
         ik_joints = ik_chain.joints
         self.compat_ik_chain = ik_chain
-        #ik rig
+        # ik rig
         self.compat_ik_controls = self.build_ik_spline_with_controls(
             name=f"{self.base_name}_compat",
             parent=ik_group,
@@ -185,18 +250,24 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             ctrl_group=ik_ctrl_group,
             ctrl_prefix="Tail",
         )
-        
-    def create_ik_control_rig(self):
-        ik_group = mc.group(empty=True, name=f"{self.base_name}_IK_GRP", parent=self.module_grp)
-        ik_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_IK_CTRL_GRP", parent=self.control_grp)
+
+    def create_ik_control_rig(self, ctrl_parent: str | None = None):
+        ik_group = mc.group(
+            empty=True,
+            name=f"{self.base_name}_IK_GRP",
+            parent=ctrl_parent if ctrl_parent is not None else self.module_grp,
+        )
+        ik_ctrl_group = mc.group(
+            empty=True, name=f"{self.base_name}_IK_CTRL_GRP", parent=self.control_grp
+        )
         self.ik_ctrl_group = ik_ctrl_group
-        
+
         ik_chain = rChain.Chain(transform_list=self.guide_list, suffix="IK", name=self.part)
         ik_chain.create_from_transforms(static=True, parent=ik_group)
-        
+
         ik_joints = ik_chain.joints
         self.ik_chain = ik_chain
-        #ik rig
+        # ik rig
         self.ik_controls = self.build_ik_spline_with_controls(
             name=self.base_name,
             parent=ik_group,
@@ -205,10 +276,12 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             end_joint=ik_joints[-1],
             ctrl_group=ik_ctrl_group,
             curve=self.ik_spline_guide,
+            set_curve_templated=True,
+            curve_parent=ik_ctrl_group,
         )
 
-    
     def control_rig(self):
+        self.ik_ctrl_parent_group = mc.group(name=f"{self.base_name}_IK_CTLS")
         self.create_fk_control_rig()
         self.create_compat_ik_control_rig()
         self.create_ik_control_rig()
@@ -227,6 +300,17 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             chain_b=self.ik_chain.joints,
             handle_offsets=True,
         )
+
+        # Handle compatibility IK and it's visibility
+        invert_node = node.SubtractNode(name=f"{self.base_name}_Compat_Invert")
+        invert_node.input1.set(1)
+        invert_node.input2.connect_from(ik_blend_chain.switch.attr)
+        invert_node.output.connect_to(f"{self.ik_ctrl_group}.visibility")
+        mc.connectAttr(ik_blend_chain.switch.attr, f"{self.compat_ik_ctrl_group}.visibility")
+
+        for control in self.compat_ik_controls + self.ik_controls:
+            mc.addAttr(control.ctrl, longName="compatibility_IK", proxy=ik_blend_chain.switch.attr)
+
         self.ik_blend_chain = ik_blend_chain
         for guide, fk_joint, ik_joint in zip(
             self.guide_list, self.fk_chain.joints, ik_blend_chain.joints
@@ -239,11 +323,11 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         bind_joints = []
         for guide in self.guide_list:
             # World position (translation)
-            pos = mc.xform(guide, q=True, ws=True, t=True)   # [x, y, z]
+            pos = mc.xform(guide, q=True, ws=True, t=True)  # [x, y, z]
             # World rotation (Euler angles, degrees)
             rot = mc.xform(guide, q=True, ws=True, ro=True)  # [rx, ry, rz]
             mc.select(clear=True)
-            bindjnt = mc.joint(p=pos, o=rot, name=f'{guide}_jnt')
+            bindjnt = mc.joint(p=pos, o=rot, name=f"{guide}_jnt")
             bind_joints.append(bindjnt)
             if lastjnt:
                 mc.parent(bindjnt, lastjnt)
@@ -253,51 +337,58 @@ class SplineTail(rModule.RigModule, rFk.Fk):
         split_joint: str = bind_joints[0]
         split_joints: list[str] = bind_joints
         mc.addAttr(split_joint, longName="split_joints", dataType="string")
-        mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
+        mc.setAttr(f"{split_joint}.split_joints", repr(split_joints), type="string")
         self.joints = bind_joints
         self.tag_bind_joints(bind_joints)
 
     def add_plugs(self):
         if mc.objExists("switch_CTRL"):
-            switch = 'switch_CTRL'
+            switch = "switch_CTRL"
         else:
             switch = self.module_grp
-        mc.addAttr(switch, longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False )
+        mc.addAttr(switch, longName="Tail_M_IKFK", attributeType="bool", keyable=True, hidden=False)
 
         rev = mc.shadingNode("reverse", asUtility=True, name="Tail_Switch_Rev")
-        mc.connectAttr(f'{switch}.Tail_M_IKFK', f'{rev}.inputX')
-        mc.connectAttr(f'{switch}.Tail_M_IKFK',f'{self.fk_ctrl_group}.visibility')
-        mc.connectAttr(f'{rev}.outputX',f'{self.ik_ctrl_group}.visibility')
+        mc.connectAttr(f"{switch}.Tail_M_IKFK", f"{rev}.inputX")
+        mc.connectAttr(f"{switch}.Tail_M_IKFK", f"{self.fk_ctrl_group}.visibility")
+        mc.connectAttr(f"{rev}.outputX", f"{self.ik_ctrl_parent_group}.visibility")
 
-        for joint, fk_joint, ik_joint in zip(self.joints, self.fk_chain.joints, self.ik_blend_chain.joints):
-            mc.connectAttr(f'{switch}.Tail_M_IKFK', f"{joint}_parentConstraint1.{fk_joint}W0")
-            mc.connectAttr(f'{rev}.outputX', f"{joint}_parentConstraint1.{ik_joint}W1")
+        for joint, fk_joint, ik_joint in zip(
+            self.joints, self.fk_chain.joints, self.ik_blend_chain.joints
+        ):
+            mc.connectAttr(f"{switch}.Tail_M_IKFK", f"{joint}_parentConstraint1.{fk_joint}W0")
+            mc.connectAttr(f"{rev}.outputX", f"{joint}_parentConstraint1.{ik_joint}W1")
 
-        #mc.parentConstraint('waist_M_CTRL', )
-        mc.parent('Tail1_jnt', 'COG_M_JNT')
+        # mc.parentConstraint('waist_M_CTRL', )
+        mc.parent("Tail1_jnt", "COG_M_JNT")
 
-        mc.parentConstraint('waist_M_CTRL', self.fk_controls[0].ctrl, mo=True)
+        mc.parentConstraint("waist_M_CTRL", self.fk_controls[0].ctrl, mo=True)
 
-        mc.addAttr(self.compat_ik_controls[0].ctrl, ln="TailSpace", at="enum", en="Waist:Root:World", k=True)
-        
-        for control in self.compat_ik_controls:
-            grp = control.top
+        for control in self.ik_controls[:3]:
+            mc.parentConstraint("waist_M_CTRL", control.top, maintainOffset=True)
 
-            # make one parentConstraint with all drivers
-            pc = mc.parentConstraint("waist_M_CTRL", "global_M_CTRL", grp, mo=True)[0]
-            weights = mc.parentConstraint(pc, q=True, wal=True)
+        create_space_switch(
+            host_node=self.ik_ctrl_group,
+            switch_attr_name="tailSpace",
+            driven_transforms=[control.top for control in self.ik_controls[2:]],
+            space_names=["Waist", "Root", "World"],
+            space_transforms=["waist_M_CTRL", "global_M_CTRL"],
+        )
+        mc.setAttr(f"{self.ik_ctrl_group}.tailSpace", 1)
+        for control in self.ik_controls:
+            mc.addAttr(control.ctrl, longName="tailSpace", proxy=f"{self.ik_ctrl_group}.tailSpace")
 
-            # loop through drivers and make condition per driver
-            for idx, driver in enumerate(["waist_M_CTRL", "global_M_CTRL"]):
-                cond = mc.createNode("condition", n=f"{control.ctrl}_{driver}_cond")
-                mc.connectAttr(f"{self.compat_ik_controls[0].ctrl}.TailSpace", f"{cond}.firstTerm")
-                mc.setAttr(f"{cond}.secondTerm", idx)       # match enum index
-                mc.setAttr(f"{cond}.operation", 0)          # Equal
-                mc.setAttr(f"{cond}.colorIfTrueR", 1)
-                mc.setAttr(f"{cond}.colorIfFalseR", 0)
-                mc.connectAttr(f"{cond}.outColorR", f"{pc}.{weights[idx]}")
+        create_space_switch(
+            host_node=self.compat_ik_controls[0].ctrl,
+            switch_attr_name="TailSpace",
+            driven_transforms=[control.top for control in self.compat_ik_controls],
+            space_names=["Waist", "Root", "World"],
+            space_transforms=["waist_M_CTRL", "global_M_CTRL"],
+        )
 
-        proxylist = [control.ctrl for control in self.compat_ik_controls] + [control.ctrl for control in self.fk_controls]
+        proxylist = [control.ctrl for control in self.compat_ik_controls] + [
+            control.ctrl for control in self.fk_controls
+        ]
 
         for ctrl in proxylist:
-            mc.addAttr(ctrl, longName='FK_IK_Switch', proxy=f'{switch}.Tail_M_IKFK')
+            mc.addAttr(ctrl, longName="FK_IK_Switch", proxy=f"{switch}.Tail_M_IKFK")
