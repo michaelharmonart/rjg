@@ -1,4 +1,5 @@
 {
+  "format_on_save": "off",
   "remove_trailing_whitespace_on_save": false,
   "languages": {
     "Python": {

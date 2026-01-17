@@ -98,7 +98,7 @@ class Chain:
             mc.error("Must use padding on chains with more than one joint to avoid naming conflicts.")
 
         # place joints at each position in the transform list
-        self.joints = []
+        self.joints: list[str] = []
         split_dict: dict[str, list[str]] = {}
         joint_mapping: dict[str, str] = {}
         for i, (guide_name, matrix) in enumerate(new_poses):
@@ -542,8 +542,9 @@ class Chain:
         scale: bool = True,
         shear: bool = True,
         handle_offsets: bool = False,
+        parent: str | None = None,
     ):
-        self.create_from_transforms(static=True)
+        self.create_from_transforms(static=True, parent=parent if parent is not None else False)
 
         self.switch = rAttr.Attribute(
             node=switch_node, type="double", min=0, max=1, keyable=True, name="switch"
