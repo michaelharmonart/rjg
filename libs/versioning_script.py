@@ -62,6 +62,14 @@ else:
                     version_attribute(f"{rig_namespace}{control}.CounterTwist_mult", 0)
             update_version(6)
         if scene_rig_version < 7:
+            # New IK Tail for Luciana
             if rig_name == "Luciana":
                 for control in ["tail_M_IK_Blend_GRP"]:
                     version_attribute(f"{rig_namespace}{control}.switch", 1)
+            update_version(7)
+        if scene_rig_version < 7.1:
+            # Wing Orient Switch
+            if rig_name == "Luciana":
+                for control in ["Wing_L_01_FK_L_CTRL", "Wing_R_01_FK_R_CTRL"]:
+                    version_attribute(f"{rig_namespace}{control}.orientSpace", 4)
+            update_version(7.1)
