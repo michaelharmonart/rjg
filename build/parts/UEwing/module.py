@@ -227,4 +227,3 @@ class UEwing(UEface):
         self.connect_feathers(
             root_spline=self.root_spline, mid_spline=self.mid_spline, tip_spline=self.tip_spline, side=side
         )
-

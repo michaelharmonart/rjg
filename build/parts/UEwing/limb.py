@@ -1,8 +1,11 @@
 from importlib import reload
 from typing import TYPE_CHECKING
+
 import maya.cmds as mc
-from rjg.build.UEface import UEface
 import rjg.build.chain as rChain
+from rjg.build.UEface import UEface
+from rjg.libs.control.ctrl import Control
+from rjg.libs.space import space_switch
 
 reload(rChain)
 
@@ -41,11 +44,41 @@ def build_bendy_chain(wing: "UEwing", bend_axis: tuple[int, int, int] = (0, 0, 1
 
     wing.add_global_twist(main_ctrl=f"Wing_{wing.side}")
 
+
+def create_inputs(wing: "UEwing") -> None:
+    wing.input_group = mc.group(
+        empty=True, name=f"{wing.prefix}_INPUTS", parent=wing.mastergrp
+    )
+    wing.orient_input = mc.group(
+        empty=True, name=f"{wing.prefix}_Orient_IN", parent=wing.input_group
+    )
+
+
+def create_orient_spaces(wing: "UEwing", orient_spaces: dict[str, str], orient_transform: str, orient_attr_node: str):
+    targets = []
+    names = []
+    for name, target in orient_spaces.items():
+        names.append(name)
+        targets.append(target)
+
+    space_switch(
+        node=wing.orient_input,
+        driver=orient_attr_node,
+        target_list=targets,
+        name_list=names,
+        name="orientSpace",
+        constraint_type="orient",
+        value=1,
+    )
+    mc.orientConstraint(wing.orient_input, orient_transform, maintainOffset=True)
+
+
 def build_limb(wing: "UEwing", ctrl_group: str, part_group: str, bendy: bool = True):
     prefix = wing.prefix
     side = prefix.split("_")[-1]
     ctrlname, grpname = (ctrl_group, part_group)
     mc.select(clear=True)
+    create_inputs(wing)
     wing.fk_group = mc.group(em=True, name=f"{prefix}_FK_{grpname}")
     wing.ik_group = mc.group(em=True, name=f"{prefix}_IK_{grpname}")
 
@@ -109,6 +142,8 @@ def build_limb(wing: "UEwing", ctrl_group: str, part_group: str, bendy: bool = T
     mc.connectAttr(f"{FKIKSwitch_CTL}.FK_IK", f"{rev_node}.inputX")
 
     # fk
+    fk_controls: list[str] = []
+    fk_offsets: list[str] = []
     for guide in [
         f"{prefix}_01_guide",
         f"{prefix}_02_guide",
@@ -130,6 +165,8 @@ def build_limb(wing: "UEwing", ctrl_group: str, part_group: str, bendy: bool = T
             JNT_Size=0.5,
             bind=False,
         )
+        fk_controls.append(ctrl)
+        fk_offsets.append(ctrl)
         # mc.addAttr()
         rot = mc.xform(guide, q=True, ws=True, ro=True)
         trans = mc.xform(guide, q=True, ws=True, t=True)
@@ -283,6 +320,20 @@ def build_limb(wing: "UEwing", ctrl_group: str, part_group: str, bendy: bool = T
     mc.parentConstraint("chest_M_02_CTRL", ctrl_offset, mo=True)
     mc.hide(f"{prefix}_extraOffset_{grpname}")
     mc.parent(wing.mastergrp, "RIG")
+
+    
+    create_orient_spaces(
+        wing,
+        orient_spaces={
+            "world": "ROOT",
+            "global": "global_M_CTRL",
+            "root": "root_02_M_CTRL",
+            "chest": "chest_top_M_CTRL",
+            "scapula": f"Wing_{wing.side}_Scap_{wing.side}_CTRL",
+        },
+        orient_transform=fk_offsets[0],
+        orient_attr_node=fk_controls[0],
+    )
 
     # proxy ik / fk switch
     for control in [
