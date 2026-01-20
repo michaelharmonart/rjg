@@ -91,7 +91,7 @@ class Head(rModule.RigModule):
         if self.autoneckik == True:
             mc.orientConstraint('Head_M_ik_CTRL', 'head_M_01_CTRL_SDK_GRP', mo=True)
             mc.addAttr('Head_M_ik_CTRL', longName='Rot_Legacy_Switch', at='bool', dv=1)
-            md = mc.createNode('multipyDivide', name='Legacy_Head_Switch_MD')
+            md = mc.createNode('multiplyDivide', name='Legacy_Head_Switch_MD')
             #mc.connectAttr('neck_M_REV.outputZ', 'head_M_01_CTRL_SDK_GRP_orientConstraint1.Head_M_ik_CTRLW0')
             mc.connectAttr('neck_M_REV.outputZ', f'{md}.input1X')
             mc.connectAttr('Head_M_ik_CTRL.Rot_Legacy_Switch', f'{md}.input2X')

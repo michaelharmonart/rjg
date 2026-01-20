@@ -37,6 +37,7 @@ class UEfaceconnect(UEface):
             JNT_Size=0.9,
             CTRL_Color=(1, 0.6, 0)
         )
+
         lower_jnt, lower_ctrl, lower_offset = UEface.Simple_joint_and_Control(
             guide='LowerHead_guide',
             overwrite=True,
@@ -48,6 +49,8 @@ class UEfaceconnect(UEface):
         )
         mc.parent(lower_jnt, upper_jnt, 'head_M_JNT')
         mc.parent(lower_offset, upper_offset, 'head_M_01_CTRL')
+        mc.settAttr('LowerHead_JNT.segmentScaleCompensate', 0)
+        mc.settAttr('UpperHead_JNT.segmentScaleCompensate', 0)
 
         # Select the set and get its members
         mc.select('UE_Face_Bind')
