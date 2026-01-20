@@ -463,6 +463,9 @@ class UEfaceconnect(UEface):
             mc.parent('Beard_M_01_JNT', lower_jnt)
             mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL', mo=True)
 
+            if mc.objExists('Tongue_M_Curl_CTRL_CNST_GRP'):
+                mc.parentConstraint('LowerHead_M_CTRL', 'Tongue_M_Curl_CTRL_CNST_GRP', mo=True)
+
         elif self.custom == 'Luciana':
             mc.parent('Eye_L_look_offset', 'Eye_R_look_offset', 'UpperHead_M_CTRL')
             look_pos = mc.xform('LookNULL_loc', q=True, os=True, t=True)
@@ -666,3 +669,6 @@ class UEfaceconnect(UEface):
             for ctrl in ['Eye_R_Lower_Blink_R_CTRL', 'Eye_L_Upper_Blink_L_CTRL', 'Eye_L_Lower_Blink_L_CTRL', 'Eye_R_Upper_Blink_R_CTRL']:
                 mc.setAttr(f'{ctrl}.blink_mult2', -.1)
                 mc.setAttr(f'{ctrl}.blink_mult', -1)
+
+            if mc.objExists('Tongue_M_Curl_CTRL_CNST_GRP'):
+                mc.parentConstraint('LowerHead_M_CTRL', 'Tongue_M_Curl_CTRL_CNST_GRP', mo=True)
