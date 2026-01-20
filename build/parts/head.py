@@ -90,7 +90,7 @@ class Head(rModule.RigModule):
         rAttr.Attribute(node=self.part_grp, type='plug', value=['mc.ls("neck_M_??_driver_JNT", "neck_M_??_fk_offset_CTRL")[-1]'], name='pocRigPlugs', children_name=[self.head_jnt])
         if self.autoneckik == True:
             mc.orientConstraint('Head_M_ik_CTRL', 'head_M_01_CTRL_SDK_GRP', mo=True)
-            mc.addAttr('Head_M_ik_CTRL', longName='Rot_Legacy_Switch', at='bool', dv=1)
+            mc.addAttr('Head_M_ik_CTRL', longName='Rot_Legacy_Switch', at='bool', dv=1, k=True)
             md = mc.createNode('multiplyDivide', name='Legacy_Head_Switch_MD')
             #mc.connectAttr('neck_M_REV.outputZ', 'head_M_01_CTRL_SDK_GRP_orientConstraint1.Head_M_ik_CTRLW0')
             mc.connectAttr('neck_M_REV.outputZ', f'{md}.input1X')
