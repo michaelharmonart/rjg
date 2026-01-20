@@ -98,7 +98,11 @@ class GuideWriteTool(QtWidgets.QDialog):
 
         self.setWindowTitle("Guide Write Tool")
         self.setMinimumWidth(300)
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.Window)
+        self.setWindowFlags(
+        self.windowFlags()
+        | QtCore.Qt.Window
+        | QtCore.Qt.WindowStaysOnTopHint
+    )
 
         self.last_joint = None
 
