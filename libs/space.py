@@ -3,12 +3,20 @@ from importlib import reload
 
 import rjg.libs.attribute as rAttr
 
-def space_switch(node, driver, target_list=[], name_list=[], name='space', constraint_type='parent', value=0):
+def space_switch(node: str, driver: str, target_list: list[str]=[], name_list: list[str]=[], name: str='space', constraint_type: str ='parent', value: int = 0):
     node_split = node.split('_')
     base_name = node_split[0] + '_' + node_split[1]
 
     if constraint_type != 'parent':
-        loc_grp = mc.group(empty=True, parent=base_name + '_MODULE', name=base_name + '_' + name + '_GRP')
+        parent = base_name + '_MODULE'
+        if mc.objExists(parent):
+            loc_grp = mc.group(empty=True, parent=base_name + '_MODULE', name=base_name + '_' + name + '_GRP')
+        else:
+            parent = mc.listRelatives(node, parent=True)
+            loc_grp = mc.group(empty=True, name=node + '_' + name + '_GRP')
+            if parent:
+                mc.parent(loc_grp, parent, relative=True) 
+        
         targets = []
         for target in target_list:
             target_name = base_name + '_' + target + '_LOC'

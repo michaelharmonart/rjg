@@ -76,7 +76,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     mc.viewFit('perspShape', fitFactor=1, all=True, animate=True)
 
     # Versioning
-    create_versioning_script(rig_name=character, rig_version=7)
+    create_versioning_script(rig_name=character, rig_version=7.1)
     
     #Fixing Names
     if character == 'Skeleton':
