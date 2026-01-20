@@ -200,7 +200,7 @@ class GuideReaderUI(QtWidgets.QDialog):
 
         self.setWindowTitle("Read Guides")
         self.setMinimumWidth(320)
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.Window)
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint)
 
         self.build_ui()
         self.populate_parts()
