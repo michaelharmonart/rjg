@@ -49,8 +49,8 @@ class UEfaceconnect(UEface):
         )
         mc.parent(lower_jnt, upper_jnt, 'head_M_JNT')
         mc.parent(lower_offset, upper_offset, 'head_M_01_CTRL')
-        mc.settAttr('LowerHead_JNT.segmentScaleCompensate', 0)
-        mc.settAttr('UpperHead_JNT.segmentScaleCompensate', 0)
+        mc.setAttr('LowerHead_JNT.segmentScaleCompensate', 0)
+        mc.setAttr('UpperHead_JNT.segmentScaleCompensate', 0)
 
         # Select the set and get its members
         mc.select('UE_Face_Bind')
