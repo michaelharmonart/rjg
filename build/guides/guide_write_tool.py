@@ -121,7 +121,7 @@ class GuideWriteTool(QtWidgets.QDialog):
         # Type dropdown
         layout.addWidget(QtWidgets.QLabel("Type"))
         self.type_cb = QtWidgets.QComboBox()
-        self.type_cb.addItems(["chain", "single", "dilation"])
+        self.type_cb.addItems(["chain", "single", "sequence"])
         layout.addWidget(self.type_cb)
 
         # Parent field
@@ -149,50 +149,96 @@ class GuideWriteTool(QtWidgets.QDialog):
 
     def write_pos(self):
 
-        if self.type_cb.currentText() != "chain":
-            mc.warning("Only chain mode implemented.")
+
+        if self.type_cb.currentText() == "chain":
+            mesh = get_selected_mesh()
+            if not mesh:
+                mc.warning("No mesh selected.")
+                return
+
+            vert_ids = get_selected_vert_ids_in_order()
+            if not vert_ids:
+                mc.warning("No verts selected.")
+                return
+
+            pos = get_middle_position_from_vert_ids(mesh, vert_ids)
+            if not pos:
+                mc.warning("Could not compute position.")
+                return
+
+            idx = get_next_chain_index()
+
+            null = mc.group(em=True, n=f"chain_guide_NULL_{idx:02d}")
+            jnt = mc.joint(n=f"chain_guide_{idx:02d}")
+
+            mc.parent(jnt, null)
+            mc.parent(null, get_preview_grp())
+
+            mc.xform(null, ws=True, t=pos)
+
+            # Custom attrs
+            if not mc.attributeQuery("vertList", n=jnt, ex=True):
+                mc.addAttr(jnt, ln="vertList", dt="string")
+            if not mc.attributeQuery("mesh", n=jnt, ex=True):
+                mc.addAttr(jnt, ln="mesh", dt="string")
+            if not mc.attributeQuery("upVectorVert", n=jnt, ex=True):
+                mc.addAttr(jnt, ln="upVectorVert", dt="string")
+
+            mc.setAttr(jnt+".vertList", json.dumps(vert_ids), type="string")
+            mc.setAttr(jnt+".mesh", mesh, type="string")
+            mc.setAttr(jnt+".upVectorVert", "None", type="string")
+
+            self.last_joint = jnt
+
+            print(f"Created {jnt}")
+
+        elif self.type_cb.currentText() == "sequence":
+            mesh = get_selected_mesh()
+            if not mesh:
+                mc.warning("No mesh selected.")
+                return
+
+            vert_ids = get_selected_vert_ids_in_order()
+            if not vert_ids:
+                mc.warning("No verts selected.")
+                return
+            for vert in vert_ids:
+
+                pos = get_middle_position_from_vert_ids(mesh, [vert])
+                if not pos:
+                    mc.warning("Could not compute position.")
+                    return
+
+                idx = get_next_chain_index()
+
+                null = mc.group(em=True, n=f"seq_guide_NULL_{idx:02d}")
+                jnt = mc.joint(n=f"seq_guide_{idx:02d}")
+
+                mc.parent(jnt, null)
+                mc.parent(null, get_preview_grp())
+
+                mc.xform(null, ws=True, t=pos)
+
+                # Custom attrs
+                if not mc.attributeQuery("vertList", n=jnt, ex=True):
+                    mc.addAttr(jnt, ln="vertList", dt="string")
+                if not mc.attributeQuery("mesh", n=jnt, ex=True):
+                    mc.addAttr(jnt, ln="mesh", dt="string")
+                if not mc.attributeQuery("upVectorVert", n=jnt, ex=True):
+                    mc.addAttr(jnt, ln="upVectorVert", dt="string")
+
+                mc.setAttr(jnt+".vertList", json.dumps([vert]), type="string")
+                mc.setAttr(jnt+".mesh", mesh, type="string")
+                mc.setAttr(jnt+".upVectorVert", "None", type="string")
+
+                self.last_joint = jnt
+
+                print(f"Created {jnt}")
+        
+        else:
+            #if self.type_cb.currentText() not in  ["chain", 'sequence']:
+            mc.warning("Only chain and sequence mode implemented.")
             return
-
-        mesh = get_selected_mesh()
-        if not mesh:
-            mc.warning("No mesh selected.")
-            return
-
-        vert_ids = get_selected_vert_ids_in_order()
-        if not vert_ids:
-            mc.warning("No verts selected.")
-            return
-
-        pos = get_middle_position_from_vert_ids(mesh, vert_ids)
-        if not pos:
-            mc.warning("Could not compute position.")
-            return
-
-        idx = get_next_chain_index()
-
-        null = mc.group(em=True, n=f"chain_guide_NULL_{idx:02d}")
-        jnt = mc.joint(n=f"chain_guide_{idx:02d}")
-
-        mc.parent(jnt, null)
-        mc.parent(null, get_preview_grp())
-
-        mc.xform(null, ws=True, t=pos)
-
-        # Custom attrs
-        if not mc.attributeQuery("vertList", n=jnt, ex=True):
-            mc.addAttr(jnt, ln="vertList", dt="string")
-        if not mc.attributeQuery("mesh", n=jnt, ex=True):
-            mc.addAttr(jnt, ln="mesh", dt="string")
-        if not mc.attributeQuery("upVectorVert", n=jnt, ex=True):
-            mc.addAttr(jnt, ln="upVectorVert", dt="string")
-
-        mc.setAttr(jnt+".vertList", json.dumps(vert_ids), type="string")
-        mc.setAttr(jnt+".mesh", mesh, type="string")
-        mc.setAttr(jnt+".upVectorVert", "None", type="string")
-
-        self.last_joint = jnt
-
-        print(f"Created {jnt}")
 
     # -------------------------
     # STORE UP VECTOR
@@ -227,7 +273,8 @@ class GuideWriteTool(QtWidgets.QDialog):
             "guides": {}
         }
 
-        guides = mc.ls("chain_guide_*", type="joint")
+        if self.type_cb.currentText() == 'chain':
+            guides = mc.ls("chain_guide_*", type="joint")
 
         for jnt in guides:
             null = mc.listRelatives(jnt, p=True)[0]
