@@ -427,8 +427,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
             poc = True
         else:
             poc = False
-        limb_chain.create_from_transforms(orient_constraint=True,
-                                          point_constraint=poc,
+        limb_chain.create_from_transforms(matrix_constraint=True, keep_joint_orient=True,
                                           parent=self.skel)
         self.bind_joints = limb_chain.joints
         self.tag_bind_joints(self.bind_joints[:-1])
