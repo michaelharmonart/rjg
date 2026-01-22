@@ -73,3 +73,9 @@ else:
                 for control in ["Wing_L_01_FK_L_CTRL", "Wing_R_01_FK_R_CTRL"]:
                     version_attribute(f"{rig_namespace}{control}.orientSpace", 4)
             update_version(7.1)
+        if scene_rig_version < 7.2:
+            # Tail Orient Switch
+            if rig_name == "Luciana":
+                for control in ["Tail1_M_CTRL"]:
+                    version_attribute(f"{rig_namespace}{control}.orientSpace", 4)
+            update_version(7.2)

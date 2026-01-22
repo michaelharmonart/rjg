@@ -2,6 +2,8 @@ from collections.abc import Sequence
 from importlib import reload
 
 import maya.cmds as mc
+from rjg.libs.transform import matrix_constraint
+from rjg.libs.space import space_switch
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
 import rjg.build.rigModule as rModule
@@ -185,10 +187,19 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             mc.parentConstraint(ik_ctrl.ctrl, cluster_handle, mo=True)
 
         return ik_ctrls
-
+        
+    def create_inputs(self):
+        self.input_group = mc.group(
+            empty=True, name=f"{self.base_name}_INPUTS", parent=self.module_grp
+        )
+        self.orient_input = mc.group(
+            empty=True, name=f"{self.base_name}_Orient_IN", parent=self.input_group
+        )
+    
     def create_module(self):
         super().create_module()
-
+        
+        self.create_inputs()
         self.control_rig()
         self.skeleton()
         self.output_rig()
@@ -223,7 +234,18 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             self.fk_controls.append(fk_ctrl)
             mc.parentConstraint(fk_ctrl.ctrl, fk_joint, mo=True)
             control_parent = fk_ctrl.ctrl
-
+        
+        self.create_orient_spaces(orient_spaces={
+            "world": "ROOT",
+            "global": "global_M_CTRL",
+            "root": "root_02_M_CTRL",
+            "cog": "COG_M_CTRL",
+            "hip": "hip_M_CTRL"
+        },
+        orient_transform=self.fk_controls[0].top,
+        orient_attr_node=self.fk_controls[0].ctrl)
+        
+        
     def create_compat_ik_control_rig(self, ctrl_parent: str | None = None):
         ik_group = mc.group(
             empty=True,
@@ -279,8 +301,27 @@ class SplineTail(rModule.RigModule, rFk.Fk):
             set_curve_templated=True,
             curve_parent=ik_ctrl_group,
         )
-
+    
+    def create_orient_spaces(self, orient_spaces: dict[str, str], orient_transform: str, orient_attr_node: str):
+        targets = []
+        names = []
+        for name, target in orient_spaces.items():
+            names.append(name)
+            targets.append(target)
+    
+        space_switch(
+            node=self.orient_input,
+            driver=orient_attr_node,
+            target_list=targets,
+            name_list=names,
+            name="orientSpace",
+            constraint_type="orient",
+            value=1,
+        )
+        mc.orientConstraint(self.orient_input, orient_transform, maintainOffset=True)
+    
     def control_rig(self):
+        
         self.ik_ctrl_parent_group = mc.group(empty=True, name=f"{self.base_name}_IK_CTLS", parent=self.control_grp)
         self.create_fk_control_rig()
         self.create_compat_ik_control_rig(ctrl_parent=self.ik_ctrl_parent_group)
@@ -361,8 +402,8 @@ class SplineTail(rModule.RigModule, rFk.Fk):
 
         # mc.parentConstraint('waist_M_CTRL', )
         mc.parent("Tail1_jnt", "COG_M_JNT")
-
-        mc.parentConstraint("waist_M_CTRL", self.fk_controls[0].ctrl, mo=True)
+        
+        matrix_constraint("waist_M_CTRL", self.fk_controls[0].top, rotate=False, scale=False, shear=False)
 
         for control in self.ik_controls[:3]:
             mc.parentConstraint("waist_M_CTRL", control.top, maintainOffset=True)
