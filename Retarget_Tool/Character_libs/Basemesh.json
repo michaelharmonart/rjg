@@ -101,13 +101,33 @@
         "FKIK_Switch": ""
     },
     "spine": {
-        "ControlList": {},
+        "ControlList": {
+            "Spine": [
+                "torso_M_CTRL",
+                "chest_M_CTRL"
+            ]
+        },
         "Type": "FK_Distribute",
         "MO": true,
         "Mirror": false,
         "Mirror_Label": [
             "L",
             "R"
+        ],
+        "FKIK_Switch": ""
+    },
+    "hip": {
+        "ControlList": {
+            "Hip": [
+                "COG_M_CTRL"
+            ]
+        },
+        "Type": "Root",
+        "MO": true,
+        "Mirror": false,
+        "Mirror_Label": [
+            "_L_",
+            "_R_"
         ],
         "FKIK_Switch": ""
     }
