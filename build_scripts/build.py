@@ -977,11 +977,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.parent('root_M_JNT', 'faceRoot_JNT', 'root_root_JNT')
 
             # look spaceswitch
-            mc.select('head_M_01_CTRL', 'Glasses_ctrl')
+            mc.select('head_M_01_CTRL', 'Eyes_ctrl')
             spsw.run()
-            mc.addAttr('Glasses_ctrl.spaceSwitch', e=True, enumName='world:head:')
-            mc.setAttr('Glasses_ctrl.spaceSwitch', 1)
-            mc.parent('Glasses_ctrl_space_switch_GRP', 'RIG')
+            mc.addAttr('Eyes_ctrl.spaceSwitch', e=True, enumName='world:head:')
+            mc.setAttr('Eyes_ctrl.spaceSwitch', 1)
+            mc.parent('Eyes_ctrl_space_switch_GRP', 'RIG')
 
             # glasses spaceswitch
             mc.select('head_M_01_CTRL', 'Glasses_ctrl')
