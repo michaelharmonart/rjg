@@ -1,0 +1,44 @@
+{
+    "arm": {
+        "ControlList": {
+            "FKShoulder": [
+                "arm_L_01_fk_CTRL"
+            ],
+            "FkElbow": [
+                "arm_L_02_fk_CTRL"
+            ],
+            "FkWrist": [
+                "arm_L_03_fk_CTRL"
+            ],
+            "IKHand": [
+                "hand_L_01_CTRL"
+            ],
+            "IKPV": [
+                "arm_L_IK_PV_CTRL"
+            ]
+        },
+        "Type": "FK",
+        "MO": true,
+        "Mirror": true,
+        "Mirror_Label": [
+            "_L_",
+            "_R_"
+        ],
+        "FKIK_Switch": "\"hand_L_01_CTRL.armL_IKFK\""
+    },
+    "leg": {
+        "ControlList": {
+            "Hip": [
+                "leg_L_01_fk_CTRL"
+            ]
+        },
+        "Type": "FK",
+        "MO": true,
+        "Mirror": true,
+        "Mirror_Label": [
+            "_L_",
+            "_R_"
+        ],
+        "FKIK_Switch": "\"hand_L_01_CTRL.armL_IKFK\""
+    }
+}
