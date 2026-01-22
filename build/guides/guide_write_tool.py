@@ -202,6 +202,7 @@ class GuideWriteTool(QtWidgets.QDialog):
             if not vert_ids:
                 mc.warning("No verts selected.")
                 return
+            idx = 1
             for vert in vert_ids:
 
                 pos = get_middle_position_from_vert_ids(mesh, [vert])
@@ -209,7 +210,6 @@ class GuideWriteTool(QtWidgets.QDialog):
                     mc.warning("Could not compute position.")
                     return
 
-                idx = get_next_chain_index()
 
                 null = mc.group(em=True, n=f"seq_guide_NULL_{idx:02d}")
                 jnt = mc.joint(n=f"seq_guide_{idx:02d}")
@@ -234,6 +234,7 @@ class GuideWriteTool(QtWidgets.QDialog):
                 self.last_joint = jnt
 
                 print(f"Created {jnt}")
+                idx = idx + 1
         
         else:
             #if self.type_cb.currentText() not in  ["chain", 'sequence']:
