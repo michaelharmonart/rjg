@@ -22,7 +22,7 @@ GUIDE_PATH = r"G:\bobo\pipeline\pipeline\software\maya\scripts\rjg\build\guides\
 
 PART_CONFIG = {
     "arm": {
-        "Axes": ["Y", "-X", "Z"],
+        "Axes": ["Y", "Z", "X"],
         "Names": ["LeftArm", "LeftForeArm", "LeftHand"],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
@@ -37,7 +37,117 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":False
-    }
+    },
+
+    "clavicle": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["LeftShoulder"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "foot": {
+        "Axes": ["Y", "X", "Z"],
+        "Names": ["LeftFoot", "LeftToeBase", "LeftToe_End"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "indexfinger": {
+        "Axes": ["Y", "X", "Z"],
+        "Names": ["LeftHandIndex0", "LeftHandIndex1", "LeftHandIndex2", "LeftHandIndex3", "LeftHandIndex4"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "middlefinger": {
+        "Axes": ["Y", "X", "Z"],
+        "Names": ["LeftHandMiddle0", "LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3", "LeftHandMiddle4"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "ringfinger": {
+        "Axes": ["Y", "X", "Z"],
+        "Names": ["LeftHandRing0", "LeftHandRing1", "LeftHandRing2", "LeftHandRing3", "LeftHandRing4"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "pinkyfinger": {
+        "Axes": ["Y", "X", "Z"],
+        "Names": ["LeftHandPinky0", "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", "LeftHandPinky4"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "thumbfinger": {
+        "Axes": ["Y", "X", "Z"],
+        "Names": ["LeftHandThumb1", "LeftHandThumb2", "LeftHandThumb3", "LeftHandThumb4"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "leg": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["LeftUpLeg", "LeftLeg"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "spine": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Hips", "Spine", "Spine1", "Spine2", ],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "neck": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Neck", "Neck1", "Neck2", "Head", "HeadTop_End"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+    },
+
+    "neck": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Mouth_M_UpperLip_01", "Mouth_L_UpperLip_02", "Mouth_L_UpperLip_03", "Mouth_L_UpperLip_04", "Mouth_L_UpperLip_05", "Mouth_L_CornerLip", "Mouth_L_LowerLip_05", "Mouth_L_LowerLip_04", "Mouth_L_LowerLip_03", "Mouth_L_LowerLip_02", "Mouth_M_LowerLip_01"],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False
+    },
+
+
+
+    
+
+
+
+    
+
+    
+    
 }
 
 # ---------------- HELPERS ----------------
