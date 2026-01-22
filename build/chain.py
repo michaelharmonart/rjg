@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import ast
 from importlib import reload
-from typing import Any
+from typing import Any, Self
 
 import maya.cmds as mc
 import rjg.libs.attribute as rAttr
@@ -20,10 +22,11 @@ reload(rXform)
 reload(rMath)
 reload(spline)
 
-'''
-Class used to create joint chains from a list of transforms.
-'''
+
 class Chain:
+    '''
+    Class used to create joint chains from a list of transforms.
+    '''
     def __init__(self, transform_list=None, label_chain=True, side='M', suffix='JNT', name='default'):
         self.transform_list = transform_list
         self.label_chain = label_chain
@@ -32,9 +35,7 @@ class Chain:
         self.name = name
         self.split_jnt_dict = None
 
-    '''
-    Given a list of transforms, place joints at each transform
-    '''
+    
 
     def create_from_transforms(
         self,
@@ -50,6 +51,9 @@ class Chain:
         pad="auto",
         force_planar: bool = False,
     ):
+        '''
+        Given a list of transforms, place joints at each transform
+        '''
         pose_dict = rXform.read_pose(self.transform_list)
         new_poses = list(pose_dict.items())
         if force_planar:
@@ -188,11 +192,14 @@ class Chain:
         if self.label_chain:
             self.label_side(self.joints)
         return self.joints
-
-    '''
-    Adds an attribute to joints depending on their side.
-    '''
+        
+    def add_chain(self, other_chain: Self):
+        self.joints.append(other_chain.joints)
+    
     def label_side(self, chain):
+        '''
+        Adds an attribute to joints depending on their side.
+        '''
         for jnt in chain:
             if any(self.side[0] == side for side in ['M', 'm', 'C', 'c', 'Md', 'md', 'Ct', 'ct']):
                 mc.setAttr(jnt + '.side', 0)
@@ -203,10 +210,11 @@ class Chain:
             else:
                 mc.setAttr(jnt + '.side', 3)
 
-    '''
-    sums up bone lengths in the chain
-    '''
+    
     def get_chain_lengths(self):
+        '''
+        sums up bone lengths in the chain
+        '''
         self.bone_lengths = []
 
         for i in range(len(self.joints)-1):
