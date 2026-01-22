@@ -310,6 +310,8 @@ class GuideWriteTool(QtWidgets.QDialog):
 
         if self.type_cb.currentText() == 'chain':
             guides = mc.ls("chain_guide_*", type="joint")
+        elif self.type_cb.currentText() == 'sequence':
+            guides = mc.ls("seq_guide_*", type="joint")
 
         for jnt in guides:
             null = mc.listRelatives(jnt, p=True)[0]
@@ -324,6 +326,7 @@ class GuideWriteTool(QtWidgets.QDialog):
                 "mesh": mesh,
                 "pos": pos,
                 "offset": mc.xform(jnt, q=True, t=True),
+                "rotoffset": mc.xform(jnt, q=True, ro=True),
                 "upvect": None if upvect=="None" else int(upvect),
                 "vert_list": vert_list
             }
