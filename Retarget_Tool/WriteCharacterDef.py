@@ -20,7 +20,7 @@ CHAR_LIB_PATH = r"G:\bobo\pipeline\pipeline\software\maya\scripts\rjg\Retarget_T
 PARTS = {
     "arm": ["FKShoulder", "FkElbow", "FkWrist", "IKHand", "IKPV"],
     "clav": ["Clavicle"],
-    "leg": ["FKHip", "FKKnee", "FkAnkle", "FKToe" "IKFoot", "IKPV", "IKToe"],
+    "leg": ["FKHip", "FKKnee", "FkAnkle", "FKToe", "IKFoot", "IKPV", "IKToe"],
     "spine": ["Spine"],
     "neck": ["Neck",],
     "head": ["Head"],
