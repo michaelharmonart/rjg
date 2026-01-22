@@ -24,12 +24,19 @@ PART_CONFIG = {
     "arm": {
         "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftArm", "LeftForeArm", "LeftHand"],
-        "Delete_Last": True
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True
+
     },
     "default": {
         "Axes": ["Y", "-X", "Z"],
         "Names": None,
-        "Delete_Last": True
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":False
     }
 }
 
@@ -118,6 +125,18 @@ def orient_joint_primary(jnt, start_pos, next_pos, primary_axis, up_pos=None, up
 
 # ---------------- MAIN READER ----------------
 
+def read_type(json_file):
+    with open(json_file, "r") as f:
+        data = json.load(f)
+
+    part = data["part"]
+    part_type = data["type"]
+    if part_type == "chain":
+        read_chain_guides(json_file)
+    elif part_type == "sequence":
+        read_seg_guides(json_file)
+
+
 def read_chain_guides(json_file):
 
     with open(json_file, "r") as f:
@@ -132,12 +151,17 @@ def read_chain_guides(json_file):
     axes = cfg["Axes"]
     names = cfg["Names"]
     delete_last = cfg["Delete_Last"]
+    BuildParent = cfg["BuildParent"]
+    Guide_Type = cfg ["Guide_Type"]
+    Bake_To_Orient = cfg["Bake_To_Orient"]
 
     guides = data["guides"]
 
     built = []
 
     keys = sorted(guides.keys())
+
+    pre_guide = None
 
     for i, gname in enumerate(keys):
 
@@ -149,6 +173,10 @@ def read_chain_guides(json_file):
         mesh = g["mesh"]
         vert_list = g["vert_list"]
         offset = g["offset"]
+        if "rotoffset" in g:
+            rotoffset = g["rotoffset"]
+        else:
+            rotoffset = None
         up_id = g["upvect"]
 
         pos = get_position_from_vert_ids(mesh, vert_list)
@@ -162,7 +190,11 @@ def read_chain_guides(json_file):
         else:
             jnt_name = f"{part}_guide_{i+1:02d}"
 
-        jnt = mc.joint(name=jnt_name)
+        mc.select(clear=True)
+        if Guide_Type == 'Loc':
+            jnt = mc.spaceLocator(name=jnt_name)[0]
+        else:
+            jnt = mc.joint(name=jnt_name)
         mc.xform(jnt, ws=True, t=pos)
 
         built.append(jnt)
@@ -182,12 +214,141 @@ def read_chain_guides(json_file):
 
             if next_pos:
                 orient_joint_primary(jnt, pos, next_pos, axes[0], up_pos, axes[1])
+        if rotoffset:
+            rot = mc.getAttr(jnt + ".rotate")[0]
+            jo  = rotoffset
+
+            mc.setAttr(
+                jnt + ".rotate",
+                jo[0] + rot[0],
+                jo[1] + rot[1],
+                jo[2] + rot[2]
+            )
+
+
+        if Guide_Type == 'Joints' and Bake_To_Orient == True:
+            rot = mc.getAttr(jnt + ".rotate")[0]
+            jo  = mc.getAttr(jnt + ".jointOrient")[0]
+
+            mc.setAttr(
+                jnt + ".jointOrient",
+                jo[0] + rot[0],
+                jo[1] + rot[1],
+                jo[2] + rot[2]
+            )
+
+            mc.setAttr(jnt + ".rotate", 0, 0, 0)
+
+
+        if pre_guide:
+            mc.parent(jnt, pre_guide)
+        pre_guide = jnt
+
 
     for i in range(1, len(built)):
         mc.parent(built[i], built[i-1])
 
     if parent and mc.objExists(parent):
         mc.parent(built[0], parent)
+    elif BuildParent == True:
+        mc.group(empty=True, name=parent)
+        mc.parent(built[0], parent)
+
+
+    return built
+
+def read_seg_guides(json_file):
+
+    with open(json_file, "r") as f:
+        data = json.load(f)
+
+    part = data["part"]
+    part_type = data["type"]
+    parent = data.get("parent")
+
+    cfg = PART_CONFIG.get(part, PART_CONFIG["default"])
+
+    axes = cfg["Axes"]
+    names = cfg["Names"]
+    delete_last = cfg["Delete_Last"]
+    BuildParent = cfg["BuildParent"]
+    Guide_Type = cfg ["Guide_Type"]
+    Bake_To_Orient = cfg["Bake_To_Orient"]
+
+    guides = data["guides"]
+
+    built = []
+
+    keys = sorted(guides.keys())
+
+
+    if BuildParent == True:
+        mc.group(empty=True, name=parent)
+
+    for i, gname in enumerate(keys):
+
+        if delete_last and i == len(keys)-1:
+            break
+
+        g = guides[gname]
+
+        mesh = g["mesh"]
+        vert_list = g["vert_list"]
+        offset = g["offset"]
+        if "rotoffset" in g:
+            rotoffset = g["rotoffset"]
+        else:
+            rotoffset = None
+        up_id = g["upvect"]
+
+        pos = get_position_from_vert_ids(mesh, vert_list)
+        if not pos:
+            continue
+
+        pos = [pos[0]+offset[0], pos[1]+offset[1], pos[2]+offset[2]]
+
+        if names and i < len(names):
+            jnt_name = names[i]
+        else:
+            jnt_name = f"{part}_guide_{i+1:02d}"
+
+        mc.select(clear=True)
+        if Guide_Type == 'Loc':
+            jnt = mc.spaceLocator(name=jnt_name)[0]
+        else:
+            jnt = mc.joint(name=jnt_name)
+        mc.xform(jnt, ws=True, t=pos)
+
+        built.append(jnt)
+        
+        if rotoffset:
+            rot = mc.getAttr(jnt + ".rotate")[0]
+            jo  = rotoffset
+
+            mc.setAttr(
+                jnt + ".rotate",
+                jo[0] + rot[0],
+                jo[1] + rot[1],
+                jo[2] + rot[2]
+            )
+
+
+        if Guide_Type == 'Joints' and Bake_To_Orient == True:
+            rot = mc.getAttr(jnt + ".rotate")[0]
+            jo  = mc.getAttr(jnt + ".jointOrient")[0]
+
+            mc.setAttr(
+                jnt + ".jointOrient",
+                jo[0] + rot[0],
+                jo[1] + rot[1],
+                jo[2] + rot[2]
+            )
+
+            mc.setAttr(jnt + ".rotate", 0, 0, 0)
+
+
+        if mc.objExists(parent):
+            mc.parent(jnt, parent)
 
     return built
 
@@ -240,7 +401,7 @@ class GuideReaderUI(QtWidgets.QDialog):
 
         path = os.path.join(GUIDE_PATH, file)
 
-        read_chain_guides(path)
+        read_type(path)
 
 # ---------------- SHOW ----------------
 
