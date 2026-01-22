@@ -236,6 +236,7 @@ def matrix_constraint(
     rotate: bool = True,
     scale: bool = True,
     shear: bool = True,
+    use_joint_orient: bool = False,
     lock_joint_orient: bool = True,
 ) -> None:
     """
@@ -301,18 +302,117 @@ def matrix_constraint(
     )
     mc.connectAttr(f"{mult_matrix}.matrixSum", f"{decompose_matrix}.inputMatrix")
     mc.connectAttr(f"{constrain_transform}.rotateOrder", f"{decompose_matrix}.inputRotateOrder")
-
+    
+    rotate_attr: str = f"{decompose_matrix}.outputRotate"
     # Drive transform with decomposed values
     # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient
     if mc.nodeType(constrain_transform) == "joint":
         if scale:
             mc.setAttr(f"{constrain_transform}.segmentScaleCompensate", 0)
         if rotate:
-            mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
-            if lock_joint_orient:
-                mc.setAttr(f"{constrain_transform}.jointOrient", lock=True)
+            if use_joint_orient:
+                # Check if the joint orient isn't about 0
+                joint_orient: tuple[float, float, float] = mc.getAttr(
+                    f"{constrain_transform}.jointOrient"
+                )[0]
+                if any(abs(i) > 0.01 for i in joint_orient):
+                    # Get our joint orient and turn it into a matrix
+                    orient_node: str = mc.createNode(
+                        "composeMatrix", name=f"{constraint_name}_OrientMatrix"
+                    )
+                    mc.connectAttr(
+                        f"{constrain_transform}.jointOrient", f"{orient_node}.inputRotate"
+                    )
+                    orient_matrix_attr = f"{orient_node}.outputMatrix"
+
+                    # We need to compose a different matrix to drive just the rotation due to the joint orient
+                    orient_offset_node: str = mc.createNode(
+                        "inverseMatrix", name=f"{constraint_name}_OrientOffsetMatrix"
+                    )
+                    orient_mult_matrix: str = mc.createNode(
+                        "multMatrix", name=f"{constraint_name}_ConstraintOrientMatrix"
+                    )
+                    orient_mult_index: int = 0
+
+                    # If we have an offset it'll be our first matrix in the multiplier (same as above)
+                    if keep_offset:
+                        mc.setAttr(
+                            f"{orient_mult_matrix}.matrixIn[{orient_mult_index}]",
+                            offset_matrix,
+                            type="matrix",
+                        )
+                        orient_mult_index += 1
+
+                    # Next we multiply by the world matrix of the source transform
+                    mc.connectAttr(
+                        f"{source_transform}.worldMatrix[0]",
+                        f"{orient_mult_matrix}.matrixIn[{orient_mult_index}]",
+                    )
+                    orient_mult_index += 1
+
+                    # Depending on if we need to take a parent into account we'll need a few extra nodes
+                    # (otherwise just pre-calculate a matrix and plop it in)
+                    # Bless Jared Love for figuring this out https://www.youtube.com/watch?v=_LNhZB8jQyo
+                    # Essentially we need to take the inverse of the orient * the world matrix of the parent and multiply by that
+                    if local_space:
+                        # Create a node to multiply the joint orient by the world matrix of the parent
+                        orient_parent_mult_matrix: str = mc.createNode(
+                            "multMatrix", name=f"{constraint_name}_ConstraintOrientMultMatrix"
+                        )
+                        mc.connectAttr(orient_matrix_attr, f"{orient_parent_mult_matrix}.matrixIn[0]")
+                        mc.connectAttr(
+                            f"{constrain_transform}.parentMatrix[0]",
+                            f"{orient_parent_mult_matrix}.matrixIn[1]",
+                        )
+
+                        # Create an inverse node and connect it to the result of the last step
+                        mc.connectAttr(
+                            f"{orient_parent_mult_matrix}.matrixSum",
+                            f"{orient_offset_node}.inputMatrix",
+                        )
+
+                        # Finally add this to a slot on the matrix multiplier node
+                        mc.connectAttr(
+                            f"{orient_offset_node}.outputMatrix",
+                            f"{orient_mult_matrix}.matrixIn[{orient_mult_index}]",
+                        )
+                        orient_mult_index += 1
+                    else:
+                        # If we don't care about a parent, just make a temp inverse node and store the inverse of the joint orient
+                        mc.connectAttr(
+                            f"{orient_node}.outputMatrix", f"{orient_offset_node}.inputMatrix"
+                        )
+                        inverse_orient_matrix = mc.getAttr(f"{orient_offset_node}.outputMatrix")
+
+                        # And then set it in a slot on the matrix multiplier
+                        mc.setAttr(
+                            f"{orient_mult_matrix}.matrixIn[{orient_mult_index}]",
+                            inverse_orient_matrix,
+                            type="matrix",
+                        )
+                        orient_mult_index += 1
+                        # Cleanup temp node
+                        mc.delete(orient_offset_node)
+
+                    #  Hook up the matrix multiplier to our decomposeMatrix and feed it into the rotate attribute of the joint
+                    orient_decompose_matrix: str = mc.createNode(
+                        "decomposeMatrix", name=f"{constraint_name}_ConstrainOrientDecompose"
+                    )
+                    mc.connectAttr(
+                        f"{orient_mult_matrix}.matrixSum", f"{orient_decompose_matrix}.inputMatrix"
+                    )
+                    mc.connectAttr(
+                        f"{constrain_transform}.rotateOrder",
+                        f"{orient_decompose_matrix}.inputRotateOrder",
+                    )
+                    rotate_attr = f"{orient_decompose_matrix}.outputRotate"
+            else:
+                mc.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")
+                if lock_joint_orient:
+                    mc.setAttr(f"{constrain_transform}.jointOrient", lock=True)
+        
     if rotate:
-        mc.connectAttr(f"{decompose_matrix}.outputRotate", f"{constrain_transform}.rotate")
+        mc.connectAttr(rotate_attr, f"{constrain_transform}.rotate")
         mc.setAttr(f"{constrain_transform}.rotateAxis", 0, 0, 0, type="float3")
     if translate:
         mc.connectAttr(f"{decompose_matrix}.outputTranslate", f"{constrain_transform}.translate")

@@ -2,7 +2,6 @@ import ast
 from importlib import reload
 from typing import Any
 
-from maya.api.OpenMaya import MVector
 import maya.cmds as mc
 import rjg.libs.attribute as rAttr
 import rjg.libs.common as rCommon
@@ -10,6 +9,7 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.math as rMath
 import rjg.libs.spline as spline
 import rjg.libs.transform as rXform
+from maya.api.OpenMaya import MVector
 from rjg.libs.maya_api import node
 
 reload(rCtrl)
@@ -42,6 +42,7 @@ class Chain:
         point_constraint=False,
         scale_constraint=True,
         matrix_constraint=False,
+        keep_joint_orient: bool = False,
         connect_scale=False,
         parent=False,
         static=False,
@@ -154,7 +155,7 @@ class Chain:
             self.constraints = []
             for src, jnt in zip(pose_dict, self.joints):
                 if matrix_constraint:
-                    rXform.matrix_constraint(src, jnt, keep_offset=False)
+                    rXform.matrix_constraint(src, jnt, use_joint_orient=keep_joint_orient)
                 elif parent_constraint:
                     pac = mc.parentConstraint(src, jnt, mo=True)[0]
                     self.constraints.append(pac)
@@ -313,8 +314,20 @@ class Chain:
             source_transform = joint
             if first_joint_space is not None and index == 0:
                 source_transform = first_joint_space
-            rXform.matrix_constraint(source_transform=source_transform, constrain_transform=segment_grp, keep_offset=False)
-            rXform.matrix_constraint(source_transform=source_transform, constrain_transform=segment_ctl, keep_offset=False)
+            rXform.matrix_constraint(
+                source_transform=source_transform,
+                constrain_transform=segment_grp,
+                keep_offset=False,
+                scale=False,
+                shear=False,
+            )
+            rXform.matrix_constraint(
+                source_transform=source_transform,
+                constrain_transform=segment_ctl,
+                keep_offset=False,
+                scale=False,
+                shear=False,
+            )
 
                 
             start_jnt = joint
@@ -377,20 +390,35 @@ class Chain:
 
             spline.matrix_spline_from_transforms(
                 transforms=[start_ctrl.ctrl_name, end_ctrl.ctrl_name],
-                transforms_to_pin=[f"{mid_ctrl.ctrl_name}_CNST_GRP"],
+                transforms_to_pin=[mid_ctrl.top],
                 degree=1,
                 primary_axis=(0, 1 * mirror, 0),
                 secondary_axis=sec_axis,
                 twist=False,
                 name=f"{joint}_Mid",
+                stretch=False,
             )
 
             # Handle End Control (follow the next segment, or if this is the last segment then only use the twist)
             if index == len(segments) - 1:
                 # Twist for end joint
-                mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{end_ctrl.ctrl_name}_CNST_GRP.rotateY")
+                mc.connectAttr(f"{quat_to_euler}.outputRotateY", f"{end_ctrl.top}.rotateY")
+                rXform.matrix_constraint(
+                    source_transform=end_jnt,
+                    constrain_transform=end_ctrl.top,
+                    keep_offset=False,
+                    rotate=False,
+                    scale=False,
+                    shear=False,
+                )
             else:
-                rXform.matrix_constraint(source_transform=end_jnt, constrain_transform=f"{end_ctrl.ctrl_name}_CNST_GRP", keep_offset=False)
+                rXform.matrix_constraint(
+                    source_transform=end_jnt,
+                    constrain_transform=end_ctrl.top,
+                    keep_offset=False,
+                    scale=False,
+                    shear=False,
+                )
 
             spline.matrix_spline_from_transforms(
                 transforms=[start_ctrl.ctrl_name, mid_ctrl.ctrl_name, end_ctrl.ctrl_name],
