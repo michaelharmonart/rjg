@@ -83,7 +83,7 @@ class Chain:
             
             if error > (chain_length * 0.01):
                 print(
-                    f"WARNING: The {self.name} chain was made planar, but need to move point(s) by over 1% of the chain length.\n"
+                    f"WARNING: The {self.name} chain was made planar, but needed to move point(s) by over 1% of the chain length.\n"
                     "Fix the source transforms to make sure the chain will behave properly."
                 )
 
