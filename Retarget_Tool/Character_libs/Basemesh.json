@@ -1,0 +1,114 @@
+{
+    "arm": {
+        "ControlList": {
+            "FKShoulder": [
+                "arm_L_01_fk_CTRL"
+            ],
+            "FkElbow": [
+                "arm_L_02_fk_CTRL"
+            ],
+            "FkWrist": [
+                "arm_L_03_fk_CTRL"
+            ],
+            "IKHand": [
+                "hand_L_01_CTRL"
+            ],
+            "IKPV": [
+                "arm_L_IK_PV_CTRL"
+            ]
+        },
+        "Type": "FK_IK",
+        "MO": true,
+        "Mirror": true,
+        "Mirror_Label": [
+            "_L_",
+            "_R_"
+        ],
+        "FKIK_Switch": "\"arm_L_03_fk_CTRL.armL_IKFK\""
+    },
+    "head": {
+        "ControlList": {
+            "Head": [
+                "head_M_01_CTRL"
+            ]
+        },
+        "Type": "FK",
+        "MO": true,
+        "Mirror": false,
+        "Mirror_Label": [
+            "_L_",
+            "_R_"
+        ],
+        "FKIK_Switch": ""
+    },
+    "clav": {
+        "ControlList": {
+            "Clavicle": [
+                "clavicle_L_CTRL"
+            ]
+        },
+        "Type": "FK",
+        "MO": true,
+        "Mirror": true,
+        "Mirror_Label": [
+            "_L_",
+            "_R_"
+        ],
+        "FKIK_Switch": ""
+    },
+    "leg": {
+        "ControlList": {
+            "FKHip": [
+                "leg_L_01_fk_CTRL"
+            ],
+            "FKKnee": [
+                "leg_L_02_fk_CTRL"
+            ],
+            "FkAnkle": [
+                "foot_L_01_fk_CTRL"
+            ],
+            "FKToe": [
+                "foot_L_02_fk_CTRL"
+            ],
+            "IKFoot": [
+                "foot_L_01_L_CTRL"
+            ],
+            "IKPV": [
+                "leg_L_IK_PV_CTRL"
+            ],
+            "IKToe": [
+                "foot_L_toe_L_CTRL"
+            ]
+        },
+        "Type": "FK_IK",
+        "MO": true,
+        "Mirror": true,
+        "Mirror_Label": [
+            "_L_",
+            "_R_"
+        ],
+        "FKIK_Switch": "\"leg_L_02_fk_CTRL.legL_IKFK\""
+    },
+    "neck": {
+        "ControlList": {},
+        "Type": "FK",
+        "MO": true,
+        "Mirror": false,
+        "Mirror_Label": [
+            "L",
+            "R"
+        ],
+        "FKIK_Switch": ""
+    },
+    "spine": {
+        "ControlList": {},
+        "Type": "FK_Distribute",
+        "MO": true,
+        "Mirror": false,
+        "Mirror_Label": [
+            "L",
+            "R"
+        ],
+        "FKIK_Switch": ""
+    }
+}
