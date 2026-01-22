@@ -585,9 +585,15 @@ class Chain:
                 parent_offset_matrix = rXform.get_parent_matrix(joint_b) * rXform.get_parent_inverse_matrix(joint_a)
                 if not (rXform.is_identity_matrix(offset_matrix) and rXform.is_identity_matrix(parent_offset_matrix)):
                     mult_matrix_node = node.MultMatrixNode(name=f"{switch_name}_BlendOffset")
-                    mc.setAttr(mult_matrix_node.matrix_in[0], offset_matrix, type="matrix")
-                    mc.connectAttr(joint_b_matrix, mult_matrix_node.matrix_in[1])
-                    mc.setAttr(mult_matrix_node.matrix_in[2], parent_offset_matrix, type="matrix")
+                    mult_index: int = 0
+                    if not rXform.is_identity_matrix(offset_matrix):
+                        mc.setAttr(mult_matrix_node.matrix_in[mult_index], offset_matrix, type="matrix")
+                        mult_index += 1
+                    mc.connectAttr(joint_b_matrix, mult_matrix_node.matrix_in[mult_index])
+                    mult_index += 1
+                    if not rXform.is_identity_matrix(parent_offset_matrix):
+                        mc.setAttr(mult_matrix_node.matrix_in[mult_index], parent_offset_matrix, type="matrix")
+                        mult_index += 1
                     joint_b_matrix = mult_matrix_node.matrix_sum
 
             blend_matrix_node = node.BlendMatrixNode(
