@@ -135,6 +135,9 @@ def project(body=None, char=None, f_model=None, f_rig=None, f_skel=None, extras=
             mc.connectAttr(f'{side}_Eye_mid_05_ctrl.Wrinkle', f'{side}_Eye_mid_05_ctrl_clone.Wrinkle')
             mc.connectAttr(f'{side}_Corner_Main_Mouth_ctrl.Crease', f'{side}_Corner_Main_Mouth_ctrl_clone.Crease')
             mc.addAttr(f'{side}_Eyebrow_main_ctrl', longName='Legacy_Rig_Switch', proxy=f'{side}_InBrow_ctrl.Legacy_Rig_Switch')
+        for side in ['Left', 'Right']:
+            mc.connectAttr(f'{side}_Eye_ctrl.Iris_Scale', f'{side}_Eye_ctrl_clone.Iris_Scale')
+            mc.connectAttr(f'{side}_Eye_ctrl.Pupil_Scale', f'{side}_Eye_ctrl_clone.Pupil_Scale')
 
     
 
