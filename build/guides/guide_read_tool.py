@@ -22,12 +22,13 @@ GUIDE_PATH = r"G:\bobo\pipeline\pipeline\software\maya\scripts\rjg\build\guides\
 
 PART_CONFIG = {
     "arm": {
-        "Axes": ["Y", "Z", "X"],
+        "Axes": ["Y", "-Z", "X"],
         "Names": ["LeftArm", "LeftForeArm", "LeftHand"],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
 
     },
     "default": {
@@ -36,16 +37,18 @@ PART_CONFIG = {
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":False
+        "Bake_To_Orient":False,
+        "Force_Planar":None
     },
 
     "clavicle": {
-        "Axes": ["Y", "Z", "X"],
+        "Axes": ["Y", "-Z", "X"],
         "Names": ["LeftShoulder"],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
     },
 
     "foot": {
@@ -54,52 +57,58 @@ PART_CONFIG = {
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":["X", "leg"]
     },
 
     "indexfinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandIndex0", "LeftHandIndex1", "LeftHandIndex2", "LeftHandIndex3", "LeftHandIndex4"],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
     },
 
     "middlefinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandMiddle0", "LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3", "LeftHandMiddle4"],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
     },
 
     "ringfinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandRing0", "LeftHandRing1", "LeftHandRing2", "LeftHandRing3", "LeftHandRing4"],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
     },
 
     "pinkyfinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandPinky0", "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", "LeftHandPinky4"],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
     },
 
     "thumbfinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandThumb1", "LeftHandThumb2", "LeftHandThumb3", "LeftHandThumb4"],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
     },
 
     "leg": {
@@ -108,7 +117,8 @@ PART_CONFIG = {
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":["X", "leg"]
     },
 
     "spine": {
@@ -117,7 +127,8 @@ PART_CONFIG = {
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
     },
 
     "neck": {
@@ -126,16 +137,18 @@ PART_CONFIG = {
         "Delete_Last": True,
         "Guide_Type": 'Joints',
         "BuildParent":False,
-        "Bake_To_Orient":True
+        "Bake_To_Orient":True,
+        "Force_Planar":None
     },
 
-    "neck": {
+    "UEmouth": {
         "Axes": ["Y", "Z", "X"],
         "Names": ["Mouth_M_UpperLip_01", "Mouth_L_UpperLip_02", "Mouth_L_UpperLip_03", "Mouth_L_UpperLip_04", "Mouth_L_UpperLip_05", "Mouth_L_CornerLip", "Mouth_L_LowerLip_05", "Mouth_L_LowerLip_04", "Mouth_L_LowerLip_03", "Mouth_L_LowerLip_02", "Mouth_M_LowerLip_01"],
         "Delete_Last": False,
         "Guide_Type": 'Loc',
         "BuildParent":True,
-        "Bake_To_Orient":False
+        "Bake_To_Orient":False,
+        "Force_Planar":None
     },
 
 
