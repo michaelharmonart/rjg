@@ -24,7 +24,6 @@ def project_points_to_plane(
     Returns:
         array of [x, y, z] points, and array of the distances the points were projected from.
     """
-    
 
     # signed distance of each point to plane
     distances = point_array @ plane_normal + plane_offset

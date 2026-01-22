@@ -9,8 +9,9 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.math as rMath
 import rjg.libs.spline as spline
 import rjg.libs.transform as rXform
-from maya.api.OpenMaya import MVector
+from maya.api.OpenMaya import MPoint, MVector
 from rjg.libs.maya_api import node
+from rjg.libs.plane import make_points_planar
 
 reload(rCtrl)
 reload(rCommon)
@@ -53,34 +54,20 @@ class Chain:
         new_poses = list(pose_dict.items())
         if force_planar:
             pose_keys = list(pose_dict.keys())
-            if len(pose_keys) != 3:
-                raise ValueError(f"{self.transform_list} is not 3 transforms (required to force_planar)")
-            first_guide = pose_keys[0]
-            second_guide = pose_keys[1]
-            last_guide = pose_keys[-1]
-            first_matrix = pose_dict[first_guide]
-            second_matrix = pose_dict[second_guide]
-            last_matrix = pose_dict[last_guide]
-
-            # Snag the location straight from the matrices
-            first_location = MVector(first_matrix[12], first_matrix[13], first_matrix[14])
-            second_location = MVector(second_matrix[12], second_matrix[13], second_matrix[14])
-            last_location = MVector(last_matrix[12], last_matrix[13], last_matrix[14])
-
-            first_segment: MVector = second_location - first_location
-            second_segment: MVector = last_location - second_location
-
-            ortho_vector: MVector = first_segment ^ second_segment
-            plane_normal: MVector = ortho_vector.normal()
-
+            if len(pose_keys) < 3:
+                raise ValueError(f"{self.transform_list} needs to be at least 3 transforms (required to force_planar)")
+            
+            guide_positions: list[MPoint] = [MPoint(matrix[12], matrix[13], matrix[14]) for matrix in pose_dict.values()]
+            planar_guide_positions, plane_normal, error = make_points_planar(guide_positions)
+            chain_length = 0
             for i, (guide_name, matrix) in enumerate(new_poses):
                 if i == len(new_poses) - 1:
                     continue
-                current_matrix = matrix
-                next_matrix = new_poses[i+1][1]
-                current_location: MVector = MVector(current_matrix[12], current_matrix[13], current_matrix[14])
-                next_location: MVector = MVector(next_matrix[12], next_matrix[13], next_matrix[14])
-                aim_vector: MVector = (next_location - current_location).normal()
+                current_location: MVector = MVector(planar_guide_positions[i])
+                next_location: MVector = MVector(planar_guide_positions[i+1])
+                segment_vector: MVector = next_location - current_location
+                chain_length += segment_vector.length()
+                aim_vector: MVector = segment_vector.normal()
                 z_axis: MVector = (plane_normal ^ aim_vector).normal()
                 x_axis: MVector = (aim_vector ^ z_axis).normal()
 
@@ -93,6 +80,12 @@ class Chain:
                     ]
 
                 new_poses[i] = (guide_name, new_matrix)
+            
+            if error > (chain_length * 0.01):
+                print(
+                    f"WARNING: The {self.name} chain was made planar, but need to move point(s) by over 1% of the chain length.\n"
+                    "Fix the source transforms to make sure the chain will behave properly."
+                )
 
         if pad == 'auto':
             pad = len(str(len(self.transform_list))) + 1
