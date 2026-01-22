@@ -31,9 +31,9 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         fk_shape="circle",
         par_ctrl=None,
         bendy=False,
-        create_ik=True,
-        create_fk=True,
-        expression_control=True,
+        create_ik: bool =False,
+        create_fk: bool =True,
+        expression_control = True,
         bendy_vis_attr: str | None = None,
         curl: bool = True,
         curlaxis: str = 'Z',
@@ -80,7 +80,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.skeleton()
         self.add_plugs()
         if self.bendy == True:
-            self.fk_chain.split_chain(segments=4)
+            self.deformation_chain.split_chain(segments=4)
 
             self.add_bendy_twist(ctrl_scale=self.ctrl_scale * 0.8, mirror=self.mirror)
 
@@ -91,21 +91,21 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         This creates Start, Mid, and End bendy controls per segment in the finger chain,
         skipping the first (metacarpal) joint.
         """
-        if not hasattr(self, 'fk_chain') or not self.fk_chain:
+        if not hasattr(self, 'fk_chain') or not self.deformation_chain:
             mc.error("Cannot add bendy twist: Chain not built. Run skeleton() first.")
 
         if ctrl_scale is None:
             ctrl_scale = getattr(self, 'ctrl_scale', 1.0)
 
         # Use bind joints as base
-        self.fk_chain.joints = self.bind_joints
+        self.deformation_chain.joints = self.bind_joints
 
         # Skip first joint (metacarpal) for bendy setup
-        original_joints = list(self.fk_chain.joints)
-        self.fk_chain.joints = original_joints[1:]  # skip metacarpal
+        original_joints = list(self.deformation_chain.joints)
+        self.deformation_chain.joints = original_joints[1:]  # skip metacarpal
 
         # Build the bendy rig
-        rig_dict = self.fk_chain.bend_twist_chain(
+        rig_dict = self.deformation_chain.bend_twist_chain(
             ctrl_scale=ctrl_scale,
             mirror=mirror,
             global_scale=global_scale_attr,
@@ -114,7 +114,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         )
 
         # Restore full joint list
-        self.fk_chain.joints = original_joints
+        self.deformation_chain.joints = original_joints
 
         # Get groups and parent them properly
         ctrl_grp = rig_dict.get('control')
@@ -133,8 +133,9 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
 
 
     def control_rig(self):
-        self.build_fk_controls()
-        mc.parent(self.fk_ctrls[0].top, self.control_grp)
+        if self.build_fk:
+            self.build_fk_controls()
+            mc.parent(self.fk_ctrls[0].top, self.control_grp)
         if self.curl:
             if self.part == 'fingerThumb':
                 self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
@@ -142,22 +143,23 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
                 self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[1], rotate=self.guide_list[1], ctrl_scale=self.ctrl_scale)
 
     def output_rig(self):
-        self.build_fk_chain()
-        mc.parent(self.fk_joints[0], self.module_grp)
+        if self.build_fk:
+            self.build_fk_chain()
+            mc.parent(self.fk_joints[0], self.module_grp)
         
 
     def skeleton(self):
-        fk_chain = rChain.Chain(transform_list=self.fk_joints, side=self.side, suffix='JNT', name=self.part)
-        fk_chain.create_from_transforms(parent=self.skel, scale_constraint=False)
+        deformation_chain = rChain.Chain(transform_list=self.fk_joints, side=self.side, suffix='JNT', name=self.part)
+        deformation_chain.create_from_transforms(parent=self.skel, scale_constraint=False)
 
         if self.remove_last:
             mc.delete(self.fk_ctrls[-1].top)
-            self.bind_joints = fk_chain.joints[:-1]
+            self.bind_joints = deformation_chain.joints[:-1]
         else:
-            self.bind_joints = fk_chain.joints
+            self.bind_joints = deformation_chain.joints
 
         self.tag_bind_joints(self.bind_joints)
-        self.fk_chain = fk_chain
+        self.deformation_chain = deformation_chain
 
     def add_plugs(self):
         #rAttr.Attribute(node=self.part_grp, type='plug', value=['hand_' + self.side + '_JNT'], name='skeletonPlugs', children_name=[self.bind_joints[0]])
@@ -257,5 +259,3 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             mc.connectAttr(f'{remap_HandRollFront}.outValue', f'{adddl}.input1')
             mc.connectAttr(f'{remap_HandRollMid}.outValue', f'{adddl}.input2')
             mc.connectAttr(f'{adddl}.output', f'{self.base_name}_02_fk_CTRL_OFF_GRP.rotateZ')
-
-
