@@ -159,52 +159,86 @@ class RetargetToolUI(QtWidgets.QDialog):
 
     # --------------------------------------------------------
 
-    def constrain_fk(self):
-        if not self.shared_parts:
-            mc.warning("No compatible parts to constrain")
-            return
+    def constrain_fk(self, part):
+        """
+        Constrain a single FK part.
+        Adds orient constraints for all subparts.
+        """
+        src_part = self.source_data[part]
+        tgt_part = self.target_data[part]
+
+        if src_part.get("Type") != "FK":
+            mc.warning(f"[FK Constrain] {part} is not FK")
+            return False
 
         if not mc.objExists(CONSTRAINT_SET):
             mc.sets(name=CONSTRAINT_SET, empty=True)
 
-        created = []
+        src_ns = self.source_ns.text()
+        tgt_ns = self.target_ns.text()
+
         failed = []
+        created = []
+
+        src_controls = src_part.get("ControlList", {})
+        tgt_controls = tgt_part.get("ControlList", {})
+
+        for subpart, src_list in src_controls.items():
+            tgt_list = tgt_controls.get(subpart, [])
+            for src_ctrl, tgt_ctrl in zip(src_list, tgt_list):
+                src_node = f"{src_ns}:{src_ctrl}" if src_ns else src_ctrl
+                tgt_node = f"{tgt_ns}:{tgt_ctrl}" if tgt_ns else tgt_ctrl
+
+                if not mc.objExists(src_node) or not mc.objExists(tgt_node):
+                    mc.warning(f"[FK Constrain] Missing node: {src_node} or {tgt_node}")
+                    failed.append(part)
+                    continue
+
+                con = mc.orientConstraint(src_node, tgt_node, mo=src_part.get("MO", True))[0]
+                mc.sets(con, add=CONSTRAINT_SET)
+                created.append(con)
+
+        return len(failed) == 0
+
+    def constrain_root(self, part):
+        """
+        Constrain a single Root part.
+        Adds both orient and point constraints for all subparts.
+        """
+        src_part = self.source_data[part]
+        tgt_part = self.target_data[part]
+
+        if not mc.objExists(CONSTRAINT_SET):
+            mc.sets(name=CONSTRAINT_SET, empty=True)
 
         src_ns = self.source_ns.text()
         tgt_ns = self.target_ns.text()
 
-        for part in self.shared_parts:
-            src_part = self.source_data[part]
-            tgt_part = self.target_data[part]
+        failed = []
+        created = []
 
-            # Only FK type for this demo
-            if src_part.get("Type") != "FK":
-                failed.append(part)
-                continue
+        src_controls = src_part.get("ControlList", {})
+        tgt_controls = tgt_part.get("ControlList", {})
 
-            src_controls = src_part.get("ControlList", {})
-            tgt_controls = tgt_part.get("ControlList", {})
+        for subpart, src_list in src_controls.items():
+            tgt_list = tgt_controls.get(subpart, [])
+            for src_ctrl, tgt_ctrl in zip(src_list, tgt_list):
+                src_node = f"{src_ns}:{src_ctrl}" if src_ns else src_ctrl
+                tgt_node = f"{tgt_ns}:{tgt_ctrl}" if tgt_ns else tgt_ctrl
 
-            for subpart, src_list in src_controls.items():
-                tgt_list = tgt_controls.get(subpart, [])
+                if not mc.objExists(src_node) or not mc.objExists(tgt_node):
+                    mc.warning(f"[Root Constrain] Missing node: {src_node} or {tgt_node}")
+                    failed.append(part)
+                    continue
 
-                for src_ctrl, tgt_ctrl in zip(src_list, tgt_list):
-                    src_node = f"{src_ns}:{src_ctrl}" if src_ns else src_ctrl
-                    tgt_node = f"{tgt_ns}:{tgt_ctrl}" if tgt_ns else tgt_ctrl
+                # Orient + Point constraints
+                con = mc.orientConstraint(src_node, tgt_node, mo=src_part.get("MO", True))[0]
+                mc.sets(con, add=CONSTRAINT_SET)
+                con = mc.pointConstraint(src_node, tgt_node, mo=src_part.get("MO", True))[0]
+                mc.sets(con, add=CONSTRAINT_SET)
+                created.append(con)
 
-                    if not mc.objExists(src_node) or not mc.objExists(tgt_node):
-                        mc.warning(f"Missing node: {src_node} or {tgt_node}")
-                        failed.append(part)
-                        continue
-
-                    con = mc.orientConstraint(src_node, tgt_node, mo=src_part.get("MO", True))[0]
-                    mc.sets(con, add=CONSTRAINT_SET)
-                    created.append(con)
-
-        if failed:
-            print("[Constrain FK] Failed parts:", list(set(failed)))
-        else:
-            print("[Constrain FK] All parts constrained successfully")
+        return len(failed) == 0
 
     def constrain(self):
         if not self.shared_parts:
@@ -218,8 +252,6 @@ class RetargetToolUI(QtWidgets.QDialog):
 
         for part in self.shared_parts:
             src_part = self.source_data[part]
-            tgt_part = self.target_data[part]
-
             part_type = src_part.get("Type")
 
             if part_type not in VALID_TYPES:
@@ -227,21 +259,25 @@ class RetargetToolUI(QtWidgets.QDialog):
                 failed.append(part)
                 continue
 
-            # ------------------------------
-            # STUBS – YOU FILL THESE IN
-            # ------------------------------
+            # Call the single-part constrain functions
             if part_type == "FK":
-                self.constrain_fk()
+                success = self.constrain_fk(part)
+                if not success:
+                    failed.append(part)
             elif part_type == "IK":
                 pass
             elif part_type == "FK_Distribute":
                 pass
             elif part_type == "FK_IK":
-                self.constrain_fk()
+                success = self.constrain_fk(part)
+                if not success:
+                    failed.append(part)
             elif part_type == "Hybrid":
                 pass
             elif part_type == "Root":
-                pass
+                success = self.constrain_root(part)
+                if not success:
+                    failed.append(part)
 
         if failed:
             print("[Constrain] Failed parts:", failed)
