@@ -24,6 +24,7 @@ PARTS = {
     "spine": ["Spine"],
     "neck": ["Neck",],
     "head": ["Head"],
+    "hip": ["Hip"],
 }
 
 TYPE_OPTIONS = ["FK", "IK", "FK_Distribute", "FK_IK", "Hybrid", "Root"]
