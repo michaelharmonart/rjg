@@ -106,6 +106,10 @@ class GuideWriteTool(QtWidgets.QDialog):
 
         self.last_joint = None
 
+        self.ordered_verts = []
+        self._script_job_id = None
+        self._last_selection = set()
+
         self.build_ui()
 
     # -------------------------
@@ -133,15 +137,42 @@ class GuideWriteTool(QtWidgets.QDialog):
         self.write_pos_btn = QtWidgets.QPushButton("Write Pos")
         self.upvect_btn = QtWidgets.QPushButton("Store Up Vector")
         self.write_part_btn = QtWidgets.QPushButton("Write Part")
+        self.clear_preview_btn = QtWidgets.QPushButton("Clear Preview")
 
         layout.addWidget(self.write_pos_btn)
         layout.addWidget(self.upvect_btn)
         layout.addWidget(self.write_part_btn)
+        layout.addWidget(self.clear_preview_btn)
 
         # Connections
         self.write_pos_btn.clicked.connect(self.write_pos)
         self.upvect_btn.clicked.connect(self.store_up_vector)
         self.write_part_btn.clicked.connect(self.write_part)
+        self.write_part_btn.clicked.connect(self.clear_preview)
+
+        # -------------------------
+        # Sequence Recorder
+        # -------------------------
+
+        layout.addWidget(QtWidgets.QLabel("Sequence Recorder"))
+
+        seq_layout = QtWidgets.QHBoxLayout()
+
+        self.seq_start_btn = QtWidgets.QPushButton("Start")
+        self.seq_stop_btn = QtWidgets.QPushButton("Stop")
+
+        seq_layout.addWidget(self.seq_start_btn)
+        seq_layout.addWidget(self.seq_stop_btn)
+
+        layout.addLayout(seq_layout)
+
+        # Initial button state
+        self.seq_start_btn.setEnabled(True)
+        self.seq_stop_btn.setEnabled(False)
+
+        # Connections
+        self.seq_start_btn.clicked.connect(self.start_sequence_recording)
+        self.seq_stop_btn.clicked.connect(self.stop_sequence_recording)
 
     # -------------------------
     # WRITE POS
@@ -197,8 +228,11 @@ class GuideWriteTool(QtWidgets.QDialog):
             if not mesh:
                 mc.warning("No mesh selected.")
                 return
+            if not self.ordered_verts:
+                mc.warning("No recorded vertex sequence. Click Start and select verts.")
+                return
 
-            vert_ids = get_selected_vert_ids_in_order()
+            vert_ids = self.get_recorded_vert_ids()
             if not vert_ids:
                 mc.warning("No verts selected.")
                 return
@@ -300,6 +334,70 @@ class GuideWriteTool(QtWidgets.QDialog):
             json.dump(data, f, indent=4)
 
         print("Wrote guide file:", file_path)
+
+
+    # -------------------------
+    # SEQUENCE RECORDER LOGIC
+    # -------------------------
+
+    def _on_selection_changed(self):
+        current = set(mc.ls(sl=True, fl=True) or [])
+
+        added = current - self._last_selection
+
+        for item in added:
+            if '.vtx[' in item:
+                self.ordered_verts.append(item)
+
+        self._last_selection = current
+
+
+    def start_sequence_recording(self):
+        self.stop_sequence_recording()  # safety
+
+        self.ordered_verts.clear()
+        self._last_selection = set(mc.ls(sl=True, fl=True) or [])
+
+        self._script_job_id = mc.scriptJob(
+            event=["SelectionChanged", self._on_selection_changed],
+            protected=True
+        )
+
+        # Button states
+        self.seq_start_btn.setEnabled(False)
+        self.seq_stop_btn.setEnabled(True)
+
+        print("▶ Sequence recording started")
+
+
+    def stop_sequence_recording(self):
+        if self._script_job_id and mc.scriptJob(exists=self._script_job_id):
+            mc.scriptJob(kill=self._script_job_id, force=True)
+
+        self._script_job_id = None
+
+        # Button states
+        self.seq_start_btn.setEnabled(True)
+        self.seq_stop_btn.setEnabled(False)
+
+        print("■ Sequence recording stopped")
+        print("Recorded verts:", self.ordered_verts)
+
+    def get_recorded_vert_ids(self):
+        """Return recorded vertex IDs as ints (no mesh name)."""
+        vert_ids = []
+
+        for v in self.ordered_verts:
+            try:
+                idx = int(v.split('[')[-1].rstrip(']'))
+                vert_ids.append(idx)
+            except ValueError:
+                pass
+
+        return vert_ids
+
+    def clear_preview(self):
+        mc.delete('preview_guide_grp')
 
 # -----------------------------
 # Launch
