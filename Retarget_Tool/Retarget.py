@@ -240,6 +240,123 @@ class RetargetToolUI(QtWidgets.QDialog):
 
         return len(failed) == 0
 
+    def constrain_ik(self, part):
+        """
+        Constrain a single IK part (arm or leg).
+        Parent/point/orient constraints depending on type.
+        """
+        src_part = self.source_data[part]
+        tgt_part = self.target_data[part]
+
+        src_ns = self.source_ns.text()
+        tgt_ns = self.target_ns.text()
+
+        if not mc.objExists(CONSTRAINT_SET):
+            mc.sets(name=CONSTRAINT_SET, empty=True)
+
+        failed = []
+        created = []
+
+        # -------------------------
+        # Editable arm/leg lists
+        # -------------------------
+        ARM_PARTS = ["arm"]   # You can expand this later
+        LEG_PARTS = ["leg"]   # You can expand this later
+
+        part_lower = part.lower()
+
+        if part_lower in ARM_PARTS:
+            # -------------------------
+            # ARM IK LOGIC
+            # -------------------------
+            src_controls = src_part.get("ControlList", {})
+            tgt_controls = tgt_part.get("ControlList", {})
+
+            # Expected subparts: Shoulder, Elbow, Wrist / Hand
+            try:
+                src_fk_hand = src_controls["FkWrist"][0]
+                src_fk_elbow = src_controls["FkElbow"][0]
+
+                tgt_ik_hand = tgt_controls.get("IKHand", [None])[0]
+                tgt_ik_pv = tgt_controls.get("IKPV", [None])[0]
+
+                if not src_fk_hand or not tgt_ik_hand or not src_fk_elbow or not tgt_ik_pv:
+                    mc.warning(f"[IK Constrain] Missing arm controls for part '{part}'")
+                    return False
+
+                # ParentConstraint FK Hand -> IK Hand
+                pc = mc.parentConstraint(f"{src_ns}:{src_fk_hand}" if src_ns else src_fk_hand,
+                                        f"{tgt_ns}:{tgt_ik_hand}" if tgt_ns else tgt_ik_hand,
+                                        mo=True)[0]
+                mc.sets(pc, add=CONSTRAINT_SET)
+                created.append(pc)
+
+                # PointConstraint FK Elbow -> IK PV
+                pt = mc.pointConstraint(f"{src_ns}:{src_fk_elbow}" if src_ns else src_fk_elbow,
+                                        f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
+                                        mo=True)[0]
+                mc.sets(pt, add=CONSTRAINT_SET)
+                created.append(pt)
+
+            except KeyError as e:
+                mc.warning(f"[IK Constrain] Missing subpart for arm: {e}")
+                failed.append(part)
+                return False
+
+        elif part_lower in LEG_PARTS:
+            # -------------------------
+            # LEG IK LOGIC
+            # -------------------------
+            src_controls = src_part.get("ControlList", {})
+            tgt_controls = tgt_part.get("ControlList", {})
+
+            # Expected subparts: Hip, Knee, Ankle, Toes
+            try:
+                src_fk_ankle = src_controls["FkAnkle"][0]
+                src_fk_knee = src_controls["FKKnee"][0]
+                src_fk_toes = src_controls["FKToe"][0]
+
+                tgt_ik_foot = tgt_controls.get("IKFoot", [None])[0]
+                tgt_ik_pv = tgt_controls.get("IKPV", [None])[0]
+                tgt_ik_toes = tgt_controls.get("IKToe", [None])[0]
+
+                if not all([src_fk_ankle, src_fk_knee, src_fk_toes, tgt_ik_foot, tgt_ik_pv, tgt_ik_toes]):
+                    mc.warning(f"[IK Constrain] Missing leg controls for part '{part}'")
+                    return False
+
+                # ParentConstraint FK Ankle -> IK Foot
+                pc = mc.parentConstraint(f"{src_ns}:{src_fk_ankle}" if src_ns else src_fk_ankle,
+                                        f"{tgt_ns}:{tgt_ik_foot}" if tgt_ns else tgt_ik_foot,
+                                        mo=True)[0]
+                mc.sets(pc, add=CONSTRAINT_SET)
+                created.append(pc)
+
+                # PointConstraint FK Knee -> IK PV
+                pt = mc.pointConstraint(f"{src_ns}:{src_fk_knee}" if src_ns else src_fk_knee,
+                                        f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
+                                        mo=True)[0]
+                mc.sets(pt, add=CONSTRAINT_SET)
+                created.append(pt)
+
+                # OrientConstraint FK Toes -> IK Toes
+                oc = mc.orientConstraint(f"{src_ns}:{src_fk_toes}" if src_ns else src_fk_toes,
+                                        f"{tgt_ns}:{tgt_ik_toes}" if tgt_ns else tgt_ik_toes,
+                                        mo=True)[0]
+                mc.sets(oc, add=CONSTRAINT_SET)
+                created.append(oc)
+
+            except KeyError as e:
+                mc.warning(f"[IK Constrain] Missing subpart for leg: {e}")
+                failed.append(part)
+                return False
+
+        else:
+            mc.warning(f"[IK Constrain] Logic not written for part '{part}', try FK instead.")
+            failed.append(part)
+            return False
+
+        return len(failed) == 0
+
     def constrain(self):
         if not self.shared_parts:
             mc.warning("No compatible parts to constrain")
@@ -250,9 +367,12 @@ class RetargetToolUI(QtWidgets.QDialog):
 
         failed = []
 
+
         for part in self.shared_parts:
+            
             src_part = self.source_data[part]
-            part_type = src_part.get("Type")
+            tgt_part = self.target_data[part]
+            part_type = tgt_part.get("Type")
 
             if part_type not in VALID_TYPES:
                 mc.warning(f"[Constrain] Invalid type '{part_type}' on {part}")
@@ -265,11 +385,34 @@ class RetargetToolUI(QtWidgets.QDialog):
                 if not success:
                     failed.append(part)
             elif part_type == "IK":
-                pass
+                success = self.constrain_ik(part)
+                if not success:
+                    failed.append(part)
             elif part_type == "FK_Distribute":
                 pass
             elif part_type == "FK_IK":
-                success = self.constrain_fk(part)
+                arm_mode = self.arm_fkik.currentText()
+                leg_mode = self.leg_fkik.currentText()
+                other_mode = self.other_fkik.currentText()
+                mode_map = {
+                    "arm": arm_mode,
+                    "leg": leg_mode
+                }
+                part_lower = part.lower()
+                # Determine mode: arm_mode / leg_mode / other_mode
+                if part_lower.startswith("arm"):
+                    mode = mode_map["arm"]
+                elif part_lower.startswith("leg"):
+                    mode = mode_map["leg"]
+                else:
+                    mode = other_mode
+
+                if mode == "FK":
+                    success = self.constrain_fk(part)
+                else:
+                    print(mode)
+                    success = self.constrain_ik(part)
+
                 if not success:
                     failed.append(part)
             elif part_type == "Hybrid":
