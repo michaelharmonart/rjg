@@ -156,6 +156,7 @@ class RetargetToolUI(QtWidgets.QDialog):
             print("Missing on Source:", list(missing_src))
         if missing_tgt:
             print("Missing on Target:", list(missing_tgt))
+        
 
     # --------------------------------------------------------
 
@@ -166,16 +167,34 @@ class RetargetToolUI(QtWidgets.QDialog):
         """
         src_part = self.source_data[part]
         tgt_part = self.target_data[part]
-        part_mirror = src_part.get("Mirror", False)
-        print(f"[Mirror Check] Part: {part}, Mirror: {part_mirror}")
 
-        if src_part.get("Type") != "FK":
-            mc.warning(f"[FK Constrain] {part} is not FK")
-            return False
+        src_mirror = src_part.get("Mirror", False)
+        tgt_mirror = tgt_part.get("Mirror", False)
+        if src_mirror and tgt_mirror:
+            src_mirrored_controls = {}
+            tgt_mirrored_controls = {}
+            src_mirror_labels = src_part.get("Mirror_Label", [])
+            tgt_mirror_labels = tgt_part.get("Mirror_Label", [])
+            src_control_list = src_part.get("ControlList", {})
+            tgt_control_list = tgt_part.get("ControlList", {})
+            if src_mirror_labels and len(src_mirror_labels) == 2:
+                src_left_label, src_right_label = src_mirror_labels
+                for subpart, ctrls in src_control_list.items():
+                    src_mirrored_controls[subpart] = [
+                        ctrl.replace(src_left_label, src_right_label) for ctrl in ctrls
+                    ]
+            if tgt_mirror_labels and len(tgt_mirror_labels) == 2:
+                tgt_left_label, tgt_right_label = tgt_mirror_labels
+                for subpart, ctrls in tgt_control_list.items():
+                    tgt_mirrored_controls[subpart] = [
+                        ctrl.replace(tgt_left_label, tgt_right_label) for ctrl in ctrls
+                    ]
+        
 
         if not mc.objExists(CONSTRAINT_SET):
             mc.sets(name=CONSTRAINT_SET, empty=True)
 
+        #get namespace
         src_ns = self.source_ns.text()
         tgt_ns = self.target_ns.text()
 
@@ -199,6 +218,27 @@ class RetargetToolUI(QtWidgets.QDialog):
                 con = mc.orientConstraint(src_node, tgt_node, mo=src_part.get("MO", True))[0]
                 mc.sets(con, add=CONSTRAINT_SET)
                 created.append(con)
+
+        if src_mirror and tgt_mirror:
+            print(f"[Mirror Debug] Part: {part}")
+            print(f"  Source mirrored controls: {src_mirrored_controls}")
+            print(f"  Target mirrored controls: {tgt_mirrored_controls}")
+            for subpart, src_list in src_mirrored_controls.items():
+                tgt_list = tgt_mirrored_controls.get(subpart, [])
+                for src_ctrl, tgt_ctrl in zip(src_list, tgt_list):
+                    src_node = f"{src_ns}:{src_ctrl}" if src_ns else src_ctrl
+                    tgt_node = f"{tgt_ns}:{tgt_ctrl}" if tgt_ns else tgt_ctrl
+
+                    print(f"[Mirror Connect] {src_node} -> {tgt_node}")
+
+                    if not mc.objExists(src_node) or not mc.objExists(tgt_node):
+                        mc.warning(f"[FK Constrain] Missing node: {src_node} or {tgt_node}")
+                        failed.append(part)
+                        continue
+
+                    con = mc.orientConstraint(src_node, tgt_node, mo=src_part.get("MO", True))[0]
+                    mc.sets(con, add=CONSTRAINT_SET)
+                    created.append(con)
 
         return len(failed) == 0
 
