@@ -1,5 +1,15 @@
+from typing_extensions import LiteralString
+
+
+from typing import Any, Literal
+
+
 import os
 import json
+
+import platform
+import sys
+groups: Literal['G:', '/groups'] = 'G:' if platform.system() == 'Windows' else '/groups'
 
 import maya.cmds as mc
 try:
@@ -14,21 +24,21 @@ import maya.OpenMayaUI as omui
 # CONFIG
 # ------------------------------------------------------------
 
-CHAR_LIB_PATH = r"G:\bobo\pipeline\pipeline\software\maya\scripts\rjg\Retarget_Tool\Character_libs"
+CHAR_LIB_PATH: LiteralString = f"{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/Retarget_Tool/Character_libs"
 
-VALID_TYPES = ["FK", "IK", "FK_Distribute", "FK_IK", "Hybrid", "Root"]
+VALID_TYPES: list[str] = ["FK", "IK", "FK_Distribute", "FK_IK", "Hybrid", "Root"]
 CONSTRAINT_SET = "retarget_constraint_set"
-FKIK_OPTIONS = ["FK", "IK"]
+FKIK_OPTIONS: list[str] = ["FK", "IK"]
 
 # ------------------------------------------------------------
 # UTILS
 # ------------------------------------------------------------
 
-def maya_main_window():
+def maya_main_window() -> Any:
     ptr = omui.MQtUtil.mainWindow()
     return wrapInstance(int(ptr), QtWidgets.QWidget)
 
-def list_defs():
+def list_defs() -> list | list[str]:
     if not os.path.exists(CHAR_LIB_PATH):
         return []
     return sorted(
@@ -37,12 +47,12 @@ def list_defs():
         if f.endswith(".json")
     )
 
-def load_def(name):
-    path = os.path.join(CHAR_LIB_PATH, f"{name}.json")
+def load_def(name) -> dict | Any:
+    path: str = os.path.join(CHAR_LIB_PATH, f"{name}.json")
     if not os.path.exists(path):
         return {}
-    with open(path, "r") as f:
-        return json.load(f)
+    with open(file=path, mode="r") as f:
+        return json.load(fp=f)
 
 # ------------------------------------------------------------
 # UI
@@ -50,40 +60,40 @@ def load_def(name):
 
 class RetargetToolUI(QtWidgets.QDialog):
 
-    def __init__(self, parent=maya_main_window()):
+    def __init__(self, parent=maya_main_window()) -> None:
         super().__init__(parent)
         self.setWindowTitle("Retarget Tool")
         self.setMinimumWidth(420)
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.Window)
 
-        self.source_data = {}
-        self.target_data = {}
-        self.shared_parts = []
+        self.source_data: dict = {}
+        self.target_data: dict = {}
+        self.shared_parts: list = []
 
         self.build_ui()
 
     # --------------------------------------------------------
 
-    def build_ui(self):
-        layout = QtWidgets.QVBoxLayout(self)
+    def build_ui(self) -> None:
+        layout: Any = QtWidgets.QVBoxLayout(self)
 
         # ---------- Source ----------
         layout.addWidget(QtWidgets.QLabel("Source Def"))
-        self.source_combo = QtWidgets.QComboBox()
+        self.source_combo: Any = QtWidgets.QComboBox()
         self.source_combo.addItems(list_defs())
         layout.addWidget(self.source_combo)
 
-        self.source_ns = QtWidgets.QLineEdit()
+        self.source_ns: Any = QtWidgets.QLineEdit()
         self.source_ns.setPlaceholderText("Source Namespace")
         layout.addWidget(self.source_ns)
 
         # ---------- Target ----------
         layout.addWidget(QtWidgets.QLabel("Target Def"))
-        self.target_combo = QtWidgets.QComboBox()
+        self.target_combo: Any = QtWidgets.QComboBox()
         self.target_combo.addItems(list_defs())
         layout.addWidget(self.target_combo)
 
-        self.target_ns = QtWidgets.QLineEdit()
+        self.target_ns: Any = QtWidgets.QLineEdit()
         self.target_ns.setPlaceholderText("Target Namespace")
         layout.addWidget(self.target_ns)
 
