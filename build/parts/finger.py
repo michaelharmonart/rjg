@@ -162,7 +162,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             self.build_fk_chain()
             mc.parent(self.fk_joints[0], self.module_grp)
         if self.build_ik:
-            self.build_ik_chain(guide_list=self.guide_list[1:])
+            self.build_ik_chain(force_planar=True, guide_list=self.guide_list[1:])
             self.build_ikh(scale_attr=self.global_scale)
             mc.parent(self.ikh, self.ik_joints[0], self.module_grp)
         
