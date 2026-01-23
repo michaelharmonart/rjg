@@ -44,14 +44,21 @@ def get_pv_position(guide_list: Sequence[str], distance: float = 1) -> MPoint:
     """
     # This idea for this pole vector positioning math/technique for a 2 segment limb is from mGear's calculatePoleVector function.
     def get_best_mid_point(positions: Sequence[MPoint]) -> MPoint:
-        best_angle: float = 0
+        # Pick the point that is farthest from the baseline vector to build a traingle to define the guide plane.
+        # Equation for distance between a point P and a vector line V is: ||P cross V|| / ||V||
+        # Assuming that P and V both start at origin. https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Another_vector_formulation
+        first_point = MVector(positions[0])
+        last_point = MVector(positions[-1])
+        base_vector: MVector =  last_point - first_point
+        
+        best_distance: float = 0
         best_point: MPoint = positions[1]
-        base_vector = MVector(positions[-1]) - MVector(positions[0])
         for i in range(1, len(positions)-1):
-            vector1: MVector = MVector(positions[i]) - MVector(positions[i-1])
-            angle = vector1.angle(base_vector)
-            if angle > best_angle:
-                best_angle = angle
+            vector1: MVector = MVector(positions[i]) - first_point
+            cross: MVector = (vector1 ^ base_vector)
+            distance: float = cross.length() / base_vector.length()
+            if distance > best_distance:
+                best_distance = distance
                 best_point = positions[i]
         return best_point    
         
