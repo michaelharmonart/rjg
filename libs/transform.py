@@ -1,3 +1,4 @@
+from cgi import test
 from collections import OrderedDict
 from collections.abc import Sequence
 
@@ -5,6 +6,7 @@ import maya.cmds as mc
 from maya.api.OpenMaya import (
     MAngle,
     MDagPath,
+    MEulerRotation,
     MFnTransform,
     MMatrix,
     MPoint,
@@ -495,3 +497,48 @@ def drive_transform_with_matrix(
         mc.connectAttr(f"{decompose_matrix}.outputScale", f"{transform}.scale")
     if shear:
         mc.connectAttr(f"{decompose_matrix}.outputShear", f"{transform}.shear")
+
+
+def clean_parent(transform: str, parent: str, joint_orient: bool = True) -> None:
+    """
+    Parent a node while preserving its world transform without creating
+    Maya's intermediate "compensation" transforms.
+
+    - For transforms: world matrix is preserved.
+    - For joints (if joint_orient=True): rotation is baked into jointOrient
+      and rotate is zeroed, keeping the joint clean for IK/FK.
+
+    Args:
+        transform: Node to reparent.
+        parent: New parent node.
+        joint_orient: If True, bake rotation into jointOrient for joints.
+    """
+    object_world_matrix: MMatrix = get_world_matrix(transform)
+    node_type = mc.nodeType(transform)
+    mc.parent(transform, parent, relative=True)
+
+    if node_type == "joint" and joint_orient:
+        mc.setAttr(f"{transform}.jointOrient", 0, 0, 0)
+        set_world_matrix(transform, object_world_matrix)
+        # Get current rotation info
+        rotate_order = mc.getAttr(f"{transform}.rotateOrder")
+        rotation = mc.getAttr(f"{transform}.rotate")[0]
+        # Convert rotation XYZ rotate order for replacing the joint orient
+        euler: MEulerRotation = MEulerRotation(
+            MAngle(rotation[0], MAngle.kDegrees).asRadians(),
+            MAngle(rotation[1], MAngle.kDegrees).asRadians(),
+            MAngle(rotation[2], MAngle.kDegrees).asRadians(),
+            rotate_order,
+        )
+        euler.reorderIt(MEulerRotation.kXYZ)
+        # Apply to jointOrient (convert back to degrees)
+        mc.setAttr(
+            f"{transform}.jointOrient",
+            MAngle(euler.x).asDegrees(),
+            MAngle(euler.y).asDegrees(),
+            MAngle(euler.z).asDegrees(),
+        )
+        # Zero the rotate channel
+        mc.setAttr(f"{transform}.rotate", 0, 0, 0)
+    else:
+        set_world_matrix(transform, object_world_matrix)
