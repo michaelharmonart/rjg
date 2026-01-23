@@ -1,6 +1,13 @@
 import os
 import json
 
+from typing_extensions import LiteralString
+from typing import Any, Literal
+
+import platform
+import sys
+groups: Literal['G:', '/groups'] = 'G:' if platform.system() == 'Windows' else '/groups'
+
 import maya.cmds as mc
 try:
     from PySide6 import QtWidgets, QtCore
@@ -15,9 +22,9 @@ import maya.OpenMayaUI as omui
 # CONFIG
 # ------------------------------------------------------------
 
-CHAR_LIB_PATH = r"G:\bobo\pipeline\pipeline\software\maya\scripts\rjg\Retarget_Tool\Character_libs"
+CHAR_LIB_PATH: LiteralString = f"{groups}/bobo/pipeline/pipeline/software/maya/scripts/rjg/Retarget_Tool/Character_libs"
 
-PARTS = {
+PARTS: dict[str, list[str]] = {
     "arm": ["FKShoulder", "FkElbow", "FkWrist", "IKHand", "IKPV"],
     "clav": ["Clavicle"],
     "leg": ["FKHip", "FKKnee", "FkAnkle", "FKToe", "IKFoot", "IKPV", "IKToe"],
@@ -27,7 +34,7 @@ PARTS = {
     "hip": ["Hip"],
 }
 
-TYPE_OPTIONS = ["FK", "IK", "FK_Distribute", "FK_IK", "Hybrid", "Root"]
+TYPE_OPTIONS: list[str] = ["FK", "IK", "FK_Distribute", "FK_IK", "Hybrid", "Root"]
 
 # ------------------------------------------------------------
 # UTILS
