@@ -400,6 +400,34 @@ class RetargetToolUI(QtWidgets.QDialog):
         src_part = self.source_data[part]
         tgt_part = self.target_data[part]
 
+        # -------------------------
+        # Mirror setup
+        # -------------------------
+        src_mirror = src_part.get("Mirror", False)
+        tgt_mirror = tgt_part.get("Mirror", False)
+        if src_mirror and tgt_mirror:
+            src_mirrored_controls = {}
+            tgt_mirrored_controls = {}
+            src_mirror_labels = src_part.get("Mirror_Label", [])
+            tgt_mirror_labels = tgt_part.get("Mirror_Label", [])
+            src_control_list = src_part.get("ControlList", {})
+            tgt_control_list = tgt_part.get("ControlList", {})
+            if src_mirror_labels and len(src_mirror_labels) == 2:
+                src_left_label, src_right_label = src_mirror_labels
+                for subpart, ctrls in src_control_list.items():
+                    src_mirrored_controls[subpart] = [
+                        ctrl.replace(src_left_label, src_right_label) for ctrl in ctrls
+                    ]
+            if tgt_mirror_labels and len(tgt_mirror_labels) == 2:
+                tgt_left_label, tgt_right_label = tgt_mirror_labels
+                for subpart, ctrls in tgt_control_list.items():
+                    tgt_mirrored_controls[subpart] = [
+                        ctrl.replace(tgt_left_label, tgt_right_label) for ctrl in ctrls
+                    ]
+
+        # -------------------------
+        # Constraint setup
+        # -------------------------
         src_ns = self.source_ns.text()
         tgt_ns = self.target_ns.text()
 
@@ -409,57 +437,39 @@ class RetargetToolUI(QtWidgets.QDialog):
         failed = []
         created = []
 
-        ARM_PARTS = ["arm"]   # Expandable
-        LEG_PARTS = ["leg"]   # Expandable
+        src_controls = src_part.get("ControlList", {})
+        tgt_controls = tgt_part.get("ControlList", {})
 
         part_lower = part.lower()
+        ARM_PARTS = ["arm"]
+        LEG_PARTS = ["leg"]
 
+        # -------------------------
+        # Normal constraints
+        # -------------------------
         if part_lower in ARM_PARTS:
-            # -------------------------
-            # ARM IK LOGIC
-            # -------------------------
-            src_controls = src_part.get("ControlList", {})
-            tgt_controls = tgt_part.get("ControlList", {})
-
             try:
                 src_fk_hand = src_controls["FkWrist"][0]
                 src_fk_elbow = src_controls["FkElbow"][0]
-
                 tgt_ik_hand = tgt_controls.get("IKHand", [None])[0]
                 tgt_ik_pv = tgt_controls.get("IKPV", [None])[0]
 
-                if not src_fk_hand or not tgt_ik_hand or not src_fk_elbow or not tgt_ik_pv:
-                    mc.warning(f"[IK Constrain] Missing arm controls for part '{part}'")
-                    return False
-
-                pc = mc.parentConstraint(
-                    f"{src_ns}:{src_fk_hand}" if src_ns else src_fk_hand,
-                    f"{tgt_ns}:{tgt_ik_hand}" if tgt_ns else tgt_ik_hand,
-                    mo=True
-                )[0]
+                pc = mc.parentConstraint(f"{src_ns}:{src_fk_hand}" if src_ns else src_fk_hand,
+                                        f"{tgt_ns}:{tgt_ik_hand}" if tgt_ns else tgt_ik_hand,
+                                        mo=True)[0]
                 mc.sets(pc, add=CONSTRAINT_SET)
                 created.append(pc)
 
-                pt = mc.pointConstraint(
-                    f"{src_ns}:{src_fk_elbow}" if src_ns else src_fk_elbow,
-                    f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
-                    mo=True
-                )[0]
+                pt = mc.pointConstraint(f"{src_ns}:{src_fk_elbow}" if src_ns else src_fk_elbow,
+                                        f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
+                                        mo=True)[0]
                 mc.sets(pt, add=CONSTRAINT_SET)
                 created.append(pt)
-
             except KeyError as e:
                 mc.warning(f"[IK Constrain] Missing subpart for arm: {e}")
                 failed.append(part)
-                return False
 
         elif part_lower in LEG_PARTS:
-            # -------------------------
-            # LEG IK LOGIC
-            # -------------------------
-            src_controls = src_part.get("ControlList", {})
-            tgt_controls = tgt_part.get("ControlList", {})
-
             try:
                 src_fk_ankle = src_controls["FkAnkle"][0]
                 src_fk_knee = src_controls["FKKnee"][0]
@@ -469,45 +479,98 @@ class RetargetToolUI(QtWidgets.QDialog):
                 tgt_ik_pv = tgt_controls.get("IKPV", [None])[0]
                 tgt_ik_toes = tgt_controls.get("IKToe", [None])[0]
 
-                if not all([src_fk_ankle, src_fk_knee, src_fk_toes, tgt_ik_foot, tgt_ik_pv, tgt_ik_toes]):
-                    mc.warning(f"[IK Constrain] Missing leg controls for part '{part}'")
-                    return False
-
-                pc = mc.parentConstraint(
-                    f"{src_ns}:{src_fk_ankle}" if src_ns else src_fk_ankle,
-                    f"{tgt_ns}:{tgt_ik_foot}" if tgt_ns else tgt_ik_foot,
-                    mo=True
-                )[0]
+                pc = mc.parentConstraint(f"{src_ns}:{src_fk_ankle}" if src_ns else src_fk_ankle,
+                                        f"{tgt_ns}:{tgt_ik_foot}" if tgt_ns else tgt_ik_foot,
+                                        mo=True)[0]
                 mc.sets(pc, add=CONSTRAINT_SET)
                 created.append(pc)
 
-                pt = mc.pointConstraint(
-                    f"{src_ns}:{src_fk_knee}" if src_ns else src_fk_knee,
-                    f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
-                    mo=True
-                )[0]
+                pt = mc.pointConstraint(f"{src_ns}:{src_fk_knee}" if src_ns else src_fk_knee,
+                                        f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
+                                        mo=True)[0]
                 mc.sets(pt, add=CONSTRAINT_SET)
                 created.append(pt)
 
-                oc = mc.orientConstraint(
-                    f"{src_ns}:{src_fk_toes}" if src_ns else src_fk_toes,
-                    f"{tgt_ns}:{tgt_ik_toes}" if tgt_ns else tgt_ik_toes,
-                    mo=True
-                )[0]
+                oc = mc.orientConstraint(f"{src_ns}:{src_fk_toes}" if src_ns else src_fk_toes,
+                                        f"{tgt_ns}:{tgt_ik_toes}" if tgt_ns else tgt_ik_toes,
+                                        mo=True)[0]
                 mc.sets(oc, add=CONSTRAINT_SET)
                 created.append(oc)
-
             except KeyError as e:
                 mc.warning(f"[IK Constrain] Missing subpart for leg: {e}")
                 failed.append(part)
-                return False
-
         else:
-            mc.warning(f"[IK Constrain] Logic not written for part '{part}', try FK instead.")
+            mc.warning(f"[IK Constrain] Logic not written for part '{part}'")
             failed.append(part)
-            return False
+
+        # -------------------------
+        # Mirror constraints
+        # -------------------------
+        if src_mirror and tgt_mirror:
+            print(f"[Mirror Debug] Part: {part}")
+            print(f"  Source mirrored controls: {src_mirrored_controls}")
+            print(f"  Target mirrored controls: {tgt_mirrored_controls}")
+
+            if part_lower in ARM_PARTS:
+                try:
+                    src_fk_hand = src_mirrored_controls["FkWrist"][0]
+                    src_fk_elbow = src_mirrored_controls["FkElbow"][0]
+                    tgt_ik_hand = tgt_mirrored_controls.get("IKHand", [None])[0]
+                    tgt_ik_pv = tgt_mirrored_controls.get("IKPV", [None])[0]
+
+                    print(f"[Mirror Connect] {src_ns}:{src_fk_hand} -> {tgt_ns}:{tgt_ik_hand}")
+                    pc = mc.parentConstraint(f"{src_ns}:{src_fk_hand}" if src_ns else src_fk_hand,
+                                            f"{tgt_ns}:{tgt_ik_hand}" if tgt_ns else tgt_ik_hand,
+                                            mo=True)[0]
+                    mc.sets(pc, add=CONSTRAINT_SET)
+                    created.append(pc)
+
+                    print(f"[Mirror Connect] {src_ns}:{src_fk_elbow} -> {tgt_ns}:{tgt_ik_pv}")
+                    pt = mc.pointConstraint(f"{src_ns}:{src_fk_elbow}" if src_ns else src_fk_elbow,
+                                            f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
+                                            mo=True)[0]
+                    mc.sets(pt, add=CONSTRAINT_SET)
+                    created.append(pt)
+                except KeyError as e:
+                    mc.warning(f"[IK Constrain Mirror] Missing subpart for arm: {e}")
+                    failed.append(part)
+
+            elif part_lower in LEG_PARTS:
+                try:
+                    src_fk_ankle = src_mirrored_controls["FkAnkle"][0]
+                    src_fk_knee = src_mirrored_controls["FKKnee"][0]
+                    src_fk_toes = src_mirrored_controls["FKToe"][0]
+
+                    tgt_ik_foot = tgt_mirrored_controls.get("IKFoot", [None])[0]
+                    tgt_ik_pv = tgt_mirrored_controls.get("IKPV", [None])[0]
+                    tgt_ik_toes = tgt_mirrored_controls.get("IKToe", [None])[0]
+
+                    print(f"[Mirror Connect] {src_ns}:{src_fk_ankle} -> {tgt_ns}:{tgt_ik_foot}")
+                    pc = mc.parentConstraint(f"{src_ns}:{src_fk_ankle}" if src_ns else src_fk_ankle,
+                                            f"{tgt_ns}:{tgt_ik_foot}" if tgt_ns else tgt_ik_foot,
+                                            mo=True)[0]
+                    mc.sets(pc, add=CONSTRAINT_SET)
+                    created.append(pc)
+
+                    print(f"[Mirror Connect] {src_ns}:{src_fk_knee} -> {tgt_ns}:{tgt_ik_pv}")
+                    pt = mc.pointConstraint(f"{src_ns}:{src_fk_knee}" if src_ns else src_fk_knee,
+                                            f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
+                                            mo=True)[0]
+                    mc.sets(pt, add=CONSTRAINT_SET)
+                    created.append(pt)
+
+                    print(f"[Mirror Connect] {src_ns}:{src_fk_toes} -> {tgt_ns}:{tgt_ik_toes}")
+                    oc = mc.orientConstraint(f"{src_ns}:{src_fk_toes}" if src_ns else src_fk_toes,
+                                            f"{tgt_ns}:{tgt_ik_toes}" if tgt_ns else tgt_ik_toes,
+                                            mo=True)[0]
+                    mc.sets(oc, add=CONSTRAINT_SET)
+                    created.append(oc)
+                except KeyError as e:
+                    mc.warning(f"[IK Constrain Mirror] Missing subpart for leg: {e}")
+                    failed.append(part)
 
         return len(failed) == 0
+
 
 
 
