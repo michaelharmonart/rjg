@@ -1,12 +1,13 @@
-from typing import Sequence
-import maya.cmds as mc
-import maya.api.OpenMaya as om
-from maya.api.OpenMaya import MPoint, MVector
 from importlib import reload
+from typing import Sequence
 
-from rjg.libs.plane import make_points_planar
+import maya.api.OpenMaya as om
+import maya.cmds as mc
 import rjg.libs.attribute as rAttr
 import rjg.libs.math as rMath
+from maya.api.OpenMaya import MPoint, MVector
+from rjg.libs.plane import make_points_planar
+
 reload(rAttr)
 reload(rMath)
 
@@ -95,12 +96,9 @@ def get_pv_position(guide_list: Sequence[str], distance: float = 1) -> MPoint:
     return MPoint(pole_vector)
 
 
-def create_pv_guide(guide_list=None,
-                    name=None,
-                    suffix=None,
-                    slide_pv=None,
-                    offset_pv=0,
-                    delete_setup=None):
+def create_pv_guide(
+    guide_list=None, name=None, suffix=None, slide_pv=None, offset_pv=0, delete_setup=None, smart_two_segment: bool = False
+):
     if not guide_list:
         guide_list = mc.ls(sl=True)
 
@@ -110,7 +108,10 @@ def create_pv_guide(guide_list=None,
             return (point.x, point.y, point.z)
         else:
             mc.error('Must select or define three transforms to use as guides.')
-
+    elif smart_two_segment:
+        point = get_pv_position(guide_list)
+        return (point.x, point.y, point.z)
+        
     if not suffix:
         suffix = 'guide'
 

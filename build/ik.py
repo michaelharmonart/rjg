@@ -1,10 +1,10 @@
 from importlib import reload
+
 import maya.cmds as mc
 import rjg.build.chain as rChain
 import rjg.build.guide as rGuide
 import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
-
 
 reload(rAttr)
 reload(rChain)
@@ -61,10 +61,25 @@ class Ik:
             used_guides = self.guide_list
         else:
             used_guides = guide_list
-        if self.pv_guide == 'auto':
-            self.pv_guide = rGuide.create_pv_guide(guide_list=used_guides, name=self.base_name, slide_pv=self.slide_pv, offset_pv=self.offset_pv, delete_setup=True)
-            #self.pv_guide = rGuide.clean_pv_guide(guide_list=self.guide_list, name=self.base_name, offset_pv=self.offset_pv)
-    
+        if self.pv_guide == "auto":
+            self.pv_guide = rGuide.create_pv_guide(
+                guide_list=used_guides,
+                name=self.base_name,
+                slide_pv=self.slide_pv,
+                offset_pv=self.offset_pv,
+                delete_setup=True,
+            )
+            # self.pv_guide = rGuide.clean_pv_guide(guide_list=self.guide_list, name=self.base_name, offset_pv=self.offset_pv)
+        if self.pv_guide == "smart_auto":
+             self.pv_guide = rGuide.create_pv_guide(
+                guide_list=used_guides,
+                name=self.base_name,
+                slide_pv=self.slide_pv,
+                offset_pv=self.offset_pv,
+                delete_setup=True,
+                smart_two_segment=True,
+            )
+
     def build_ik_controls(self, guide_list: list[str] | None = None):
         if guide_list is None:
             used_guides = self.guide_list

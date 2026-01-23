@@ -1,7 +1,7 @@
 from importlib import reload
 
 import maya.cmds as mc
-from rjg.libs.transform import drive_transform_with_matrix, get_world_matrix
+from rjg.libs.transform import drive_transform_with_matrix, get_world_matrix, matrix_constraint
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
 import rjg.build.ik as rIk
@@ -38,7 +38,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         curl: bool = True,
         curlaxis: str = 'Z',
         handroll=False,
-        pv_guide="auto",
+        pv_guide="smart_auto",
     ):
         super().__init__(
             side=side,
@@ -140,7 +140,11 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.bendy_module_grp = module_grp
 
         return rig_dict
-
+        
+    def finger_ik_controls(self):
+        self.build_ik_controls(guide_list=self.guide_list[1:-1])
+        mc.parent(self.ik_ctrl_grp, self.control_grp)
+        mc.parent(self.fk_ctrls[1].top, self.fk_ctrl_group)
 
     def control_rig(self):
         self.fk_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_FK_CTLS", parent=self.control_grp) 
@@ -148,9 +152,8 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             self.build_fk_controls()
             mc.parent(self.fk_ctrls[0].top, self.control_grp)
         if self.build_ik:
-            self.build_ik_controls(guide_list=self.guide_list[1:])
-            mc.parent(self.ik_ctrl_grp, self.control_grp)
-            mc.parent(self.fk_ctrls[1].top, self.fk_ctrl_group)
+            self.finger_ik_controls()
+        
         if self.curl:
             if self.part == 'fingerThumb':
                 self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
@@ -162,10 +165,13 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             self.build_fk_chain()
             mc.parent(self.fk_joints[0], self.module_grp)
         if self.build_ik:
-            self.build_ik_chain(force_planar=True, guide_list=self.guide_list[1:])
+            self.build_ik_chain(force_planar=True, guide_list=self.guide_list[1:-1])
             self.build_ikh(scale_attr=self.global_scale)
             mc.parent(self.ikh, self.ik_joints[0], self.module_grp)
-        
+        if self.build_ik and self.build_fk:
+            matrix_constraint(self.fk_joints[0], self.base_ctrl.top, scale=False, shear=False)
+            full_ik_chain = rChain.Chain(transform_list = [self.fk_joints[0]] + self.ik_joints, name=self.part, side=self.side, suffix="_IK")
+            full_ik_chain.create_from_transforms(matrix_constraint=True, parent=self.module_grp)
 
     def skeleton(self):
         deformation_chain = rChain.Chain(transform_list=self.fk_joints, side=self.side, suffix='JNT', name=self.part)

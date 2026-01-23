@@ -57,10 +57,6 @@ class Chain:
         pose_dict = rXform.read_pose(self.transform_list)
         new_poses = list(pose_dict.items())
         if force_planar:
-            pose_keys = list(pose_dict.keys())
-            if len(pose_keys) < 3:
-                raise ValueError(f"{self.transform_list} needs to be at least 3 transforms (required to force_planar)")
-            
             guide_positions: list[MPoint] = [MPoint(matrix[12], matrix[13], matrix[14]) for matrix in pose_dict.values()]
             planar_guide_positions, plane_normal, error = make_points_planar(guide_positions)
             chain_length = 0
