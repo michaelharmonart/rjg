@@ -199,6 +199,111 @@ class RetargetToolUI(QtWidgets.QDialog):
                 created.append(con)
 
         return len(failed) == 0
+    
+    def fk_distribute_constraint(self, part):
+        """
+        Distribute summed FK rotations across multiple target controls.
+        Uses plusMinusAverage + multiplyDivide to average rotations.
+        """
+
+        src_part = self.source_data[part]
+        tgt_part = self.target_data[part]
+
+        if src_part.get("Type") != "FK_Distribute":
+            mc.warning(f"[FK Distribute] {part} is not FK_Distribute")
+            return False
+
+        if not mc.objExists(CONSTRAINT_SET):
+            mc.sets(name=CONSTRAINT_SET, empty=True)
+
+        src_ns = self.source_ns.text()
+        tgt_ns = self.target_ns.text()
+
+        failed = []
+        created = []
+
+        src_controls = src_part.get("ControlList", {})
+        tgt_controls = tgt_part.get("ControlList", {})
+
+        # FK_Distribute assumes a single subpart (eg. "Spine")
+        for subpart, src_list in src_controls.items():
+            tgt_list = tgt_controls.get(subpart, [])
+
+            if not src_list or not tgt_list:
+                mc.warning(f"[FK Distribute] Empty control list for {part}:{subpart}")
+                failed.append(part)
+                continue
+
+            # Resolve full node names
+            src_nodes = [
+                f"{src_ns}:{c}" if src_ns else c
+                for c in src_list
+                if mc.objExists(f"{src_ns}:{c}" if src_ns else c)
+            ]
+
+            tgt_nodes = [
+                f"{tgt_ns}:{c}" if tgt_ns else c
+                for c in tgt_list
+                if mc.objExists(f"{tgt_ns}:{c}" if tgt_ns else c)
+            ]
+
+            if len(src_nodes) != len(src_list) or len(tgt_nodes) != len(tgt_list):
+                mc.warning(f"[FK Distribute] Missing source or target controls for {part}")
+                failed.append(part)
+                continue
+
+            # --------------------------------------------------
+            # plusMinusAverage (sum rotations)
+            # --------------------------------------------------
+            pma = mc.createNode(
+                "plusMinusAverage",
+                name=f"{part}_FKDist_add_PMA"
+            )
+            mc.setAttr(f"{pma}.operation", 1)  # Sum
+
+            for i, src in enumerate(src_nodes):
+                mc.connectAttr(
+                    f"{src}.rotate",
+                    f"{pma}.input3D[{i}]",
+                    force=True
+                )
+
+            # --------------------------------------------------
+            # multiplyDivide (average)
+            # --------------------------------------------------
+            count = len(tgt_nodes)
+            inv = 1.0 / float(count)
+
+            md = mc.createNode(
+                "multiplyDivide",
+                name=f"{part}_FKDist_avg_MD"
+            )
+            mc.setAttr(f"{md}.operation", 1)  # Multiply
+
+            mc.connectAttr(f"{pma}.output3D", f"{md}.input1", force=True)
+            mc.setAttr(f"{md}.input2X", inv)
+            mc.setAttr(f"{md}.input2Y", inv)
+            mc.setAttr(f"{md}.input2Z", inv)
+
+            # --------------------------------------------------
+            # Connect to targets
+            # --------------------------------------------------
+            for tgt in tgt_nodes:
+                mc.connectAttr(
+                    f"{md}.output",
+                    f"{tgt}.rotate",
+                    force=True
+                )
+
+            # --------------------------------------------------
+            # Organization
+            # --------------------------------------------------
+            mc.sets(pma, add=CONSTRAINT_SET)
+            mc.sets(md, add=CONSTRAINT_SET)
+            created.extend([pma, md])
+
+        return len(failed) == 0
+
 
     def constrain_root(self, part):
         """
@@ -356,7 +461,8 @@ class RetargetToolUI(QtWidgets.QDialog):
             return False
 
         return len(failed) == 0
-
+    
+    
     def constrain(self):
         if not self.shared_parts:
             mc.warning("No compatible parts to constrain")
@@ -389,7 +495,9 @@ class RetargetToolUI(QtWidgets.QDialog):
                 if not success:
                     failed.append(part)
             elif part_type == "FK_Distribute":
-                pass
+                success =  self.fk_distribute_constraint( part)
+                if not success:
+                    failed.append(part)
             elif part_type == "FK_IK":
                 arm_mode = self.arm_fkik.currentText()
                 leg_mode = self.leg_fkik.currentText()
