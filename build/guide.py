@@ -41,14 +41,14 @@ def get_pv_position(guide_list: Sequence[str], distance: float = 1) -> MPoint:
     Returns:
         MPoint: The pole vector position in world space.
     """
-    # This pole vector positioning math/technique for a 2 segment limb is from mGear's calculatePoleVector function.
+    # This idea for this pole vector positioning math/technique for a 2 segment limb is from mGear's calculatePoleVector function.
     def get_best_mid_point(positions: Sequence[MPoint]) -> MPoint:
         best_angle: float = 0
         best_point: MPoint = positions[1]
+        base_vector = MVector(positions[-1]) - MVector(positions[0])
         for i in range(1, len(positions)-1):
             vector1: MVector = MVector(positions[i]) - MVector(positions[i-1])
-            vector2: MVector = MVector(positions[i+1]) - MVector(positions[i])
-            angle = vector1.angle(vector2)
+            angle = vector1.angle(base_vector)
             if angle > best_angle:
                 best_angle = angle
                 best_point = positions[i]
@@ -72,25 +72,25 @@ def get_pv_position(guide_list: Sequence[str], distance: float = 1) -> MPoint:
     )
     middle_position = MVector(get_best_mid_point(planar_points))
     last_position = MVector(mc.xform(last_guide, query=True, worldSpace=True, translation=True))
+    base_mid: MVector = (last_position + first_position) * 0.5
 
-    # 1. Calculate a "nice distance" based on average of the two bone lengths.
+    # Calculate a scale reference for how far the pole vector should be based on the two "segment" lengths.
     first_segment_length = (middle_position - first_position).length()
     second_segment_length = (last_position - middle_position).length()
     pole_distance = (first_segment_length + second_segment_length) * 0.5 * distance
 
-    # 2. Normalize the length of leg and ankle, relative to the knee.
-    # This will ensure that the pole vector goes STRAIGHT ahead of the knee
-    # Avoids up-down offset if there is a length difference between the two
-    # bones.
-    first_segment_vector = ((first_position - middle_position).normal() * pole_distance) + middle_position
-    second_segment_vector = ((last_position - middle_position).normal() * pole_distance) + middle_position
-
-    # 3. given 3 points, calculate a pole vector position
+    # Project the first segment onto the vector from the first to last point
+    base_vector: MVector = last_position - first_position # Vector from first to last point (base of the traingle)
+    projected = first_position + project_vector((middle_position - first_position), base_vector)
+    mid_pointer: MVector = middle_position - projected # projected point to the midpoint points directly out from the base
+    pole_vector_direction: MVector = mid_pointer.normal()
     
-    mid = first_segment_vector + project_vector((middle_position - first_segment_vector), (second_segment_vector - first_segment_vector))
-    # 4. Move the pole vector in front of the knee by the "nice distance".
-    mid_pointer: MVector = middle_position - mid
-    pole_vector = (mid_pointer.normal() * pole_distance) + middle_position
+    # Construct the pole vector position. 
+    # We take the normalized direction and scale it by the scale reference we calculated earlier, 
+    # then add the vector that goes from the base out to the midpoint, 
+    # this makes sure the pole vector is pushed out far enough when the chain is very bent.
+    # Finally we take that and add it to the midpoint betwen the first and last points.
+    pole_vector = (pole_vector_direction * pole_distance) + mid_pointer + base_mid
 
     return MPoint(pole_vector)
 
