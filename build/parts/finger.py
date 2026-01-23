@@ -68,6 +68,11 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.solver= None
         self.stretchy = False
         
+        if part == "fingerThumb":
+            self.ik_guides: list[str] = self.guide_list[:-1]
+        else:
+            self.ik_guides: list[str] = self.guide_list[1:-1]
+        
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
         is_right = self.side in ["R", "r", "Right", "right"]
@@ -82,7 +87,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
     def create_module(self):
         super().create_module()
         
-        self.check_pv_guide()
+        self.check_pv_guide(guide_list=self.ik_guides)
         self.check_solvers()
 
         self.control_rig()
@@ -141,10 +146,38 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
 
         return rig_dict
         
+    def create_inputs(self, group: str) -> None:
+        self.input_group = mc.group(empty=True, name=f"{self.base_name}_INPUTS", parent=group)
+        self.orient_input = mc.group(
+            empty=True, name=f"{self.base_name}_Orient_IN", parent=self.input_group
+    )
+        
     def finger_ik_controls(self):
-        self.build_ik_controls(guide_list=self.guide_list[1:-1])
+        
+        used_guides = self.ik_guides
+        self.ik_ctrls: list[rCtrl.Control] = []
+        self.ik_ctrl_grp = mc.group(empty=True, name=self.base_name + "_IK_CTRL_GRP")
+        
+        attr_util = rAttr.Attribute(add=False)
+        self.base_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_BASE", axis='y', group_type='main', rig_type='primary', translate=used_guides[0], ctrl_scale=self.ctrl_scale)
+        self.ik_ctrls.append(self.base_ctrl)
+        attr_util.lock_and_hide(node=self.base_ctrl.ctrl, translate=False, rotate=False)
+        self.base_ctrl.tag_as_controller()
+
+        self.main_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_MAIN", axis='y', group_type='main', rig_type='primary', translate=used_guides[-1], ctrl_scale=self.ctrl_scale)
+        self.ik_ctrls.append(self.main_ctrl)
+        attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
+        self.main_ctrl.tag_as_controller()
+
+        if self.pv_guide:
+            self.check_pv_guide()
+            self.pv_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='locator_3D', side=None, suffix='CTRL', name=self.base_name +"_IK_PV", axis='y', group_type='main', rig_type='pv', translate=self.pv_guide, ctrl_scale=self.ctrl_scale * 0.4)
+            self.ik_ctrls.append(self.pv_ctrl)
+            attr_util.lock_and_hide(node=self.pv_ctrl.ctrl, translate=False)
+            self.pv_ctrl.tag_as_controller()
+        
         mc.parent(self.ik_ctrl_grp, self.control_grp)
-        mc.parent(self.fk_ctrls[1].top, self.fk_ctrl_group)
+        #mc.parent(self.fk_ctrls[1].top, self.fk_ctrl_group)
 
     def control_rig(self):
         self.fk_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_FK_CTLS", parent=self.control_grp) 
@@ -153,7 +186,11 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             mc.parent(self.fk_ctrls[0].top, self.control_grp)
         if self.build_ik:
             self.finger_ik_controls()
-        
+            self.ik_switch_attr = rAttr.Attribute(
+                node=self.part_grp, type="double", min=0, max=1, keyable=True, name="finger_IK"
+            )
+            mc.connectAttr(self.ik_switch_attr.attr, f"{self.ik_ctrl_grp}.visibility")
+            
         if self.curl:
             if self.part == 'fingerThumb':
                 self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
@@ -165,13 +202,17 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             self.build_fk_chain()
             mc.parent(self.fk_joints[0], self.module_grp)
         if self.build_ik:
-            self.build_ik_chain(force_planar=True, guide_list=self.guide_list[1:-1])
+            self.build_ik_chain(force_planar=True, guide_list=self.ik_guides)
             self.build_ikh(scale_attr=self.global_scale)
             mc.parent(self.ikh, self.ik_joints[0], self.module_grp)
         if self.build_ik and self.build_fk:
+            mc.connectAttr(self.ik_switch_attr.attr, f"{self.ikh}.ikBlend")
             matrix_constraint(self.fk_joints[0], self.base_ctrl.top, scale=False, shear=False)
-            full_ik_chain = rChain.Chain(transform_list = [self.fk_joints[0]] + self.ik_joints, name=self.part, side=self.side, suffix="_IK")
-            full_ik_chain.create_from_transforms(matrix_constraint=True, parent=self.module_grp)
+            #full_ik_chain = rChain.Chain(transform_list = [self.fk_joints[0]] + self.ik_joints, name=self.part, side=self.side, suffix="_IK")
+            #full_ik_chain.create_from_transforms(matrix_constraint=True, parent=self.module_grp)
+            if self.build_fk and self.build_ik:
+                for i, fk_ctrl in enumerate(self.fk_ctrls[1:-1]):
+                    matrix_constraint(self.ik_joints[i], fk_ctrl.top)
 
     def skeleton(self):
         deformation_chain = rChain.Chain(transform_list=self.fk_joints, side=self.side, suffix='JNT', name=self.part)

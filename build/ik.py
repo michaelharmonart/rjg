@@ -223,7 +223,9 @@ class Ik:
         if constrain:
             mc.parentConstraint(self.base_ctrl.ctrl, self.ik_joints[0], mo=True)
             mc.parentConstraint(self.main_ctrl.ctrl, self.ikh, mo=True)
-            mc.orientConstraint(self.main_ctrl.ctrl, self.ik_joints[-1], maintainOffset=True)
+            orient_const = mc.orientConstraint(self.main_ctrl.ctrl, self.ik_joints[-1], maintainOffset=True)[0]
+            weight_names = mc.orientConstraint(orient_const, query=True, weightAliasList=True)
+            mc.connectAttr(f"{self.ikh}.ikBlend", f"{orient_const}.{weight_names[0]}")
 
         if self.pv_guide:
             mc.poleVectorConstraint(self.pv_ctrl.ctrl, self.ikh)

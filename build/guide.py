@@ -33,7 +33,7 @@ def clean_pv_guide(guide_list=None, name=None, suffix=None, slide_pv=None, offse
     return (pv_pos[0], pv_pos[1], pv_pos[2])
 
 
-def get_pv_position(guide_list: Sequence[str], distance: float = 1) -> MPoint:
+def get_pv_position(guide_list: Sequence[str], distance: float = 1.2) -> MPoint:
     """
     Automatic creation of pole vector position pole vector position.
     

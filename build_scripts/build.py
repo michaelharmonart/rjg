@@ -579,7 +579,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                         else 5
                     )
                 ],
-                ctrl_scale=1,
+                ctrl_scale=20 if character == "Luciana" else 1,
                 fk_shape=fing_shape,
                 bendy=bendbo,
                 create_ik=ik_fingers,
@@ -596,7 +596,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             guide_list=[
                 fs + "HandThumb" + str(num + 1) for num in range(5 if character == "Domingo" else 4)
             ],
-            ctrl_scale=1,
+            ctrl_scale=20 if character == "Luciana" else 1,
             fk_shape=fing_shape,
             bendy=bendbo,
             create_ik=ik_fingers,
