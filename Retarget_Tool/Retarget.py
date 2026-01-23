@@ -273,10 +273,6 @@ class RetargetToolUI(QtWidgets.QDialog):
         src_part = self.source_data[part]
         tgt_part = self.target_data[part]
 
-        if src_part.get("Type") != "FK_Distribute":
-            mc.warning(f"[FK Distribute] {part} is not FK_Distribute")
-            return False
-
         if not mc.objExists(CONSTRAINT_SET):
             mc.sets(name=CONSTRAINT_SET, empty=True)
 
