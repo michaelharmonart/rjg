@@ -56,21 +56,30 @@ class Ik:
         else:
             mc.error("Invalid solver specified.")
 
-    def check_pv_guide(self):
+    def check_pv_guide(self, guide_list: list[str] | None = None):
+        if guide_list is None:
+            used_guides = self.guide_list
+        else:
+            used_guides = guide_list
         if self.pv_guide == 'auto':
-            self.pv_guide = rGuide.create_pv_guide(guide_list=self.guide_list, name=self.base_name, slide_pv=self.slide_pv, offset_pv=self.offset_pv, delete_setup=True)
+            self.pv_guide = rGuide.create_pv_guide(guide_list=used_guides, name=self.base_name, slide_pv=self.slide_pv, offset_pv=self.offset_pv, delete_setup=True)
             #self.pv_guide = rGuide.clean_pv_guide(guide_list=self.guide_list, name=self.base_name, offset_pv=self.offset_pv)
     
-    def build_ik_controls(self):
+    def build_ik_controls(self, guide_list: list[str] | None = None):
+        if guide_list is None:
+            used_guides = self.guide_list
+        else:
+            used_guides = guide_list
+        
         self.ik_ctrls: list[rCtrl.Control] = []
         attr_util = rAttr.Attribute(add=False)
         self.ik_ctrl_grp = mc.group(empty=True, name=self.base_name + "_IK_CTRL_GRP")
-        self.base_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_BASE", axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
+        self.base_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_BASE", axis='y', group_type='main', rig_type='primary', translate=used_guides[0], ctrl_scale=self.ctrl_scale)
         self.ik_ctrls.append(self.base_ctrl)
         attr_util.lock_and_hide(node=self.base_ctrl.ctrl, translate=False, rotate=False)
         self.base_ctrl.tag_as_controller()
 
-        self.main_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_MAIN", axis='y', group_type='main', rig_type='primary', translate=self.guide_list[-1], ctrl_scale=self.ctrl_scale)
+        self.main_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_MAIN", axis='y', group_type='main', rig_type='primary', translate=used_guides[-1], ctrl_scale=self.ctrl_scale)
         self.ik_ctrls.append(self.main_ctrl)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
         self.main_ctrl.tag_as_controller()
@@ -170,8 +179,12 @@ class Ik:
         return [ctrl.ctrl for ctrl in self.ikspline_ctrls]
 
 
-    def build_ik_chain(self, force_planar: bool = False):
-        self.ik_chain = rChain.Chain(transform_list=self.guide_list, side=self.side, suffix=self.s_name + '_JNT', name=self.part)
+    def build_ik_chain(self, force_planar: bool = False, guide_list: list[str] | None = None):
+        if guide_list is None:
+            used_guides = self.guide_list
+        else:
+            used_guides = guide_list
+        self.ik_chain = rChain.Chain(transform_list=used_guides, side=self.side, suffix=self.s_name + '_JNT', name=self.part)
         self.ik_chain.create_from_transforms(static=True, force_planar=force_planar)
         self.ik_joints = self.ik_chain.joints
 

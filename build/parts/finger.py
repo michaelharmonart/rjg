@@ -64,6 +64,9 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.pv_guide = pv_guide
         self.slide_pv = None
         self.offset_pv = None
+        self.sticky = False
+        self.solver= None
+        self.stretchy = False
         
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -78,6 +81,9 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
 
     def create_module(self):
         super().create_module()
+        
+        self.check_pv_guide()
+        self.check_solvers()
 
         self.control_rig()
         self.output_rig()
@@ -142,7 +148,8 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             self.build_fk_controls()
             mc.parent(self.fk_ctrls[0].top, self.control_grp)
         if self.build_ik:
-            self.build_ik_controls()
+            self.build_ik_controls(guide_list=self.guide_list[1:])
+            mc.parent(self.ik_ctrl_grp, self.control_grp)
             mc.parent(self.fk_ctrls[1].top, self.fk_ctrl_group)
         if self.curl:
             if self.part == 'fingerThumb':
@@ -154,6 +161,10 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         if self.build_fk:
             self.build_fk_chain()
             mc.parent(self.fk_joints[0], self.module_grp)
+        if self.build_ik:
+            self.build_ik_chain(guide_list=self.guide_list[1:])
+            self.build_ikh(scale_attr=self.global_scale)
+            mc.parent(self.ikh, self.ik_joints[0], self.module_grp)
         
 
     def skeleton(self):
