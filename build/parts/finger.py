@@ -37,7 +37,8 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         bendy_vis_attr: str | None = None,
         curl: bool = True,
         curlaxis: str = 'Z',
-        handroll=False
+        handroll=False,
+        pv_guide="auto",
     ):
         super().__init__(
             side=side,
@@ -60,6 +61,9 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.curl = curl
         self.curlaxis = curlaxis
         self.handroll=handroll
+        self.pv_guide = pv_guide
+        self.slide_pv = None
+        self.offset_pv = None
         
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -133,9 +137,13 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
 
 
     def control_rig(self):
+        self.fk_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_FK_CTLS", parent=self.control_grp) 
         if self.build_fk:
             self.build_fk_controls()
             mc.parent(self.fk_ctrls[0].top, self.control_grp)
+        if self.build_ik:
+            self.build_ik_controls()
+            mc.parent(self.fk_ctrls[1].top, self.fk_ctrl_group)
         if self.curl:
             if self.part == 'fingerThumb':
                 self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)

@@ -1,10 +1,11 @@
-import maya.cmds as mc
 from importlib import reload
-
-import rjg.libs.attribute as rAttr
+import maya.cmds as mc
 import rjg.build.chain as rChain
-import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
+import rjg.libs.attribute as rAttr
+import rjg.libs.control.ctrl as rCtrl
+
+
 reload(rAttr)
 reload(rChain)
 reload(rChain)
@@ -59,7 +60,7 @@ class Ik:
         if self.pv_guide == 'auto':
             self.pv_guide = rGuide.create_pv_guide(guide_list=self.guide_list, name=self.base_name, slide_pv=self.slide_pv, offset_pv=self.offset_pv, delete_setup=True)
             #self.pv_guide = rGuide.clean_pv_guide(guide_list=self.guide_list, name=self.base_name, offset_pv=self.offset_pv)
-
+    
     def build_ik_controls(self):
         self.ik_ctrls: list[rCtrl.Control] = []
         attr_util = rAttr.Attribute(add=False)
@@ -75,6 +76,7 @@ class Ik:
         self.main_ctrl.tag_as_controller()
 
         if self.pv_guide:
+            self.check_pv_guide()
             self.pv_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='locator_3D', side=None, suffix='CTRL', name=self.base_name +"_IK_PV", axis='y', group_type='main', rig_type='pv', translate=self.pv_guide, ctrl_scale=self.ctrl_scale)
             self.ik_ctrls.append(self.pv_ctrl)
             attr_util.lock_and_hide(node=self.pv_ctrl.ctrl, translate=False)

@@ -494,6 +494,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         else:
             bendbo = False
             bendy_switch=None
+            
+        if character in ['Luciana']:
+            ik_fingers = True
+        else:
+            ik_fingers = False
+            
         # Hand
         if character == 'Bobo':
             hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = False, handroll=handroll)
@@ -576,7 +582,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 ctrl_scale=1,
                 fk_shape=fing_shape,
                 bendy=bendbo,
-                create_ik=False,
+                create_ik=ik_fingers,
                 bendy_vis_attr = hand.bendy_vis_attr,
                 curlaxis = curlaxis,
                 handroll = handroll
@@ -593,7 +599,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             ctrl_scale=1,
             fk_shape=fing_shape,
             bendy=bendbo,
-            create_ik=False,
+            create_ik=ik_fingers,
             bendy_vis_attr = hand.bendy_vis_attr,
             curlaxis = curlaxis
         )

@@ -1,7 +1,10 @@
+from typing import Sequence
 import maya.cmds as mc
 import maya.api.OpenMaya as om
+from maya.api.OpenMaya import MPoint, MVector
 from importlib import reload
 
+from rjg.libs.plane import make_points_planar
 import rjg.libs.attribute as rAttr
 import rjg.libs.math as rMath
 reload(rAttr)
@@ -29,6 +32,69 @@ def clean_pv_guide(guide_list=None, name=None, suffix=None, slide_pv=None, offse
     return (pv_pos[0], pv_pos[1], pv_pos[2])
 
 
+def get_pv_position(guide_list: Sequence[str], distance: float = 1) -> MPoint:
+    """
+    Automatic creation of pole vector position pole vector position.
+    
+    Args:
+        distance: distance of the pole vector from the mid point
+    Returns:
+        MPoint: The pole vector position in world space.
+    """
+    # This pole vector positioning math/technique for a 2 segment limb is from mGear's calculatePoleVector function.
+    def get_best_mid_point(positions: Sequence[MPoint]) -> MPoint:
+        best_angle: float = 0
+        best_point: MPoint = positions[1]
+        for i in range(1, len(positions)-1):
+            vector1: MVector = MVector(positions[i]) - MVector(positions[i-1])
+            vector2: MVector = MVector(positions[i+1]) - MVector(positions[i])
+            angle = vector1.angle(vector2)
+            if angle > best_angle:
+                best_angle = angle
+                best_point = positions[i]
+        return best_point    
+        
+    def project_vector(vector_a: MVector, vector_b: MVector) -> MVector:
+        return ((vector_a * vector_b) / (vector_b * vector_b)) * vector_b
+    
+    first_guide = guide_list[0]
+    last_guide = guide_list[-1]
+
+    planar_points, *_ = make_points_planar(
+        [
+            MPoint(mc.xform(transform, query=True, worldSpace=True, translation=True))
+            for transform in guide_list
+        ]
+    )
+
+    first_position = MVector(
+        mc.xform(first_guide, query=True, worldSpace=True, translation=True)
+    )
+    middle_position = MVector(get_best_mid_point(planar_points))
+    last_position = MVector(mc.xform(last_guide, query=True, worldSpace=True, translation=True))
+
+    # 1. Calculate a "nice distance" based on average of the two bone lengths.
+    first_segment_length = (middle_position - first_position).length()
+    second_segment_length = (last_position - middle_position).length()
+    pole_distance = (first_segment_length + second_segment_length) * 0.5 * distance
+
+    # 2. Normalize the length of leg and ankle, relative to the knee.
+    # This will ensure that the pole vector goes STRAIGHT ahead of the knee
+    # Avoids up-down offset if there is a length difference between the two
+    # bones.
+    first_segment_vector = ((first_position - middle_position).normal() * pole_distance) + middle_position
+    second_segment_vector = ((last_position - middle_position).normal() * pole_distance) + middle_position
+
+    # 3. given 3 points, calculate a pole vector position
+    
+    mid = first_segment_vector + project_vector((middle_position - first_segment_vector), (second_segment_vector - first_segment_vector))
+    # 4. Move the pole vector in front of the knee by the "nice distance".
+    mid_pointer: MVector = middle_position - mid
+    pole_vector = (mid_pointer.normal() * pole_distance) + middle_position
+
+    return MPoint(pole_vector)
+
+
 def create_pv_guide(guide_list=None,
                     name=None,
                     suffix=None,
@@ -40,7 +106,8 @@ def create_pv_guide(guide_list=None,
 
     if len(guide_list) != 3:
         if len(guide_list) > 3:
-            guide_list = guide_list[0:3]
+            point = get_pv_position(guide_list)
+            return (point.x, point.y, point.z)
         else:
             mc.error('Must select or define three transforms to use as guides.')
 
@@ -207,4 +274,3 @@ def create_line_guide(a=None, b=None, name=None, suffix=None):
 
     return {'clusters': [handle_a, handle_b],
             'curve': crv}
-
