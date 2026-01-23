@@ -1,5 +1,6 @@
 import maya.cmds as mc
 import rjg.build.rigModule as rModule
+import rjg.libs.transform as rXform
 
 
 def Build_Correctives(side='L'):
@@ -73,14 +74,16 @@ def Build_Correctives(side='L'):
             mc.xform(basejoint_name, ws=True, ro=rot)
             mc.makeIdentity(basejoint_name, apply=True, translate=False, rotate=True)
             mc.setAttr(f'{basejoint_name}.segmentScaleCompensate', 0)
-            mc.parent(basejoint_name, param)
+            #mc.parent(basejoint_name, param)
+            rXform.clean_parent(basejoint_name, param)
 
             joint_name = f"{base_name}_{SideShort}_JNT"
             mc.joint(p=pos, name=joint_name)
             mc.xform(joint_name, ws=True, ro=rot)
             mc.makeIdentity(joint_name, apply=True, translate=False, rotate=True)
             mc.setAttr(f'{joint_name}.segmentScaleCompensate', 0)
-            mc.parent(joint_name, basejoint_name)
+            #mc.parent(joint_name, basejoint_name)
+            rXform.clean_parent(joint_name, basejoint_name)
 
 
             rig_module.tag_bind_joints(joint_name)
