@@ -124,6 +124,12 @@ class RetargetToolUI(QtWidgets.QDialog):
         self.bake_btn.clicked.connect(self.bake_retarget)
         layout.addWidget(self.bake_btn)
 
+        self.clear_btn = QtWidgets.QPushButton("Clear Retarget")
+        self.clear_btn.setStyleSheet("background-color: #773333;")
+        self.clear_btn.clicked.connect(self.clear_retarget)
+        layout.addWidget(self.clear_btn)
+
+
     # --------------------------------------------------------
 
     def check_compatibility(self):
@@ -159,6 +165,20 @@ class RetargetToolUI(QtWidgets.QDialog):
         
 
     # --------------------------------------------------------
+
+
+    def clear_retarget(self):
+        if not mc.objExists(CONSTRAINT_SET):
+            mc.warning("[Clear] No retarget constraint set found")
+            return
+
+        members = mc.sets(CONSTRAINT_SET, q=True) or []
+        if members:
+            mc.delete(members)
+
+        mc.delete(CONSTRAINT_SET)
+
+        print("[Clear] Retarget constraints cleared")
 
     def constrain_fk(self, part):
         """
@@ -666,12 +686,43 @@ class RetargetToolUI(QtWidgets.QDialog):
             mc.warning("No retarget constraint set found")
             return
 
-        # Collect target controls
         bake_nodes = set()
+        tgt_ns = self.target_ns.text()
 
-        for part in self.target_data.values():
-            for ctrl_list in part.get("ControlList", {}).values():
-                bake_nodes.update(ctrl_list)
+        # -------------------------
+        # Collect target controls (normal + mirrored)
+        # -------------------------
+        for part_name, part in self.target_data.items():
+
+            ctrl_dict = part.get("ControlList", {})
+            part_mirror = part.get("Mirror", False)
+            mirror_labels = part.get("Mirror_Label", [])
+
+            # ---------
+            # Normal controls
+            # ---------
+            for ctrl_list in ctrl_dict.values():
+                for ctrl in ctrl_list:
+                    node = f"{tgt_ns}:{ctrl}" if tgt_ns else ctrl
+                    if mc.objExists(node):
+                        bake_nodes.add(node)
+                    else:
+                        mc.warning(f"[Bake] Missing node: {node}")
+
+            # ---------
+            # Mirrored controls
+            # ---------
+            if part_mirror and mirror_labels and len(mirror_labels) == 2:
+                left_label, right_label = mirror_labels
+
+                for ctrl_list in ctrl_dict.values():
+                    for ctrl in ctrl_list:
+                        mirrored_ctrl = ctrl.replace(left_label, right_label)
+                        node = f"{tgt_ns}:{mirrored_ctrl}" if tgt_ns else mirrored_ctrl
+                        if mc.objExists(node):
+                            bake_nodes.add(node)
+                        else:
+                            mc.warning(f"[Bake] Missing mirrored node: {node}")
 
         bake_nodes = list(bake_nodes)
 
@@ -679,6 +730,9 @@ class RetargetToolUI(QtWidgets.QDialog):
             mc.warning("No target controls to bake")
             return
 
+        # -------------------------
+        # Bake animation
+        # -------------------------
         start = mc.playbackOptions(q=True, min=True)
         end = mc.playbackOptions(q=True, max=True)
 
@@ -689,13 +743,17 @@ class RetargetToolUI(QtWidgets.QDialog):
             simulation=True
         )
 
-        # Cleanup
+        # -------------------------
+        # Cleanup constraints
+        # -------------------------
         members = mc.sets(CONSTRAINT_SET, q=True) or []
         if members:
             mc.delete(members)
         mc.delete(CONSTRAINT_SET)
 
         print("[Bake] Retarget bake complete and cleaned up")
+
+
 
 # ------------------------------------------------------------
 # LAUNCH
