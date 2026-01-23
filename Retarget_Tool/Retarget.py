@@ -159,10 +159,11 @@ class RetargetToolUI(QtWidgets.QDialog):
 
     # --------------------------------------------------------
 
-    def constrain_fk(self, part):
+    def constrain_fk(self, part, src_controls_override=None, tgt_controls_override=None):
         """
         Constrain a single FK part.
         Adds orient constraints for all subparts.
+        Optional src/tgt overrides allow mirrored control lists.
         """
         src_part = self.source_data[part]
         tgt_part = self.target_data[part]
@@ -180,8 +181,8 @@ class RetargetToolUI(QtWidgets.QDialog):
         failed = []
         created = []
 
-        src_controls = src_part.get("ControlList", {})
-        tgt_controls = tgt_part.get("ControlList", {})
+        src_controls = src_controls_override or src_part.get("ControlList", {})
+        tgt_controls = tgt_controls_override or tgt_part.get("ControlList", {})
 
         for subpart, src_list in src_controls.items():
             tgt_list = tgt_controls.get(subpart, [])
@@ -199,11 +200,13 @@ class RetargetToolUI(QtWidgets.QDialog):
                 created.append(con)
 
         return len(failed) == 0
+
     
-    def fk_distribute_constraint(self, part):
+    def fk_distribute_constraint(self, part, src_controls_override=None, tgt_controls_override=None):
         """
         Distribute summed FK rotations across multiple target controls.
         Uses plusMinusAverage + multiplyDivide to average rotations.
+        Optional src/tgt overrides allow mirrored control lists.
         """
 
         src_part = self.source_data[part]
@@ -222,10 +225,9 @@ class RetargetToolUI(QtWidgets.QDialog):
         failed = []
         created = []
 
-        src_controls = src_part.get("ControlList", {})
-        tgt_controls = tgt_part.get("ControlList", {})
+        src_controls = src_controls_override or src_part.get("ControlList", {})
+        tgt_controls = tgt_controls_override or tgt_part.get("ControlList", {})
 
-        # FK_Distribute assumes a single subpart (eg. "Spine")
         for subpart, src_list in src_controls.items():
             tgt_list = tgt_controls.get(subpart, [])
 
@@ -234,7 +236,6 @@ class RetargetToolUI(QtWidgets.QDialog):
                 failed.append(part)
                 continue
 
-            # Resolve full node names
             src_nodes = [
                 f"{src_ns}:{c}" if src_ns else c
                 for c in src_list
@@ -252,52 +253,29 @@ class RetargetToolUI(QtWidgets.QDialog):
                 failed.append(part)
                 continue
 
-            # --------------------------------------------------
-            # plusMinusAverage (sum rotations)
-            # --------------------------------------------------
-            pma = mc.createNode(
-                "plusMinusAverage",
-                name=f"{part}_FKDist_add_PMA"
-            )
+            # plusMinusAverage node (sum rotations)
+            pma = mc.createNode(f"plusMinusAverage", name=f"{part}_FKDist_add_PMA")
             mc.setAttr(f"{pma}.operation", 1)  # Sum
 
             for i, src in enumerate(src_nodes):
-                mc.connectAttr(
-                    f"{src}.rotate",
-                    f"{pma}.input3D[{i}]",
-                    force=True
-                )
+                mc.connectAttr(f"{src}.rotate", f"{pma}.input3D[{i}]", force=True)
 
-            # --------------------------------------------------
-            # multiplyDivide (average)
-            # --------------------------------------------------
+            # multiplyDivide node (average)
             count = len(tgt_nodes)
             inv = 1.0 / float(count)
 
-            md = mc.createNode(
-                "multiplyDivide",
-                name=f"{part}_FKDist_avg_MD"
-            )
+            md = mc.createNode(f"multiplyDivide", name=f"{part}_FKDist_avg_MD")
             mc.setAttr(f"{md}.operation", 1)  # Multiply
-
             mc.connectAttr(f"{pma}.output3D", f"{md}.input1", force=True)
             mc.setAttr(f"{md}.input2X", inv)
             mc.setAttr(f"{md}.input2Y", inv)
             mc.setAttr(f"{md}.input2Z", inv)
 
-            # --------------------------------------------------
-            # Connect to targets
-            # --------------------------------------------------
+            # Connect to target rotates
             for tgt in tgt_nodes:
-                mc.connectAttr(
-                    f"{md}.output",
-                    f"{tgt}.rotate",
-                    force=True
-                )
+                mc.connectAttr(f"{md}.output", f"{tgt}.rotate", force=True)
 
-            # --------------------------------------------------
-            # Organization
-            # --------------------------------------------------
+            # Add nodes to set
             mc.sets(pma, add=CONSTRAINT_SET)
             mc.sets(md, add=CONSTRAINT_SET)
             created.extend([pma, md])
@@ -305,10 +283,12 @@ class RetargetToolUI(QtWidgets.QDialog):
         return len(failed) == 0
 
 
-    def constrain_root(self, part):
+
+    def constrain_root(self, part, src_controls_override=None, tgt_controls_override=None):
         """
         Constrain a single Root part.
         Adds both orient and point constraints for all subparts.
+        Optional src/tgt overrides allow mirrored control lists.
         """
         src_part = self.source_data[part]
         tgt_part = self.target_data[part]
@@ -322,8 +302,8 @@ class RetargetToolUI(QtWidgets.QDialog):
         failed = []
         created = []
 
-        src_controls = src_part.get("ControlList", {})
-        tgt_controls = tgt_part.get("ControlList", {})
+        src_controls = src_controls_override or src_part.get("ControlList", {})
+        tgt_controls = tgt_controls_override or tgt_part.get("ControlList", {})
 
         for subpart, src_list in src_controls.items():
             tgt_list = tgt_controls.get(subpart, [])
@@ -336,7 +316,6 @@ class RetargetToolUI(QtWidgets.QDialog):
                     failed.append(part)
                     continue
 
-                # Orient + Point constraints
                 con = mc.orientConstraint(src_node, tgt_node, mo=src_part.get("MO", True))[0]
                 mc.sets(con, add=CONSTRAINT_SET)
                 con = mc.pointConstraint(src_node, tgt_node, mo=src_part.get("MO", True))[0]
@@ -345,10 +324,11 @@ class RetargetToolUI(QtWidgets.QDialog):
 
         return len(failed) == 0
 
-    def constrain_ik(self, part):
+
+    def constrain_ik(self, part, src_controls_override=None, tgt_controls_override=None):
         """
         Constrain a single IK part (arm or leg).
-        Parent/point/orient constraints depending on type.
+        Optional src/tgt overrides allow mirrored control lists.
         """
         src_part = self.source_data[part]
         tgt_part = self.target_data[part]
@@ -362,22 +342,15 @@ class RetargetToolUI(QtWidgets.QDialog):
         failed = []
         created = []
 
-        # -------------------------
-        # Editable arm/leg lists
-        # -------------------------
-        ARM_PARTS = ["arm"]   # You can expand this later
-        LEG_PARTS = ["leg"]   # You can expand this later
+        src_controls = src_controls_override or src_part.get("ControlList", {})
+        tgt_controls = tgt_controls_override or tgt_part.get("ControlList", {})
 
+        ARM_PARTS = ["arm"]
+        LEG_PARTS = ["leg"]
         part_lower = part.lower()
 
         if part_lower in ARM_PARTS:
-            # -------------------------
-            # ARM IK LOGIC
-            # -------------------------
-            src_controls = src_part.get("ControlList", {})
-            tgt_controls = tgt_part.get("ControlList", {})
-
-            # Expected subparts: Shoulder, Elbow, Wrist / Hand
+            # Arm IK logic
             try:
                 src_fk_hand = src_controls["FkWrist"][0]
                 src_fk_elbow = src_controls["FkElbow"][0]
@@ -389,14 +362,12 @@ class RetargetToolUI(QtWidgets.QDialog):
                     mc.warning(f"[IK Constrain] Missing arm controls for part '{part}'")
                     return False
 
-                # ParentConstraint FK Hand -> IK Hand
                 pc = mc.parentConstraint(f"{src_ns}:{src_fk_hand}" if src_ns else src_fk_hand,
                                         f"{tgt_ns}:{tgt_ik_hand}" if tgt_ns else tgt_ik_hand,
                                         mo=True)[0]
                 mc.sets(pc, add=CONSTRAINT_SET)
                 created.append(pc)
 
-                # PointConstraint FK Elbow -> IK PV
                 pt = mc.pointConstraint(f"{src_ns}:{src_fk_elbow}" if src_ns else src_fk_elbow,
                                         f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
                                         mo=True)[0]
@@ -409,13 +380,7 @@ class RetargetToolUI(QtWidgets.QDialog):
                 return False
 
         elif part_lower in LEG_PARTS:
-            # -------------------------
-            # LEG IK LOGIC
-            # -------------------------
-            src_controls = src_part.get("ControlList", {})
-            tgt_controls = tgt_part.get("ControlList", {})
-
-            # Expected subparts: Hip, Knee, Ankle, Toes
+            # Leg IK logic
             try:
                 src_fk_ankle = src_controls["FkAnkle"][0]
                 src_fk_knee = src_controls["FKKnee"][0]
@@ -429,21 +394,18 @@ class RetargetToolUI(QtWidgets.QDialog):
                     mc.warning(f"[IK Constrain] Missing leg controls for part '{part}'")
                     return False
 
-                # ParentConstraint FK Ankle -> IK Foot
                 pc = mc.parentConstraint(f"{src_ns}:{src_fk_ankle}" if src_ns else src_fk_ankle,
                                         f"{tgt_ns}:{tgt_ik_foot}" if tgt_ns else tgt_ik_foot,
                                         mo=True)[0]
                 mc.sets(pc, add=CONSTRAINT_SET)
                 created.append(pc)
 
-                # PointConstraint FK Knee -> IK PV
                 pt = mc.pointConstraint(f"{src_ns}:{src_fk_knee}" if src_ns else src_fk_knee,
                                         f"{tgt_ns}:{tgt_ik_pv}" if tgt_ns else tgt_ik_pv,
                                         mo=True)[0]
                 mc.sets(pt, add=CONSTRAINT_SET)
                 created.append(pt)
 
-                # OrientConstraint FK Toes -> IK Toes
                 oc = mc.orientConstraint(f"{src_ns}:{src_fk_toes}" if src_ns else src_fk_toes,
                                         f"{tgt_ns}:{tgt_ik_toes}" if tgt_ns else tgt_ik_toes,
                                         mo=True)[0]
@@ -461,8 +423,61 @@ class RetargetToolUI(QtWidgets.QDialog):
             return False
 
         return len(failed) == 0
+
     
-    
+    def get_mirrored_control_lists(self, part):
+        """
+        Returns temporary mirrored copies of source and target control lists for this part.
+        Does NOT mutate JSON.
+        """
+        src_part = self.source_data[part]
+        tgt_part = self.target_data[part]
+
+        mirror_labels = src_part.get("Mirror_Label")
+        if not mirror_labels or len(mirror_labels) != 2:
+            return src_part.get("ControlList", {}), tgt_part.get("ControlList", {})
+
+        left, right = mirror_labels
+
+        def mirror_list(ctrls):
+            return [c.replace(left, right) for c in ctrls]
+
+        # Build mirrored dicts
+        mirrored_src = {subpart: mirror_list(ctrls)
+                        for subpart, ctrls in src_part.get("ControlList", {}).items()}
+        mirrored_tgt = {subpart: mirror_list(ctrls)
+                        for subpart, ctrls in tgt_part.get("ControlList", {}).items()}
+
+        return mirrored_src, mirrored_tgt
+
+    def run_constraint_with_optional_lists(self, func, part, src_override=None, tgt_override=None):
+        """
+        Calls a constraint function with optional overridden control lists.
+        The function will temporarily use the overridden lists if provided.
+        """
+        # Store original lists
+        src_part = self.source_data[part]
+        tgt_part = self.target_data[part]
+
+        orig_src = src_part.get("ControlList")
+        orig_tgt = tgt_part.get("ControlList")
+
+        try:
+            if src_override is not None:
+                src_part["ControlList"] = src_override
+            if tgt_override is not None:
+                tgt_part["ControlList"] = tgt_override
+
+            return func(part)
+        finally:
+            # Restore original lists
+            src_part["ControlList"] = orig_src
+            tgt_part["ControlList"] = orig_tgt
+
+
+
+
+
     def constrain(self):
         if not self.shared_parts:
             mc.warning("No compatible parts to constrain")
@@ -473,67 +488,69 @@ class RetargetToolUI(QtWidgets.QDialog):
 
         failed = []
 
-
         for part in self.shared_parts:
-            
             src_part = self.source_data[part]
             tgt_part = self.target_data[part]
+
             part_type = tgt_part.get("Type")
+            part_mirror = src_part.get("Mirror", False)
 
             if part_type not in VALID_TYPES:
                 mc.warning(f"[Constrain] Invalid type '{part_type}' on {part}")
                 failed.append(part)
                 continue
 
-            # Call the single-part constrain functions
+            # Select the correct constraint function
             if part_type == "FK":
-                success = self.constrain_fk(part)
-                if not success:
-                    failed.append(part)
+                func = self.constrain_fk
             elif part_type == "IK":
-                success = self.constrain_ik(part)
-                if not success:
-                    failed.append(part)
+                func = self.constrain_ik
             elif part_type == "FK_Distribute":
-                success =  self.fk_distribute_constraint( part)
-                if not success:
-                    failed.append(part)
+                func = self.fk_distribute_constraint
             elif part_type == "FK_IK":
+                # Determine mode (FK or IK)
+                part_lower = part.lower()
                 arm_mode = self.arm_fkik.currentText()
                 leg_mode = self.leg_fkik.currentText()
                 other_mode = self.other_fkik.currentText()
-                mode_map = {
-                    "arm": arm_mode,
-                    "leg": leg_mode
-                }
-                part_lower = part.lower()
-                # Determine mode: arm_mode / leg_mode / other_mode
+
                 if part_lower.startswith("arm"):
-                    mode = mode_map["arm"]
+                    mode = arm_mode
                 elif part_lower.startswith("leg"):
-                    mode = mode_map["leg"]
+                    mode = leg_mode
                 else:
                     mode = other_mode
 
-                if mode == "FK":
-                    success = self.constrain_fk(part)
-                else:
-                    print(mode)
-                    success = self.constrain_ik(part)
-
-                if not success:
-                    failed.append(part)
-            elif part_type == "Hybrid":
-                pass
+                func = self.constrain_fk if mode == "FK" else self.constrain_ik
             elif part_type == "Root":
-                success = self.constrain_root(part)
+                func = self.constrain_root
+            else:
+                mc.warning(f"[Constrain] No logic for part '{part}'")
+                failed.append(part)
+                continue
+
+            # -------------------------
+            # Run normal constraint
+            # -------------------------
+            success = func(part)
+            if not success:
+                failed.append(part)
+
+            # -------------------------
+            # Run mirrored constraint if needed
+            # -------------------------
+            if part_mirror and part_type != "Root":  # Root usually not mirrored
+                mirrored_src, mirrored_tgt = self.get_mirrored_control_lists(part)
+                success = func(part, src_controls_override=mirrored_src, tgt_controls_override=mirrored_tgt)
                 if not success:
-                    failed.append(part)
+                    failed.append(f"{part} (mirror)")
 
         if failed:
             print("[Constrain] Failed parts:", failed)
         else:
             print("[Constrain] All parts constrained successfully")
+
+
 
     # --------------------------------------------------------
 
