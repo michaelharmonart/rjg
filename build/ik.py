@@ -133,6 +133,7 @@ class Ik:
         
         end_auto_pv_driver = mc.group(empty=True, name=f"{self.base_name}_End_AutoPV_Driver", parent=end_auto_pv_group)
         aim_const = mc.aimConstraint(self.base_ctrl.ctrl, end_auto_pv_driver)[0]
+        mc.pointConstraint(self.main_ctrl.ctrl, end_auto_pv_driver)
         
         mc.setAttr(f"{aim_const}.aimVector", 0,1,0)
         mc.setAttr(f"{aim_const}.upVector", 0,0,0)
