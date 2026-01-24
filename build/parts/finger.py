@@ -1,5 +1,6 @@
 from importlib import reload
 
+from maya.api.OpenMaya import MMatrix, MPoint, MQuaternion, MTransformationMatrix, MVector
 import maya.cmds as mc
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
@@ -9,7 +10,7 @@ import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
 from rjg.libs.maya_api import node
 from rjg.libs.space import space_switch
-from rjg.libs.transform import drive_transform_with_matrix, get_parent_inverse_matrix, get_parent_matrix, get_world_matrix, is_identity_matrix, matrix_constraint
+from rjg.libs.transform import create_aim_matrix, drive_transform_with_matrix, get_parent_inverse_matrix, get_parent_matrix, get_world_matrix, is_identity_matrix, matrix_constraint, set_world_matrix
 
 reload(rModule)
 reload(rAttr)
@@ -158,7 +159,24 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         )
         
     def finger_ik_controls(self):
-        
+        def get_y_twist_matrix(matrix: MMatrix) -> MMatrix:
+            y_axis: MVector = MVector(0,1,0)
+            forward_axis: MVector = (y_axis * -1) if self.mirror else y_axis
+            input_y: MVector = (forward_axis * matrix).normal()
+            right_vector: MVector = (y_axis ^ input_y).normal()
+            output_forward: MVector = (y_axis ^ right_vector).normal()
+            position: MPoint = MPoint(0,0,0) * matrix
+            
+            if self.mirror:
+                right_vector *= -1
+            
+            forward_axis = (output_forward.x, output_forward.y, output_forward.z, 0.0)
+            right_axis = (right_vector.x, right_vector.y, right_vector.z, 0.0)
+            up_axis = (y_axis.x, y_axis.y, y_axis.z, 0.0)
+            position_row = (position.x, position.y, position.z, 1.0)
+            
+            return MMatrix((right_axis, up_axis, forward_axis, position_row))
+            
         used_guides = self.ik_guides
         self.ik_ctrls: list[rCtrl.Control] = []
         self.ik_ctrl_grp = mc.group(empty=True, name=self.base_name + "_IK_CTRL_GRP")
@@ -168,8 +186,13 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.ik_ctrls.append(self.base_ctrl)
         attr_util.lock_and_hide(node=self.base_ctrl.ctrl, translate=False, rotate=False)
         self.base_ctrl.tag_as_controller()
+        
+        tip_matrix = get_world_matrix(used_guides[-1])
+        tip_twist = get_y_twist_matrix(tip_matrix)
 
+        
         self.main_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_MAIN", axis='y', group_type='main', rig_type='primary', translate=used_guides[-1], ctrl_scale=self.ctrl_scale)
+        set_world_matrix(self.main_ctrl.top, tip_twist)
         self.ik_ctrls.append(self.main_ctrl)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
         self.main_ctrl.tag_as_controller()
