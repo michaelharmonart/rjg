@@ -1,14 +1,15 @@
 from importlib import reload
 
 import maya.cmds as mc
-from rjg.libs.transform import drive_transform_with_matrix, get_world_matrix, matrix_constraint
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
 import rjg.build.ik as rIk
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
-from rjg.libs.maya_api import node
 import rjg.libs.control.ctrl as rCtrl
+from rjg.libs.maya_api import node
+from rjg.libs.space import space_switch
+from rjg.libs.transform import drive_transform_with_matrix, get_world_matrix, matrix_constraint
 
 reload(rModule)
 reload(rAttr)
@@ -89,7 +90,8 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         
         self.check_pv_guide(guide_list=self.ik_guides)
         self.check_solvers()
-
+        
+        self.create_inputs(self.module_grp)
         self.control_rig()
         self.output_rig()
         self.skeleton()
@@ -148,8 +150,8 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         
     def create_inputs(self, group: str) -> None:
         self.input_group = mc.group(empty=True, name=f"{self.base_name}_INPUTS", parent=group)
-        self.orient_input = mc.group(
-            empty=True, name=f"{self.base_name}_Orient_IN", parent=self.input_group
+        self.pv_input = mc.group(
+            empty=True, name=f"{self.base_name}_PV_IN", parent=self.input_group
     )
         
     def finger_ik_controls(self):
@@ -205,6 +207,22 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             self.build_ik_chain(force_planar=True, guide_list=self.ik_guides)
             self.build_ikh(scale_attr=self.global_scale)
             mc.parent(self.ikh, self.ik_joints[0], self.module_grp)
+            end_pv_space = self.build_auto_pv_driver(self.module_grp)
+            space_mapping = {
+                "auto": end_pv_space,
+                "fingertip": self.main_ctrl.ctrl,
+                "hand": f"hand_{self.side}_01_switch_JNT",
+            }
+            space_switch(
+                node=self.pv_input,
+                driver=self.pv_ctrl.ctrl,
+                target_list=[value for value in space_mapping.values()],
+                name_list=[name for name in space_mapping.keys()],
+                name="poleVectorSpace",
+                constraint_type="parent",
+                value=0,
+            )
+            matrix_constraint(self.pv_input, self.pv_ctrl.top)
         if self.build_ik and self.build_fk:
             mc.connectAttr(self.ik_switch_attr.attr, f"{self.ikh}.ikBlend")
             matrix_constraint(self.fk_joints[0], self.base_ctrl.top, scale=False, shear=False)

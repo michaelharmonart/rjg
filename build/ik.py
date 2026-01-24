@@ -1,6 +1,8 @@
 from importlib import reload
 
+from maya.api.OpenMaya import MPoint, MVector
 import maya.cmds as mc
+from rjg.libs.transform import create_aim_matrix, get_world_matrix, set_world_matrix
 import rjg.build.chain as rChain
 import rjg.build.guide as rGuide
 import rjg.libs.attribute as rAttr
@@ -107,6 +109,38 @@ class Ik:
             self.pv_ctrl.tag_as_controller()
 
         return self.pv_ctrl.ctrl
+    
+    def build_auto_pv_driver(self, parent:str):
+        ik_start_pos = MVector(
+            mc.xform(self.base_ctrl.ctrl, query=True, worldSpace=True, translation=True)
+        )
+        ik_end_pos = MVector(
+            mc.xform(self.main_ctrl.ctrl, query=True, worldSpace=True, translation=True)
+        )
+        pv_pos = MVector(
+            mc.xform(self.pv_ctrl.ctrl, query=True, worldSpace=True, translation=True)
+        )
+        middle_pos: MVector = (ik_start_pos + ik_end_pos) * 0.5
+        
+        base_aim_vector: MVector = ik_start_pos - ik_end_pos
+        base_up_vector: MVector = pv_pos - middle_pos
+        
+        aim_up_matrix = create_aim_matrix(base_aim_vector, base_up_vector, position=MPoint(ik_end_pos))
+        
+        end_auto_pv_group = mc.group(empty=True, name=f"{self.base_name}_End_AutoPV_GRP", parent=parent)
+        set_world_matrix(end_auto_pv_group, aim_up_matrix)
+        mc.orientConstraint(self.main_ctrl.ctrl, end_auto_pv_group, maintainOffset=True)
+        
+        end_auto_pv_driver = mc.group(empty=True, name=f"{self.base_name}_End_AutoPV_Driver", parent=end_auto_pv_group)
+        aim_const = mc.aimConstraint(self.base_ctrl.ctrl, end_auto_pv_driver)[0]
+        
+        mc.setAttr(f"{aim_const}.aimVector", 0,1,0)
+        mc.setAttr(f"{aim_const}.upVector", 0,0,0)
+        mc.setAttr(f"{aim_const}.worldUpType", 0) # No up vector: swing decompositon
+        
+        self.auto_pv_driver = end_auto_pv_driver
+        
+        return end_auto_pv_driver
     
     def build_ikspline_controls(self):
         """
