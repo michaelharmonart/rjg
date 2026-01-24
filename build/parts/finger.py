@@ -9,7 +9,7 @@ import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
 from rjg.libs.maya_api import node
 from rjg.libs.space import space_switch
-from rjg.libs.transform import drive_transform_with_matrix, get_world_matrix, matrix_constraint
+from rjg.libs.transform import drive_transform_with_matrix, get_parent_inverse_matrix, get_parent_matrix, get_world_matrix, is_identity_matrix, matrix_constraint
 
 reload(rModule)
 reload(rAttr)
@@ -67,7 +67,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.offset_pv = None
         self.sticky = False
         self.solver= None
-        self.stretchy = False
+        self.stretchy = True
         
         if part == "fingerThumb":
             self.ik_guides: list[str] = self.guide_list[:-1]
@@ -201,7 +201,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
                 self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
             else:
                 self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[1], rotate=self.guide_list[1], ctrl_scale=self.ctrl_scale)
-
+    
     def output_rig(self):
         if self.build_fk:
             self.build_fk_chain()
@@ -244,13 +244,42 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             )
             matrix_constraint(self.fingertip_input, self.main_ctrl.top)
         if self.build_ik and self.build_fk:
-            mc.connectAttr(self.ik_switch_attr.attr, f"{self.ikh}.ikBlend")
+            
+            short_fk_chain = rChain.Chain(self.fk_joints[1:-1], name=self.part, side=self.side, suffix="_Fk_Short")
+            short_fk_chain.create_from_transforms(parent=self.module_grp, static=True)
+            matrix_constraint(self.fk_joints[0], short_fk_chain.joints[0])
+            
+            ik_fk_blend_chain = rChain.Chain(short_fk_chain.joints, name=self.part, side=self.side, suffix="_Blend")
+            ik_fk_blend_chain.create_blend_chain(switch_node=self.part_grp, chain_a=self.ik_joints, chain_b=short_fk_chain.joints, handle_offsets=True, parent=self.module_grp)
+            
+            mc.connectAttr(self.ik_switch_attr.attr, ik_fk_blend_chain.switch.attr)
             matrix_constraint(self.fk_joints[0], self.base_ctrl.top, scale=False, shear=False)
-            #full_ik_chain = rChain.Chain(transform_list = [self.fk_joints[0]] + self.ik_joints, name=self.part, side=self.side, suffix="_IK")
-            #full_ik_chain.create_from_transforms(matrix_constraint=True, parent=self.module_grp)
             if self.build_fk and self.build_ik:
                 for i, fk_ctrl in enumerate(self.fk_ctrls[1:-1]):
-                    matrix_constraint(self.ik_joints[i], fk_ctrl.top)
+                    ik_joint = ik_fk_blend_chain.joints[i]
+                    ik_joint_matrix = f"{ik_joint}.matrix"
+                    fk_ctrl_offset_matrix = f"{fk_ctrl.top}.matrix"
+                    offset_matrix =  get_world_matrix(fk_ctrl.top) * get_world_matrix(ik_joint).inverse()
+                    parent_offset_matrix = get_parent_matrix(ik_joint) * get_parent_inverse_matrix(fk_ctrl.top)
+                    if not (is_identity_matrix(offset_matrix) and is_identity_matrix(parent_offset_matrix)):
+                        mult_matrix_node = node.MultMatrixNode(name=f"{fk_ctrl.top}_IKOffset")
+                        mult_index: int = 0
+                        if not is_identity_matrix(offset_matrix):
+                            mc.setAttr(mult_matrix_node.matrix_in[mult_index], offset_matrix, type="matrix")
+                            mult_index += 1
+                        mc.connectAttr(ik_joint_matrix, mult_matrix_node.matrix_in[mult_index])
+                        mult_index += 1
+                        mc.connectAttr(f"{ik_joint}.parentMatrix[0]" ,mult_matrix_node.matrix_in[mult_index])
+                        mult_index += 1
+                        mc.connectAttr(f"{fk_ctrl.top}.parentInverseMatrix[0]" ,mult_matrix_node.matrix_in[mult_index])
+                        mult_index += 1
+                        fk_ctrl_offset_matrix = mult_matrix_node.matrix_sum
+        
+                    drive_transform_with_matrix(
+                        matrix_attr=fk_ctrl_offset_matrix,
+                        transform=fk_ctrl.top,
+                        scale=False
+                    )
 
     def skeleton(self):
         deformation_chain = rChain.Chain(transform_list=self.fk_joints, side=self.side, suffix='JNT', name=self.part)
