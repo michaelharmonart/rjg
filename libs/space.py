@@ -3,7 +3,7 @@ from importlib import reload
 
 import rjg.libs.attribute as rAttr
 
-def space_switch(node: str, driver: str, target_list: list[str]=[], name_list: list[str]=[], name: str='space', constraint_type: str ='parent', value: int = 0):
+def space_switch(node: str, driver: str, target_list: list[str]=[], name_list: list[str]=[], name: str='space', constraint_type: str ='parent', value: int = 0) -> rAttr.Attribute:
     node_split = node.split('_')
     base_name = node_split[0] + '_' + node_split[1]
 
@@ -59,3 +59,5 @@ def space_switch(node: str, driver: str, target_list: list[str]=[], name_list: l
         mc.setDrivenKeyframe(cnst + '.' + wal_ordered[i], currentDriver=space.attr, driverValue=i, value=1)
         if i <= len(target_list) - 2:
             mc.setDrivenKeyframe(cnst + '.' + wal_ordered[i+1], currentDriver=space.attr, driverValue=i, value=0)
+
+    return space

@@ -152,7 +152,10 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.input_group = mc.group(empty=True, name=f"{self.base_name}_INPUTS", parent=group)
         self.pv_input = mc.group(
             empty=True, name=f"{self.base_name}_PV_IN", parent=self.input_group
-    )
+        )
+        self.fingertip_input = mc.group(
+            empty=True, name=f"{self.base_name}_Fingertip_IN", parent=self.input_group
+        )
         
     def finger_ik_controls(self):
         
@@ -208,7 +211,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             self.build_ikh(scale_attr=self.global_scale)
             mc.parent(self.ikh, self.ik_joints[0], self.module_grp)
             end_pv_space = self.build_auto_pv_driver(self.module_grp)
-            space_mapping = {
+            pv_space_mapping = {
                 "auto": end_pv_space,
                 "fingertip": self.main_ctrl.ctrl,
                 "hand": f"hand_{self.side}_01_switch_JNT",
@@ -216,13 +219,30 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             space_switch(
                 node=self.pv_input,
                 driver=self.pv_ctrl.ctrl,
-                target_list=[value for value in space_mapping.values()],
-                name_list=[name for name in space_mapping.keys()],
+                target_list=[value for value in pv_space_mapping.values()],
+                name_list=[name for name in pv_space_mapping.keys()],
                 name="poleVectorSpace",
                 constraint_type="parent",
                 value=0,
             )
             matrix_constraint(self.pv_input, self.pv_ctrl.top)
+            
+            self.fingertip_space_mapping = {
+                "world" : "ROOT",
+                "global" : "global_M_CTRL",
+                "root" : "root_02_M_CTRL",
+                "hand" : f"hand_{self.side}_01_switch_JNT",
+            }
+            self.fingertip_space_attr = space_switch(
+                node=self.fingertip_input,
+                driver=self.part_grp,
+                target_list=[value for value in self.fingertip_space_mapping.values()],
+                name_list=[name for name in self.fingertip_space_mapping.keys()],
+                name="fingertipSpace",
+                constraint_type="parent",
+                value=2,
+            )
+            matrix_constraint(self.fingertip_input, self.main_ctrl.top)
         if self.build_ik and self.build_fk:
             mc.connectAttr(self.ik_switch_attr.attr, f"{self.ikh}.ikBlend")
             matrix_constraint(self.fk_joints[0], self.base_ctrl.top, scale=False, shear=False)
@@ -238,6 +258,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
 
         if self.remove_last:
             mc.delete(self.fk_ctrls[-1].top)
+            self.fk_ctrls.pop(-1)
             self.bind_joints = deformation_chain.joints[:-1]
         else:
             self.bind_joints = deformation_chain.joints
@@ -247,6 +268,34 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
 
     def add_plugs(self):
         #rAttr.Attribute(node=self.part_grp, type='plug', value=['hand_' + self.side + '_JNT'], name='skeletonPlugs', children_name=[self.bind_joints[0]])
+        hand_part = f"hand_{self.side}"
+        if self.build_ik:
+            if mc.objExists(hand_part):
+                space_attr_name = "fingertipSpace"
+                if not mc.attributeQuery(space_attr_name, node=hand_part, exists=True):
+                     rAttr.Attribute(
+                        node=hand_part,
+                        type="enum",
+                        value=0,
+                        enum_list=self.fingertip_space_mapping.keys(),
+                        keyable=True,
+                        name=space_attr_name,
+                    )
+                hand_fingertip_space_attr = f"{hand_part}.{space_attr_name}"
+                mc.connectAttr(hand_fingertip_space_attr, self.fingertip_space_attr.attr)
+                for ctrl in self.ik_ctrls:
+                    mc.addAttr(ctrl.ctrl, longName=space_attr_name, proxy=hand_fingertip_space_attr)
+
+                ik_switch_attr_name = "finger_IK"
+                if not mc.attributeQuery(ik_switch_attr_name, node=hand_part, exists=True):
+                    rAttr.Attribute(
+                        node=hand_part, type="double", min=0, max=1, keyable=True, name=ik_switch_attr_name
+                    )
+                finger_ik_switch_attr = f"{hand_part}.{ik_switch_attr_name}"
+                mc.connectAttr(finger_ik_switch_attr, self.ik_switch_attr.attr)
+                for ctrl in self.ik_ctrls + self.fk_ctrls:
+                    mc.addAttr(ctrl.ctrl, longName=ik_switch_attr_name, proxy=finger_ik_switch_attr)
+            
 
         if not self.par_ctrl:
             driver_list = ['hand_' + self.side + '_01_switch_JNT']
