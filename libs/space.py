@@ -32,8 +32,6 @@ def space_switch(node: str, driver: str, target_list: list[str]=[], name_list: l
             mc.delete(loc_grp)
     else:
         targets = target_list
-    if 'IK_PV' in node:
-        print(f"Targets passed to constraint: {targets}")
     
     if constraint_type == 'parent':
         cnst = mc.parentConstraint(targets, node, mo=True)[0]
