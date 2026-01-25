@@ -3,7 +3,7 @@ from importlib import reload
 
 import rjg.libs.attribute as rAttr
 
-def space_switch(node: str, driver: str, target_list: list[str]=[], name_list: list[str]=[], name: str='space', constraint_type: str ='parent', value: int = 0):
+def space_switch(node: str, driver: str, target_list: list[str]=[], name_list: list[str]=[], name: str='space', constraint_type: str ='parent', value: int = 0) -> rAttr.Attribute:
     node_split = node.split('_')
     base_name = node_split[0] + '_' + node_split[1]
 
@@ -32,29 +32,32 @@ def space_switch(node: str, driver: str, target_list: list[str]=[], name_list: l
             mc.delete(loc_grp)
     else:
         targets = target_list
-
+    
     if constraint_type == 'parent':
         cnst = mc.parentConstraint(targets, node, mo=True)[0]
         wal = mc.parentConstraint(cnst, q=True, wal=True)
+        cnst_targets = mc.parentConstraint(cnst, q=True, tl=True)
     elif constraint_type == 'point':
         cnst = mc.pointConstraint(targets, node, mo=True)[0]
         wal = mc.pointConstraint(cnst, q=True, wal=True)
+        cnst_targets = mc.pointConstraint(cnst, q=True, tl=True)
     elif constraint_type == 'orient':
         cnst = mc.orientConstraint(targets, node, mo=True)[0]
         wal = mc.orientConstraint(cnst, q=True, wal=True)
+        cnst_targets = mc.orientConstraint(cnst, q=True, tl=True)
     else:
         mc.error("constraint_type only supports ['parent', 'point', 'orient']")
-
-    # for some reason, PV wal gets scrambled, so this unscrambles...
-    if 'PV' in node:
-        temp = [wal[1], wal[2], wal[0], wal[3], wal[4]]
-        wal = temp
+        
+    target_weight_map = {target: weight_alias for target, weight_alias in zip(cnst_targets, wal)}
+    wal_ordered = [target_weight_map[target] for target in targets]
 
     space = rAttr.Attribute(node=driver, type='enum', value=value, enum_list=name_list, keyable=True, name=name)
     print("making space:", name)
     for i in range(len(targets)):
         if i > 0:
-            mc.setDrivenKeyframe(cnst + '.' + wal[i-1], currentDriver=space.attr, driverValue=i, value=0)
-        mc.setDrivenKeyframe(cnst + '.' + wal[i], currentDriver=space.attr, driverValue=i, value=1)
+            mc.setDrivenKeyframe(cnst + '.' + wal_ordered[i-1], currentDriver=space.attr, driverValue=i, value=0)
+        mc.setDrivenKeyframe(cnst + '.' + wal_ordered[i], currentDriver=space.attr, driverValue=i, value=1)
         if i <= len(target_list) - 2:
-            mc.setDrivenKeyframe(cnst + '.' + wal[i+1], currentDriver=space.attr, driverValue=i, value=0)
+            mc.setDrivenKeyframe(cnst + '.' + wal_ordered[i+1], currentDriver=space.attr, driverValue=i, value=0)
+
+    return space

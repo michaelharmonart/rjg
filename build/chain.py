@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import ast
 from importlib import reload
-from typing import Any
+from typing import Any, Self
 
 import maya.cmds as mc
 import rjg.libs.attribute as rAttr
@@ -9,8 +11,9 @@ import rjg.libs.control.ctrl as rCtrl
 import rjg.libs.math as rMath
 import rjg.libs.spline as spline
 import rjg.libs.transform as rXform
-from maya.api.OpenMaya import MVector
+from maya.api.OpenMaya import MPoint, MVector
 from rjg.libs.maya_api import node
+from rjg.libs.plane import make_points_planar
 
 reload(rCtrl)
 reload(rCommon)
@@ -19,10 +22,11 @@ reload(rXform)
 reload(rMath)
 reload(spline)
 
-'''
-Class used to create joint chains from a list of transforms.
-'''
+
 class Chain:
+    '''
+    Class used to create joint chains from a list of transforms.
+    '''
     def __init__(self, transform_list=None, label_chain=True, side='M', suffix='JNT', name='default'):
         self.transform_list = transform_list
         self.label_chain = label_chain
@@ -31,9 +35,7 @@ class Chain:
         self.name = name
         self.split_jnt_dict = None
 
-    '''
-    Given a list of transforms, place joints at each transform
-    '''
+    
 
     def create_from_transforms(
         self,
@@ -49,38 +51,23 @@ class Chain:
         pad="auto",
         force_planar: bool = False,
     ):
+        '''
+        Given a list of transforms, place joints at each transform
+        '''
         pose_dict = rXform.read_pose(self.transform_list)
         new_poses = list(pose_dict.items())
         if force_planar:
-            pose_keys = list(pose_dict.keys())
-            if len(pose_keys) != 3:
-                raise ValueError(f"{self.transform_list} is not 3 transforms (required to force_planar)")
-            first_guide = pose_keys[0]
-            second_guide = pose_keys[1]
-            last_guide = pose_keys[-1]
-            first_matrix = pose_dict[first_guide]
-            second_matrix = pose_dict[second_guide]
-            last_matrix = pose_dict[last_guide]
-
-            # Snag the location straight from the matrices
-            first_location = MVector(first_matrix[12], first_matrix[13], first_matrix[14])
-            second_location = MVector(second_matrix[12], second_matrix[13], second_matrix[14])
-            last_location = MVector(last_matrix[12], last_matrix[13], last_matrix[14])
-
-            first_segment: MVector = second_location - first_location
-            second_segment: MVector = last_location - second_location
-
-            ortho_vector: MVector = first_segment ^ second_segment
-            plane_normal: MVector = ortho_vector.normal()
-
+            guide_positions: list[MPoint] = [MPoint(matrix[12], matrix[13], matrix[14]) for matrix in pose_dict.values()]
+            planar_guide_positions, plane_normal, error = make_points_planar(guide_positions)
+            chain_length = 0
             for i, (guide_name, matrix) in enumerate(new_poses):
                 if i == len(new_poses) - 1:
                     continue
-                current_matrix = matrix
-                next_matrix = new_poses[i+1][1]
-                current_location: MVector = MVector(current_matrix[12], current_matrix[13], current_matrix[14])
-                next_location: MVector = MVector(next_matrix[12], next_matrix[13], next_matrix[14])
-                aim_vector: MVector = (next_location - current_location).normal()
+                current_location: MVector = MVector(planar_guide_positions[i])
+                next_location: MVector = MVector(planar_guide_positions[i+1])
+                segment_vector: MVector = next_location - current_location
+                chain_length += segment_vector.length()
+                aim_vector: MVector = segment_vector.normal()
                 z_axis: MVector = (plane_normal ^ aim_vector).normal()
                 x_axis: MVector = (aim_vector ^ z_axis).normal()
 
@@ -93,6 +80,12 @@ class Chain:
                     ]
 
                 new_poses[i] = (guide_name, new_matrix)
+            
+            if error > (chain_length * 0.01):
+                print(
+                    f"WARNING: The {self.name} chain was made planar, but needed to move point(s) by over 1% of the chain length.\n"
+                    "Fix the source transforms to make sure the chain will behave properly."
+                )
 
         if pad == 'auto':
             pad = len(str(len(self.transform_list))) + 1
@@ -195,11 +188,14 @@ class Chain:
         if self.label_chain:
             self.label_side(self.joints)
         return self.joints
-
-    '''
-    Adds an attribute to joints depending on their side.
-    '''
+        
+    def add_chain(self, other_chain: Self):
+        self.joints.append(other_chain.joints)
+    
     def label_side(self, chain):
+        '''
+        Adds an attribute to joints depending on their side.
+        '''
         for jnt in chain:
             if any(self.side[0] == side for side in ['M', 'm', 'C', 'c', 'Md', 'md', 'Ct', 'ct']):
                 mc.setAttr(jnt + '.side', 0)
@@ -210,10 +206,11 @@ class Chain:
             else:
                 mc.setAttr(jnt + '.side', 3)
 
-    '''
-    sums up bone lengths in the chain
-    '''
+    
     def get_chain_lengths(self):
+        '''
+        sums up bone lengths in the chain
+        '''
         self.bone_lengths = []
 
         for i in range(len(self.joints)-1):
@@ -592,9 +589,15 @@ class Chain:
                 parent_offset_matrix = rXform.get_parent_matrix(joint_b) * rXform.get_parent_inverse_matrix(joint_a)
                 if not (rXform.is_identity_matrix(offset_matrix) and rXform.is_identity_matrix(parent_offset_matrix)):
                     mult_matrix_node = node.MultMatrixNode(name=f"{switch_name}_BlendOffset")
-                    mc.setAttr(mult_matrix_node.matrix_in[0], offset_matrix, type="matrix")
-                    mc.connectAttr(joint_b_matrix, mult_matrix_node.matrix_in[1])
-                    mc.setAttr(mult_matrix_node.matrix_in[2], parent_offset_matrix, type="matrix")
+                    mult_index: int = 0
+                    if not rXform.is_identity_matrix(offset_matrix):
+                        mc.setAttr(mult_matrix_node.matrix_in[mult_index], offset_matrix, type="matrix")
+                        mult_index += 1
+                    mc.connectAttr(joint_b_matrix, mult_matrix_node.matrix_in[mult_index])
+                    mult_index += 1
+                    if not rXform.is_identity_matrix(parent_offset_matrix):
+                        mc.setAttr(mult_matrix_node.matrix_in[mult_index], parent_offset_matrix, type="matrix")
+                        mult_index += 1
                     joint_b_matrix = mult_matrix_node.matrix_sum
 
             blend_matrix_node = node.BlendMatrixNode(

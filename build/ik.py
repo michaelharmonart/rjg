@@ -1,10 +1,13 @@
-import maya.cmds as mc
 from importlib import reload
 
-import rjg.libs.attribute as rAttr
+from maya.api.OpenMaya import MPoint, MVector
+import maya.cmds as mc
+from rjg.libs.transform import create_aim_matrix, get_world_matrix, set_world_matrix
 import rjg.build.chain as rChain
-import rjg.libs.control.ctrl as rCtrl
 import rjg.build.guide as rGuide
+import rjg.libs.attribute as rAttr
+import rjg.libs.control.ctrl as rCtrl
+
 reload(rAttr)
 reload(rChain)
 reload(rChain)
@@ -55,32 +58,90 @@ class Ik:
         else:
             mc.error("Invalid solver specified.")
 
-    def check_pv_guide(self):
-        if self.pv_guide == 'auto':
-            self.pv_guide = rGuide.create_pv_guide(guide_list=self.guide_list, name=self.base_name, slide_pv=self.slide_pv, offset_pv=self.offset_pv, delete_setup=True)
-            #self.pv_guide = rGuide.clean_pv_guide(guide_list=self.guide_list, name=self.base_name, offset_pv=self.offset_pv)
+    def check_pv_guide(self, guide_list: list[str] | None = None):
+        if guide_list is None:
+            used_guides = self.guide_list
+        else:
+            used_guides = guide_list
+        if self.pv_guide == "auto":
+            self.pv_guide = rGuide.create_pv_guide(
+                guide_list=used_guides,
+                name=self.base_name,
+                slide_pv=self.slide_pv,
+                offset_pv=self.offset_pv,
+                delete_setup=True,
+            )
+            # self.pv_guide = rGuide.clean_pv_guide(guide_list=self.guide_list, name=self.base_name, offset_pv=self.offset_pv)
+        if self.pv_guide == "smart_auto":
+             self.pv_guide = rGuide.create_pv_guide(
+                guide_list=used_guides,
+                name=self.base_name,
+                slide_pv=self.slide_pv,
+                offset_pv=self.offset_pv,
+                delete_setup=True,
+                smart_two_segment=True,
+            )
 
-    def build_ik_controls(self):
+    def build_ik_controls(self, guide_list: list[str] | None = None):
+        if guide_list is None:
+            used_guides = self.guide_list
+        else:
+            used_guides = guide_list
+        
         self.ik_ctrls: list[rCtrl.Control] = []
         attr_util = rAttr.Attribute(add=False)
         self.ik_ctrl_grp = mc.group(empty=True, name=self.base_name + "_IK_CTRL_GRP")
-        self.base_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_BASE", axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
+        self.base_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_BASE", axis='y', group_type='main', rig_type='primary', translate=used_guides[0], ctrl_scale=self.ctrl_scale)
         self.ik_ctrls.append(self.base_ctrl)
         attr_util.lock_and_hide(node=self.base_ctrl.ctrl, translate=False, rotate=False)
         self.base_ctrl.tag_as_controller()
 
-        self.main_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_MAIN", axis='y', group_type='main', rig_type='primary', translate=self.guide_list[-1], ctrl_scale=self.ctrl_scale)
+        self.main_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name +"_IK_MAIN", axis='y', group_type='main', rig_type='primary', translate=used_guides[-1], ctrl_scale=self.ctrl_scale)
         self.ik_ctrls.append(self.main_ctrl)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
         self.main_ctrl.tag_as_controller()
 
         if self.pv_guide:
+            self.check_pv_guide()
             self.pv_ctrl = rCtrl.Control(parent=self.ik_ctrl_grp, shape='locator_3D', side=None, suffix='CTRL', name=self.base_name +"_IK_PV", axis='y', group_type='main', rig_type='pv', translate=self.pv_guide, ctrl_scale=self.ctrl_scale)
             self.ik_ctrls.append(self.pv_ctrl)
             attr_util.lock_and_hide(node=self.pv_ctrl.ctrl, translate=False)
             self.pv_ctrl.tag_as_controller()
 
         return self.pv_ctrl.ctrl
+    
+    def build_auto_pv_driver(self, parent:str):
+        ik_start_pos = MVector(
+            mc.xform(self.base_ctrl.ctrl, query=True, worldSpace=True, translation=True)
+        )
+        ik_end_pos = MVector(
+            mc.xform(self.main_ctrl.ctrl, query=True, worldSpace=True, translation=True)
+        )
+        pv_pos = MVector(
+            mc.xform(self.pv_ctrl.ctrl, query=True, worldSpace=True, translation=True)
+        )
+        middle_pos: MVector = (ik_start_pos + ik_end_pos) * 0.5
+        
+        base_aim_vector: MVector = ik_start_pos - ik_end_pos
+        base_up_vector: MVector = pv_pos - middle_pos
+        
+        aim_up_matrix = create_aim_matrix(base_aim_vector, base_up_vector, position=MPoint(ik_end_pos))
+        
+        end_auto_pv_group = mc.group(empty=True, name=f"{self.base_name}_End_AutoPV_GRP", parent=parent)
+        set_world_matrix(end_auto_pv_group, aim_up_matrix)
+        mc.orientConstraint(self.main_ctrl.ctrl, end_auto_pv_group, maintainOffset=True)
+        
+        end_auto_pv_driver = mc.group(empty=True, name=f"{self.base_name}_End_AutoPV_Driver", parent=end_auto_pv_group)
+        aim_const = mc.aimConstraint(self.base_ctrl.ctrl, end_auto_pv_driver)[0]
+        mc.pointConstraint(self.main_ctrl.ctrl, end_auto_pv_driver)
+        
+        mc.setAttr(f"{aim_const}.aimVector", 0,1,0)
+        mc.setAttr(f"{aim_const}.upVector", 0,0,0)
+        mc.setAttr(f"{aim_const}.worldUpType", 0) # No up vector: swing decompositon
+        
+        self.auto_pv_driver = end_auto_pv_driver
+        
+        return end_auto_pv_driver
     
     def build_ikspline_controls(self):
         """
@@ -168,8 +229,12 @@ class Ik:
         return [ctrl.ctrl for ctrl in self.ikspline_ctrls]
 
 
-    def build_ik_chain(self, force_planar: bool = False):
-        self.ik_chain = rChain.Chain(transform_list=self.guide_list, side=self.side, suffix=self.s_name + '_JNT', name=self.part)
+    def build_ik_chain(self, force_planar: bool = False, guide_list: list[str] | None = None):
+        if guide_list is None:
+            used_guides = self.guide_list
+        else:
+            used_guides = guide_list
+        self.ik_chain = rChain.Chain(transform_list=used_guides, side=self.side, suffix=self.s_name + '_JNT', name=self.part)
         self.ik_chain.create_from_transforms(static=True, force_planar=force_planar)
         self.ik_joints = self.ik_chain.joints
 
@@ -193,7 +258,9 @@ class Ik:
         if constrain:
             mc.parentConstraint(self.base_ctrl.ctrl, self.ik_joints[0], mo=True)
             mc.parentConstraint(self.main_ctrl.ctrl, self.ikh, mo=True)
-            mc.orientConstraint(self.main_ctrl.ctrl, self.ik_joints[-1], maintainOffset=True)
+            orient_const = mc.orientConstraint(self.main_ctrl.ctrl, self.ik_joints[-1], maintainOffset=True)[0]
+            weight_names = mc.orientConstraint(orient_const, query=True, weightAliasList=True)
+            mc.connectAttr(f"{self.ikh}.ikBlend", f"{orient_const}.{weight_names[0]}")
 
         if self.pv_guide:
             mc.poleVectorConstraint(self.pv_ctrl.ctrl, self.ikh)

@@ -12,7 +12,7 @@ class Fk:
         self.side = side
         self.part = part
         self.base_name = part + "_" + side
-        
+
         self.guide_list = guide_list
         self.gimbal = gimbal
         self.offset = offset
@@ -26,7 +26,7 @@ class Fk:
 
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
-        
+
         if self.guide_list:
             if not isinstance(self.guide_list, list):
                 self.guide_list = [self.guide_list]
@@ -84,4 +84,3 @@ class Fk:
         self.fk_chain = rChain.Chain(transform_list=transform_list, side=self.side, suffix='fk_JNT', name=self.part)
         self.fk_chain.create_from_transforms(parent_constraint=True, scale_constraint=False)
         self.fk_joints = self.fk_chain.joints
-

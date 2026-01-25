@@ -1,9 +1,13 @@
-import maya.cmds as mc
-import maya.api.OpenMaya as om
 from importlib import reload
+from typing import Sequence
 
+import maya.api.OpenMaya as om
+import maya.cmds as mc
 import rjg.libs.attribute as rAttr
 import rjg.libs.math as rMath
+from maya.api.OpenMaya import MPoint, MVector
+from rjg.libs.plane import make_points_planar
+
 reload(rAttr)
 reload(rMath)
 
@@ -29,21 +33,92 @@ def clean_pv_guide(guide_list=None, name=None, suffix=None, slide_pv=None, offse
     return (pv_pos[0], pv_pos[1], pv_pos[2])
 
 
-def create_pv_guide(guide_list=None,
-                    name=None,
-                    suffix=None,
-                    slide_pv=None,
-                    offset_pv=0,
-                    delete_setup=None):
+def get_pv_position(guide_list: Sequence[str], distance: float = 1.2) -> MPoint:
+    """
+    Automatic creation of pole vector position pole vector position.
+    
+    Args:
+        distance: distance of the pole vector from the mid point
+    Returns:
+        MPoint: The pole vector position in world space.
+    """
+    # This idea for this pole vector positioning math/technique for a 2 segment limb is from mGear's calculatePoleVector function.
+    def get_best_mid_point(positions: Sequence[MPoint]) -> MPoint:
+        # Pick the point that is farthest from the baseline vector to build a traingle to define the guide plane.
+        # Equation for distance between a point P and a vector line V is: ||P cross V|| / ||V||
+        # Assuming that P and V both start at origin. https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Another_vector_formulation
+        first_point = MVector(positions[0])
+        last_point = MVector(positions[-1])
+        base_vector: MVector =  last_point - first_point
+        
+        best_distance: float = 0
+        best_point: MPoint = positions[1]
+        for i in range(1, len(positions)-1):
+            vector1: MVector = MVector(positions[i]) - first_point
+            cross: MVector = (vector1 ^ base_vector)
+            distance: float = cross.length() / base_vector.length()
+            if distance > best_distance:
+                best_distance = distance
+                best_point = positions[i]
+        return best_point    
+        
+    def project_vector(vector_a: MVector, vector_b: MVector) -> MVector:
+        return ((vector_a * vector_b) / (vector_b * vector_b)) * vector_b
+    
+    first_guide = guide_list[0]
+    last_guide = guide_list[-1]
+
+    planar_points, *_ = make_points_planar(
+        [
+            MPoint(mc.xform(transform, query=True, worldSpace=True, translation=True))
+            for transform in guide_list
+        ]
+    )
+
+    first_position = MVector(
+        mc.xform(first_guide, query=True, worldSpace=True, translation=True)
+    )
+    middle_position = MVector(get_best_mid_point(planar_points))
+    last_position = MVector(mc.xform(last_guide, query=True, worldSpace=True, translation=True))
+    base_mid: MVector = (last_position + first_position) * 0.5
+
+    # Calculate a scale reference for how far the pole vector should be based on the two "segment" lengths.
+    first_segment_length = (middle_position - first_position).length()
+    second_segment_length = (last_position - middle_position).length()
+    pole_distance = (first_segment_length + second_segment_length) * 0.5 * distance
+
+    # Project the first segment onto the vector from the first to last point
+    base_vector: MVector = last_position - first_position # Vector from first to last point (base of the traingle)
+    projected = first_position + project_vector((middle_position - first_position), base_vector)
+    mid_pointer: MVector = middle_position - projected # projected point to the midpoint points directly out from the base
+    pole_vector_direction: MVector = mid_pointer.normal()
+    
+    # Construct the pole vector position. 
+    # We take the normalized direction and scale it by the scale reference we calculated earlier, 
+    # then add the vector that goes from the base out to the midpoint, 
+    # this makes sure the pole vector is pushed out far enough when the chain is very bent.
+    # Finally we take that and add it to the midpoint betwen the first and last points.
+    pole_vector = (pole_vector_direction * pole_distance) + mid_pointer + base_mid
+
+    return MPoint(pole_vector)
+
+
+def create_pv_guide(
+    guide_list=None, name=None, suffix=None, slide_pv=None, offset_pv=0, delete_setup=None, smart_two_segment: bool = False
+):
     if not guide_list:
         guide_list = mc.ls(sl=True)
 
     if len(guide_list) != 3:
         if len(guide_list) > 3:
-            guide_list = guide_list[0:3]
+            point = get_pv_position(guide_list)
+            return (point.x, point.y, point.z)
         else:
             mc.error('Must select or define three transforms to use as guides.')
-
+    elif smart_two_segment:
+        point = get_pv_position(guide_list)
+        return (point.x, point.y, point.z)
+        
     if not suffix:
         suffix = 'guide'
 
@@ -207,4 +282,3 @@ def create_line_guide(a=None, b=None, name=None, suffix=None):
 
     return {'clusters': [handle_a, handle_b],
             'curve': crv}
-

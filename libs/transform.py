@@ -9,9 +9,11 @@ from maya.api.OpenMaya import (
     MEulerRotation,
     MFnTransform,
     MMatrix,
+    MPoint,
     MSelectionList,
     MSpace,
     MTransformationMatrix,
+    MVector,
 )
 
 '''
@@ -216,6 +218,24 @@ def set_world_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
         inverse_matrix: MMatrix = get_parent_inverse_matrix(transform)
         local_matrix: MMatrix = matrix * inverse_matrix
         set_local_matrix(transform=transform, matrix=local_matrix, fallback=False)
+
+def create_aim_matrix(aim_vector: MVector, up_vector: MVector, position: MPoint | None = None) -> MMatrix:
+    """
+    Aims the y axis of a matrix towards a vector.
+    """
+    aim_normal: MVector = aim_vector.normal()
+    right_normal: MVector = (up_vector ^ aim_vector).normal()
+    up_normal: MVector = (aim_vector ^ right_normal).normal()
+    
+    aim_axis = (aim_normal.x, aim_normal.y, aim_normal.z, 0.0)
+    right_axis = (right_normal.x, right_normal.y, right_normal.z, 0.0)
+    up_axis = (up_normal.x, up_normal.y, up_normal.z, 0.0)
+    if position is not None:
+        position_row = (position.x, position.y, position.z, 1.0)
+    else:
+        position_row = (0.0, 0.0, 0.0, 1.0)
+        
+    return MMatrix((right_axis, aim_axis, up_axis, position_row))
 
 def match_transform(transform: str, target_transform: str) -> None:
     """
