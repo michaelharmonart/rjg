@@ -267,19 +267,20 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             )
             matrix_constraint(self.fingertip_input, self.main_ctrl.top)
         if self.build_ik and self.build_fk:
+            static_fk_chain = rChain.Chain(self.fk_joints, name=self.part, side=self.side, suffix="_Fk_Short")
+            static_fk_chain.create_from_transforms(parent=self.module_grp, static=True)
             
-            short_fk_chain = rChain.Chain(self.fk_joints[1:-1], name=self.part, side=self.side, suffix="_Fk_Short")
-            short_fk_chain.create_from_transforms(parent=self.module_grp, static=True)
-            matrix_constraint(self.fk_joints[0], short_fk_chain.joints[0])
+            full_ik_chain = rChain.Chain([self.fk_ctrls[0].ctrl] + self.ik_joints + [self.fk_ctrls[-1].ctrl], name=self.part, side=self.side, suffix="_IK_Full")
+            full_ik_chain.create_from_transforms(parent=self.module_grp)
             
-            ik_fk_blend_chain = rChain.Chain(short_fk_chain.joints, name=self.part, side=self.side, suffix="_Blend")
-            ik_fk_blend_chain.create_blend_chain(switch_node=self.part_grp, chain_a=self.ik_joints, chain_b=short_fk_chain.joints, handle_offsets=True, parent=self.module_grp)
+            ik_fk_blend_chain = rChain.Chain(self.fk_joints, name=self.part, side=self.side, suffix="_Blend")
+            ik_fk_blend_chain.create_blend_chain(switch_node=self.part_grp, chain_a=full_ik_chain.joints, chain_b=static_fk_chain.joints, handle_offsets=True, parent=self.module_grp)
             
             mc.connectAttr(self.ik_switch_attr.attr, ik_fk_blend_chain.switch.attr)
             matrix_constraint(self.fk_joints[0], self.base_ctrl.top, scale=False, shear=False)
             if self.build_fk and self.build_ik:
                 for i, fk_ctrl in enumerate(self.fk_ctrls[1:-1]):
-                    ik_joint = ik_fk_blend_chain.joints[i]
+                    ik_joint = ik_fk_blend_chain.joints[i+1]
                     ik_joint_matrix = f"{ik_joint}.matrix"
                     fk_ctrl_offset_matrix = f"{fk_ctrl.top}.matrix"
                     offset_matrix =  get_world_matrix(fk_ctrl.top) * get_world_matrix(ik_joint).inverse()
@@ -292,10 +293,9 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
                             mult_index += 1
                         mc.connectAttr(ik_joint_matrix, mult_matrix_node.matrix_in[mult_index])
                         mult_index += 1
-                        mc.connectAttr(f"{ik_joint}.parentMatrix[0]" ,mult_matrix_node.matrix_in[mult_index])
-                        mult_index += 1
-                        mc.connectAttr(f"{fk_ctrl.top}.parentInverseMatrix[0]" ,mult_matrix_node.matrix_in[mult_index])
-                        mult_index += 1
+                        if not is_identity_matrix(parent_offset_matrix):
+                            mc.setAttr(mult_matrix_node.matrix_in[mult_index], parent_offset_matrix, type="matrix")
+                            mult_index += 1
                         fk_ctrl_offset_matrix = mult_matrix_node.matrix_sum
         
                     drive_transform_with_matrix(
