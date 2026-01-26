@@ -687,3 +687,11 @@ string $stuff[] = `ls -sl`;
 int $numbjoints = `size($stuff)`;
 
 print("Number of Joints in the scene: "+ $numbjoints +"\n");
+
+
+
+
+#Clean NG layers
+import maya.cmds as mc
+ng_nodes = cmds.ls(type="ngst2SkinLayerData")
+cmds.delete(ng_nodes)
