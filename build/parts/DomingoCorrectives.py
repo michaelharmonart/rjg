@@ -41,14 +41,14 @@ def Build_Correctives(side='L'):
         parlist = [
         f"leg_{SideShort}_08_JNT",   # AnkleFrontBack
         f"leg_{SideShort}_08_JNT",   # LeftAnkleFront 
-        f"leg_{SideShort}_05_JNT",    # LeftKneeFront
-        f"leg_{SideShort}_05_JNT",    # LeftKneeBack
+        f"leg_{SideShort}_04_JNT",    # LeftKneeFront
+        f"leg_{SideShort}_04_JNT",    # LeftKneeBack
         f"chest_M_JNT", # LeftTrap
         f"chest_M_JNT", # LeftArmPit
         f"chest_M_JNT", # LeftPec
         f"chest_M_JNT", # LeftScap
         f"clavicle_{SideShort}_01_JNT", # LeftBicep
-        f"arm_{SideShort}_04_JNT",    # LeftElbowIn
+        f"arm_{SideShort}_05_JNT",    # LeftElbowIn
         f"arm_{SideShort}_08_JNT",    # LeftWristIn
         f"arm_{SideShort}_08_JNT",    # LeftWristHigh
         f"arm_{SideShort}_08_JNT",    # LeftWristLow

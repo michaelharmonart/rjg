@@ -693,5 +693,5 @@ print("Number of Joints in the scene: "+ $numbjoints +"\n");
 
 #Clean NG layers
 import maya.cmds as mc
-ng_nodes = cmds.ls(type="ngst2SkinLayerData")
-cmds.delete(ng_nodes)
+ng_nodes = mc.ls(type="ngst2SkinLayerData")
+mc.delete(ng_nodes)
