@@ -70,19 +70,14 @@ def Build_Correctives(side='L'):
             rot = mc.getAttr(f"{guide}.jointOrient")[0]
 
 
-            mc.select(clear=True)
-            mc.joint(p=pos, name=basejoint_name)
-            mc.xform(basejoint_name, ws=True, ro=rot)
-            mc.makeIdentity(basejoint_name, apply=True, translate=False, rotate=True)
+            mc.select(param)
+            mc.joint(p=pos, name=basejoint_name, o=rot)
+            
+            #mc.xform(basejoint_name, ws=True, ro=rot)
+            #mc.makeIdentity(basejoint_name, apply=True, translate=False, rotate=True)
             mc.setAttr(f'{basejoint_name}.segmentScaleCompensate', 0)
-            mc.setAttr(basejoint_name + ".rotate", 0, 0, 0)
-            rotpar = mc.getAttr(f"{param}.rotate")[0]
-            temp = mc.group(empty=True)
-            mc.setAttr(f'{temp}.rotate', rotpar[0], rotpar[1], rotpar[2])
-            mc.parent(basejoint_name, temp)
-            mc.select('Your_Mom')
-            mc.parent(basejoint_name, param, absolute=True)
-            mc.delete(temp)
+            #mc.parent(basejoint_name, param)
+            #mc.parent(basejoint_name, param)
             #rXform.clean_parent(basejoint_name, param)
 
             joint_name = f"{base_name}_{SideShort}_JNT"
@@ -91,7 +86,11 @@ def Build_Correctives(side='L'):
             mc.makeIdentity(joint_name, apply=True, translate=False, rotate=True)
             mc.setAttr(f'{joint_name}.segmentScaleCompensate', 0)
             mc.parent(joint_name, basejoint_name)
+            #mc.parent(joint_name, basejoint_name)
             #rXform.clean_parent(joint_name, basejoint_name)
+
+
+
 
 
             rig_module.tag_bind_joints(joint_name)
