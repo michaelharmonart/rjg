@@ -461,7 +461,7 @@ class UEfaceconnect(UEface):
             mc.pointConstraint('LowerLip_M_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
             mc.orientConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
             mc.parent('Beard_M_01_JNT', lower_jnt)
-            mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL', mo=True)
+            #mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL', mo=True)
 
             if mc.objExists('Tongue_M_Curl_CTRL_CNST_GRP'):
                 mc.parentConstraint('LowerHead_M_CTRL', 'Tongue_M_Curl_CTRL_CNST_GRP', mo=True)
