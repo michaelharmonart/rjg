@@ -76,10 +76,11 @@ def Build_Correctives(side='L'):
             mc.makeIdentity(basejoint_name, apply=True, translate=False, rotate=True)
             mc.setAttr(f'{basejoint_name}.segmentScaleCompensate', 0)
             mc.setAttr(basejoint_name + ".rotate", 0, 0, 0)
-            rotpar = mc.xform(param, q=True, ws=True, ro=True)
+            rotpar = mc.getAttr(f"{param}.rotate")[0]
             temp = mc.group(empty=True)
             mc.setAttr(f'{temp}.rotate', rotpar[0], rotpar[1], rotpar[2])
             mc.parent(basejoint_name, temp)
+            mc.select('Your_Mom')
             mc.parent(basejoint_name, param, absolute=True)
             mc.delete(temp)
             #rXform.clean_parent(basejoint_name, param)
