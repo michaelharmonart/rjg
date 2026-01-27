@@ -53,11 +53,14 @@ def Domingo_extras(skin_src, skin_trg_grp, face):
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]
         sk_g.append(sk)
 
-    mc.skinCluster('head_M_JNT', 'Hair', tsb=True, skinMethod=1, n='hairSkc') #skin the hair to only the head joint in order to avoid weird stretching
+    sk = mc.skinCluster(bind_joints, 'FaceFeathers', tsb=True, skinMethod=1, n='clothingSkc')[0]
+    sk_g.append(sk)
+
+    #mc.skinCluster('head_M_JNT', 'Hair', tsb=True, skinMethod=1, n='hairSkc') #skin the hair to only the head joint in order to avoid weird stretching
         
     for g in sk_g:
         pass
-        mc.copySkinWeights(ss='skinCluster1', ds=g, surfaceAssociation='closestPoint', noMirror=True, )
+        mc.copySkinWeights(ss='skinCluster21', ds=g, surfaceAssociation='closestPoint', noMirror=True, )
         #rUtil.create_pxWrap([g, 'Rayden_UBM'])
 
    

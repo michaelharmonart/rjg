@@ -41,14 +41,14 @@ def Build_Correctives(side='L'):
         parlist = [
         f"leg_{SideShort}_08_JNT",   # AnkleFrontBack
         f"leg_{SideShort}_08_JNT",   # LeftAnkleFront 
-        f"leg_{SideShort}_04_JNT",    # LeftKneeFront
-        f"leg_{SideShort}_04_JNT",    # LeftKneeBack
+        f"leg_{SideShort}_05_JNT",    # LeftKneeFront
+        f"leg_{SideShort}_05_JNT",    # LeftKneeBack
         f"chest_M_JNT", # LeftTrap
         f"chest_M_JNT", # LeftArmPit
         f"chest_M_JNT", # LeftPec
         f"chest_M_JNT", # LeftScap
         f"clavicle_{SideShort}_01_JNT", # LeftBicep
-        f"arm_{SideShort}_05_JNT",    # LeftElbowIn
+        f"arm_{SideShort}_04_JNT",    # LeftElbowIn
         f"arm_{SideShort}_08_JNT",    # LeftWristIn
         f"arm_{SideShort}_08_JNT",    # LeftWristHigh
         f"arm_{SideShort}_08_JNT",    # LeftWristLow
@@ -70,20 +70,27 @@ def Build_Correctives(side='L'):
             rot = mc.getAttr(f"{guide}.jointOrient")[0]
 
 
+            mc.select(clear=True)
             mc.joint(p=pos, name=basejoint_name)
             mc.xform(basejoint_name, ws=True, ro=rot)
             mc.makeIdentity(basejoint_name, apply=True, translate=False, rotate=True)
             mc.setAttr(f'{basejoint_name}.segmentScaleCompensate', 0)
-            #mc.parent(basejoint_name, param)
-            rXform.clean_parent(basejoint_name, param)
+            mc.setAttr(basejoint_name + ".rotate", 0, 0, 0)
+            rotpar = mc.xform(param, q=True, ws=True, ro=True)
+            temp = mc.group(empty=True)
+            mc.setAttr(f'{temp}.rotate', rotpar[0], rotpar[1], rotpar[2])
+            mc.parent(basejoint_name, temp)
+            mc.parent(basejoint_name, param, absolute=True)
+            mc.delete(temp)
+            #rXform.clean_parent(basejoint_name, param)
 
             joint_name = f"{base_name}_{SideShort}_JNT"
             mc.joint(p=pos, name=joint_name)
             mc.xform(joint_name, ws=True, ro=rot)
             mc.makeIdentity(joint_name, apply=True, translate=False, rotate=True)
             mc.setAttr(f'{joint_name}.segmentScaleCompensate', 0)
-            #mc.parent(joint_name, basejoint_name)
-            rXform.clean_parent(joint_name, basejoint_name)
+            mc.parent(joint_name, basejoint_name)
+            #rXform.clean_parent(joint_name, basejoint_name)
 
 
             rig_module.tag_bind_joints(joint_name)
