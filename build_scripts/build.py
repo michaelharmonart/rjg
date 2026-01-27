@@ -599,7 +599,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             bendy=bendbo,
             create_ik=ik_fingers,
             bendy_vis_attr = hand.bendy_vis_attr,
-            curlaxis = curlaxis
+            curlaxis = curlaxis,
+            metacarpal_ik = True,
         )
         fingers.append(thumb) 
 
