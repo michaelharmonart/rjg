@@ -48,6 +48,8 @@ def Domingo_extras(skin_src, skin_trg_grp, face):
     #rUtil.create_pxWrap('Shirt', 'Pants', 'Gretchen_UBM')
     #rUtil.create_pxWrap('VestFluff', 'Clothes')
     #mc.parent('Fingernails', 'Rayden_EXTRAS')
+    sk = mc.skinCluster(bind_joints, 'FaceFeathers', tsb=True, skinMethod=1, n='clothingSkc')[0]
+    sk_g.append(sk)
 
     for g in geo:
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]
