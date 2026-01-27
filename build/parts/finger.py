@@ -1,6 +1,5 @@
 from importlib import reload
 
-from maya.api.OpenMaya import MMatrix, MPoint, MQuaternion, MTransformationMatrix, MVector
 import maya.cmds as mc
 import rjg.build.chain as rChain
 import rjg.build.fk as rFk
@@ -8,9 +7,20 @@ import rjg.build.ik as rIk
 import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
 import rjg.libs.control.ctrl as rCtrl
+from maya.api.OpenMaya import MMatrix, MPoint, MQuaternion, MTransformationMatrix, MVector
 from rjg.libs.maya_api import node
 from rjg.libs.space import space_switch
-from rjg.libs.transform import create_aim_matrix, drive_transform_with_matrix, get_parent_inverse_matrix, get_parent_matrix, get_world_matrix, is_identity_matrix, matrix_constraint, set_world_matrix
+from rjg.libs.transform import (
+    create_aim_matrix,
+    drive_transform_with_matrix,
+    get_parent_inverse_matrix,
+    get_parent_matrix,
+    get_world_matrix,
+    is_identity_matrix,
+    match_transform,
+    matrix_constraint,
+    set_world_matrix,
+)
 
 reload(rModule)
 reload(rAttr)
@@ -41,6 +51,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         curlaxis: str = 'Z',
         handroll=False,
         pv_guide="smart_auto",
+        metacarpal_ik: bool = False,
     ):
         super().__init__(
             side=side,
@@ -69,11 +80,13 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.sticky = False
         self.solver= None
         self.stretchy = True
+        self.metacarpal_ik = metacarpal_ik
         
-        if part == "fingerThumb":
+        if self.metacarpal_ik:
             self.ik_guides: list[str] = self.guide_list[:-1]
         else:
             self.ik_guides: list[str] = self.guide_list[1:-1]
+        self.ik_start_index = 0 if metacarpal_ik else 1
         
         if self.pad == 'auto':
             self.pad = len(str(len(self.guide_list))) + 1
@@ -157,6 +170,10 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.fingertip_input = mc.group(
             empty=True, name=f"{self.base_name}_Fingertip_IN", parent=self.input_group
         )
+        self.fingerbase_input = mc.group(
+            empty=True, name=f"{self.base_name}_Finger_Base_IN", parent=self.input_group
+        )
+        match_transform(self.fingerbase_input, self.guide_list[0])
         
     def finger_ik_controls(self):
         def get_y_twist_matrix(matrix: MMatrix) -> MMatrix:
@@ -196,6 +213,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.ik_ctrls.append(self.main_ctrl)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
         self.main_ctrl.tag_as_controller()
+        match_transform(self.fingertip_input, self.main_ctrl.ctrl)
 
         if self.pv_guide:
             self.check_pv_guide()
@@ -203,15 +221,17 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             self.ik_ctrls.append(self.pv_ctrl)
             attr_util.lock_and_hide(node=self.pv_ctrl.ctrl, translate=False)
             self.pv_ctrl.tag_as_controller()
+            match_transform(self.pv_input, self.pv_ctrl.ctrl)
         
         mc.parent(self.ik_ctrl_grp, self.control_grp)
         #mc.parent(self.fk_ctrls[1].top, self.fk_ctrl_group)
 
     def control_rig(self):
         self.fk_ctrl_group = mc.group(empty=True, name=f"{self.base_name}_FK_CTLS", parent=self.control_grp) 
+        matrix_constraint(self.fingerbase_input, self.fk_ctrl_group)
         if self.build_fk:
             self.build_fk_controls()
-            mc.parent(self.fk_ctrls[0].top, self.control_grp)
+            mc.parent(self.fk_ctrls[0].top, self.fk_ctrl_group)
         if self.build_ik:
             self.finger_ik_controls()
             self.ik_switch_attr = rAttr.Attribute(
@@ -226,13 +246,21 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
                 self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[1], rotate=self.guide_list[1], ctrl_scale=self.ctrl_scale)
     
     def output_rig(self):
+        self.chain_grp = mc.group(
+            empty=True, name=f"{self.base_name}_Chains", parent=self.module_grp
+        )
+        matrix_constraint(self.fingerbase_input, self.chain_grp)
         if self.build_fk:
             self.build_fk_chain()
-            mc.parent(self.fk_joints[0], self.module_grp)
+            mc.parent(self.fk_joints[0], self.chain_grp)
         if self.build_ik:
             self.build_ik_chain(force_planar=True, guide_list=self.ik_guides)
             self.build_ikh(scale_attr=self.global_scale)
-            mc.parent(self.ikh, self.ik_joints[0], self.module_grp)
+            
+            if self.metacarpal_ik:
+                matrix_constraint(self.fingerbase_input, self.base_ctrl.top)
+            
+            mc.parent(self.ikh, self.ik_joints[0], self.chain_grp)
             end_pv_space = self.build_auto_pv_driver(self.module_grp)
             pv_space_mapping = {
                 "auto": end_pv_space,
@@ -267,20 +295,39 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             )
             matrix_constraint(self.fingertip_input, self.main_ctrl.top)
         if self.build_ik and self.build_fk:
-            static_fk_chain = rChain.Chain(self.fk_joints, name=self.part, side=self.side, suffix="_Fk_Short")
-            static_fk_chain.create_from_transforms(parent=self.module_grp, static=True)
-            
-            full_ik_chain = rChain.Chain([self.fk_ctrls[0].ctrl] + self.ik_joints + [self.fk_ctrls[-1].ctrl], name=self.part, side=self.side, suffix="_IK_Full")
-            full_ik_chain.create_from_transforms(parent=self.module_grp)
-            
-            ik_fk_blend_chain = rChain.Chain(self.fk_joints, name=self.part, side=self.side, suffix="_Blend")
-            ik_fk_blend_chain.create_blend_chain(switch_node=self.part_grp, chain_a=full_ik_chain.joints, chain_b=static_fk_chain.joints, handle_offsets=True, parent=self.module_grp)
-            
+            static_fk_chain = rChain.Chain(
+                self.fk_joints, name=self.part, side=self.side, suffix="_Fk_Static"
+            )
+            static_fk_chain.create_from_transforms(parent=self.chain_grp, static=True)
+            if self.metacarpal_ik:
+                full_ik_transforms = self.ik_joints + [self.fk_ctrls[-1].ctrl]
+            else:
+                full_ik_transforms = (
+                    [self.fk_ctrls[0].ctrl] + self.ik_joints + [self.fk_ctrls[-1].ctrl]
+                )
+            full_ik_chain = rChain.Chain(
+                full_ik_transforms, name=self.part, side=self.side, suffix="_IK_Full"
+            )
+
+            full_ik_chain.create_from_transforms(parent=self.chain_grp)
+
+            ik_fk_blend_chain = rChain.Chain(
+                self.fk_joints, name=self.part, side=self.side, suffix="_Blend"
+            )
+            ik_fk_blend_chain.create_blend_chain(
+                switch_node=self.part_grp,
+                chain_a=full_ik_chain.joints,
+                chain_b=static_fk_chain.joints,
+                handle_offsets=True,
+                parent=self.chain_grp,
+            )
+
             mc.connectAttr(self.ik_switch_attr.attr, ik_fk_blend_chain.switch.attr)
-            matrix_constraint(self.fk_joints[0], self.base_ctrl.top, scale=False, shear=False)
+            if not self.metacarpal_ik:
+                matrix_constraint(self.fk_joints[0], self.base_ctrl.top, scale=False, shear=False)
             if self.build_fk and self.build_ik:
-                for i, fk_ctrl in enumerate(self.fk_ctrls[1:-1]):
-                    ik_joint = ik_fk_blend_chain.joints[i+1]
+                for i, fk_ctrl in enumerate(self.fk_ctrls[self.ik_start_index:-1]):
+                    ik_joint = ik_fk_blend_chain.joints[i+self.ik_start_index]
                     ik_joint_matrix = f"{ik_joint}.matrix"
                     fk_ctrl_offset_matrix = f"{fk_ctrl.top}.matrix"
                     offset_matrix =  get_world_matrix(fk_ctrl.top) * get_world_matrix(ik_joint).inverse()
@@ -301,7 +348,6 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
                     drive_transform_with_matrix(
                         matrix_attr=fk_ctrl_offset_matrix,
                         transform=fk_ctrl.top,
-                        scale=False
                     )
 
     def skeleton(self):
@@ -355,9 +401,12 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         else:
             driver_list = [self.par_ctrl]
             rAttr.Attribute(node=self.part_grp, type='plug', value=[self.par_ctrl], name='skeletonPlugs', children_name=[self.bind_joints[0]])
+        
+        rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=[self.fingerbase_input])
         driven_list = [self.base_name + '_01_fk_CTRL_CNST_GRP']
         if self.part == 'fingerThumb':
-            rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
+            #rAttr.Attribute(node=self.part_grp, type='plug', value=driver_list, name='pacRigPlugs', children_name=driven_list)
+            pass
         else:
             if self.expression_control:
                 if mc.objExists(f'hand_{self.side}_express_CTRL'):
