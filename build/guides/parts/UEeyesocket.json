@@ -1,0 +1,183 @@
+{
+    "part": "UEeyesocket",
+    "type": "sequence",
+    "parent": "Eye_L_Guides",
+    "guides": {
+        "seq_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                1.7178620100021362,
+                151.52792358398438,
+                9.820734977722168
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                9780
+            ]
+        },
+        "seq_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                2.06261944770813,
+                152.8350830078125,
+                9.961966514587402
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                9784
+            ]
+        },
+        "seq_guide_03": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                3.3710029125213623,
+                153.3712158203125,
+                9.947410583496094
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4459
+            ]
+        },
+        "seq_guide_04": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                4.523249626159668,
+                153.02398681640625,
+                9.1561861038208
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4987
+            ]
+        },
+        "seq_guide_05": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                5.174544334411621,
+                152.17703247070312,
+                8.234440803527832
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4465
+            ]
+        },
+        "seq_guide_06": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                4.635403156280518,
+                151.42361450195312,
+                9.178722381591797
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4986
+            ]
+        },
+        "seq_guide_07": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                3.6087114810943604,
+                151.02073669433594,
+                9.720949172973633
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4461
+            ]
+        },
+        "seq_guide_08": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                2.616727352142334,
+                151.1153106689453,
+                9.918527603149414
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4689
+            ]
+        }
+    }
+}
