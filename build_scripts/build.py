@@ -20,6 +20,7 @@ from rjg.build.parts.clavicle import Clavicle
 from rjg.build.parts.hand import Hand
 from rjg.libs.skin import auto_split_all_weights
 from rjg.libs.profile import add_profiler_tag
+import rjg.post.PoseInterpExtras as expi
 
 reload(rUtil)
 reload(rProp)
@@ -1605,6 +1606,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.connectAttr(f'{remapy}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateY')
             mc.connectAttr(f'{remapx}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateX')
             mc.connectAttr(f'{remapz}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateZ')
+
+
+            #correctives
+            expi.rebuild_graph_from_json(filepath=rf"{groups}\bobo\character\Rigs\Domingo\Poses\poseInterpolator_data.json")
+            expi.mirror_rebuild_from_json_strict(rf"{groups}\bobo\character\Rigs\Domingo\Poses\poseInterpolator_data.json",modX=-1, modY=-1, modZ=-1)
+            expi.rebuild_graph_from_json(filepath=rf"{groups}\bobo\character\Rigs\Domingo\Poses\neckposeInterpolator_data.json")
 
 
 
