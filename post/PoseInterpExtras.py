@@ -167,7 +167,7 @@ def trace_stream(input_attr, visited=None):
     return stream_list if stream_list else None
 
 
-def write_graph(filepath=r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator_data.json"):
+def write_graph(filepath=r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator_data.json", output_start=3):
     """
     Build a full poseInterpolator graph and save it to JSON.
     """
@@ -179,7 +179,7 @@ def write_graph(filepath=r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator
         num_outputs, outputs = list_outputs(interp)
 
         for i, out_attr in enumerate(outputs):
-            if i < 3:
+            if i < output_start:
                 continue
             full_attr = f"{interp}.{out_attr}"
             stream = trace_stream(full_attr)
@@ -550,10 +550,11 @@ def _rebuild_mirrored_entry_recursive(entry, modX, modY, modZ):
     for sub in entry.get("downstream", []):
         _rebuild_mirrored_entry_recursive(sub, modX, modY, modZ)
     
-# Example usage:
 #mirror_graph_from_json(r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator_data.json", modX=-1, modY=-1, modZ=-1)
 #rebuild_graph_from_json()
 #mirror_rebuild_from_json_strict(r"G:/bobo/character/Rigs/Domingo/Poses/poseInterpolator_data.json",modX=1, modY=1, modZ=1)
-#write_graph(filepath=r"G:/bobo/character/Rigs/Domingo/Poses/neckposeInterpolator_data.json")
+#write_graph(filepath=r"G:/bobo/character/Rigs/Luciana/Poses/poseInterpolator_data.json", output_start=1)
 #rebuild_graph_from_json(filepath=r"G:/bobo/character/Rigs/Domingo/Poses/neckposeInterpolator_data.json")
+#rebuild_graph_from_json(filepath=r"G:/bobo/character/Rigs/Luciana/Poses/poseInterpolator_data.json", )
+#mirror_rebuild_from_json_strict(r"G:/bobo/character/Rigs/Luciana/Poses/poseInterpolator_data.json",modX=-1, modY=-1, modZ=-1)
                                
