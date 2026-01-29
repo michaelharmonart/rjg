@@ -122,7 +122,7 @@ class RigBuildUI(QtWidgets.QDialog):
                 "ep" : f"{groups}/bobo/character/Rigs/Luciana/Luciana_Extras.mb",
                 "cp" : f"{groups}/bobo/character/Rigs/Luciana/Controls/Luciana_control_curves.json", 
                 "sp" : f"{groups}/bobo/character/Rigs/Luciana/SkinFiles/Luciana_Weights.json",  
-                "pp" : None,
+                "pp" : f"{groups}/bobo/character/Rigs/Luciana/SkinFiles/Luciana_Poses.pose", #Luciana_Poses.pose
                 "im" : f"{groups}/Bobo/character/Rigs/Rig_Icon/dragon.png",
             },
 

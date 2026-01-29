@@ -1547,6 +1547,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     mod = mod + 1000
                 mod2 = mod2 - 1000
 
+        #read Correctives
+        expi.rebuild_graph_from_json(filepath=rf"{groups}\bobo\character\Rigs\Luciana\Poses\poseInterpolator_FULL_data.json")
+
         if face == False:
             for obj in ['Eye', 'topteeth', 'botteeth', 'tongue', 'FaceFeathers', 'Corneas']:
                 mc.skinCluster('head_M_JNT', obj, tsb=True)
@@ -1608,10 +1611,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             mc.connectAttr(f'{remapz}.outValue', f'Wing_{side}_{part}_Spline_02_CTRL_SDK_GRP.translateZ')
 
 
-            #correctives
-            expi.rebuild_graph_from_json(filepath=rf"{groups}\bobo\character\Rigs\Domingo\Poses\poseInterpolator_data.json")
-            expi.mirror_rebuild_from_json_strict(rf"{groups}\bobo\character\Rigs\Domingo\Poses\poseInterpolator_data.json",modX=-1, modY=-1, modZ=-1)
-            expi.rebuild_graph_from_json(filepath=rf"{groups}\bobo\character\Rigs\Domingo\Poses\neckposeInterpolator_data.json")
+        #correctives
+        expi.rebuild_graph_from_json(filepath=rf"{groups}\bobo\character\Rigs\Domingo\Poses\poseInterpolator_data.json")
+        expi.mirror_rebuild_from_json_strict(rf"{groups}\bobo\character\Rigs\Domingo\Poses\poseInterpolator_data.json",modX=-1, modY=-1, modZ=-1)
+        expi.rebuild_graph_from_json(filepath=rf"{groups}\bobo\character\Rigs\Domingo\Poses\neckposeInterpolator_data.json")
 
 
 
