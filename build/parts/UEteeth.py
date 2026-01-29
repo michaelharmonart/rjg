@@ -18,11 +18,12 @@ reload(rXform)
 
 
 class UEteeth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, skin=None, toungecurl=True, tongue_spit = True):
+    def __init__(self, grp_name=None, ctrl_scale=1, skin=None, toungecurl=True, tongue_spit = True, teeth_split=True):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.skin = skin
         self.toungecurl = toungecurl
         self.tongue_spit = tongue_spit
+        self.teeth_split = teeth_split
 
     @auto_profiler_tag
     def build(self):
@@ -66,6 +67,12 @@ class UEteeth(UEface):
                 side = guide.split('_')[1]
                 mc.parent(f'{guide}_{side}_CTRL_CNST_GRP', f'{type.capitalize()}Teeth_M_CTRL')
                 bindjnts.append(f'{guide}_JNT')
+            if self.teeth_split == True:
+                split_joint = f'{type}Teeth_L_Sub_03_JNT'
+                split_joints: list[str] = [f'{type}Teeth_L_Sub_03_JNT',f'{type}Teeth_L_Sub_02_JNT',f'{type}Teeth_M_Sub_01_JNT',f'{type}Teeth_R_Sub_02_JNT',f'{type}Teeth_R_Sub_03_JNT',]
+                mc.addAttr(split_joint, longName="split_joints", dataType="string")
+                mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
+
             if self.skin:
                 mc.skinCluster(*bindjnts, f'{type}teeth')
 
