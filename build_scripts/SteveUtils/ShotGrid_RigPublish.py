@@ -64,7 +64,10 @@ Productions = ['Select Production', 'bobo', 'DragonKisser', 'Custom']
 
 # --- Function to get production asset list ---
 def get_production(selected_production, conn: DB):
-    asset_list = conn.get_asset_name_list(sorted=True)
+    #asset_list = conn.get_asset_name_list(sorted=True)
+    asset_list = conn.get_asset_name_list_by_type(
+    ["Character", "Rigged Prop"]
+    )
     production = selected_production
     if production == 'bobo':
         gotten_list = asset_list
