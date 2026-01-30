@@ -18,8 +18,8 @@
         },
         "positions": {
             "/apply_ng_skin": [
-                -1649.9100923900724,
-                -573.5713631900276
+                -1662.9356601522109,
+                -740.46069135397
             ],
             "/base": [
                 -1222.382967685364,
@@ -30,20 +30,20 @@
                 67.10136403715103
             ],
             "/bind_skin": [
-                -230.5703594757799,
-                -471.0950917820601
+                -480.1248786765205,
+                -468.45430321908924
             ],
             "/bind_skin_group": [
-                -1643.5660095611408,
-                -667.430968360131
+                -1656.5915773232791,
+                -834.3202965240733
             ],
             "/bottom_pivot": [
                 -671.7024140073306,
                 -335.1021613735204
             ],
             "/cleanup": [
-                163.77987380299865,
-                -472.7855475723303
+                -90.77885041447212,
+                -466.73625123272035
             ],
             "/component": [
                 -1634.309876900515,
@@ -70,16 +70,16 @@
                 100.66255920209404
             ],
             "/split_skin_weights": [
-                -1644.4519635163085,
-                -749.962015049137
+                -1657.4775312784468,
+                -916.8513432130793
             ],
             "/split_weights": [
                 -36.075738649835415,
                 -201.26464720434493
             ],
             "/trunk": [
-                -679.9769286576874,
-                -471.9163422228687
+                -855.5893680952457,
+                -467.9551593784124
             ],
             "/trunk/bottom_pivot": [
                 0.0,
@@ -106,7 +106,7 @@
             "/matrix_spline/joints": false,
             "/matrix_spline/spline": true,
             "/setup_file/def_groups": true,
-            "/trunk/bottom_pivot": true,
+            "/trunk/bottom_pivot": false,
             "/trunk/trunk_spline/controls": false,
             "/trunk/trunk_spline/trunk_scale_spline/controls": true
         }
@@ -209,10 +209,26 @@
                 "trunk_spline"
             ],
             "attrs": {
+                "base_scale_attr": {},
                 "name": {
                     "value": "trunk"
-                }
-            }
+                },
+                "top_scale_attr": {}
+            },
+            "code": [
+                "import rjg.libs.attribute",
+                "",
+                "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
+                "top_scale_attr = rjg.libs.attribute.Attribute(",
+                "                node=part_group, type=\"double\", min=0.01, max=5, value=1, keyable=True, name=\"topScale\"",
+                "            )",
+                "self.top_scale_attr = top_scale_attr.attr",
+                "base_scale_attr = rjg.libs.attribute.Attribute(",
+                "                node=part_group, type=\"double\", min=0.01, max=5, value=1, keyable=True, name=\"baseScale\"",
+                "            )",
+                "self.base_scale_attr = base_scale_attr.attr",
+                "cmds.refresh()"
+            ]
         },
         "/trunk/bottom_pivot": {
             "instance": "/basic_control",
@@ -233,7 +249,25 @@
                     "type": "int",
                     "value": "250"
                 }
-            }
+            },
+            "code": [
+                "import rjg.libs.control.ctrl",
+                "",
+                "control = rjg.libs.control.ctrl.Control(",
+                "            name=\"${name}\", ",
+                "            ctrl_scale=${size}, ",
+                "            shape=\"${shape}\",",
+                "            parent=\"${parent}\",",
+                "            translate=\"${guide}\",",
+                "            rotate=\"${guide}\",",
+                "            scale=\"${guide}\",",
+                "            side=\"${side}\"",
+                ")",
+                "self.control_transform = control.ctrl",
+                "cmds.addAttr(control.ctrl, longName=\"topScale\", proxy=\"${top_scale_attr}\")",
+                "cmds.addAttr(control.ctrl, longName=\"baseScale\", proxy=\"${base_scale_attr}\")",
+                "cmds.refresh()"
+            ]
         },
         "/trunk/trunk_spline": {
             "instance": "/matrix_spline",
@@ -294,8 +328,15 @@
                 "controls = []",
                 "shape=\"${control_shape}\"",
                 "",
-                "top_pin = cmds.group(empty=True, name=\"${name}_top_scale\", parent=\"${component_group}\")",
                 "base_pin = cmds.group(empty=True, name=\"${name}_base_scale\", parent=\"${component_group}\")",
+                "top_pin = cmds.group(empty=True, name=\"${name}_top_scale\", parent=\"${component_group}\")",
+                "",
+                "cmds.connectAttr(\"${base_scale_attr}\", f\"{base_pin}.scaleX\")",
+                "cmds.connectAttr(\"${base_scale_attr}\", f\"{base_pin}.scaleY\")",
+                "cmds.connectAttr(\"${base_scale_attr}\", f\"{base_pin}.scaleZ\")",
+                "cmds.connectAttr(\"${top_scale_attr}\", f\"{top_pin}.scaleX\")",
+                "cmds.connectAttr(\"${top_scale_attr}\", f\"{top_pin}.scaleY\")",
+                "cmds.connectAttr(\"${top_scale_attr}\", f\"{top_pin}.scaleZ\")",
                 "",
                 "scale_spline = rjg.libs.spline.matrix_spline.MatrixSpline(",
                 "    cv_transforms=[base_pin, top_pin], ",
