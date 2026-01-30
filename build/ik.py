@@ -355,7 +355,7 @@ class Ik:
             # Make cluster for the CV
             #ctrl_list = []
             cluster_list = []
-            cluster, cluster_handle = mc.cluster(cv, n=f"{self.base_name}_{i:02}_cluster")
+            cluster, cluster_handle = mc.cluster(cv, n=f"{self.base_name}_{i:02}_cluster", relative=True)
             mc.parent(cluster_handle, f'neck_M_MODULE') 
             # Get cluster position
             pos = mc.pointPosition(cv, w=True)
@@ -391,8 +391,8 @@ class Ik:
 
             postci = mc.createNode("curveInfo", name=f"{self.spline_curve }_postci")
             preci = mc.createNode("curveInfo", name=f"{self.spline_curve }_preci")
-            mc.connectAttr(f"{postcurve}.worldSpace[0]", f"{postci}.inputCurve", force=True)
-            mc.connectAttr(f"{precurve}.worldSpace[0]", f"{preci}.inputCurve", force=True)
+            mc.connectAttr(f"{postcurve}.local", f"{postci}.inputCurve", force=True)
+            mc.connectAttr(f"{precurve}.local", f"{preci}.inputCurve", force=True)
             value = mc.getAttr(f"{postci}.arcLength")
 
             frac = mc.createNode("multiplyDivide", name=f"{self.spline_curve }_Frac")
