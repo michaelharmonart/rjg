@@ -63,7 +63,7 @@ def match_pose(node, translate=None, rotate=None, scale=None):
         pass
     elif mc.objExists(scale):
         src = mc.xform(scale, query=True, worldSpace=True, scale=True)
-        mc.xform(node, worldSpace=True, scalen=src)
+        mc.xform(node, worldSpace=True, scale=src)
     else:
         mc.error("Input for scale not valid. Please give coordinates or provide a valid object.")
 

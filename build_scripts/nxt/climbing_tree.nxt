@@ -1,0 +1,486 @@
+{
+    "version": "1.17",
+    "alias": "climbing_tree",
+    "color": "#a72d2d",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/components.nxt"
+    ],
+    "comp_overrides": {
+        "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/components.nxt": {
+            "mute": false
+        }
+    },
+    "meta_data": {
+        "colors": {
+            "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/common.nxt": "#238d99"
+        },
+        "positions": {
+            "/apply_ng_skin": [
+                -1662.9356601522109,
+                -740.46069135397
+            ],
+            "/base": [
+                -1222.382967685364,
+                -468.0632671717985
+            ],
+            "/basic_control": [
+                -1631.8144649866358,
+                67.10136403715103
+            ],
+            "/bind_skin": [
+                -480.1248786765205,
+                -468.45430321908924
+            ],
+            "/bind_skin_group": [
+                -1656.5915773232791,
+                -834.3202965240733
+            ],
+            "/bottom_pivot": [
+                -671.7024140073306,
+                -335.1021613735204
+            ],
+            "/cleanup": [
+                -90.77885041447212,
+                -466.73625123272035
+            ],
+            "/climb_control": [
+                -593.0540329708124,
+                -71.9511979397426
+            ],
+            "/component": [
+                -1634.309876900515,
+                -23.577884251120622
+            ],
+            "/controls": [
+                -1185.0728560610164,
+                3.050380581881633
+            ],
+            "/matrix_spline": [
+                -1656.6961379132358,
+                167.27220889442367
+            ],
+            "/node": [
+                -382.02702307951967,
+                -154.31222547971862
+            ],
+            "/setup_file": [
+                -1651.77823044254,
+                -469.0290939370648
+            ],
+            "/skin_trunk": [
+                -237.92829013335634,
+                -469.9992528309976
+            ],
+            "/spline": [
+                -1450.4559666847185,
+                100.66255920209404
+            ],
+            "/split_skin_weights": [
+                -1657.4775312784468,
+                -916.8513432130793
+            ],
+            "/split_weights": [
+                -36.075738649835415,
+                -201.26464720434493
+            ],
+            "/trunk": [
+                -855.5893680952457,
+                -467.9551593784124
+            ],
+            "/trunk/bottom_pivot": [
+                0.0,
+                0.0
+            ],
+            "/trunk/trunk_spline/spline": [
+                0.0,
+                0.0
+            ],
+            "/trunk2": [
+                -700.062343541836,
+                -413.3265688449619
+            ],
+            "/trunk_scale_spline": [
+                -678.669464189579,
+                -179.44462221624246
+            ],
+            "/trunk_spline": [
+                -690.5604057321052,
+                -88.99554984149482
+            ]
+        },
+        "collapse": {
+            "/matrix_spline/joints": false,
+            "/matrix_spline/spline": false,
+            "/setup_file/def_groups": true,
+            "/trunk/bottom_pivot": false,
+            "/trunk/trunk_spline/climb_control": true,
+            "/trunk/trunk_spline/controls": false,
+            "/trunk/trunk_spline/trunk_scale_spline/controls": true
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "asset_root": {
+                    "value": "/groups/bobo/character/Rigs/treeclimb"
+                },
+                "trunk_def": {
+                    "type": "raw"
+                },
+                "trunk_spline": {},
+                "trunk_split": {}
+            }
+        },
+        "/base": {
+            "attrs": {
+                "size": {
+                    "type": "int",
+                    "value": "400"
+                }
+            }
+        },
+        "/bind_skin": {
+            "instance": "/bind_skin_group",
+            "execute_in": "/trunk",
+            "child_order": [
+                "split_weights"
+            ],
+            "attrs": {
+                "def_group": {
+                    "type": "raw",
+                    "value": "trunk_def"
+                },
+                "geo": {
+                    "type": "raw",
+                    "value": "trunk_geo"
+                }
+            },
+            "code": [
+                "import rjg.libs.skin",
+                "rjg.libs.skin.skin_mesh(",
+                "    bind_joints=STAGE.${def_group}[0], ",
+                "    geometry=\"${geo}\", ",
+                "    dual_quaternion=${dual_quaternion}",
+                ")"
+            ]
+        },
+        "/bind_skin/split_weights": {
+            "instance": "/split_skin_weights",
+            "attrs": {
+                "split_dict": {
+                    "value": "trunk_split"
+                }
+            }
+        },
+        "/cleanup": {
+            "execute_in": "/bind_skin",
+            "attrs": {
+                "release": {
+                    "value": "True"
+                }
+            }
+        },
+        "/matrix_spline": {
+            "child_order": [
+                "joints"
+            ],
+            "code": [
+                "",
+                "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
+                "if ${group_constrain} is not None:",
+                "    ",
+                "",
+                "cmds.refresh()"
+            ]
+        },
+        "/matrix_spline/joints": {
+            "attrs": {
+                "joint_set": {
+                    "type": "raw",
+                    "value": "trunk_def"
+                }
+            }
+        },
+        "/setup_file": {
+            "attrs": {
+                "asset_root": {
+                    "value": "/groups/bobo/character/Rigs/treeclimb/build"
+                }
+            }
+        },
+        "/setup_file/def_groups": {
+            "attrs": {
+                "def_groups": {
+                    "value": "[\"trunk_def\"]"
+                }
+            }
+        },
+        "/setup_file/split_dicts": {
+            "attrs": {
+                "split_dicts": {
+                    "type": "list",
+                    "value": "[\"trunk_split\"]"
+                }
+            },
+            "code": [
+                "for split_dict in self.split_dicts:",
+                "    setattr(STAGE, split_dict, {})"
+            ]
+        },
+        "/trunk": {
+            "instance": "/component",
+            "execute_in": "/base",
+            "child_order": [
+                "bottom_pivot",
+                "trunk_spline"
+            ],
+            "attrs": {
+                "base_scale_attr": {},
+                "name": {
+                    "value": "trunk"
+                },
+                "top_scale_attr": {}
+            },
+            "code": [
+                "import rjg.libs.attribute",
+                "",
+                "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
+                "top_scale_attr = rjg.libs.attribute.Attribute(",
+                "                node=part_group, type=\"double\", min=0.01, max=5, value=1, keyable=True, name=\"topScale\"",
+                "            )",
+                "self.top_scale_attr = top_scale_attr.attr",
+                "base_scale_attr = rjg.libs.attribute.Attribute(",
+                "                node=part_group, type=\"double\", min=0.01, max=5, value=1, keyable=True, name=\"baseScale\"",
+                "            )",
+                "self.base_scale_attr = base_scale_attr.attr",
+                "cmds.refresh()"
+            ]
+        },
+        "/trunk/bottom_pivot": {
+            "instance": "/basic_control",
+            "execute_in": "/base",
+            "attrs": {
+                "guide": {
+                    "type": "raw",
+                    "value": "trunk_base"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "bottom_pivot"
+                },
+                "side": {
+                    "value": "M"
+                },
+                "size": {
+                    "type": "int",
+                    "value": "250"
+                }
+            },
+            "code": [
+                "import rjg.libs.control.ctrl",
+                "",
+                "control = rjg.libs.control.ctrl.Control(",
+                "            name=\"${name}\", ",
+                "            ctrl_scale=${size}, ",
+                "            shape=\"${shape}\",",
+                "            parent=\"${parent}\",",
+                "            translate=\"${guide}\",",
+                "            rotate=\"${guide}\",",
+                "            scale=\"${guide}\",",
+                "            side=\"${side}\"",
+                ")",
+                "self.control_transform = control.ctrl",
+                "cmds.addAttr(control.ctrl, longName=\"topScale\", proxy=\"${top_scale_attr}\")",
+                "cmds.addAttr(control.ctrl, longName=\"baseScale\", proxy=\"${base_scale_attr}\")",
+                "cmds.refresh()"
+            ]
+        },
+        "/trunk/trunk_spline": {
+            "instance": "/matrix_spline",
+            "child_order": [
+                "controls",
+                "joints",
+                "spline",
+                "climb_control"
+            ],
+            "attrs": {
+                "control_shape": {
+                    "type": "raw",
+                    "value": "square"
+                },
+                "control_size": {
+                    "type": "int",
+                    "value": "75"
+                },
+                "ctl_parent": {
+                    "type": "raw",
+                    "value": "bottom_pivot_M_CTRL"
+                },
+                "degree": {
+                    "type": "int",
+                    "value": "3"
+                },
+                "group_constrain": {
+                    "value": "bottom_pivot_M_CTRL"
+                },
+                "guides": {
+                    "type": "list",
+                    "value": "[\"trunk_base\", \"trunk_mid1\",  \"trunk_mid2\", \"trunk_top\"]"
+                },
+                "mch_parent": {
+                    "value": "${../.component_group}"
+                },
+                "name": {
+                    "value": "trunk_spline"
+                },
+                "padded": {
+                    "value": "False"
+                },
+                "segments": {
+                    "value": "8"
+                }
+            },
+            "code": [
+                "import rjg.libs.transform",
+                "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
+                "rjg.libs.transform.matrix_constraint(\"${ctl_parent}\", part_group)",
+                "cmds.refresh()"
+            ]
+        },
+        "/trunk/trunk_spline/climb_control": {
+            "attrs": {
+                "control_name": {
+                    "type": "raw",
+                    "value": "climb"
+                },
+                "control_shape": {
+                    "type": "raw",
+                    "value": "hexagon"
+                },
+                "control_size": {
+                    "type": "int",
+                    "value": "150"
+                },
+                "curve_name": {
+                    "type": "raw",
+                    "value": "trunk_spline_Curve"
+                }
+            },
+            "code": [
+                "import rjg.libs.transform",
+                "",
+                "curve_shape = cmds.listRelatives(\"${curve_name}\", shapes=True)[0]",
+                "",
+                "pin = cmds.group(empty=True, name=\"${control_name}_curvePin\", parent=\"${component_group}\")",
+                "pin_matrix = cmds.createNode(\"composeMatrix\", name=f\"{pin}_matrix\")",
+                "",
+                "motion_path = cmds.createNode(\"motionPath\", name=f\"{name}_motionPath\")",
+                "cmds.setAttr(f\"{motion_path}.fractionMode\", True)",
+                "cmds.setAttr(f\"{motion_path}.follow\", True)",
+                "cmds.connectAttr(f\"{curve_shape}.local\", f\"{motion_path}.geometryPath\")",
+                "cmds.connectAttr(f\"{motion_path}.allCoordinates\", f\"{pin}.translate\")",
+                "cmds.connectAttr(f\"{motion_path}.rotate\", f\"{pin_matrix}.inputRotate\")",
+                "",
+                "aim_matrix = cmds.createNode(\"aimMatrix\", name=f\"{pin_matrix}_orientMatrix\")",
+                "aim_axis = cmds.createNode(\"axisFromMatrix\", name=\"f{pin_matrix}_yAxis\")",
+                "cmds.connectAttr(f\"{pin_matrix}.outputMatrix\", f\"{aim_axis}.input\")",
+                "cmds.setAttr(f\"{aim_axis}.axis\", 1)",
+                "",
+                "cmds.connectAttr(f\"{aim_axis}.output\", f\"{aim_matrix}.primaryTargetVector\")",
+                "cmds.setAttr(f\"{aim_matrix}.primaryInputAxis\", 0, 1, 0)",
+                "",
+                "decompose_matrix = cmds.createNode(\"decomposeMatrix\", name=f\"{pin}_orient\")",
+                "cmds.connectAttr(f\"{aim_matrix}.outputMatrix\", f\"{decompose_matrix}.inputMatrix\")",
+                "cmds.connectAttr(f\"{decompose_matrix}.outputRotate\", f\"{pin}.rotate\")",
+                "",
+                "control = rjg.libs.control.ctrl.Control(",
+                "            name = \"${control_name}\", ",
+                "            ctrl_scale = ${control_size}, ",
+                "            shape = \"${control_shape}\",",
+                "            parent = \"${ctl_parent}\",",
+                "        )",
+                "rjg.libs.transform.matrix_constraint(pin, control.top, keep_offset=False)",
+                "",
+                "cmds.addAttr(control.ctrl, longName=\"climbHeight\", attributeType=\"double\", keyable=True)",
+                "u_val_scale = cmds.createNode(\"multiply\", name=f\"{motion_path}_uValueScale\")",
+                "cmds.connectAttr(f\"{control.ctrl}.climbHeight\", f\"{u_val_scale}.input[0]\")",
+                "cmds.setAttr(f\"{u_val_scale}.input[1]\", 1/100)",
+                "cmds.connectAttr(f\"{u_val_scale}.output\", f\"{motion_path}.uValue\")",
+                "",
+                "cmds.setAttr(f\"{control.ctrl}.climbHeight\", 10)"
+            ]
+        },
+        "/trunk/trunk_spline/controls": {
+            "code": [
+                "import rjg.libs.control.ctrl",
+                "import rjg.libs.transform",
+                "import rjg.libs.spline.matrix_spline",
+                "guides = ${guides}",
+                "controls = []",
+                "shape=\"${control_shape}\"",
+                "",
+                "base_pin = cmds.group(empty=True, name=\"${name}_base_scale\", parent=\"${component_group}\")",
+                "top_pin = cmds.group(empty=True, name=\"${name}_top_scale\", parent=\"${component_group}\")",
+                "",
+                "cmds.connectAttr(\"${base_scale_attr}\", f\"{base_pin}.scaleX\")",
+                "cmds.connectAttr(\"${base_scale_attr}\", f\"{base_pin}.scaleY\")",
+                "cmds.connectAttr(\"${base_scale_attr}\", f\"{base_pin}.scaleZ\")",
+                "cmds.connectAttr(\"${top_scale_attr}\", f\"{top_pin}.scaleX\")",
+                "cmds.connectAttr(\"${top_scale_attr}\", f\"{top_pin}.scaleY\")",
+                "cmds.connectAttr(\"${top_scale_attr}\", f\"{top_pin}.scaleZ\")",
+                "",
+                "scale_spline = rjg.libs.spline.matrix_spline.MatrixSpline(",
+                "    cv_transforms=[base_pin, top_pin], ",
+                "    degree=1, ",
+                "    name=\"${name}_scaleSpline\", ",
+                ")",
+                "",
+                "scale_pins = []",
+                "for i, guide in enumerate(guides):",
+                "    pivot_transform = guide",
+                "    shape_transform = guide",
+                "    if i == (len(guides) - 1):",
+                "        pivot_transform = guides[i-2]",
+                "    control_pin = cmds.group(empty=True, name=f\"{guide}_ControlPin\", parent=\"${component_group}\")",
+                "    rjg.libs.transform.match_transform(control_pin, guide)",
+                "    if i > 1:",
+                "        control = rjg.libs.control.ctrl.Control(",
+                "            name = guide, ",
+                "            ctrl_scale = ${control_size}, ",
+                "            shape = shape,",
+                "            parent = \"${ctl_parent}\",",
+                "            translate = pivot_transform,",
+                "            rotate = pivot_transform,",
+                "            scale = pivot_transform,",
+                "            shape_translate = shape_transform,",
+                "        )",
+                "        controls.append(control)",
+                "        rjg.libs.transform.matrix_constraint(control.ctrl, control_pin)",
+                "    ",
+                "    scale_pin = cmds.group(empty=True, name=f\"{guide}_ScalePin\", parent=control_pin)",
+                "    parameter = (i / (len(guides) - 1))",
+                "    rjg.libs.spline.matrix_spline.scale_with_matrix_spline(matrix_spline=scale_spline, parameter=parameter, scaled_transform=scale_pin)",
+                "    scale_pins.append(scale_pin)",
+                "",
+                "self.ctl_transforms = scale_pins",
+                "self.ctl_offsets = [control.top for control in controls]"
+            ]
+        },
+        "/trunk/trunk_spline/joints": {
+            "attrs": {
+                "split_dict": {
+                    "value": "trunk_split"
+                }
+            }
+        },
+        "/trunk/trunk_spline/spline": {
+            "attrs": {
+                "create_curve": {
+                    "value": "True"
+                }
+            }
+        }
+    }
+}

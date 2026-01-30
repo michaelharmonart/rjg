@@ -427,6 +427,51 @@ def pin_to_matrix_spline(
     mc.connectAttr(f"{output_matrix}.output", f"{pinned_transform}.offsetParentMatrix")
 
 
+def scale_with_matrix_spline(
+    matrix_spline: MatrixSpline,
+    scaled_transform: str,
+    parameter: float,
+    normalize_parameter: bool = True,
+) -> None:
+    """
+    Scales a transform as if it was pinned to a matrix spline at a given parameter along the curve.
+
+    Args:
+        matrix_spline: The matrix spline data object.
+        scaled_transform: Transform to pin to the spline.
+        parameter: Position along the spline (0–1).
+        stretch: Whether to apply automatic scaling along the spline tangent.
+    Returns:
+        None
+    """
+    
+    cv_matrices: list[str] = matrix_spline.cv_matrices
+    degree: int = matrix_spline.degree
+    knots: list[float] = matrix_spline.knots
+    segment_name: str = scaled_transform
+
+    # Create node that blends the matrices based on the calculated DeBoor weights.
+    blended_matrix = mc.createNode("wtAddMatrix", name=f"{segment_name}_BaseMatrix")
+    point_weights = point_on_spline_weights(
+        cvs=cv_matrices, t=parameter, degree=degree, knots=knots, normalize=normalize_parameter
+    )
+    for index, point_weight in enumerate(point_weights):
+        mc.setAttr(f"{blended_matrix}.wtMatrix[{index}].weightIn", point_weight[1])
+        mc.connectAttr(f"{point_weight[0]}", f"{blended_matrix}.wtMatrix[{index}].matrixIn")
+
+    # Create nodes to access the values of the blended matrix node.
+    deconstruct_matrix_attribute = f"{blended_matrix}.matrixSum"
+    
+    matrix_column4 = node.ColumnFromMatrixNode(name=f"{blended_matrix}_row1")
+    mc.setAttr(matrix_column4.input, 3)
+    mc.connectAttr(deconstruct_matrix_attribute, matrix_column4.matrix)
+    
+    matrix_column4.output.x.connect_to(f"{scaled_transform}.scaleX")
+    matrix_column4.output.y.connect_to(f"{scaled_transform}.scaleY")
+    matrix_column4.output.z.connect_to(f"{scaled_transform}.scaleZ")
+
+
+
 def matrix_spline_from_transforms(
     transforms: list[str],
     transforms_to_pin: list[str],

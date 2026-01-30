@@ -1,0 +1,240 @@
+{
+    "version": "1.17",
+    "alias": "setup",
+    "color": "#55aa7f",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/common.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/base": [
+                -928.5096578577088,
+                -463.6843018935002
+            ],
+            "/cleanup": [
+                -194.76058313394353,
+                -459.76166917536636
+            ],
+            "/setup_file": [
+                -1650.626848829977,
+                -466.61636882690954
+            ]
+        },
+        "collapse": {
+            "/setup_file": false,
+            "/setup_file/load_geo": true
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "asset_root": {
+                    "type": "raw",
+                    "value": "/groups/bobo/character/Rigs/"
+                },
+                "controls": {
+                    "type": "list",
+                    "value": "[]"
+                },
+                "controls_group": {
+                    "type": "raw",
+                    "value": "CTLS"
+                },
+                "controls_parent": {
+                    "type": "raw",
+                    "value": "local_M_CTRL"
+                },
+                "def_group": {
+                    "type": "raw",
+                    "value": "SKEL"
+                },
+                "geo_group": {
+                    "type": "raw",
+                    "value": "MODEL"
+                },
+                "guides_group": {
+                    "type": "raw",
+                    "value": "GUIDES"
+                },
+                "guides_path": {
+                    "type": "raw",
+                    "value": "${file::${asset_root}/guides.mb}"
+                },
+                "mch_group": {
+                    "type": "raw",
+                    "value": "RIG"
+                },
+                "model_path": {
+                    "type": "raw",
+                    "value": "${file::${asset_root}/model.mb}"
+                },
+                "rig_group": {
+                    "type": "raw",
+                    "value": "ROOT"
+                }
+            }
+        },
+        "/base": {
+            "execute_in": "/setup_file",
+            "attrs": {
+                "control_color": {
+                    "type": "list",
+                    "value": "[0.6190000176429749, 0.1729000061750412, 0.09700000286102295]"
+                },
+                "local_name": {
+                    "type": "raw",
+                    "value": "local"
+                },
+                "root_name": {
+                    "type": "raw",
+                    "value": "root"
+                },
+                "settings_node": {
+                    "type": "raw",
+                    "value": "${root_name}_settings"
+                },
+                "size": {
+                    "type": "int",
+                    "value": "10"
+                }
+            },
+            "code": [
+                "import rjg.libs.control.ctrl as ctrl",
+                "",
+                "settings = cmds.createNode(\"network\", name=\"${settings_node}\")",
+                "cmds.addAttr(settings, longName='controlColor', usedAsColor=True, attributeType='float3' )",
+                "cmds.addAttr(settings, longName='controlColorR', attributeType='float', parent='controlColor')",
+                "cmds.addAttr(settings, longName='controlColorG', attributeType='float', parent='controlColor')",
+                "cmds.addAttr(settings, longName='controlColorB', attributeType='float', parent='controlColor')",
+                "",
+                "cmds.setAttr(f\"{settings}.controlColor\", type=\"float3\", *${control_color})",
+                "",
+                "controls = []",
+                "root = ctrl.Control(",
+                "            name=\"${root_name}\", ",
+                "            ctrl_scale=${size}, ",
+                "            shape=\"circle\",",
+                "            parent=\"${controls_group}\",",
+                ")",
+                "controls.append(root)",
+                "local = ctrl.Control(",
+                "            name=\"${local_name}\", ",
+                "            ctrl_scale=${size}*0.9, ",
+                "            shape=\"circle\",",
+                "            parent = root.ctrl,",
+                ")",
+                "controls.append(local)",
+                "",
+                "for control in controls:",
+                "    control_transform = control.ctrl",
+                "    cmds.connectAttr(",
+                "                \"${settings_node}.controlColor\", ",
+                "                f\"{control_transform}.drawOverride.overrideColorRGB\"",
+                "            )",
+                "    cmds.setAttr(f\"{control_transform}.overrideEnabled\", 1)",
+                "    cmds.setAttr(f\"{control_transform}.overrideRGBColors\", 1)"
+            ]
+        },
+        "/cleanup": {
+            "execute_in": "/base",
+            "child_order": [
+                "enable_undo"
+            ],
+            "attrs": {
+                "release": {
+                    "type": "bool",
+                    "value": "False"
+                }
+            },
+            "code": [
+                "if ${release}:",
+                "    cmds.delete(\"${guides_group}\")",
+                "    # Make Geo unselectable",
+                "    cmds.setAttr(\"${geo_group}.overrideEnabled\", 1)",
+                "    cmds.setAttr(\"${geo_group}.overrideDisplayType\", 2)",
+                "else:",
+                "    # Hide Rig Groups",
+                "    cmds.hide(\"${guides_group}\")",
+                "    cmds.hide(\"${mch_group}\")",
+                "    cmds.hide(\"${def_group}\")"
+            ]
+        },
+        "/cleanup/enable_undo": {
+            "enabled": false,
+            "code": [
+                "cmds.undoInfo(state=True)",
+                "cmds.undoInfo(closeChunk=True)"
+            ]
+        },
+        "/setup_file": {
+            "start_point": true,
+            "child_order": [
+                "load_geo",
+                "load_guides",
+                "create_groups",
+                "def_groups",
+                "disable_undo"
+            ],
+            "attrs": {
+                "controls_parent": {
+                    "type": "raw",
+                    "value": "local_M_ctrl"
+                },
+                "model_path": {
+                    "value": "${asset_root}/model.mb"
+                }
+            },
+            "code": [
+                "cmds.file(force=True, newFile=True)",
+                "cmds.group(empty=True, name=\"${rig_group}\")"
+            ]
+        },
+        "/setup_file/create_groups": {
+            "code": [
+                "cmds.group(empty=True, name=\"${controls_group}\", parent=\"${rig_group}\")",
+                "cmds.group(empty=True, name=\"${mch_group}\", parent=\"${rig_group}\")",
+                "cmds.group(empty=True, name=\"${def_group}\", parent=\"${rig_group}\")"
+            ]
+        },
+        "/setup_file/def_groups": {
+            "attrs": {
+                "def_groups": {
+                    "type": "list",
+                    "value": "[\"body_def\"]"
+                }
+            },
+            "code": [
+                "for def_group in self.def_groups:",
+                "    setattr(STAGE, def_group, [])"
+            ]
+        },
+        "/setup_file/disable_undo": {
+            "enabled": false,
+            "code": [
+                "cmds.undoInfo(openChunk=True)",
+                "cmds.undoInfo(state=False)",
+                ""
+            ]
+        },
+        "/setup_file/load_geo": {
+            "code": [
+                "cmds.file(\"${model_path}\", i=True, defaultNamespace=True)",
+                "cmds.parent(\"${geo_group}\", \"${rig_group}\")",
+                "cmds.viewFit('perspShape', fitFactor=1, all=True, animate=True)"
+            ]
+        },
+        "/setup_file/load_guides": {
+            "code": [
+                "cmds.file(\"${guides_path}\", i=True, defaultNamespace=True)",
+                "cmds.parent(\"${guides_group}\", \"${rig_group}\")",
+                "",
+                "joints = cmds.listRelatives(\"${guides_group}\", allDescendents=True, type=\"joint\") or []",
+                "",
+                "for joint in joints:",
+                "    cmds.setAttr(f\"{joint}.segmentScaleCompensate\", 0)"
+            ]
+        }
+    }
+}

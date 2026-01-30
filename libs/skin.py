@@ -626,7 +626,7 @@ def split_weights(
     skin_cluster: str | None = None,
     degree: int = 2,
     periodic: bool = False,
-    add_ng_layer: bool = True,
+    add_ng_layer: bool = False,
 ) -> None:
     """
     Redistributes skin weights from specified original joints to sets of split joints using spline-based falloff.

@@ -150,6 +150,18 @@ class ClampRangeNode(Node):
         self.output = ScalarAttribute(f"{self.name}.output")
 
 
+class ColumnFromMatrixNode(Node):
+    """Maya columnFromMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "columnFromMatrix") -> None:
+        super().__init__("columnFromMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input = IntegerAttribute(f"{self.name}.input")
+        self.matrix = MatrixAttribute(f"{self.name}.matrix")
+        self.output = Vector4Attribute(f"{self.name}.output")
+
+
 class CosNode(Node):
     """Maya cos node with enhanced interface."""
 
