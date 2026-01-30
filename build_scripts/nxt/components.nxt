@@ -236,6 +236,12 @@
             ]
         },
         "/matrix_spline/spline": {
+            "attrs": {
+                "create_curve": {
+                    "type": "bool",
+                    "value": "False"
+                }
+            },
             "code": [
                 "import rjg.libs.spline.matrix_spline",
                 "",
@@ -244,7 +250,7 @@
                 "else:",
                 "    driven_transforms = ${../joints.joint_transforms}",
                 "",
-                "rjg.libs.spline.matrix_spline.matrix_spline_from_transforms(",
+                "matrix_spline = rjg.libs.spline.matrix_spline.matrix_spline_from_transforms(",
                 "    name = \"${name}\",",
                 "    degree = ${degree},",
                 "    spline_group = \"${component_group}\",",
@@ -252,6 +258,8 @@
                 "    transforms_to_pin = driven_transforms,",
                 "    padded = ${padded},",
                 ")",
+                "if ${create_curve}:",
+                "    rjg.libs.spline.matrix_spline.bound_curve_from_matrix_spline(matrix_spline, curve_parent=\"${component_group}\")",
                 "cmds.refresh()"
             ]
         }

@@ -45,6 +45,10 @@
                 -90.77885041447212,
                 -466.73625123272035
             ],
+            "/climb_control": [
+                -593.0540329708124,
+                -71.9511979397426
+            ],
             "/component": [
                 -1634.309876900515,
                 -23.577884251120622
@@ -56,6 +60,10 @@
             "/matrix_spline": [
                 -1656.6961379132358,
                 167.27220889442367
+            ],
+            "/node": [
+                -382.02702307951967,
+                -154.31222547971862
             ],
             "/setup_file": [
                 -1651.77823044254,
@@ -104,9 +112,10 @@
         },
         "collapse": {
             "/matrix_spline/joints": false,
-            "/matrix_spline/spline": true,
+            "/matrix_spline/spline": false,
             "/setup_file/def_groups": true,
             "/trunk/bottom_pivot": false,
+            "/trunk/trunk_spline/climb_control": true,
             "/trunk/trunk_spline/controls": false,
             "/trunk/trunk_spline/trunk_scale_spline/controls": true
         }
@@ -117,6 +126,7 @@
                 "trunk_def": {
                     "type": "raw"
                 },
+                "trunk_spline": {},
                 "trunk_split": {}
             }
         },
@@ -162,9 +172,17 @@
             }
         },
         "/cleanup": {
-            "execute_in": "/bind_skin"
+            "execute_in": "/bind_skin",
+            "attrs": {
+                "release": {
+                    "value": "True"
+                }
+            }
         },
         "/matrix_spline": {
+            "child_order": [
+                "joints"
+            ],
             "code": [
                 "",
                 "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
@@ -273,7 +291,9 @@
             "instance": "/matrix_spline",
             "child_order": [
                 "controls",
-                "joints"
+                "joints",
+                "spline",
+                "climb_control"
             ],
             "attrs": {
                 "control_shape": {
@@ -282,7 +302,7 @@
                 },
                 "control_size": {
                     "type": "int",
-                    "value": "50"
+                    "value": "75"
                 },
                 "ctl_parent": {
                     "type": "raw",
@@ -317,6 +337,69 @@
                 "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
                 "rjg.libs.transform.matrix_constraint(\"${ctl_parent}\", part_group)",
                 "cmds.refresh()"
+            ]
+        },
+        "/trunk/trunk_spline/climb_control": {
+            "attrs": {
+                "control_name": {
+                    "type": "raw",
+                    "value": "climb"
+                },
+                "control_shape": {
+                    "type": "raw",
+                    "value": "hexagon"
+                },
+                "control_size": {
+                    "type": "int",
+                    "value": "150"
+                },
+                "curve_name": {
+                    "type": "raw",
+                    "value": "trunk_spline_Curve"
+                }
+            },
+            "code": [
+                "import rjg.libs.transform",
+                "",
+                "curve_shape = cmds.listRelatives(\"${curve_name}\", shapes=True)[0]",
+                "",
+                "pin = cmds.group(empty=True, name=\"${control_name}_curvePin\", parent=\"${component_group}\")",
+                "pin_matrix = cmds.createNode(\"composeMatrix\", name=f\"{pin}_matrix\")",
+                "",
+                "motion_path = cmds.createNode(\"motionPath\", name=f\"{name}_motionPath\")",
+                "cmds.setAttr(f\"{motion_path}.fractionMode\", True)",
+                "cmds.setAttr(f\"{motion_path}.follow\", True)",
+                "cmds.connectAttr(f\"{curve_shape}.local\", f\"{motion_path}.geometryPath\")",
+                "cmds.connectAttr(f\"{motion_path}.allCoordinates\", f\"{pin}.translate\")",
+                "cmds.connectAttr(f\"{motion_path}.rotate\", f\"{pin_matrix}.inputRotate\")",
+                "",
+                "aim_matrix = cmds.createNode(\"aimMatrix\", name=f\"{pin_matrix}_orientMatrix\")",
+                "aim_axis = cmds.createNode(\"axisFromMatrix\", name=\"f{pin_matrix}_yAxis\")",
+                "cmds.connectAttr(f\"{pin_matrix}.outputMatrix\", f\"{aim_axis}.input\")",
+                "cmds.setAttr(f\"{aim_axis}.axis\", 1)",
+                "",
+                "cmds.connectAttr(f\"{aim_axis}.output\", f\"{aim_matrix}.primaryTargetVector\")",
+                "cmds.setAttr(f\"{aim_matrix}.primaryInputAxis\", 0, 1, 0)",
+                "",
+                "decompose_matrix = cmds.createNode(\"decomposeMatrix\", name=f\"{pin}_orient\")",
+                "cmds.connectAttr(f\"{aim_matrix}.outputMatrix\", f\"{decompose_matrix}.inputMatrix\")",
+                "cmds.connectAttr(f\"{decompose_matrix}.outputRotate\", f\"{pin}.rotate\")",
+                "",
+                "control = rjg.libs.control.ctrl.Control(",
+                "            name = \"${control_name}\", ",
+                "            ctrl_scale = ${control_size}, ",
+                "            shape = \"${control_shape}\",",
+                "            parent = \"${ctl_parent}\",",
+                "        )",
+                "rjg.libs.transform.matrix_constraint(pin, control.top, keep_offset=False)",
+                "",
+                "cmds.addAttr(control.ctrl, longName=\"climbHeight\", attributeType=\"double\", keyable=True)",
+                "u_val_scale = cmds.createNode(\"multiply\", name=f\"{motion_path}_uValueScale\")",
+                "cmds.connectAttr(f\"{control.ctrl}.climbHeight\", f\"{u_val_scale}.input[0]\")",
+                "cmds.setAttr(f\"{u_val_scale}.input[1]\", 1/100)",
+                "cmds.connectAttr(f\"{u_val_scale}.output\", f\"{motion_path}.uValue\")",
+                "",
+                "cmds.setAttr(f\"{control.ctrl}.climbHeight\", 10)"
             ]
         },
         "/trunk/trunk_spline/controls": {
@@ -379,6 +462,13 @@
             "attrs": {
                 "split_dict": {
                     "value": "trunk_split"
+                }
+            }
+        },
+        "/trunk/trunk_spline/spline": {
+            "attrs": {
+                "create_curve": {
+                    "value": "True"
                 }
             }
         }
