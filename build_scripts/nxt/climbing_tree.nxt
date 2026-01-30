@@ -1,0 +1,278 @@
+{
+    "version": "1.17",
+    "alias": "climbing_tree",
+    "color": "#a72d2d",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/components.nxt"
+    ],
+    "comp_overrides": {
+        "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/components.nxt": {
+            "mute": false
+        }
+    },
+    "meta_data": {
+        "colors": {
+            "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/common.nxt": "#238d99"
+        },
+        "positions": {
+            "/apply_ng_skin": [
+                -1649.9100923900724,
+                -573.5713631900276
+            ],
+            "/base": [
+                -1222.382967685364,
+                -468.0632671717985
+            ],
+            "/basic_control": [
+                -1631.8144649866358,
+                -96.22504250940682
+            ],
+            "/bind_skin": [
+                -230.5703594757799,
+                -471.0950917820601
+            ],
+            "/bind_skin_group": [
+                -1643.5660095611408,
+                -665.5322452732976
+            ],
+            "/bottom_pivot": [
+                -671.7024140073306,
+                -335.1021613735204
+            ],
+            "/cleanup": [
+                163.77987380299865,
+                -472.7855475723303
+            ],
+            "/component": [
+                -1634.3098769005153,
+                -186.90429079767847
+            ],
+            "/controls": [
+                -1185.0728560610164,
+                3.050380581881633
+            ],
+            "/matrix_spline": [
+                -1656.6961379132358,
+                3.9458023478658504
+            ],
+            "/node": [
+                -1506.5993472734065,
+                317.55580536824573
+            ],
+            "/setup_file": [
+                -1650.4172984338395,
+                -460.8635018848611
+            ],
+            "/skin_trunk": [
+                -237.92829013335634,
+                -469.9992528309976
+            ],
+            "/spline": [
+                -1450.4559666847185,
+                100.66255920209404
+            ],
+            "/trunk": [
+                -679.9769286576874,
+                -471.9163422228687
+            ],
+            "/trunk/bottom_pivot": [
+                0.0,
+                0.0
+            ],
+            "/trunk/trunk_spline/spline": [
+                0.0,
+                0.0
+            ],
+            "/trunk2": [
+                -700.062343541836,
+                -413.3265688449619
+            ],
+            "/trunk_scale_spline": [
+                -678.669464189579,
+                -179.44462221624246
+            ],
+            "/trunk_spline": [
+                -690.5604057321052,
+                -88.99554984149482
+            ]
+        },
+        "collapse": {
+            "/matrix_spline/joints": false,
+            "/matrix_spline/spline": true,
+            "/setup_file/def_groups": true,
+            "/trunk/trunk_spline/controls": false,
+            "/trunk/trunk_spline/trunk_scale_spline/controls": true
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "trunk_def": {
+                    "type": "raw"
+                }
+            }
+        },
+        "/base": {
+            "attrs": {
+                "size": {
+                    "type": "int",
+                    "value": "400"
+                }
+            }
+        },
+        "/bind_skin": {
+            "instance": "/bind_skin_group",
+            "execute_in": "/trunk",
+            "attrs": {
+                "def_group": {
+                    "type": "raw",
+                    "value": "trunk_def"
+                },
+                "geo": {
+                    "type": "raw",
+                    "value": "trunk_geo"
+                }
+            },
+            "code": [
+                "import rjg.libs.skin",
+                "rjg.libs.skin.skin_mesh(",
+                "    bind_joints=STAGE.${def_group}, ",
+                "    geometry=\"${geo}\", ",
+                "    dual_quaternion=${dual_quaternion}",
+                ")"
+            ]
+        },
+        "/cleanup": {
+            "execute_in": "/bind_skin"
+        },
+        "/matrix_spline/joints": {
+            "attrs": {
+                "joint_set": {
+                    "type": "raw",
+                    "value": "trunk_def"
+                }
+            }
+        },
+        "/setup_file/def_groups": {
+            "attrs": {
+                "def_groups": {
+                    "value": "[\"trunk_def\"]"
+                }
+            }
+        },
+        "/trunk": {
+            "instance": "/component",
+            "execute_in": "/base",
+            "child_order": [
+                "bottom_pivot",
+                "trunk_spline"
+            ],
+            "attrs": {
+                "name": {
+                    "value": "trunk"
+                }
+            }
+        },
+        "/trunk/bottom_pivot": {
+            "instance": "/basic_control",
+            "execute_in": "/base",
+            "attrs": {
+                "guide": {
+                    "type": "raw",
+                    "value": "trunk_base"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "bottom_pivot"
+                },
+                "side": {
+                    "value": "M"
+                },
+                "size": {
+                    "type": "int",
+                    "value": "250"
+                }
+            }
+        },
+        "/trunk/trunk_spline": {
+            "instance": "/matrix_spline",
+            "child_order": [
+                "controls",
+                "trunk_scale_spline",
+                "joints",
+                "spline"
+            ],
+            "attrs": {
+                "control_shape": {
+                    "value": "ZTSphere"
+                },
+                "control_size": {
+                    "value": "100"
+                },
+                "degree": {
+                    "value": "2"
+                },
+                "guides": {
+                    "type": "list",
+                    "value": "[\"trunk_base\", \"trunk_mid\", \"trunk_top\"]"
+                },
+                "mch_parent": {
+                    "value": "${../.component_group}"
+                },
+                "name": {
+                    "value": "trunk_spline"
+                }
+            }
+        },
+        "/trunk/trunk_spline/trunk_scale_spline": {
+            "instance": "/matrix_spline",
+            "child_order": [
+                "controls",
+                "joints",
+                "spline"
+            ],
+            "enabled": true,
+            "attrs": {
+                "control_size": {
+                    "value": "200"
+                },
+                "ctl_parent": {
+                    "type": "raw",
+                    "value": "bottom_pivot_M_CTRL"
+                },
+                "degree": {
+                    "type": "int",
+                    "value": "1"
+                },
+                "guides": {
+                    "type": "list",
+                    "value": "[\"trunk_scale_base\", \"trunk_scale_top\"]"
+                },
+                "mch_parent": {
+                    "type": "raw",
+                    "value": "${../.component_group}"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "trunk_scale_spline"
+                },
+                "padded": {
+                    "value": "False"
+                }
+            }
+        },
+        "/trunk/trunk_spline/trunk_scale_spline/joints": {
+            "enabled": false
+        },
+        "/trunk/trunk_spline/trunk_scale_spline/spline": {
+            "attrs": {
+                "driven_transforms": {
+                    "type": "raw",
+                    "value": "${../../controls.ctl_offsets}"
+                }
+            }
+        }
+    }
+}

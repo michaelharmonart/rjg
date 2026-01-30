@@ -1,0 +1,64 @@
+{
+    "version": "1.17",
+    "alias": "common",
+    "color": "#1f9799",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/base.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/apply_ng_skin": [
+                -1519.801724194712,
+                -598.7097701373108
+            ],
+            "/bind_skin_group": [
+                -1487.8485290965552,
+                -704.9948944321312
+            ]
+        }
+    },
+    "nodes": {
+        "/apply_ng_skin": {
+            "attrs": {
+                "geo": {
+                    "type": "raw",
+                    "value": "body_geo"
+                },
+                "skin_dir": {
+                    "type": "raw",
+                    "value": "${asset_root}"
+                },
+                "skin_file": {}
+            },
+            "code": [
+                "import rjg.post.dataIO.read_skin(mesh=\"${geo}\", directory=\"${skin_dir}\")"
+            ]
+        },
+        "/bind_skin_group": {
+            "attrs": {
+                "def_group": {
+                    "type": "raw",
+                    "value": "body_def"
+                },
+                "dual_quaternion": {
+                    "type": "bool",
+                    "value": "False"
+                },
+                "geo": {
+                    "type": "raw",
+                    "value": "trunk_geo"
+                }
+            },
+            "code": [
+                "import rjg.libs.skin.skin_mesh",
+                "rjg.libs.skin.skin_mesh(",
+                "    bind_joints=STAGE.${def_group}, ",
+                "    geometry=\"${geo}\", ",
+                "    dual_quaternion=${dual_quaternion}",
+                ")"
+            ]
+        }
+    }
+}

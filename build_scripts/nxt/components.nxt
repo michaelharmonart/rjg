@@ -1,0 +1,254 @@
+{
+    "version": "1.17",
+    "alias": "components",
+    "color": "#99691c",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "/users/guest/g/graphite/maya-python/rjg/build_scripts/nxt/setup.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/base": [
+                -1222.3829676853638,
+                -465.5734712277448
+            ],
+            "/base/control_panel": [
+                0.0,
+                0.0
+            ],
+            "/base/control_panel/texture_switch": [
+                0.0,
+                0.0
+            ],
+            "/base_pasted": [
+                0.0,
+                -2.1551212848689545
+            ],
+            "/basic_control": [
+                -1632.9673467958955,
+                -95.07216070014717
+            ],
+            "/cleanup": [
+                -389.48904981496327,
+                -469.2758854837928
+            ],
+            "/component": [
+                -1470.2834404669493,
+                237.92968538676774
+            ],
+            "/controls": [
+                -1012.7263531847037,
+                53.381660182928655
+            ],
+            "/matrix_spline": [
+                -1461.9895878247853,
+                24.802839378742824
+            ],
+            "/setup_file": [
+                -1651.8031275703177,
+                -467.79264756725036
+            ],
+            "/spline": [
+                -1323.8651725366308,
+                91.51141745644912
+            ]
+        },
+        "collapse": {
+            "/base": false,
+            "/base_pasted": true,
+            "/cleanup": false
+        }
+    },
+    "nodes": {
+        "/basic_control": {
+            "attrs": {
+                "control_transform": {},
+                "guide": {},
+                "name": {
+                    "type": "raw",
+                    "value": "basic"
+                },
+                "parent": {
+                    "type": "raw",
+                    "value": "${controls_parent}"
+                },
+                "shape": {
+                    "type": "raw",
+                    "value": "circle"
+                },
+                "side": {
+                    "type": "raw"
+                },
+                "size": {
+                    "type": "int",
+                    "value": "1"
+                }
+            },
+            "code": [
+                "import rjg.libs.control.ctrl",
+                "",
+                "control = rjg.libs.control.ctrl.Control(",
+                "            name=\"${name}\", ",
+                "            ctrl_scale=${size}, ",
+                "            shape=\"${shape}\",",
+                "            parent=\"${parent}\",",
+                "            translate=\"${guide}\",",
+                "            rotate=\"${guide}\",",
+                "            scale=\"${guide}\",",
+                "            side=\"${side}\"",
+                ")",
+                "self.control_transform = control.ctrl",
+                "cmds.refresh()"
+            ]
+        },
+        "/component": {
+            "attrs": {
+                "component_group": {
+                    "type": "raw",
+                    "value": "${name}_MCH"
+                },
+                "ctl_parent": {
+                    "type": "raw",
+                    "value": "${controls_parent}"
+                },
+                "def_parent": {
+                    "type": "raw",
+                    "value": "${def_group}"
+                },
+                "guides": {
+                    "type": "list",
+                    "value": "[]"
+                },
+                "mch_parent": {
+                    "type": "raw",
+                    "value": "${mch_group}"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "component_${side}"
+                },
+                "side": {
+                    "type": "raw",
+                    "value": "M"
+                }
+            },
+            "code": [
+                "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
+                "cmds.refresh()"
+            ]
+        },
+        "/matrix_spline": {
+            "instance": "/component",
+            "child_order": [
+                "controls",
+                "joints",
+                "spline"
+            ],
+            "attrs": {
+                "control_shape": {
+                    "type": "raw",
+                    "value": "circle"
+                },
+                "control_size": {
+                    "type": "int",
+                    "value": "1"
+                },
+                "degree": {
+                    "type": "int",
+                    "value": "3"
+                },
+                "driven_transforms": {
+                    "type": "NoneType",
+                    "value": "None"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "matrix_spline"
+                },
+                "padded": {
+                    "type": "bool",
+                    "value": "True"
+                },
+                "segments": {
+                    "type": "int",
+                    "value": "6"
+                }
+            },
+            "code": [
+                "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
+                "cmds.refresh()"
+            ]
+        },
+        "/matrix_spline/controls": {
+            "attrs": {
+                "ctl_offsets": {
+                    "type": "list",
+                    "value": "[]"
+                },
+                "ctl_transforms": {
+                    "type": "list",
+                    "value": "[]"
+                }
+            },
+            "code": [
+                "import rjg.libs.control.ctrl",
+                "guides = ${guides}",
+                "",
+                "controls = []",
+                "for guide in guides:",
+                "    control = rjg.libs.control.ctrl.Control(",
+                "        name = guide, ",
+                "        ctrl_scale = ${control_size}, ",
+                "        shape =\"circle\",",
+                "        parent = \"${ctl_parent}\",",
+                "        translate = guide,",
+                "        rotate = guide,",
+                "        scale = guide,",
+                "    )",
+                "    controls.append(control)",
+                "self.ctl_transforms = [control.ctrl for control in controls]",
+                "self.ctl_offsets = [control.top for control in controls]"
+            ]
+        },
+        "/matrix_spline/joints": {
+            "attrs": {
+                "joint_set": {},
+                "joint_transforms": {
+                    "type": "list",
+                    "value": "[]"
+                }
+            },
+            "code": [
+                "joints = []",
+                "for i in range(${segments}):",
+                "    segment_name = f\"${name}_{i:02d}_JNT\"",
+                "    joint = cmds.joint(name=segment_name)",
+                "    cmds.parent(joint, \"${def_parent}\")",
+                "    joints.append(joint)",
+                "self.joint_transforms = joints",
+                "STAGE.${joint_set}.extend(joints)    "
+            ]
+        },
+        "/matrix_spline/spline": {
+            "code": [
+                "import rjg.libs.spline.matrix_spline",
+                "",
+                "if ${driven_transforms} is not None:",
+                "    driven_transforms = ${driven_transforms}",
+                "else:",
+                "    driven_transforms = ${../joints.joint_transforms}",
+                "",
+                "rjg.libs.spline.matrix_spline.matrix_spline_from_transforms(",
+                "    name = \"${name}\",",
+                "    degree = ${degree},",
+                "    spline_group = \"${component_group}\",",
+                "    transforms = ${../controls.ctl_transforms},",
+                "    transforms_to_pin = driven_transforms,",
+                "    padded = ${padded},",
+                ")",
+                "cmds.refresh()"
+            ]
+        }
+    }
+}

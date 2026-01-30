@@ -1,0 +1,27 @@
+{
+    "version": "1.17",
+    "alias": "base",
+    "color": "#c91781",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/node": [
+                -1569.082462402903,
+                36.741600359296626
+            ]
+        }
+    },
+    "nodes": {
+        "/": {
+            "code": [
+                "import sys",
+                "import maya.cmds as cmds",
+                "modules = [name for name in sys.modules.keys() if name.startswith(\"rjg\")]",
+                "for name in modules:",
+                "    del sys.modules[name]",
+                "import rjg"
+            ]
+        }
+    }
+}
