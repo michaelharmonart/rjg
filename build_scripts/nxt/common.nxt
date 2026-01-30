@@ -16,6 +16,10 @@
             "/bind_skin_group": [
                 -1487.8485290965552,
                 -704.9948944321312
+            ],
+            "/split_skin_weights": [
+                -1623.5660095611408,
+                -645.5322452732976
             ]
         }
     },
@@ -48,7 +52,7 @@
                 },
                 "geo": {
                     "type": "raw",
-                    "value": "trunk_geo"
+                    "value": "body_geo"
                 }
             },
             "code": [
@@ -57,6 +61,25 @@
                 "    bind_joints=STAGE.${def_group}, ",
                 "    geometry=\"${geo}\", ",
                 "    dual_quaternion=${dual_quaternion}",
+                ")"
+            ]
+        },
+        "/split_skin_weights": {
+            "attrs": {
+                "geo": {
+                    "type": "raw",
+                    "value": "body_geo"
+                },
+                "split_dict": {
+                    "type": "raw",
+                    "value": "body_split"
+                }
+            },
+            "code": [
+                "import rjg.libs.skin",
+                "rjg.libs.skin.split_weights(",
+                "    joint_split_dict=STAGE.${split_dict}, ",
+                "    mesh=\"${geo}\", ",
                 ")"
             ]
         }

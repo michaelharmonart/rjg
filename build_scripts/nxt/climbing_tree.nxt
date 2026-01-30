@@ -27,7 +27,7 @@
             ],
             "/basic_control": [
                 -1631.8144649866358,
-                -96.22504250940682
+                67.10136403715103
             ],
             "/bind_skin": [
                 -230.5703594757799,
@@ -35,7 +35,7 @@
             ],
             "/bind_skin_group": [
                 -1643.5660095611408,
-                -665.5322452732976
+                -667.430968360131
             ],
             "/bottom_pivot": [
                 -671.7024140073306,
@@ -46,8 +46,8 @@
                 -472.7855475723303
             ],
             "/component": [
-                -1634.3098769005153,
-                -186.90429079767847
+                -1634.309876900515,
+                -23.577884251120622
             ],
             "/controls": [
                 -1185.0728560610164,
@@ -55,15 +55,11 @@
             ],
             "/matrix_spline": [
                 -1656.6961379132358,
-                3.9458023478658504
-            ],
-            "/node": [
-                -1506.5993472734065,
-                317.55580536824573
+                167.27220889442367
             ],
             "/setup_file": [
-                -1650.4172984338395,
-                -460.8635018848611
+                -1651.77823044254,
+                -469.0290939370648
             ],
             "/skin_trunk": [
                 -237.92829013335634,
@@ -72,6 +68,14 @@
             "/spline": [
                 -1450.4559666847185,
                 100.66255920209404
+            ],
+            "/split_skin_weights": [
+                -1644.4519635163085,
+                -749.962015049137
+            ],
+            "/split_weights": [
+                -36.075738649835415,
+                -201.26464720434493
             ],
             "/trunk": [
                 -679.9769286576874,
@@ -102,6 +106,7 @@
             "/matrix_spline/joints": false,
             "/matrix_spline/spline": true,
             "/setup_file/def_groups": true,
+            "/trunk/bottom_pivot": true,
             "/trunk/trunk_spline/controls": false,
             "/trunk/trunk_spline/trunk_scale_spline/controls": true
         }
@@ -111,7 +116,8 @@
             "attrs": {
                 "trunk_def": {
                     "type": "raw"
-                }
+                },
+                "trunk_split": {}
             }
         },
         "/base": {
@@ -125,6 +131,9 @@
         "/bind_skin": {
             "instance": "/bind_skin_group",
             "execute_in": "/trunk",
+            "child_order": [
+                "split_weights"
+            ],
             "attrs": {
                 "def_group": {
                     "type": "raw",
@@ -138,14 +147,32 @@
             "code": [
                 "import rjg.libs.skin",
                 "rjg.libs.skin.skin_mesh(",
-                "    bind_joints=STAGE.${def_group}, ",
+                "    bind_joints=STAGE.${def_group}[0], ",
                 "    geometry=\"${geo}\", ",
                 "    dual_quaternion=${dual_quaternion}",
                 ")"
             ]
         },
+        "/bind_skin/split_weights": {
+            "instance": "/split_skin_weights",
+            "attrs": {
+                "split_dict": {
+                    "value": "trunk_split"
+                }
+            }
+        },
         "/cleanup": {
             "execute_in": "/bind_skin"
+        },
+        "/matrix_spline": {
+            "code": [
+                "",
+                "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
+                "if ${group_constrain} is not None:",
+                "    ",
+                "",
+                "cmds.refresh()"
+            ]
         },
         "/matrix_spline/joints": {
             "attrs": {
@@ -161,6 +188,18 @@
                     "value": "[\"trunk_def\"]"
                 }
             }
+        },
+        "/setup_file/split_dicts": {
+            "attrs": {
+                "split_dicts": {
+                    "type": "list",
+                    "value": "[\"trunk_split\"]"
+                }
+            },
+            "code": [
+                "for split_dict in self.split_dicts:",
+                "    setattr(STAGE, split_dict, {})"
+            ]
         },
         "/trunk": {
             "instance": "/component",
@@ -200,43 +239,16 @@
             "instance": "/matrix_spline",
             "child_order": [
                 "controls",
-                "trunk_scale_spline",
-                "joints",
-                "spline"
+                "joints"
             ],
             "attrs": {
                 "control_shape": {
-                    "value": "ZTSphere"
+                    "type": "raw",
+                    "value": "square"
                 },
                 "control_size": {
-                    "value": "100"
-                },
-                "degree": {
-                    "value": "2"
-                },
-                "guides": {
-                    "type": "list",
-                    "value": "[\"trunk_base\", \"trunk_mid\", \"trunk_top\"]"
-                },
-                "mch_parent": {
-                    "value": "${../.component_group}"
-                },
-                "name": {
-                    "value": "trunk_spline"
-                }
-            }
-        },
-        "/trunk/trunk_spline/trunk_scale_spline": {
-            "instance": "/matrix_spline",
-            "child_order": [
-                "controls",
-                "joints",
-                "spline"
-            ],
-            "enabled": true,
-            "attrs": {
-                "control_size": {
-                    "value": "200"
+                    "type": "int",
+                    "value": "50"
                 },
                 "ctl_parent": {
                     "type": "raw",
@@ -244,33 +256,88 @@
                 },
                 "degree": {
                     "type": "int",
-                    "value": "1"
+                    "value": "3"
+                },
+                "group_constrain": {
+                    "value": "bottom_pivot_M_CTRL"
                 },
                 "guides": {
                     "type": "list",
-                    "value": "[\"trunk_scale_base\", \"trunk_scale_top\"]"
+                    "value": "[\"trunk_base\", \"trunk_mid1\",  \"trunk_mid2\", \"trunk_top\"]"
                 },
                 "mch_parent": {
-                    "type": "raw",
                     "value": "${../.component_group}"
                 },
                 "name": {
-                    "type": "raw",
-                    "value": "trunk_scale_spline"
+                    "value": "trunk_spline"
                 },
                 "padded": {
                     "value": "False"
+                },
+                "segments": {
+                    "value": "8"
                 }
-            }
+            },
+            "code": [
+                "import rjg.libs.transform",
+                "part_group = cmds.group(empty=True, name=\"${component_group}\", parent=\"${mch_parent}\")",
+                "rjg.libs.transform.matrix_constraint(\"${ctl_parent}\", part_group)",
+                "cmds.refresh()"
+            ]
         },
-        "/trunk/trunk_spline/trunk_scale_spline/joints": {
-            "enabled": false
+        "/trunk/trunk_spline/controls": {
+            "code": [
+                "import rjg.libs.control.ctrl",
+                "import rjg.libs.transform",
+                "import rjg.libs.spline.matrix_spline",
+                "guides = ${guides}",
+                "controls = []",
+                "shape=\"${control_shape}\"",
+                "",
+                "top_pin = cmds.group(empty=True, name=\"${name}_top_scale\", parent=\"${component_group}\")",
+                "base_pin = cmds.group(empty=True, name=\"${name}_base_scale\", parent=\"${component_group}\")",
+                "",
+                "scale_spline = rjg.libs.spline.matrix_spline.MatrixSpline(",
+                "    cv_transforms=[base_pin, top_pin], ",
+                "    degree=1, ",
+                "    name=\"${name}_scaleSpline\", ",
+                ")",
+                "",
+                "scale_pins = []",
+                "for i, guide in enumerate(guides):",
+                "    pivot_transform = guide",
+                "    shape_transform = guide",
+                "    if i == (len(guides) - 1):",
+                "        pivot_transform = guides[i-2]",
+                "    control_pin = cmds.group(empty=True, name=f\"{guide}_ControlPin\", parent=\"${component_group}\")",
+                "    rjg.libs.transform.match_transform(control_pin, guide)",
+                "    if i > 1:",
+                "        control = rjg.libs.control.ctrl.Control(",
+                "            name = guide, ",
+                "            ctrl_scale = ${control_size}, ",
+                "            shape = shape,",
+                "            parent = \"${ctl_parent}\",",
+                "            translate = pivot_transform,",
+                "            rotate = pivot_transform,",
+                "            scale = pivot_transform,",
+                "            shape_translate = shape_transform,",
+                "        )",
+                "        controls.append(control)",
+                "        rjg.libs.transform.matrix_constraint(control.ctrl, control_pin)",
+                "    ",
+                "    scale_pin = cmds.group(empty=True, name=f\"{guide}_ScalePin\", parent=control_pin)",
+                "    parameter = (i / (len(guides) - 1))",
+                "    rjg.libs.spline.matrix_spline.scale_with_matrix_spline(matrix_spline=scale_spline, parameter=parameter, scaled_transform=scale_pin)",
+                "    scale_pins.append(scale_pin)",
+                "",
+                "self.ctl_transforms = scale_pins",
+                "self.ctl_offsets = [control.top for control in controls]"
+            ]
         },
-        "/trunk/trunk_spline/trunk_scale_spline/spline": {
+        "/trunk/trunk_spline/joints": {
             "attrs": {
-                "driven_transforms": {
-                    "type": "raw",
-                    "value": "${../../controls.ctl_offsets}"
+                "split_dict": {
+                    "value": "trunk_split"
                 }
             }
         }

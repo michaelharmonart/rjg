@@ -162,6 +162,7 @@
             ]
         },
         "/cleanup/enable_undo": {
+            "enabled": false,
             "code": [
                 "cmds.undoInfo(state=True)",
                 "cmds.undoInfo(closeChunk=True)"
@@ -210,6 +211,7 @@
             ]
         },
         "/setup_file/disable_undo": {
+            "enabled": false,
             "code": [
                 "cmds.undoInfo(openChunk=True)",
                 "cmds.undoInfo(state=False)",

@@ -200,7 +200,7 @@
                 "    control = rjg.libs.control.ctrl.Control(",
                 "        name = guide, ",
                 "        ctrl_scale = ${control_size}, ",
-                "        shape =\"circle\",",
+                "        shape =\"${control_shape}\",",
                 "        parent = \"${ctl_parent}\",",
                 "        translate = guide,",
                 "        rotate = guide,",
@@ -217,7 +217,8 @@
                 "joint_transforms": {
                     "type": "list",
                     "value": "[]"
-                }
+                },
+                "split_dict": {}
             },
             "code": [
                 "joints = []",
@@ -227,7 +228,11 @@
                 "    cmds.parent(joint, \"${def_parent}\")",
                 "    joints.append(joint)",
                 "self.joint_transforms = joints",
-                "STAGE.${joint_set}.extend(joints)    "
+                "STAGE.${joint_set}.extend(joints)    ",
+                "if \"${split_dict}\":",
+                "    split_dict = getattr(STAGE, \"${split_dict}\")",
+                "    split_dict[joints[0]] = joints",
+                "    setattr(STAGE, \"${split_dict}\", split_dict)"
             ]
         },
         "/matrix_spline/spline": {
