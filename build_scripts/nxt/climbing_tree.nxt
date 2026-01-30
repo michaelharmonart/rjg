@@ -204,6 +204,10 @@
             }
         },
         "/setup_file": {
+            "child_order": [
+                "def_groups",
+                "split_dicts"
+            ],
             "attrs": {
                 "asset_root": {
                     "value": "/groups/bobo/character/Rigs/treeclimb/build"
@@ -381,7 +385,7 @@
                 "pin_matrix = cmds.createNode(\"composeMatrix\", name=f\"{pin}_matrix\")",
                 "",
                 "motion_path = cmds.createNode(\"motionPath\", name=f\"{name}_motionPath\")",
-                "cmds.setAttr(f\"{motion_path}.fractionMode\", True)",
+                "cmds.setAttr(f\"{motion_path}.fractionMode\", False)",
                 "cmds.setAttr(f\"{motion_path}.follow\", True)",
                 "cmds.connectAttr(f\"{curve_shape}.local\", f\"{motion_path}.geometryPath\")",
                 "cmds.connectAttr(f\"{motion_path}.allCoordinates\", f\"{pin}.translate\")",
