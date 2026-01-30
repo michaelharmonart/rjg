@@ -166,7 +166,7 @@ class SplineTail(rModule.RigModule, rFk.Fk):
 
         for i, cv in enumerate(cvs, start=1):
             # Make cluster for the CV
-            cluster, cluster_handle = mc.cluster(cv, n=f"{name}_Cluster_{i:02}")
+            cluster, cluster_handle = mc.cluster(cv, n=f"{name}_Cluster_{i:02}", relative=True)
             mc.parent(cluster_handle, spline_group)
             # Get cluster position
             pos = mc.pointPosition(cv, w=True)
