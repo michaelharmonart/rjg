@@ -123,6 +123,9 @@
     "nodes": {
         "/": {
             "attrs": {
+                "asset_root": {
+                    "value": "/groups/bobo/character/Rigs/treeclimb"
+                },
                 "trunk_def": {
                     "type": "raw"
                 },
@@ -197,6 +200,13 @@
                 "joint_set": {
                     "type": "raw",
                     "value": "trunk_def"
+                }
+            }
+        },
+        "/setup_file": {
+            "attrs": {
+                "asset_root": {
+                    "value": "/groups/bobo/character/Rigs/treeclimb/build"
                 }
             }
         },

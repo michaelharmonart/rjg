@@ -32,7 +32,7 @@
             "attrs": {
                 "asset_root": {
                     "type": "raw",
-                    "value": "/groups/bobo/character/Rigs/climbing_tree/build"
+                    "value": "/groups/bobo/character/Rigs/"
                 },
                 "controls": {
                     "type": "list",
