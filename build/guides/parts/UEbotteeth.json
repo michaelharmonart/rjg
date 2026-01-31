@@ -1,0 +1,73 @@
+{
+    "part": "UEbotteeth",
+    "type": "sequence",
+    "parent": "Tongue_M_guides",
+    "guides": {
+        "seq_guide_01": {
+            "mesh": "botteethShape",
+            "pos": [
+                2.332385301589966,
+                144.36654663085938,
+                5.979084014892578
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                692
+            ]
+        },
+        "seq_guide_02": {
+            "mesh": "botteethShape",
+            "pos": [
+                1.6741125583648682,
+                143.8303680419922,
+                8.8333740234375
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                238
+            ]
+        },
+        "seq_guide_03": {
+            "mesh": "botteethShape",
+            "pos": [
+                2.220429108591368e-16,
+                143.5100555419922,
+                9.981037139892578
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                1129
+            ]
+        }
+    }
+}

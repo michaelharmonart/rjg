@@ -1,0 +1,51 @@
+{
+    "part": "UEjawextras",
+    "type": "sequence",
+    "parent": "Jaw_M_guides",
+    "guides": {
+        "seq_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                0.0,
+                140.39593505859375,
+                6.268458366394043
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                11425
+            ]
+        },
+        "seq_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                -0.25886809825897217,
+                143.88900756835938,
+                11.539958000183105
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                17089
+            ]
+        }
+    }
+}

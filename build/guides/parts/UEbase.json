@@ -1,0 +1,53 @@
+{
+    "part": "UEbase",
+    "type": "chain",
+    "parent": "UEFace_guides",
+    "guides": {
+        "chain_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                0.00010251998901367188,
+                147.85489654541016,
+                5.094724655151367
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": 12348,
+            "vert_list": [
+                4555,
+                16972
+            ]
+        },
+        "chain_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                0.0,
+                152.4734344482422,
+                5.493058204650879
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": 10380,
+            "vert_list": [
+                11061,
+                23309
+            ]
+        }
+    }
+}

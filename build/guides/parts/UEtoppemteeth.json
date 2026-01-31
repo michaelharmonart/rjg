@@ -1,0 +1,73 @@
+{
+    "part": "UEtopteeth",
+    "type": "sequence",
+    "parent": "Tongue_M_guides",
+    "guides": {
+        "seq_guide_01": {
+            "mesh": "topteethShape",
+            "pos": [
+                2.479466676712036,
+                147.7578887939453,
+                6.530966281890869
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                3771
+            ]
+        },
+        "seq_guide_02": {
+            "mesh": "topteethShape",
+            "pos": [
+                1.762213110923767,
+                147.4374237060547,
+                9.46796703338623
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                3786
+            ]
+        },
+        "seq_guide_03": {
+            "mesh": "topteethShape",
+            "pos": [
+                -8.326672684688674e-17,
+                147.3035430908203,
+                10.673970222473145
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                3800
+            ]
+        }
+    }
+}

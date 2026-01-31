@@ -1,0 +1,95 @@
+{
+    "part": "UEear",
+    "type": "sequence",
+    "parent": "Ear_L_guides",
+    "guides": {
+        "seq_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                5.737542152404785,
+                148.3782501220703,
+                2.0143094062805176
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                9708
+            ]
+        },
+        "seq_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                7.565876007080078,
+                150.82168579101562,
+                0.9283000826835632
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4340
+            ]
+        },
+        "seq_guide_03": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                7.319411754608154,
+                147.9609375,
+                0.4218355417251587
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4297
+            ]
+        },
+        "seq_guide_04": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                6.654587745666504,
+                146.5198974609375,
+                1.955660343170166
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                4246
+            ]
+        }
+    }
+}

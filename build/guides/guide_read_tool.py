@@ -184,7 +184,7 @@ PART_CONFIG = {
     "UEeyelid": {
         "Axes": ["Y", "Z", "X"],
         "Names": ['Eye_L_Eyelid_InnerCorner', 'Eye_L_Eyelid_InnerUpper01', 'Eye_L_Eyelid_Upper', 'Eye_L_Eyelid_OuterUpper01', 'Eye_L_Eyelid_OuterCorner', 'Eye_L_Eyelid_OuterLower01', 'Eye_L_Eyelid_Lower', 'Eye_L_Eyelid_InnerLower01'],
-        "Delete_Last": True,
+        "Delete_Last": False,
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
@@ -194,19 +194,172 @@ PART_CONFIG = {
     "UEeyesocket": {
         "Axes": ["Y", "Z", "X"],
         "Names": ['Eye_L_Socket_InnerCorner', 'Eye_L_Socket_InnerUpper01', 'Eye_L_Socket_Upper', 'Eye_L_Socket_OuterUpper01', 'Eye_L_Socket_OuterCorner', 'Eye_L_Socket_OuterLower01', 'Eye_L_Socket_Lower', 'Eye_L_Socket_InnerLower01'],
-        "Delete_Last": True,
+        "Delete_Last": False,
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
         "Force_Planar":None
     },
 
+    "UEbase": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['UpperHead_guide', 'LowerHead_guide'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
 
+    "UEbase": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['UpperHead_guide', 'LowerHead_guide'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
 
+    "UEbotteeth": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['botTeeth_L_Sub_03', 'botTeeth_L_Sub_02', 'botTeeth_M_Sub_01'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
 
-    
+    "UEtopteeth": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['topTeeth_L_Sub_03', 'topTeeth_L_Sub_02', 'topTeeth_M_Sub_01'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
 
-    
+    "UEteeth": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['topTeeth', 'botTeeth',],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEbrow": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Brow_L_Crease', 'Brow_L_01_Upper', 'Brow_L_01', 'Brow_L_01_Lower', 'Brow_L_02_Upper', 'Brow_L_02', 'Brow_L_02_Lower', 'Brow_L_01_Major', 'Brow_L_03_Upper', 'Brow_L_03', 'Brow_L_03_Lower', 'Brow_L_02_Major', 'Brow_L_04_Upper', 'Brow_L_04', 'Brow_L_04_Lower', 'Brow_L_05_Upper', 'Brow_L_05', 'Brow_L_05_Lower'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEbrow": { #
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Brow_L_Crease', 'Brow_L_01_Upper', 'Brow_L_01', 'Brow_L_01_Lower', 'Brow_L_02_Upper', 'Brow_L_02', 'Brow_L_02_Lower', 'Brow_L_01_Major', 'Brow_L_03_Upper', 'Brow_L_03', 'Brow_L_03_Lower', 'Brow_L_02_Major', 'Brow_L_04_Upper', 'Brow_L_04', 'Brow_L_04_Lower', 'Brow_L_05_Upper', 'Brow_L_05', 'Brow_L_05_Lower'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEcheek": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Cheek_L_NLFold_01_inner', 'Cheek_L_NLFold_01_outer', 'Cheek_L_NLFold_02_inner', 'Cheek_L_NLFold_02_outer', 'Cheek_L_NLFold_03_inner', 'Cheek_L_NLFold_03_outer', 'Cheek_L_NLFold_04_inner', 'Cheek_L_NLFold_04_outer', 'Cheek_L_NLFold_05_inner', 'Cheek_L_NLFold_05_outer', 'Cheek_L_NLFold_04', 'Cheek_L_Puff', 'Cheek_L_CheekBone'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEear": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Ear_L_Root', 'Ear_L_Upper', 'Ear_L_Outer', 'Ear_L_Lower'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    }, 
+
+    "UEjaw": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Jaw_M_root', 'Jaw_M_ee',],
+        "Delete_Last": True,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    }, 
+
+    "UEjaw": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Jaw_M_root', 'Jaw_M_ee',],
+        "Delete_Last": True,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    }, 
+
+    "UEjawextras": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Jaw_M_larynx', 'Jaw_M_Chin',],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    }, 
+
+    "UEnose": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Nose_M_NoseBridge', 'Nose_M_Tip', 'Nose_L_UpperCorner', 'Nose_L_Nostril_Outer', 'Nose_L_Nostril', 'Nose_M_Nostril_Inner'],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    }, 
+
+    "UEnosebase": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Nose_M_NoseRoot'],
+        "Delete_Last": True,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    }, 
+
+    "UEtongue": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Tongue_01', 'Tongue_02', 'Tongue_03', 'Tongue_04', 'Tongue_05', 'Tongue_06'],
+        "Delete_Last": True,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    }, 
+
+    "UEmouthcenter": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Mouth_M_center'],
+        "Delete_Last": True,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },    
     
 }
 
@@ -523,6 +676,59 @@ def read_seg_guides(json_file):
 
     return built
 
+# ---------- Normailize_UBM ----------
+
+def normalize_ubm_mesh():
+    ubm_meshes = [
+        m for m in mc.ls(type="transform")
+        if m.endswith("_UBM") and mc.listRelatives(m, s=True, type="mesh")
+    ]
+
+    if not ubm_meshes:
+        mc.warning("No *_UBM meshes found in scene.")
+        return
+
+    if "Basemesh_UBM" in ubm_meshes:
+        print("Basemesh_UBM already exists.")
+        return
+
+    if len(ubm_meshes) > 1:
+        mc.warning("More than one *_UBM mesh found. Using the first one.")
+
+    original_mesh = ubm_meshes[0]
+
+    renamed = mc.rename(original_mesh, "Basemesh_UBM")
+
+    if not mc.objExists(f"{renamed}.OG_Name"):
+        mc.addAttr(renamed, ln="OG_Name", dt="string")
+
+    mc.setAttr(f"{renamed}.OG_Name", original_mesh, type="string")
+
+    print(f"Renamed {original_mesh} → {renamed}")
+
+
+def restore_ubm_mesh():
+    mesh = "Basemesh_UBM"
+
+    if not mc.objExists(mesh):
+        mc.warning("Basemesh_UBM not found.")
+        return
+
+    attr = f"{mesh}.OG_Name"
+
+    if not mc.objExists(attr):
+        mc.warning("No OG_Name attribute found.")
+        return
+
+    original_name = mc.getAttr(attr)
+
+    restored = mc.rename(mesh, original_name)
+
+    if mc.objExists(f"{restored}.OG_Name"):
+        mc.deleteAttr(f"{restored}.OG_Name")
+
+    print(f"Restored mesh name to {restored}")
+
 # ---------------- UI ----------------
 
 class GuideReaderUI(QtWidgets.QDialog):
@@ -552,6 +758,16 @@ class GuideReaderUI(QtWidgets.QDialog):
         layout.addWidget(self.read_btn)
 
         self.read_btn.clicked.connect(self.read_guides)
+
+        # ---------------- UBM buttons ----------------
+
+        self.normalize_btn = QtWidgets.QPushButton("Normalize UBM Mesh")
+        layout.addWidget(self.normalize_btn)
+        self.normalize_btn.clicked.connect(normalize_ubm_mesh)
+
+        self.restore_btn = QtWidgets.QPushButton("Restore Original UBM Name")
+        layout.addWidget(self.restore_btn)
+        self.restore_btn.clicked.connect(restore_ubm_mesh)
 
     def populate_parts(self):
 

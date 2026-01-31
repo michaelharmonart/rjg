@@ -1,0 +1,53 @@
+{
+    "part": "UEmouthcenter",
+    "type": "chain",
+    "parent": "Mouth_M_guides",
+    "guides": {
+        "chain_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                0.111350417137146,
+                145.11859893798828,
+                9.71773910522461
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                10211,
+                22606
+            ]
+        },
+        "chain_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                0.111350417137146,
+                145.11859893798828,
+                9.71773910522461
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                10211,
+                22606
+            ]
+        }
+    }
+}
