@@ -214,6 +214,7 @@ class UEwing(UEface):
         parts = prefix.split("_")  # ["wing", "L"]
         side = parts[-1]
         self.mastergrp = mc.group(em=True, name=f"{prefix}")
+        self.global_scale = rAttr.Attribute(node=self.mastergrp, type='double', value=1, keyable=True, name='globalScale')
         if self.buildlimb:
             self.build_limb(self.twisty)
             self.build_feathers()
