@@ -64,7 +64,7 @@ PART_CONFIG = {
     "indexfinger": {
         "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandIndex0", "LeftHandIndex1", "LeftHandIndex2", "LeftHandIndex3", "LeftHandIndex4"],
-        "Delete_Last": True,
+        "Delete_Last": False,
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
@@ -74,7 +74,7 @@ PART_CONFIG = {
     "middlefinger": {
         "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandMiddle0", "LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3", "LeftHandMiddle4"],
-        "Delete_Last": True,
+        "Delete_Last": False,
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
@@ -84,7 +84,7 @@ PART_CONFIG = {
     "ringfinger": {
         "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandRing0", "LeftHandRing1", "LeftHandRing2", "LeftHandRing3", "LeftHandRing4"],
-        "Delete_Last": True,
+        "Delete_Last": False,
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
@@ -94,7 +94,7 @@ PART_CONFIG = {
     "pinkyfinger": {
         "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandPinky0", "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", "LeftHandPinky4"],
-        "Delete_Last": True,
+        "Delete_Last": False,
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
@@ -104,7 +104,7 @@ PART_CONFIG = {
     "thumbfinger": {
         "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandThumb1", "LeftHandThumb2", "LeftHandThumb3", "LeftHandThumb4"],
-        "Delete_Last": True,
+        "Delete_Last": False,
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
@@ -145,6 +145,56 @@ PART_CONFIG = {
         "Axes": ["Y", "Z", "X"],
         "Names": ["Mouth_M_UpperLip_01", "Mouth_L_UpperLip_02", "Mouth_L_UpperLip_03", "Mouth_L_UpperLip_04", "Mouth_L_UpperLip_05", "Mouth_L_CornerLip", "Mouth_L_LowerLip_05", "Mouth_L_LowerLip_04", "Mouth_L_LowerLip_03", "Mouth_L_LowerLip_02", "Mouth_M_LowerLip_01"],
         "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEeyeball": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Eye_L_EyeCenterPivot", "Eye_L_Aim",],
+        "Delete_Last": True,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEeyeiris": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Eye_L_Iris_01", "Eye_L_Iris_02", "Eye_L_Iris_03", "Eye_L_Iris_04", "Eye_L_Iris_05", "Eye_L_Iris_06", "Eye_L_Iris_07", "Eye_L_Iris_08", "Eye_L_Iris_09", "Eye_L_Iris_10", "Eye_L_Iris_11", "Eye_L_Iris_12", "Eye_L_Iris_13", "Eye_L_Iris_14", "Eye_L_Iris_15", "Eye_L_Iris_16"],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEeyepupil": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Eye_L_Pupil_01", "Eye_L_Pupil_02", "Eye_L_Pupil_03", "Eye_L_Pupil_04", "Eye_L_Pupil_05", "Eye_L_Pupil_06", "Eye_L_Pupil_07", "Eye_L_Pupil_08", "Eye_L_Pupil_09", "Eye_L_Pupil_10", "Eye_L_Pupil_11", "Eye_L_Pupil_12", "Eye_L_Pupil_13", "Eye_L_Pupil_14", "Eye_L_Pupil_15", "Eye_L_Pupil_16"],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEeyelid": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Eye_L_Eyelid_InnerCorner', 'Eye_L_Eyelid_InnerUpper01', 'Eye_L_Eyelid_Upper', 'Eye_L_Eyelid_OuterUpper01', 'Eye_L_Eyelid_OuterCorner', 'Eye_L_Eyelid_OuterLower01', 'Eye_L_Eyelid_Lower', 'Eye_L_Eyelid_InnerLower01'],
+        "Delete_Last": True,
+        "Guide_Type": 'Loc',
+        "BuildParent":True,
+        "Bake_To_Orient":False,
+        "Force_Planar":None
+    },
+
+    "UEeyesocket": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ['Eye_L_Socket_InnerCorner', 'Eye_L_Socket_InnerUpper01', 'Eye_L_Socket_Upper', 'Eye_L_Socket_OuterUpper01', 'Eye_L_Socket_OuterCorner', 'Eye_L_Socket_OuterLower01', 'Eye_L_Socket_Lower', 'Eye_L_Socket_InnerLower01'],
+        "Delete_Last": True,
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
@@ -371,7 +421,8 @@ def read_chain_guides(json_file):
     if parent and mc.objExists(parent):
         mc.parent(built[0], parent)
     elif BuildParent == True:
-        mc.group(empty=True, name=parent)
+        if not mc.objExists(parent):
+            mc.group(empty=True, name=parent)
         mc.parent(built[0], parent)
 
 
