@@ -341,7 +341,7 @@ PART_CONFIG = {
         "Force_Planar":None
     }, 
 
-    "UEtongue": { 
+    "UEtounge": { 
         "Axes": ["Y", "Z", "X"],
         "Names": ['Tongue_01', 'Tongue_02', 'Tongue_03', 'Tongue_04', 'Tongue_05', 'Tongue_06'],
         "Delete_Last": True,
