@@ -1,7 +1,7 @@
 {
     "part": "spine",
     "type": "chain",
-    "parent": "None",
+    "parent": "Guides",
     "guides": {
         "chain_guide_01": {
             "mesh": "Basemesh_UBMShape",

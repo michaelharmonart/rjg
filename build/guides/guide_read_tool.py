@@ -18,6 +18,41 @@ import maya.OpenMayaUI as omui
 
 GUIDE_PATH = r"G:\bobo\pipeline\pipeline\software\maya\scripts\rjg\build\guides\parts"
 
+BUILD_ORDER = [
+    "spine.json",
+    "neck.json",
+    "fullleg.json",
+    "clavicle.json",
+    "arm.json",
+    "indexfinger.json",
+    "middlefinger.json",
+    "ringfinger.json",
+    "pinkyfinger.json",
+    "thumbfinger.json",
+    "UEbase.json",
+    "UEbrow.json",
+    "UEcheek.json",
+    "UEear.json",
+    "UEeyeball.json",
+    "UEeyeiris.json",
+    "UEeyepupil.json",
+    "UEeyelid.json",
+    "UEeyesocket.json",
+    "UEjaw.json",
+    "UEjawextras.json",
+    "UEmouth.json",
+    "UEmouthcenter.json",
+    "UEnose.json",
+    "UEnosebase.json",
+    "UEteeth.json",
+    "UEbotteeth.json",
+    "UEtopteeth.json",
+    "UEtounge.json",
+
+
+]
+
+
 # ---------------- CONFIG ----------------
 
 PART_CONFIG = {
@@ -28,7 +63,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":True
 
     },
     "default": {
@@ -38,7 +73,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "clavicle": {
@@ -48,7 +83,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "foot": {
@@ -68,7 +103,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "middlefinger": {
@@ -78,7 +113,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "ringfinger": {
@@ -88,7 +123,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "pinkyfinger": {
@@ -98,7 +133,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "thumbfinger": {
@@ -108,7 +143,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "leg": {
@@ -136,9 +171,9 @@ PART_CONFIG = {
         "Names": ["Hips", "Spine", "Spine1", "Spine2", ],
         "Delete_Last": True,
         "Guide_Type": 'Joints',
-        "BuildParent":False,
+        "BuildParent":True,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":True
     },
 
     "neck": {
@@ -148,7 +183,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":None
+        "Force_Planar":True
     },
 
     "UEmouth": {
@@ -158,7 +193,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEeyeball": {
@@ -168,7 +203,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEeyeiris": {
@@ -178,7 +213,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEeyepupil": {
@@ -188,7 +223,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEeyelid": {
@@ -198,7 +233,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEeyesocket": {
@@ -208,7 +243,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEbase": {
@@ -218,7 +253,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEbase": {
@@ -228,7 +263,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEbotteeth": {
@@ -238,7 +273,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEtopteeth": {
@@ -248,7 +283,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEteeth": {
@@ -258,7 +293,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEbrow": {
@@ -268,7 +303,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEbrow": { #
@@ -278,7 +313,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEcheek": { 
@@ -288,7 +323,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },
 
     "UEear": { 
@@ -298,7 +333,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     }, 
 
     "UEjaw": { 
@@ -308,7 +343,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     }, 
 
     "UEjaw": { 
@@ -318,7 +353,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     }, 
 
     "UEjawextras": { 
@@ -328,7 +363,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     }, 
 
     "UEnose": { 
@@ -338,7 +373,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     }, 
 
     "UEnosebase": { 
@@ -348,7 +383,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     }, 
 
     "UEtounge": { 
@@ -358,7 +393,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     }, 
 
     "UEmouthcenter": { 
@@ -368,7 +403,7 @@ PART_CONFIG = {
         "Guide_Type": 'Loc',
         "BuildParent":True,
         "Bake_To_Orient":False,
-        "Force_Planar":None
+        "Force_Planar":False
     },    
     
 }
@@ -456,6 +491,128 @@ def orient_joint_primary(jnt, start_pos, next_pos, primary_axis, up_pos=None, up
         om.MAngle(euler.z).asDegrees()
     ])
 
+
+
+# ---------------- Mirror ---------------------
+
+def flip_arm():
+    clav = 'LeftShoulder'
+    if mc.objExists('RightShoulder'):
+        mc.delete('RightShoulder')
+    mc.select(clav)
+    mc.mirrorJoint(mirrorYZ=True, mirrorBehavior=True, searchReplace=('Left', 'Right'))
+
+def flip_legs():
+    hip = 'LeftUpLeg'
+    parent = mc.listRelatives('LeftFoot', parent=True)
+    if parent and parent[0] == 'LeftLeg':
+        print("LeftFoot is directly parented to LeftLeg")
+        mc.parent("LeftFoot", 'Hips')
+    if mc.objExists('RightUpLeg'):
+        mc.delete('RightUpLeg')
+        
+    mc.select(hip)
+    mc.mirrorJoint(mirrorYZ=True, mirrorBehavior=True, searchReplace=('Left', 'Right'))
+
+def flip_feet():
+    foot = 'LeftFoot'
+    if mc.objExists('RightFoot'):
+        mc.delete('RightFoot')
+    mc.select(foot)
+    mc.mirrorJoint(mirrorYZ=True, mirrorBehavior=False, searchReplace=('Left', 'Right'))
+    rename_map = {
+            'LeftHeelPiv1': 'RightHeelPiv',
+            'LeftIn1': 'RightIn',
+            'LeftOut1': 'RightOut',
+            'LeftToePiv1': 'RightToePiv'
+        }
+
+    for old_name, new_name in rename_map.items():
+        if mc.objExists(old_name):
+            mc.rename(old_name, new_name)
+
+def mirror_face():
+    for grp in ['Brow_L_guides', 'Cheek_L_guides', 'Ear_L_guides', 'Eye_L_guides']:
+
+        if not mc.objExists(grp):
+            print(f"passing {grp}")
+            continue
+
+        # ---------- create new mirrored group ----------
+        flipgrpname = grp.replace("_L_", "_R_")
+
+        if mc.objExists(flipgrpname):
+            mc.delete(flipgrpname)
+
+        mirror_grp = mc.group(empty=True, name=flipgrpname)
+
+        # ---------- get children only ----------
+        children = mc.listRelatives(grp, c=True, f=False) or []
+
+        for child in children:
+
+            if "_L_" not in child:
+                continue
+
+            new_name = child.replace("_L_", "_R_")
+
+            dup = mc.duplicate(child, rr=True, name=new_name)[0]
+
+            mc.parent(dup, mirror_grp)
+
+        # ---------- flip the whole side ----------
+        flip = mc.group(empty=True, name=flipgrpname + "_flip")
+        mc.parent(mirror_grp, flip)
+        #flip = mc.group(mirror_grp, name=flipgrpname + "_flip")
+
+        mc.setAttr(f"{flip}.scaleX", -1)
+
+        # ---------- parent where you want ----------
+        mc.parent(mirror_grp, "UEFace_guides")
+        mc.delete(flip)
+
+
+    for grp in ['Mouth_M_guides', 'Nose_guides', 'Tongue_M_guides']:
+        if not mc.objExists(grp):
+            mc.warning(f"{grp} not found")
+            return
+
+        # children only (no root)
+        children = mc.listRelatives(grp, ad=True, f=False) or []
+
+        # process deepest first
+        children.sort(key=lambda x: x.count('|'), reverse=True)
+
+        for child in children:
+
+            short = child.split('|')[-1]
+
+            if "_L_" not in short:
+                continue
+
+            # -------- duplicate --------
+            dup = mc.duplicate(child, rr=True)[0]
+
+            new_name = short.replace("_L_", "_R_")
+            dup = mc.rename(dup, new_name)
+
+            # -------- create mirror group --------
+            flip = mc.group(empty=True, name=new_name + "_mirror_grp")
+
+
+            # parent duplicated node under group
+            mc.parent(dup, flip)
+
+            # -------- flip on X --------
+            mc.setAttr(flip + ".scaleX", -1)
+
+            # -------- reparent to original parent --------
+
+            mc.parent(dup, grp)
+            mc.delete(flip)
+
+
+
 # ---------------- MAIN READER ----------------
 
 def read_type(json_file):
@@ -485,16 +642,14 @@ def read_chain_guides(json_file):
     names = cfg["Names"]
     delete_last = cfg["Delete_Last"]
     BuildParent = cfg["BuildParent"]
-    Guide_Type = cfg ["Guide_Type"]
+    Guide_Type = cfg["Guide_Type"]
     Bake_To_Orient = cfg["Bake_To_Orient"]
     Force_Planar = cfg["Force_Planar"]
 
     guides = data["guides"]
 
     built = []
-
     keys = sorted(guides.keys())
-
     pre_guide = None
 
     for i, gname in enumerate(keys):
@@ -507,94 +662,175 @@ def read_chain_guides(json_file):
         mesh = g["mesh"]
         vert_list = g["vert_list"]
         offset = g["offset"]
-        if "rotoffset" in g:
-            rotoffset = g["rotoffset"]
-        else:
-            rotoffset = None
+
+        rotoffset = g.get("rotoffset")
         up_id = g["upvect"]
 
         pos = get_position_from_vert_ids(mesh, vert_list)
         if not pos:
             continue
 
-        pos = [pos[0]+offset[0], pos[1]+offset[1], pos[2]+offset[2]]
+        pos = [
+            pos[0] + offset[0],
+            pos[1] + offset[1],
+            pos[2] + offset[2]
+        ]
 
         if names and i < len(names):
             jnt_name = names[i]
         else:
             jnt_name = f"{part}_guide_{i+1:02d}"
 
+        # -------- CREATE GUIDE --------
+
         mc.select(clear=True)
+
         if Guide_Type == 'Loc':
             jnt = mc.spaceLocator(name=jnt_name)[0]
         else:
             jnt = mc.joint(name=jnt_name)
+
         mc.xform(jnt, ws=True, t=pos)
 
         built.append(jnt)
 
         up_pos = get_upvect_position(mesh, up_id)
-        """if up_pos:
-            loc_name = f"{jnt}_UPVECT"
-            if mc.objExists(loc_name):
-                mc.delete(loc_name)
-            loc = mc.spaceLocator(name=loc_name)[0]
-            mc.xform(loc, ws=True, t=up_pos)"""
+
+        # -------- ORIENT --------
 
         if i < len(keys)-1:
 
             next_g = guides[keys[i+1]]
-            next_pos = get_position_from_vert_ids(next_g["mesh"], next_g["vert_list"])
+            next_pos = get_position_from_vert_ids(
+                next_g["mesh"],
+                next_g["vert_list"]
+            )
 
             if next_pos:
-                orient_joint_primary(jnt, pos, next_pos, axes[0], up_pos, axes[1])
+                orient_joint_primary(
+                    jnt,
+                    pos,
+                    next_pos,
+                    axes[0],
+                    up_pos,
+                    axes[1]
+                )
+
+        # -------- ROT OFFSET --------
+
         if rotoffset:
             rot = mc.getAttr(jnt + ".rotate")[0]
-            jo  = rotoffset
 
             mc.setAttr(
                 jnt + ".rotate",
-                jo[0] + rot[0],
-                jo[1] + rot[1],
-                jo[2] + rot[2]
+                rotoffset[0] + rot[0],
+                rotoffset[1] + rot[1],
+                rotoffset[2] + rot[2]
             )
 
+        # =====================================================
+        # FORCE PLANAR MODE
+        # =====================================================
 
-        if Guide_Type == 'Joints' and Bake_To_Orient == True:
-            rot = mc.getAttr(jnt + ".rotate")[0]
-            jo  = mc.getAttr(jnt + ".jointOrient")[0]
+        if Force_Planar:
 
-            mc.setAttr(
-                jnt + ".jointOrient",
-                jo[0] + rot[0],
-                jo[1] + rot[1],
-                jo[2] + rot[2]
-            )
+            ax0 = axes[0].replace("-", "")
+            ax1 = axes[1].replace("-", "")
+            ax2 = axes[2].replace("-", "")
 
-            mc.setAttr(jnt + ".rotate", 0, 0, 0)
+            # ---- Every joint ----
 
+            mc.setAttr(f"{jnt}.rotate{ax0}", 0)
 
+            r1 = mc.getAttr(f"{jnt}.rotate{ax1}")
 
+            if abs(abs(r1) - 180) <= 15:
+                mc.setAttr(f"{jnt}.rotate{ax1}", 180)
 
-        if pre_guide:
-            mc.parent(jnt, pre_guide)
-            if Force_Planar:
-                mc.setAttr(f'{jnt}.translate{axes[2]}', 0)
+            # ---- First guide ----
+
+            if i == 0:
+                if parent and mc.objExists(parent):
+                    mc.parent(jnt, parent)
+                
+                mc.makeIdentity(
+                    jnt,
+                    apply=True,
+                    rotate=True,
+                    translate=False,
+                    scale=False
+                )
+
+                if jnt_name == 'Hips':
+                    mc.setAttr(f'{jnt}.jointOrientZ', 0)
+
+            # ---- Child guides ----
+
+            else:
+                mc.parent(jnt, pre_guide)
+
+                mc.setAttr(f"{jnt}.translate{ax1}", 0)
+                mc.setAttr(f"{jnt}.translate{ax2}", 0)
+
+                mc.setAttr(f"{jnt}.rotate{ax0}", 0)
+
+                mc.makeIdentity(
+                    jnt,
+                    apply=True,
+                    rotate=True,
+                    translate=False,
+                    scale=False
+                )
+
+                # force true planar joint orient
+                mc.setAttr(f"{jnt}.jointOrient{ax0}", 0)
+                mc.setAttr(f"{jnt}.jointOrient{ax1}", 0)
+                if i == 4:
+                    mc.setAttr(f"{jnt}.jointOrient{ax2}", 0)
+
+        # =====================================================
+        # NORMAL MODE (unchanged behavior)
+        # =====================================================
+
+        else:
+
+            if Guide_Type == 'Joints' and Bake_To_Orient:
+
+                rot = mc.getAttr(jnt + ".rotate")[0]
+                jo = mc.getAttr(jnt + ".jointOrient")[0]
+
+                mc.setAttr(
+                    jnt + ".jointOrient",
+                    jo[0] + rot[0],
+                    jo[1] + rot[1],
+                    jo[2] + rot[2]
+                )
+
+                mc.setAttr(jnt + ".rotate", 0, 0, 0)
+
+            if pre_guide:
+                mc.parent(jnt, pre_guide)
+
         pre_guide = jnt
 
+    # -------- FINAL PARENTING --------
 
-    for i in range(1, len(built)):
-        mc.parent(built[i], built[i-1])
+    if not Force_Planar:
 
-    if parent and mc.objExists(parent):
-        mc.parent(built[0], parent)
-    elif BuildParent == True:
-        if not mc.objExists(parent):
-            mc.group(empty=True, name=parent)
-        mc.parent(built[0], parent)
+        for i in range(1, len(built)):
+            mc.parent(built[i], built[i-1])
 
+        if parent and mc.objExists(parent):
+            mc.parent(built[0], parent)
+
+        elif BuildParent:
+            if not mc.objExists(parent):
+                mc.group(empty=True, name=parent)
+
+            mc.parent(built[0], parent)
 
     return built
+
 
 def read_seg_guides(json_file):
 
@@ -622,7 +858,9 @@ def read_seg_guides(json_file):
 
 
     if BuildParent == True:
-        mc.group(empty=True, name=parent)
+        if not mc.objExists(parent):
+
+            mc.group(empty=True, name=parent)
 
     for i, gname in enumerate(keys):
 
@@ -744,6 +982,39 @@ def restore_ubm_mesh():
 
     print(f"Restored mesh name to {restored}")
 
+
+def build_all_guides():
+
+    mc.group(empty=True, name ='Guides')
+
+    if not os.path.exists(GUIDE_PATH):
+        mc.warning("Guide path not found.")
+        return
+
+    for filename in BUILD_ORDER:
+
+        path = os.path.join(GUIDE_PATH, filename)
+
+        if not os.path.exists(path):
+            mc.warning(f"Missing guide file: {filename}")
+            continue
+
+        print(f"Building: {filename}")
+        read_type(path)
+
+    flip_arm()
+    flip_legs()
+    flip_feet()
+    mirror_face()
+
+    mc.parent('Tongue_M_guides', 'Nose_guides', 'Mouth_M_guides', 'Jaw_M_guides', 'Eye_L_guides', 'Ear_L_guides', 'Cheek_L_guides', 'Brow_L_guides', 'UEFace_guides')
+    mc.parent('UEFace_guides', 'Guides')
+    
+
+
+    print("Build All complete.")
+
+
 # ---------------- UI ----------------
 
 class GuideReaderUI(QtWidgets.QDialog):
@@ -773,6 +1044,10 @@ class GuideReaderUI(QtWidgets.QDialog):
         layout.addWidget(self.read_btn)
 
         self.read_btn.clicked.connect(self.read_guides)
+
+        self.build_all_btn = QtWidgets.QPushButton("Build All")
+        layout.addWidget(self.build_all_btn)
+        self.build_all_btn.clicked.connect(build_all_guides)
 
         # ---------------- UBM buttons ----------------
 

@@ -1,7 +1,7 @@
 {
     "part": "UEeyeball",
     "type": "chain",
-    "parent": "Eye_L_Guides",
+    "parent": "Eye_L_guides",
     "guides": {
         "chain_guide_01": {
             "mesh": "EyesShape",

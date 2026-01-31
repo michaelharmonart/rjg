@@ -1,7 +1,7 @@
 {
     "part": "thumbfinger",
     "type": "chain",
-    "parent": "Lefthand",
+    "parent": "LeftHand",
     "guides": {
         "chain_guide_01": {
             "mesh": "Basemesh_UBMShape",

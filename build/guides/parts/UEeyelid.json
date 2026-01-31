@@ -1,7 +1,7 @@
 {
     "part": "UEeyelid",
     "type": "sequence",
-    "parent": "Eye_L_Guides",
+    "parent": "Eye_L_guides",
     "guides": {
         "seq_guide_01": {
             "mesh": "Basemesh_UBMShape",
