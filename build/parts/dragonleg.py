@@ -1,11 +1,12 @@
-import maya.cmds as mc
 from importlib import reload
 
-import rjg.build.rigModule as rModule
+import maya.cmds as mc
 import rjg.build.chain as rChain
-import rjg.libs.control.ctrl as rCtrl
+import rjg.build.rigModule as rModule
 import rjg.libs.attribute as rAttr
+import rjg.libs.control.ctrl as rCtrl
 from rjg.libs.profile import auto_profiler_tag
+
 reload(rModule)
 reload(rChain)
 reload(rCtrl)
@@ -521,7 +522,14 @@ class DragonLeg(rModule.RigModule):
         else:
             mc.group(f'Leg_{self.side}_01_FK', f'Leg_{self.side}_01_IK', f'{self.side}_leg_IK1', f'{self.side}_leg_IK2', f'{self.side}_leg_IK1', f'{self.side}_bankrollparent', name=f'{self.side}_extra_GRP')
         mc.hide(f'{self.side}_extra_GRP')
-        mc.group(f'{self.side}_extra_GRP', f'{self.side}_FK_{grpname}', f'{self.side}_IK_{grpname}', f'{self.side}_Options_{grpname}', name = f'leg_{self.side}')
+        leg_group = mc.group(
+            f"{self.side}_FK_{grpname}",
+            f"{self.side}_IK_{grpname}",
+            f"{self.side}_Options_{grpname}",
+            name=f"leg_{self.side}",
+            parent=self.part_grp
+        )
+        mc.parent(f"{self.side}_extra_GRP", self.module_grp)
         #Plugs f'Leg_{self.side}_01_bindJNT' f'{self.side}_Hip_{grpname}' f'{self.side}_FootRoot_{grpname}' f'Leg_{self.side}_01_{grpname}'
         #rAttr.Attribute(node=self.part_grp, type='plug', value=['COG_M_JNT'], name='skeletonPlugs', children_name=[f'Leg_{self.side}_01_bindJNT'])
         driven_list = [f'{self.side}_Hip_{grpname}', f'Leg_{self.side}_01_{grpname}']
@@ -537,7 +545,6 @@ class DragonLeg(rModule.RigModule):
         #rAttr.Attribute(node=self.part_grp, type='plug', value=[f'{self.side}_FootRoot_{grpname}'], name=self.main_ctrl + '_parent', children_name=name_list)
 
         mc.parent(f'Leg_{self.side}_01_bindJNT', 'COG_M_JNT')
-        mc.parent(f'leg_{self.side}', 'RIG')
         mc.parentConstraint('hip_M_CTRL', f'Leg_{self.side}_01_{grpname}', mo=True)
         mc.parentConstraint('hip_M_CTRL', f'{self.side}_Hip_{grpname}' ,mo=True)
         
@@ -688,4 +695,3 @@ class DragonLeg(rModule.RigModule):
 
 
     #####Foot Roll, we need to create a toe pivot to parent the ik toes to instead of directly to the foot control, then we can hook up to roll logic to that
-
