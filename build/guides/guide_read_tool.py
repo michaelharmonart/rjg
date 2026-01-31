@@ -58,7 +58,7 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":["X", "leg"]
+        "Force_Planar":False
     },
 
     "indexfinger": {
@@ -118,7 +118,17 @@ PART_CONFIG = {
         "Guide_Type": 'Joints',
         "BuildParent":False,
         "Bake_To_Orient":True,
-        "Force_Planar":["X", "leg"]
+        "Force_Planar":False
+    },
+
+    "fullleg": {
+        "Axes": ["Y", "-Z", "X"],
+        "Names": ["LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase", "LeftToe_End"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joints',
+        "BuildParent":False,
+        "Bake_To_Orient":True,
+        "Force_Planar":True
     },
 
     "spine": {
@@ -477,6 +487,7 @@ def read_chain_guides(json_file):
     BuildParent = cfg["BuildParent"]
     Guide_Type = cfg ["Guide_Type"]
     Bake_To_Orient = cfg["Bake_To_Orient"]
+    Force_Planar = cfg["Force_Planar"]
 
     guides = data["guides"]
 
@@ -563,8 +574,12 @@ def read_chain_guides(json_file):
             mc.setAttr(jnt + ".rotate", 0, 0, 0)
 
 
+
+
         if pre_guide:
             mc.parent(jnt, pre_guide)
+            if Force_Planar:
+                mc.setAttr(f'{jnt}.translate{axes[2]}', 0)
         pre_guide = jnt
 
 
