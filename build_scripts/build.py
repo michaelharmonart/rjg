@@ -62,7 +62,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     ## Setting parameters for individual Characters (splitting off groups)
     not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'NPC', 'Fisherman'] else True
-    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy', 'RedPanda', 'Basemesh']) else True
+    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy', 'RedPanda', 'Basemesh', 'CrowdB']) else True
 
     body_mesh = f'{character}_UBM'
 
@@ -91,7 +91,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.modelEditor(twoSidedLighting=True, displayAppearance='smoothShaded', modelPanel='modelPanel4')
         neckList = ['Neck', 'Neck1', 'Neck2','Neck3','Neck4', 'Neck5', 'Head']
         neckik = False
-    elif character in ['Basemesh', 'Drummer']:
+    elif character in ['Basemesh', 'Drummer', 'CrowdB']:
         neckList = ['Neck', 'Neck1', 'Neck2', 'Head']
     else:
         neckList = ['Neck', 'Neck1', 'Head']
@@ -122,8 +122,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             joint_num=7,
             chestoffset = True
         )
-    elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer', 'SharkGuy', 'Basemesh']:
-        if character in ['Basemesh']:
+    elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer', 'SharkGuy', 'Basemesh', 'CrowdB']:
+        if character in ['Basemesh', 'CrowdB']:
             split_weights = True
         else:
             split_weights = False
@@ -189,7 +189,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Luciana':
         neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=5,)
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50, longneck = True,  autoneckik=True)
-    elif character in ['Basemesh', 'Drummer']:
+    elif character in ['Basemesh', 'Drummer', 'CrowdB']:
         neck = rBuild.build_module(module_type='autoneck', side='M', part='neck', guide_list=neckList, ctrl_scale=10, segments=3, )
         head = rBuild.build_module(module_type='head', side='M', part='head', guide_list=['Head'], ctrl_scale=50,  autoneckik=True)
     else:    
@@ -240,7 +240,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     #
-    if character in ['Basemesh', 'Drummer']:
+    if character in ['Basemesh', 'Drummer', 'CrowdB']:
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
@@ -415,9 +415,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         jaw = rBuild.build_module(module_type='hinge', side='M', part='jaw', guide_list=['JawBase', 'JawTip'], ctrl_scale=40, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
         eyes = rBuild.build_module(module_type='look_eyes', side='M', part='lookEyes', guide_list=['eye_L', 'eye_R', 'look_L', 'look_R'], ctrl_scale=1, par_ctrl='head_M_01_CTRL', par_jnt='head_M_JNT')
     #Mirrored Base Rig Parts
-    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo', 'Basemesh'] else 'lollipop'
+    fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo', 'Basemesh', 'CrowdB'] else 'lollipop'
     curlaxis = 'Z' if character != 'Gretchen' else 'X'
-    if character in ['Basemesh', 'Drummer']:
+    if character in ['Basemesh', 'Drummer','CrowdB']:
         clavshape = 'Arch'
     else:
         clavshape = 'cube'
@@ -483,7 +483,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             data = arm.export_limb_descriptor()
         
         #Bendy Fingers
-        if character in ['Luciana', 'Basemesh']:
+        if character in ['Luciana', 'Basemesh', 'CrowdB']:
             handroll = True
         else:
             handroll = False
@@ -1092,7 +1092,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 rc.Luciana_extras(body_mesh, extras)
            except Exception as e:
                 mc.warning(e)
-    if character in ['Basemesh', 'somefin']:
+    if character in ['Basemesh', 'CrowdB']:
         import rjg.build_scripts.base_misc as rc
         reload(rc)
         if not_previs:
@@ -1356,7 +1356,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon','Eye_L_Eye_L_Lower_curve_ribbon', 'Mouth_LowerLip_surf', 'Mouth_UpperLip_surf', 'tongue', 'Eye', 'Cornea', 'Spines', 'Feathers','Feathers_SecHigh','Feathers_SecLow','Feathers_TerHigh','Feathers_TerLow', 'TailFeathers', 'hornrings', 'facefeathers']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Luciana/SkinFiles')
 
-    if character in ['Basemesh'] and face:
+    if character in ['Basemesh','CrowdB'] and face:
             for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon',]: #'Mouth_LowerLip_surf',
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
 
@@ -1662,7 +1662,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     if character in ['Bobo', 'Gretchen']:
         auto_split_all_weights('MODEL')
-    if character in ['Luciana', 'Domingo', 'Basemesh']:
+    if character in ['Luciana', 'Domingo', 'Basemesh','CrowdB']:
         auto_split_all_weights('MODEL')
     #if character == 'Domingo':
     #    auto_split_all_weights('tail')

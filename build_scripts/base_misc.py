@@ -10,12 +10,32 @@ groups = 'G:' if platform.system() == 'Windows' else '/groups'
 
 reload(rUtil)
 
+def get_skincluster(mesh):
+
+    # get shape
+    shapes = mc.listRelatives(mesh, s=True, ni=True) or []
+    if not shapes:
+        return None
+
+    shape = shapes[0]
+
+    # find connected skinCluster
+    history = mc.listHistory(shape, pdo=True) or []
+
+    for node in history:
+        if mc.nodeType(node) == "skinCluster":
+            return node
+
+    return None
+
 
 def base_extras(skin_src, skin_trg_grp, character):
     bind_joints = [jnt.split('.')[0] for jnt in mc.ls('*.bindJoint')]
     geo = mc.ls(mc.select(skin_trg_grp, hierarchy=True), selection=True)
     mc.select(skin_trg_grp, hierarchy=True)
     geo = mc.ls(selection=True, type='mesh')
+
+    sc = get_skincluster(f"{character}_UBM")
 
     sk_g = []
     group = f'{character}_EXTRAS'
@@ -41,7 +61,7 @@ def base_extras(skin_src, skin_trg_grp, character):
 
     for g in sk_g:
         #pass
-        mc.copySkinWeights(ss='skinCluster1', ds=g, surfaceAssociation='closestPoint', noMirror=True)
+        mc.copySkinWeights(ss=sc, ds=g, surfaceAssociation='closestPoint', noMirror=True)
         #rUtil.create_pxWrap([g, 'Rayden_UBM'])
 
     #read weighted skin maps 

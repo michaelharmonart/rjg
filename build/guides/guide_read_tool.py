@@ -107,7 +107,7 @@ PART_CONFIG = {
     },
 
     "middlefinger": {
-        "Axes": ["Y", "-X", "Z"],
+        "Axes": ["Y", "X", "Z"],
         "Names": ["LeftHandMiddle0", "LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3", "LeftHandMiddle4"],
         "Delete_Last": False,
         "Guide_Type": 'Joints',
@@ -117,7 +117,7 @@ PART_CONFIG = {
     },
 
     "ringfinger": {
-        "Axes": ["Y", "-X", "Z"],
+        "Axes": ["Y", "X", "Z"],
         "Names": ["LeftHandRing0", "LeftHandRing1", "LeftHandRing2", "LeftHandRing3", "LeftHandRing4"],
         "Delete_Last": False,
         "Guide_Type": 'Joints',
@@ -127,7 +127,7 @@ PART_CONFIG = {
     },
 
     "pinkyfinger": {
-        "Axes": ["Y", "-X", "Z"],
+        "Axes": ["Y", "X", "Z"],
         "Names": ["LeftHandPinky0", "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", "LeftHandPinky4"],
         "Delete_Last": False,
         "Guide_Type": 'Joints',
@@ -137,7 +137,7 @@ PART_CONFIG = {
     },
 
     "thumbfinger": {
-        "Axes": ["Y", "-X", "Z"],
+        "Axes": ["Y", "X", "Z"],
         "Names": ["LeftHandThumb1", "LeftHandThumb2", "LeftHandThumb3", "LeftHandThumb4"],
         "Delete_Last": False,
         "Guide_Type": 'Joints',
@@ -1009,7 +1009,11 @@ def build_all_guides():
 
     mc.parent('Tongue_M_guides', 'Nose_guides', 'Mouth_M_guides', 'Jaw_M_guides', 'Eye_L_guides', 'Ear_L_guides', 'Cheek_L_guides', 'Brow_L_guides', 'UEFace_guides')
     mc.parent('UEFace_guides', 'Guides')
-    
+
+
+
+    # hand and foot Pivots #HipPivot # fix chain parenting #mouth_guides not Mouth_M_guides    #center mirror creating weird shape issues #top teeth not coming in  # center Mirror Rotations need to be baked 
+
 
 
     print("Build All complete.")

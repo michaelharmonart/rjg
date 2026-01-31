@@ -147,6 +147,16 @@ class RigBuildUI(QtWidgets.QDialog):
                 "im" : None, #f"{groups}/Bobo/character/Rigs/Rig_Icon/Bee.jpg",
             },
 
+            "CrowdB" : {
+                "mp" : f"{groups}/bobo/character/Rigs/CrowdB/CrowdB_Model.mb",
+                "gp" : f"{groups}/bobo/character/Rigs/CrowdB/CrowdB_Guides.mb",
+                "ep" : f"{groups}/bobo/character/Rigs/CrowdB/CrowdB_Extras.mb",
+                "cp" : None, 
+                "sp" : f"{groups}/bobo/character/Rigs/Basemesh/SkinFiles/Basemesh_Skin.json",  
+                "pp" : None,
+                "im" : None, #f"{groups}/Bobo/character/Rigs/Rig_Icon/Bee.jpg",
+            },
+
             "Fisherman" : {
                 "mp" : f"{groups}/bobo/character/Rigs/Fisherman/Fisherman_Model.mb",
                 "gp" : f"{groups}/bobo/character/Rigs/Fisherman/Fisherman_Guides.mb",
@@ -187,7 +197,7 @@ class RigBuildUI(QtWidgets.QDialog):
         
     def create_widgets(self):
         self.char_options = QtWidgets.QComboBox()
-        self.char_options.addItems([ 'Bobo', 'Gretchen', 'Luciana', 'Domingo', 'Basemesh', 'Susaka', 'Drummer', 'Fisherman', 'Rayden', 'Robin', 'DungeonMonster', 'Skeleton', 'Jett', 'Blitz', 'Sharkguy', 'RedPanda'])
+        self.char_options.addItems([ 'Bobo', 'Gretchen', 'Luciana', 'Domingo', 'Basemesh', 'CrowdB', 'Susaka', 'Drummer', 'Fisherman', 'Rayden', 'Robin', 'DungeonMonster', 'Skeleton', 'Jett', 'Blitz', 'Sharkguy', 'RedPanda'])
         self.char_options.setFixedWidth(200)
         
         self.model_label = QtWidgets.QLabel('Model:')
