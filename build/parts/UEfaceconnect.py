@@ -206,8 +206,7 @@ class UEfaceconnect(UEface):
                 mc.addAttr(look_ctrl, longName=attr_name, attributeType="bool", keyable=True)
 
             # === 3️⃣ Create the parent constraint (Head + Root → Look Offset) ===
-            constraint_name = mc.parentConstraint(head_ctrl, root_ctrl, look_offset, maintainOffset=True)[0]
-
+            constraint_name = mc.parentConstraint(head_ctrl, root_ctrl, look_offset, maintainOffset=True)[0]            
             # === 4️⃣ Create the reverse node ===
             rev = mc.createNode("reverse", name=f"{look_ctrl}_spaceSwitch_REV")
 
@@ -552,6 +551,7 @@ class UEfaceconnect(UEface):
                 mc.addAttr(look_ctrl, longName=attr_name, attributeType="bool", keyable=True)
 
             # === 3️⃣ Create the parent constraint (Head + Root → Look Offset) ===
+            rAttr.Attribute(node="Look_M_M_CTRL_SDK_GRP", type='double', value=1, keyable=True, name='globalScale')
             constraint_name = mc.parentConstraint(head_ctrl, root_ctrl, look_offset, maintainOffset=True)[0]
 
             # === 4️⃣ Create the reverse node ===
