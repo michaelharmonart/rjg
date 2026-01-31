@@ -149,6 +149,8 @@
                 }
             },
             "code": [
+                "cmds.hide(\"${mch_group}\")",
+                "cmds.hide(\"${def_group}\")",
                 "if ${release}:",
                 "    cmds.delete(\"${guides_group}\")",
                 "    # Make Geo unselectable",
@@ -157,8 +159,7 @@
                 "else:",
                 "    # Hide Rig Groups",
                 "    cmds.hide(\"${guides_group}\")",
-                "    cmds.hide(\"${mch_group}\")",
-                "    cmds.hide(\"${def_group}\")"
+                ""
             ]
         },
         "/cleanup/enable_undo": {

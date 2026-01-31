@@ -115,7 +115,7 @@
             "/matrix_spline/spline": false,
             "/setup_file/def_groups": true,
             "/trunk/bottom_pivot": false,
-            "/trunk/trunk_spline/climb_control": true,
+            "/trunk/trunk_spline/climb_control": false,
             "/trunk/trunk_spline/controls": false,
             "/trunk/trunk_spline/trunk_scale_spline/controls": true
         }
@@ -204,6 +204,10 @@
             }
         },
         "/setup_file": {
+            "child_order": [
+                "def_groups",
+                "split_dicts"
+            ],
             "attrs": {
                 "asset_root": {
                     "value": "/groups/bobo/character/Rigs/treeclimb/build"
@@ -351,6 +355,10 @@
         },
         "/trunk/trunk_spline/climb_control": {
             "attrs": {
+                "climb_height_scale": {
+                    "type": "int",
+                    "value": "3000"
+                },
                 "control_name": {
                     "type": "raw",
                     "value": "climb"
@@ -377,7 +385,7 @@
                 "pin_matrix = cmds.createNode(\"composeMatrix\", name=f\"{pin}_matrix\")",
                 "",
                 "motion_path = cmds.createNode(\"motionPath\", name=f\"{name}_motionPath\")",
-                "cmds.setAttr(f\"{motion_path}.fractionMode\", True)",
+                "cmds.setAttr(f\"{motion_path}.fractionMode\", False)",
                 "cmds.setAttr(f\"{motion_path}.follow\", True)",
                 "cmds.connectAttr(f\"{curve_shape}.local\", f\"{motion_path}.geometryPath\")",
                 "cmds.connectAttr(f\"{motion_path}.allCoordinates\", f\"{pin}.translate\")",
@@ -402,14 +410,28 @@
                 "            parent = \"${ctl_parent}\",",
                 "        )",
                 "rjg.libs.transform.matrix_constraint(pin, control.top, keep_offset=False)",
-                "",
                 "cmds.addAttr(control.ctrl, longName=\"climbHeight\", attributeType=\"double\", keyable=True)",
+                "",
+                "y_val_scale = cmds.createNode(\"multiply\", name=f\"{control.ctrl}_yValueScale\")",
+                "cmds.connectAttr(f\"{control.ctrl}.translateY\" , f\"{y_val_scale}.input[0]\")",
+                "cmds.setAttr(f\"{y_val_scale}.input[1]\", 1/${climb_height_scale})",
+                "",
                 "u_val_scale = cmds.createNode(\"multiply\", name=f\"{motion_path}_uValueScale\")",
                 "cmds.connectAttr(f\"{control.ctrl}.climbHeight\", f\"{u_val_scale}.input[0]\")",
                 "cmds.setAttr(f\"{u_val_scale}.input[1]\", 1/100)",
-                "cmds.connectAttr(f\"{u_val_scale}.output\", f\"{motion_path}.uValue\")",
+                "cmds.setAttr(f\"{control.ctrl}.climbHeight\", 10)",
                 "",
-                "cmds.setAttr(f\"{control.ctrl}.climbHeight\", 10)"
+                "u_val_add = cmds.createNode(\"sum\", name=\"{motion_path}_uValSum\")",
+                "cmds.connectAttr(f\"{u_val_scale}.output\", f\"{u_val_add}.input[0]\")",
+                "cmds.connectAttr(f\"{y_val_scale}.output\" , f\"{u_val_add}.input[1]\")",
+                "cmds.connectAttr(f\"{u_val_add}.output\", f\"{motion_path}.uValue\")",
+                "",
+                "cmds.connectAttr(f\"{control.ctrl}.inverseMatrix\", f\"{control.ctrl}.offsetParentMatrix\")",
+                "cmds.connectAttr(f\"{control.ctrl}.translateX\" ,f\"{control.ctrl}_OFF_GRP.translateX\")",
+                "cmds.connectAttr(f\"{control.ctrl}.translateZ\" ,f\"{control.ctrl}_OFF_GRP.translateZ\")",
+                "",
+                "cmds.connectAttr(f\"{control.ctrl}.rotate\" ,f\"{control.ctrl}_OFF_GRP.rotate\")",
+                ""
             ]
         },
         "/trunk/trunk_spline/controls": {
