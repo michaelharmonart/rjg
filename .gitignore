@@ -1,5 +1,4 @@
 __pycache__/
-.vscode/
 .VSCodeCounter/
 .venv/
 curve_writer.py
