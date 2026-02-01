@@ -62,15 +62,27 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     
     ## Setting parameters for individual Characters (splitting off groups)
     not_previs = False if previs or character in ['DungeonMonster', 'Jett', 'Blitz', 'Susaka', 'NPC', 'Fisherman'] else True
-    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy', 'RedPanda', 'Basemesh', 'CrowdB']) else True
+    bony = False if (character in ['Robin', 'Rayden', 'Jett', 'Blitz', 'Bobo', 'Gretchen', 'Susaka', 'Drummer', 'Luciana', 'NPC', 'Domingo', 'Fisherman', 'Sharkguy', 'Basemesh', 'CrowdB']) else True
 
     body_mesh = f'{character}_UBM'
 
     ensure_ng_initialized()
     mc.file(new=True, f=True)
 
+    #Production
+    if character in ['Bobo', 'Gretchen']:
+        production = 'HB'
+    elif character in ['Domingo', 'Luciana', 'CrowdA', 'CrowdB', 'CrowdC']:
+        production = 'DK'
+    elif character in ['Robin', 'Rayden', 'DungeonMonster']:
+        production = 'LG'
+    elif character in ['Jett', 'Blitz']:
+        production = 'SG'
+    else:
+        production = None
+
     ### BUILD SCRIPT
-    root = rBuild.build_module(module_type='root', side='M', part='root', model_path=mp, guide_path=gp)
+    root = rBuild.build_module(module_type='root', side='M', part='root', model_path=mp, guide_path=gp, base=production)
     if ep:
         extras = rFile.import_hierarchy(ep, parent='MODEL')[0]
     #Fun Camera Thing

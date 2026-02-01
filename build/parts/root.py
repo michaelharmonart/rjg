@@ -12,7 +12,7 @@ reload(rCtrl)
 Class for root joint and control.
 '''
 class Root(rModule.RigModule):
-    def __init__(self, side=None, part='root', guide_list=None, ctrl_scale=None, model_path=None, guide_path=None, global_shape='gear_2D', root_shape='circle'):
+    def __init__(self, side=None, part='root', guide_list=None, ctrl_scale=None, model_path=None, guide_path=None, global_shape='gear_2D', root_shape='circle', base=None):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
 
         if self.guide_list:
@@ -20,7 +20,18 @@ class Root(rModule.RigModule):
         else:
             self.root_pos = (0, 0, 0)
 
-        self.global_shape = global_shape    # these two shapes are unique to root
+        if base == 'HB':
+            self.global_shape = 'HB_Base'
+        elif base == 'DK':
+            self.global_shape = 'DK_Base'
+        elif base == 'LG':
+            self.global_shape = 'LG_Base'
+        elif base == 'SG':
+            self.gloab_shape = 'SG_Base'
+        else:
+            self.global_shape = 'NewGear'
+
+        #self.global_shape = global_shape    # these two shapes are unique to root
         self.root_shape = root_shape
 
         self.create_module()
