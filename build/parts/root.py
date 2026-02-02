@@ -59,6 +59,15 @@ class Root(rModule.RigModule):
         self.root_01.tag_as_controller()
         self.root_02.tag_as_controller()
 
+        self.link_control = rCtrl.Control(parent=self.global_control.ctrl, shape='RJG_Logo', side=self.side, suffix='CTRL', name='RJG', axis='y', rig_type='global', ctrl_scale=self.ctrl_scale)
+
+        attrs = mc.listAttr(self.link_control.ctrl, keyable=True) or []
+        for attr in attrs:
+            mc.setAttr(f'{self.link_control.ctrl}.{attr}', lock=True, keyable=False, channelBox=False)
+        mc.addAttr(self.link_control.ctrl, longName='githubURL', dataType='string', keyable=True)
+        # Set the value to your GitHub page
+        mc.setAttr(f'{self.link_control.ctrl}.githubURL', 'https://github.com/SteveDunn720/rjg', type='string')
+        mc.setAttr(f'{self.link_control.ctrl}.githubURL', lock=True, keyable=False, channelBox=True)
     '''
     Places root joint and constrains it to the innermost root control.
     '''
@@ -72,6 +81,8 @@ class Root(rModule.RigModule):
 
         mc.parentConstraint(self.root_02.ctrl, self.root_joint, mo=True)
         mc.scaleConstraint(self.root_02.ctrl, self.root_joint, mo=True)
+
+        
 
 
     '''
