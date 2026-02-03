@@ -1,7 +1,7 @@
 {
     "part": "UEmouth",
     "type": "sequence",
-    "parent": "Mouth_M_guides",
+    "parent": "Mouth_guides",
     "guides": {
         "seq_guide_01": {
             "mesh": "Basemesh_UBMShape",

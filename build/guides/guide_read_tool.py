@@ -573,16 +573,13 @@ def mirror_face():
         mc.delete(flip)
 
 
-    for grp in ['Mouth_M_guides', 'Nose_guides', 'Tongue_M_guides']:
+    for grp in ['Mouth_guides', 'Nose_guides', 'Tongue_M_guides']:
         if not mc.objExists(grp):
             mc.warning(f"{grp} not found")
             return
 
         # children only (no root)
-        children = mc.listRelatives(grp, ad=False, f=False) or []
-
-        # process deepest first
-        children.sort(key=lambda x: x.count('|'), reverse=True)
+        children = mc.listRelatives(grp, children=True, f=True, type="transform") or []
 
         for child in children:
 
@@ -591,26 +588,25 @@ def mirror_face():
             if "_L_" not in short:
                 continue
 
-            # -------- duplicate --------
-            dup = mc.duplicate(child, rr=True)[0]
-
             new_name = short.replace("_L_", "_R_")
+
+            # duplicate transform + shapes
+            dup = mc.duplicate(child, rr=True)[0]
             dup = mc.rename(dup, new_name)
 
-            # -------- create mirror group --------
-            flip = mc.group(empty=True, name=new_name + "_mirror_grp")
+            # -------- store rotation --------
+            rot = mc.getAttr(dup + ".rotate")[0]   # (rx, ry, rz)
 
+            # -------- zero rotations --------
+            mc.setAttr(dup + ".rotate", 0, 0, 0)
 
-            # parent duplicated node under group
-            mc.parent(dup, flip)
+            # -------- flip translate X --------
+            tx = mc.getAttr(dup + ".translateX")
+            mc.setAttr(dup + ".translateX", tx * -1)
 
-            # -------- flip on X --------
-            mc.setAttr(flip + ".scaleX", -1)
-
-            # -------- reparent to original parent --------
-
-            mc.parent(dup, grp)
-            mc.delete(flip)
+            # -------- reapply rotations (invert Y) --------
+            rx, ry, rz = rot
+            mc.setAttr(dup + ".rotate", rx, ry* -1, rz* -1)
 
 
 
@@ -1027,7 +1023,7 @@ def build_all_guides():
     flip_feet()
     mirror_face()
 
-    mc.parent('Tongue_M_guides', 'Nose_guides', 'Mouth_M_guides', 'Jaw_M_guides', 'Eye_L_guides', 'Ear_L_guides', 'Cheek_L_guides', 'Brow_L_guides', 'UEFace_guides')
+    mc.parent('Tongue_M_guides', 'Nose_guides', 'Mouth_guides', 'Jaw_M_guides', 'Eye_L_guides', 'Ear_L_guides', 'Cheek_L_guides', 'Brow_L_guides', 'UEFace_guides')
     mc.parent('UEFace_guides', 'Guides')
 
 
