@@ -491,6 +491,7 @@ def orient_joint_primary(jnt, start_pos, next_pos, primary_axis, up_pos=None, up
         om.MAngle(euler.z).asDegrees()
     ])
 
+#
 
 
 # ---------------- Mirror ---------------------
@@ -578,7 +579,7 @@ def mirror_face():
             return
 
         # children only (no root)
-        children = mc.listRelatives(grp, ad=True, f=False) or []
+        children = mc.listRelatives(grp, ad=False, f=False) or []
 
         # process deepest first
         children.sort(key=lambda x: x.count('|'), reverse=True)
@@ -698,23 +699,25 @@ def read_chain_guides(json_file):
 
         # -------- ORIENT --------
 
-        if i < len(keys)-1:
+        if Guide_Type == 'Joints':
 
-            next_g = guides[keys[i+1]]
-            next_pos = get_position_from_vert_ids(
-                next_g["mesh"],
-                next_g["vert_list"]
-            )
+            if i < len(keys)-1:
 
-            if next_pos:
-                orient_joint_primary(
-                    jnt,
-                    pos,
-                    next_pos,
-                    axes[0],
-                    up_pos,
-                    axes[1]
+                next_g = guides[keys[i+1]]
+                next_pos = get_position_from_vert_ids(
+                    next_g["mesh"],
+                    next_g["vert_list"]
                 )
+
+                if next_pos:
+                    orient_joint_primary(
+                        jnt,
+                        pos,
+                        next_pos,
+                        axes[0],
+                        up_pos,
+                        axes[1]
+                    )
 
         # -------- ROT OFFSET --------
 
@@ -1002,6 +1005,23 @@ def build_all_guides():
         print(f"Building: {filename}")
         read_type(path)
 
+    guides = ['Jaw_M_ee', 'Eye_L_Aim', 'LowerHead_guide', 'botTeeth', 'Tongue_02', 'Tongue_03', 'Tongue_04', 'Tongue_05', 'Tongue_06' ]
+
+    for guide in guides:
+        # Get parent
+        parent = mc.listRelatives(guide, parent=True, fullPath=True)
+        if not parent:
+            continue  # skip if no parent
+
+        # Get grandparent
+        grandparent = mc.listRelatives(parent[0], parent=True, fullPath=True)
+        if grandparent:
+            mc.parent(guide, grandparent[0])
+            print(f"{guide} reparented to {grandparent[0]}")
+        else:
+            print(f"{guide} has no grandparent, skipping")
+
+
     flip_arm()
     flip_legs()
     flip_feet()
@@ -1009,6 +1029,8 @@ def build_all_guides():
 
     mc.parent('Tongue_M_guides', 'Nose_guides', 'Mouth_M_guides', 'Jaw_M_guides', 'Eye_L_guides', 'Ear_L_guides', 'Cheek_L_guides', 'Brow_L_guides', 'UEFace_guides')
     mc.parent('UEFace_guides', 'Guides')
+
+
 
 
 
