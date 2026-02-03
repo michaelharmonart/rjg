@@ -506,7 +506,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             bendbo = False
             bendy_switch=None
             
-        if character in ['Luciana']:
+        if character in ['Luciana', 'Basemesh', 'CrowdB']:
             ik_fingers = True
         else:
             ik_fingers = False
@@ -1651,7 +1651,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     print(f"Failed to set {attr}: {e}")
             else:
                 print(f"{attr} does not exist on {sc}")
-            if character in ['Luciana', 'Domingo']:
+            if character in ['Luciana', 'Domingo', 'Basemesh', 'CrowdB']:
                 mc.setAttr(f'{sc}.skinningMethod', 0)
     except Exception as e:
         print(f"Failed")

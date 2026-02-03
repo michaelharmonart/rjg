@@ -84,3 +84,4 @@ class UEjaw(UEface):
         mc.setAttr(f'{mult_node2}.input2X', -0.05)
         mc.connectAttr(f'{root_ctrl}.rotateX', f'{mult_node2}.input1X')
         mc.connectAttr(f'{mult_node2}.outputX', f'Jaw_M_larynx_M_CTRL_OFF_GRP.translateY')
+        mc.scaleConstraint('head_M_01_CTRL', f'Jaw_M_larynx_M_CTRL_CNST_GRP')

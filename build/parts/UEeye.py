@@ -334,6 +334,7 @@ class UEeye(UEface):
             jnt_name = f'{jnt_temp}_Major_JNT'
             mc.select(clear=True)
             jnt = mc.joint(name=jnt_name, rad=.2)
+            mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
             mc.xform(jnt, ws=True, t=pos, ro=(0, 0, 0))
 
             mc.parent(ctrl, offset)
@@ -435,6 +436,7 @@ class UEeye(UEface):
 
         # Create eye joint at center pivot
         eye_joint = mc.joint(name=f"{suffix}_JNT", position=pos_center, orientation=[0,0,0])
+        mc.setAttr(f'{eye_joint}.segmentScaleCompensate', 0)
         #pupil_joint = mc.joint(name=f"{suffix}pupil_JNT", position=pos_center, orientation=[0,0,0], rad=.5)
         #iris_joint = mc.joint(name=f"{suffix}iris_JNT", position=pos_center, orientation=[0,0,0], rad =.5)
         #mc.parent(pupil_joint, eye_joint)
@@ -462,6 +464,8 @@ class UEeye(UEface):
         # Create eyelid look locator at look control position
         eyelid_look_loc = mc.spaceLocator(name=eyelid_look_loc_name)[0]
         mc.xform(eyelid_look_loc, ws=True, translation=pos_aim)
+
+        mc.scaleConstraint('head_M_01_CTRL', f'{eyerot_offset}')
         
         # Create or reference LookNULL_loc at same pos but X=0
         if mc.objExists(looknull_loc_name):
@@ -474,7 +478,7 @@ class UEeye(UEface):
         mc.aimConstraint(look_ctrl, eyerot_offset, maintainOffset=True, aimVector=(1,0,0), upVector=(0,1,0), worldUpType="objectrotation", worldUpObject ='head_M_01_CTRL' ) #head_M_01_CTRL
         mc.pointConstraint(f'{suffix}_MasterControl_{side}_CTRL', f'{suffix}_JNT', maintainOffset=True,)
         mc.orientConstraint(eyerot_ctrl, eye_joint, mo=True)
-        #mc.scaleConstraint(eyerot_ctrl, eye_joint, mo=True)
+        mc.scaleConstraint(eyerot_ctrl, eye_joint, mo=True)
         #mc.scaleConstraint(f'{suffix}_MasterControl_{side}_CTRL', eyerot_ctrl, mo=True)
         mc.pointConstraint(f'{suffix}_MasterControl_{side}_CTRL', eyerot_offset, maintainOffset=True,)
         # Parent look control offset and LookNULL_loc under eyelid look locator
@@ -539,6 +543,7 @@ class UEeye(UEface):
             jnt_name = f"{guide}_JNT"
             mc.select(clear=True)
             jnt = mc.joint(name=jnt_name, rad=0.1)
+            mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
             mc.xform(jnt, ws=True, t=pos, ro=rot)
             UEface.add_to_face_bind_set(jnt)
 
@@ -611,7 +616,7 @@ class UEeye(UEface):
                 orient=True,
                 overwrite=False,
                 overwrite_name=None,
-                scale=False,
+                scale=True,
                 check_side=False,
                 CTRL_Size=0.2,
                 JNT_Size=0.5,
@@ -753,6 +758,7 @@ class UEeye(UEface):
                     jnt = mc.joint(name=f"{side}_{Part}_{num}_EE_JNT", p=pos1, radius=.1)
                     #mc.scaleConstraint(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', jnt, mo=True)
                     sel.append(jnt)
+                    mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
 
 
                 roots = []
@@ -774,6 +780,7 @@ class UEeye(UEface):
 
                     # create root at pivot
                     root = mc.joint(name=root_name, p=pivot_pos, radius=.1)
+                    mc.setAttr(f'{root}.segmentScaleCompensate', 0)
                     #mc.connectAttr(f'Eye_{side}_EyeRot_Offset_{side}_CTRL.scaleY', f'{root}.scaleY')
                     #mc.scaleConstraint(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', root, mo=True)
                     mc.select(clear=True)
@@ -839,6 +846,7 @@ class UEeye(UEface):
                     mc.addAttr(jnt, longName='Scale_Mult', attributeType='double', defaultValue=Scale_Mult, keyable=True )
                     mc.addAttr(jnt, longName='Heart_Mult', attributeType='double', defaultValue=Heart_Mult, keyable=True )
                     sel.append(jnt)
+                    mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
 
 
                 roots = []
@@ -860,6 +868,7 @@ class UEeye(UEface):
 
                     # create root at pivot
                     root = mc.joint(name=root_name, p=pivot_pos, radius=.1)
+                    mc.setAttr(f'{root}.segmentScaleCompensate', 0)
                     #mc.scaleConstraint(f'Eye_{side}_EyeRot_Offset_{side}_CTRL', root, mo=True)
                     #mc.connectAttr(f'Eye_{side}_EyeRot_Offset_{side}_CTRL.scaleY', f'{root}.scaleY')
                     mc.select(clear=True)

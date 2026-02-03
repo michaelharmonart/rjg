@@ -109,6 +109,11 @@ class UEcheek(UEface):
             side = prefix.split('_')[-1]  # "L"
             ctrl_name, top_group = UEface.build_basic_control( name=f'NLFold_{side}', shape='circle', size=.5, position=pos, rotation=rot)
             mc.parentConstraint(ctrl_name, f'{prefix}_NLFold_04_Major_jnt', mo=True)
+            mc.scaleConstraint(ctrl_name, f'{prefix}_NLFold_04_Major_jnt', mo=True)
+            mc.scaleConstraint('head_M_01_CTRL', f'{top_group}')
+            mc.scaleConstraint('head_M_01_CTRL', f'{prefix}_NLFold_02_Major_jnt')
+            mc.scaleConstraint('head_M_01_CTRL', f'{prefix}_NLFold_05_Major_jnt')
+            
 
         # Step 6 - Cheek Puff & Bone
         for name in ['Puff', 'CheekBone']:

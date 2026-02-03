@@ -155,6 +155,7 @@ class UEmouth(UEface):
             mc.select(f'{loc}_{side}_CTRL_CNST_GRP', add=True)
             mc.UVPin()
             rib_offsets.append(ctrl_offset)
+            mc.scaleConstraint('head_M_01_CTRL', f'{ctrl_offset}')
         for loc in to_remove:
             jnt, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(loc, orient=False, check_side=True, CTRL_Size=.2)
             rib_offsets.append(ctrl_offset)
@@ -272,7 +273,9 @@ class UEmouth(UEface):
                 pos = mc.xform(f'Mouth_{side}_CornerLip', q=True, ws=True, t=True)
                 jnt, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(f'Mouth_{side}_CornerLip', orient=False, check_side=True, CTRL_Size=.2, overwrite=True, overwrite_name=f'Mouth_{side}_CornerLip_Helper')
                 mc.parentConstraint(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', ctrl_offset, mo=True)
+                mc.scaleConstraint('head_M_01_CTRL', f'Mouth_{side}_CornerLip_{side}_CTRL_CNST_GRP')
                 mc.parent(ctrl_offset, 'Mouth_Extras_offsets')
+            
         
         if self.mastercontrol:
             mc.parent('Major_Mouth_L_CornerLip_Mouth_CTRL_CNST_GRP', 'Major_Mouth_R_CornerLip_Mouth_CTRL_CNST_GRP', 'UpperLip_M_M_CTRL_CNST_GRP', masterctrl)

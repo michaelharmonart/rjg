@@ -99,6 +99,9 @@ class UEbrow(UEface):
         inner_major = mc.joint(name=f'{prefix}_Inner_major_JNT', p=inner_joint_pos)
         mc.select(clear=True)
         outer_major = mc.joint(name=f'{prefix}_Outer_major_JNT', p=outer_joint_pos)
+        mc.scaleConstraint('head_M_01_CTRL', f'{outer_major}')
+        mc.scaleConstraint('head_M_01_CTRL', f'{inner_major}')
+        
 
         # Step 6 - Skin loft to 4 major joints
         skin_joints = [f'{prefix}_01_Major_JNT', f'{prefix}_02_Major_JNT', inner_major, outer_major]
@@ -147,6 +150,7 @@ class UEbrow(UEface):
         side = prefix.split('_')[-1]  # "L"
         
         mc.parentConstraint(f'{prefix}_Inner_{side}_CTRL', creaseoffset, mo=True)
+        mc.scaleConstraint('head_M_01_CTRL', f'{creaseoffset}')
 
         # Parent offset groups under master
         for _, offset in io_ctrls:
