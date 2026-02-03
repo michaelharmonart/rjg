@@ -681,3 +681,4 @@ class UEfaceconnect(UEface):
         mc.connectAttr('UpperHead_M_CTRL.rotate', 'Eye_R_MasterControl_R_CTRL_OFF_GRP.rotate')
         for side in ['L', 'R']:
             mc.scaleConstraint('head_M_01_CTRL', f'Mouth_{side}_CornerLip_{side}_CTRL_CNST_GRP')
+            mc.scaleConstraint('head_M_01_CTRL', 'Tongue_M_Curl_CTRL')
