@@ -679,3 +679,5 @@ class UEfaceconnect(UEface):
         mc.scaleConstraint('head_M_01_CTRL', 'Look_M_M_CTRL_SDK_GRP')
         mc.connectAttr('UpperHead_M_CTRL.rotate', 'Eye_L_MasterControl_L_CTRL_OFF_GRP.rotate')
         mc.connectAttr('UpperHead_M_CTRL.rotate', 'Eye_R_MasterControl_R_CTRL_OFF_GRP.rotate')
+        for side in ['L', 'R']:
+            mc.scaleConstraint('head_M_01_CTRL', f'Mouth_{side}_CornerLip_{side}_CTRL_CNST_GRP')
