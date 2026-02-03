@@ -68,6 +68,7 @@ class UEbrow(UEface):
             mc.select(loft_surface)
             mc.select(offset, add=True)
             mc.UVPin()
+            mc.scaleConstraint('head_M_01_CTRL', f'{offset}')
 
             mc.select(clear=True)
             pos = mc.xform(guide, q=True, ws=True, t=True,)

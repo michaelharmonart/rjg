@@ -112,6 +112,8 @@ class UEfaceconnect(UEface):
         print("🟡 Unsorted joints:")
         for j in unsorted:
             print(f" - {j}")
+        
+
 
         if self.custom is None:
             mc.parent('Eye_L_look_offset', 'Eye_R_look_offset', 'UpperHead_M_CTRL')
@@ -672,3 +674,6 @@ class UEfaceconnect(UEface):
 
             if mc.objExists('Tongue_M_Curl_CTRL_CNST_GRP'):
                 mc.parentConstraint('LowerHead_M_CTRL', 'Tongue_M_Curl_CTRL_CNST_GRP', mo=True)
+
+        #Common
+        mc.scaleConstraint('head_M_01_CTRL', 'Look_M_M_CTRL_SDK_GRP')

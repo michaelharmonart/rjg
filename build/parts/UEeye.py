@@ -435,10 +435,10 @@ class UEeye(UEface):
 
         # Create eye joint at center pivot
         eye_joint = mc.joint(name=f"{suffix}_JNT", position=pos_center, orientation=[0,0,0])
-        pupil_joint = mc.joint(name=f"{suffix}pupil_JNT", position=pos_center, orientation=[0,0,0], rad=.5)
-        iris_joint = mc.joint(name=f"{suffix}iris_JNT", position=pos_center, orientation=[0,0,0], rad =.5)
-        mc.parent(pupil_joint, eye_joint)
-        mc.parent(iris_joint, eye_joint)
+        #pupil_joint = mc.joint(name=f"{suffix}pupil_JNT", position=pos_center, orientation=[0,0,0], rad=.5)
+        #iris_joint = mc.joint(name=f"{suffix}iris_JNT", position=pos_center, orientation=[0,0,0], rad =.5)
+        #mc.parent(pupil_joint, eye_joint)
+        #mc.parent(iris_joint, eye_joint)
 
         look_ctrl_name = f"{suffix}_Look"
         look_ctrl, look_ctrl_offset = UEface.build_basic_control(
@@ -470,21 +470,6 @@ class UEeye(UEface):
             looknull_loc = mc.spaceLocator(name=looknull_loc_name)[0]
             pos_with_zero_x = [0, pos_aim[1], pos_aim[2]]
             mc.xform(looknull_loc, ws=True, translation=pos_with_zero_x)
-        '''
-        # Aim constraint from look control to eye joint (maintain offset)
-        mc.aimConstraint(look_ctrl, eye_joint, maintainOffset=True, aimVector=(1,0,0), upVector=(0,1,0), worldUpType="objectrotation", worldUpObject ='head_M_01_CTRL' ) #head_M_01_CTRL
-        mc.pointConstraint(f'{suffix}_MasterControl_{side}_CTRL', f'{suffix}_JNT', maintainOffset=True,)
-        # Parent look control offset and LookNULL_loc under eyelid look locator
-        mc.parentConstraint(look_ctrl, eyelid_look_loc, maintainOffset=True)
-        mc.parentConstraint(looknull_loc, eyelid_look_loc, maintainOffset=True)
-        mc.setAttr(f"{suffix}_eyelid_look_loc_parentConstraint1.{suffix}_Look_{side}_CTRLW0", 0.05)
-        # Aim constraint from eyelid look locator to master control group
-        if mc.objExists(master_ctrl_grp):
-            print('1')
-            mc.aimConstraint(eyelid_look_loc, master_ctrl_grp, maintainOffset=True, aimVector=(1,0,0), upVector=(0,1,0), worldUpType="objectrotation", worldUpObject ='head_M_01_CTRL')
-        else:
-            print(f"Warning: Master control group '{master_ctrl_grp}' not found, skipping aimConstraint.")
-        '''
         # Aim constraint from look control to eye joint (maintain offset)
         mc.aimConstraint(look_ctrl, eyerot_offset, maintainOffset=True, aimVector=(1,0,0), upVector=(0,1,0), worldUpType="objectrotation", worldUpObject ='head_M_01_CTRL' ) #head_M_01_CTRL
         mc.pointConstraint(f'{suffix}_MasterControl_{side}_CTRL', f'{suffix}_JNT', maintainOffset=True,)
@@ -648,6 +633,7 @@ class UEeye(UEface):
             eyelid_ctrls.append(ctrl)
             eyelid_offsets.append(ctrl_offset)
             mc.parent(ctrl_offset, eyelid_grp)
+            mc.scaleConstraint('head_M_01_CTRL', f'{ctrl_offset}')
 
         #Major Controls
         '''

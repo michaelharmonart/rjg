@@ -143,6 +143,7 @@ class UEmouth(UEface):
             mc.select(f'{loc}_{side}_CTRL_CNST_GRP', add=True)
             mc.UVPin()
             rib_offsets.append(ctrl_offset)
+            mc.scaleConstraint('head_M_01_CTRL', f'{ctrl_offset}')
         for loc in filtered2:
             parts = loc.split('_')
             for part in parts:

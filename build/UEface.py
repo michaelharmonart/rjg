@@ -166,6 +166,7 @@ class UEface:
         mc.parentConstraint(ctrl, jnt, mo=True)
         if scale:
             mc.scaleConstraint(ctrl, jnt, mo=True)
+        mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
 
         return jnt, ctrl, ctrl_offset
     

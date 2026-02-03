@@ -76,6 +76,7 @@ class UEcheek(UEface):
                 mc.select(ribbon_surface)
                 mc.select(offset, add=True)
                 mc.UVPin()
+                mc.scaleConstraint('head_M_01_CTRL', f'{offset}')
 
             # Step 4 - Add major joints
             major_joints = []
