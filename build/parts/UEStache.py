@@ -36,6 +36,7 @@ class UEstache(UEface):
         pos = mc.xform('Stache_M_01', q=True, ws=True, t=True)
         mc.select(clear=True)
         main_jnt = mc.joint(name='Stache_M_01_JNT', p=pos)
+        mc.setAttr(f'{main_jnt}.segmentScaleCompensate', 0)
         bindjnts = []
 
         for side in ['L', 'R']:
@@ -67,6 +68,9 @@ class UEstache(UEface):
                 bindjnts.append(jnt)
             mc.skinCluster(*bindjnts, 'mustache', tsb=True)
 
+        mc.scaleConstraint('head_M_01_CTRL', 'Stache_L_04_L_CTRL')
+        mc.scaleConstraint('head_M_01_CTRL', 'Stache_R_04_R_CTRL')
+
         
         
 
@@ -91,6 +95,7 @@ class UEstache(UEface):
                     mc.parent(maj_jnt, maj_offset, maingrp)
                     mc.hide(maj_jnt)
                     jntlist.append(maj_jnt)
+                    mc.scaleConstraint('head_M_01_CTRL', maj_offset)
                     
 
 
@@ -135,11 +140,14 @@ class UEstache(UEface):
                 mc.select(loft_surface)
                 mc.select(sub_offset, add=True)
                 mc.UVPin()
+                mc.scaleConstraint('head_M_01_CTRL', sub_offset)
 
             if self.skin:
                 for jnt in ['Cheek_L_NLFold_01_JNT', 'Cheek_L_NLFold_02_JNT', 'Cheek_L_NLFold_03_JNT', 'Cheek_L_NLFold_04_JNT', 'Cheek_L_NLFold_05_JNT', 'Cheek_R_NLFold_01_JNT', 'Cheek_R_NLFold_02_JNT', 'Cheek_R_NLFold_03_JNT', 'Cheek_R_NLFold_04_JNT', 'Cheek_R_NLFold_05_JNT', 'lowermouth_JNT', 'uppermouth_JNT', 'Mouth_L_CornerLip_JNT', 'Mouth_R_CornerLip_JNT', 'Mouth_L_UpperLip_05_JNT', 'Mouth_R_UpperLip_05_JNT', 'Mouth_L_UpperLip_04_JNT', 'Mouth_R_UpperLip_04_JNT',]:
                     bindjnts.append(jnt)
                 mc.skinCluster(*bindjnts, 'beard', tsb=True)
+
+            
 
 
             

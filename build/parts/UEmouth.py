@@ -19,7 +19,7 @@ reload(rGuide)
 reload(rXform)
 
 class UEmouth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=True, mastercontrol=True):
+    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=False, mastercontrol=True):
         super().__init__(part='Mouth', grp_name=grp_name, ctrl_scale=ctrl_scale,)
         self.Major_Mouth = Major_Mouth
         self.Major_2 = Major_2

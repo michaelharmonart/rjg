@@ -460,8 +460,8 @@ class UEfaceconnect(UEface):
             mc.parentConstraint('Major_Mouth_R_CornerLip_Mouth_CTRL','Stache_R_04_R_CTRL_SDK_GRP', mo=True)
             mc.parent('Stache_M_01_JNT', upper_jnt)
             mc.parentConstraint('LowerLip_M_M_CTRL', 'Beard_M_01_Major_M_CTRL_CNST_GRP', mo=True, )
-            mc.pointConstraint('LowerLip_M_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
-            mc.orientConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True, )
+            mc.pointConstraint('LowerLip_M_M_CTRL', 'Beard_M_03_Major_M_CTRL_SDK_GRP', mo=True, )
+            mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL_CNST_GRP', mo=True)
             mc.parent('Beard_M_01_JNT', lower_jnt)
             #mc.parentConstraint('LowerHead_M_CTRL', 'Beard_M_03_Major_M_CTRL', mo=True)
 
@@ -679,6 +679,8 @@ class UEfaceconnect(UEface):
         mc.scaleConstraint('head_M_01_CTRL', 'Look_M_M_CTRL_SDK_GRP')
         mc.connectAttr('UpperHead_M_CTRL.rotate', 'Eye_L_MasterControl_L_CTRL_OFF_GRP.rotate')
         mc.connectAttr('UpperHead_M_CTRL.rotate', 'Eye_R_MasterControl_R_CTRL_OFF_GRP.rotate')
+        mc.scaleConstraint('head_M_01_CTRL', 'Tongue_M_Curl_CTRL_CNST_GRP') #Beard_M_01_M_CTRL #Beard_M_01_M_CTRL
         for side in ['L', 'R']:
-            mc.scaleConstraint('head_M_01_CTRL', f'Mouth_{side}_CornerLip_{side}_CTRL_CNST_GRP')
-            mc.scaleConstraint('head_M_01_CTRL', 'Tongue_M_Curl_CTRL')
+            mc.scaleConstraint('head_M_01_CTRL', f'Mouth_{side}_CornerLip_{side}_CTRL_CNST_GRP')  
+            if mc.objExists(f'Stache_{side}_04_{side}_CTRL_CNST_GRP'):
+                mc.scaleConstraint('head_M_01_CTRL', f'Stache_{side}_04_{side}_CTRL_CNST_GRP')

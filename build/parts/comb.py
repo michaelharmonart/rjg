@@ -56,6 +56,7 @@ class comb(UEface):
             mastersplingroup = mc.group(empty=True, name = "comb_splines")
             mc.parent(mastergroup, 'RIG')
             mc.parent(mastersplingroup, mastergroup)
+            mc.scaleConstraint('head_M_01_CTRL', mastersplingroup)
             mc.hide(mastersplingroup)
         
         fkgrp = mc.group(empty=True, name=f'{prefix}_FK')
@@ -88,8 +89,10 @@ class comb(UEface):
                 if offsetname:
                     idx = f"{i:02d}"   # pads to 2 digits → 01, 02, 03...
                     jnt = mc.joint(name=f"{offsetname}_{idx}_JNT")
+                    mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
                 else:
                     jnt = mc.joint(name=f'{guide}_JNT')
+                    mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
                     bindjnts.append(jnt)
                     
                 
@@ -110,6 +113,8 @@ class comb(UEface):
                 else:
                     mc.parent(jnt, self.parent)
                     split_joint = jnt
+                    mc.scaleConstraint('head_M_01_CTRL', jnt)
+                    
                 
                 prejnt = jnt
                 prepos = pos
@@ -150,6 +155,7 @@ class comb(UEface):
                 else:
                     mc.parent(fkjnt, handlegrp)
                     mc.parent(fkctrl_offset, fkgrp)
+                    mc.scaleConstraint('head_M_01_CTRL', fkctrl_offset)
                 
                 prejnt = fkjnt
                 prectrl = fkctrl
@@ -176,9 +182,12 @@ class comb(UEface):
                 if offsetname:
                     idx = f"{i:02d}"   # pads to 2 digits → 01, 02, 03...
                     jnt = mc.joint(name=f"{offsetname}_{idx}_IK")
+                    mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
                     jntlist.append(jnt)
+                    #mc.scaleConstraint('head_M_01_CTRL', jnt)
                 else:
                     jnt = mc.joint(name=f'{guide}_IK')
+                    mc.setAttr(f'{jnt}.segmentScaleCompensate', 0)
 
                     #switchparent = mc.parentConstraint(jnt, f'{guide}_JNT', mo=True)
 
@@ -205,6 +214,7 @@ class comb(UEface):
                     mc.parent(jnt, prejnt)
                 else:
                     mc.parent(jnt, mastersplingroup)
+                    #mc.scaleConstraint('head_M_01_CTRL', jnt)
                     #mc.parent(jnt, handlegrp)
                 
                 prejnt = jnt
@@ -223,6 +233,7 @@ class comb(UEface):
             controllist.append(masterikctrl)
             mc.addAttr(masterikctrl, ln='stretchy', at='double', dv=1, k=True, max=1, min=0 )
             Stretch_attr = f'{masterikctrl}.stretchy'
+            mc.scaleConstraint('head_M_01_CTRL', masterikoffset)
 
             #######################################################
         ik_handle, effector, curve = mc.ikHandle(
@@ -269,6 +280,7 @@ class comb(UEface):
                 mc.parentConstraint(self.parent, cluster_handle, mo=True)
             else:
                 mc.parentConstraint(masterikctrl, cluster_handle, mo=True)
+            mc.scaleConstraint('head_M_01_CTRL', cluster_handle)
 
             #StretchControl = masterikctrl
         if Stretch:
@@ -284,13 +296,18 @@ class comb(UEface):
                 mc.connectAttr(f"{precurve}.worldSpace[0]", f"{preci}.inputCurve", force=True)
 
                 frac = mc.createNode("multiplyDivide", name=f"{curve}_Frac")
+                scalecomp = mc.createNode("multiplyDivide", name=f"{curve}_scalecomp")
 
                 # Set the operation to DIVIDE (2)
                 mc.setAttr(f"{frac}.operation", 2)
 
                 # Connect inputs
                 mc.connectAttr(f"{postci}.arcLength", f"{frac}.input1X", force=True)
-                mc.connectAttr(f"{preci}.arcLength", f"{frac}.input2X", force=True) 
+                #mc.connectAttr(f"{preci}.arcLength", f"{frac}.input2X", force=True) 
+                mc.connectAttr(f"{preci}.arcLength", f"{scalecomp}.input2X", force=True)
+                mc.connectAttr(f'comb_splines_scaleConstraint1.constraintScale.constraintScaleX', f"{scalecomp}.input1X", force=True)
+                mc.connectAttr(f"{scalecomp}.outputX", f"{frac}.input2X", force=True) 
+
 
                 md = mc.createNode("multiplyDivide", name=f"{curve}_MD")
 
