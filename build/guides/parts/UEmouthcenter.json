@@ -1,7 +1,7 @@
 {
     "part": "UEmouthcenter",
     "type": "chain",
-    "parent": "Mouth_M_guides",
+    "parent": "Mouth_guides",
     "guides": {
         "chain_guide_01": {
             "mesh": "Basemesh_UBMShape",

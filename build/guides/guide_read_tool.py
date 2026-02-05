@@ -534,43 +534,45 @@ def flip_feet():
 
 def mirror_face():
     for grp in ['Brow_L_guides', 'Cheek_L_guides', 'Ear_L_guides', 'Eye_L_guides']:
-
         if not mc.objExists(grp):
-            print(f"passing {grp}")
-            continue
+            mc.warning(f"{grp} not found")
+            return
 
-        # ---------- create new mirrored group ----------
-        flipgrpname = grp.replace("_L_", "_R_")
+        # children only (no root)
+        children = mc.listRelatives(grp, children=True, f=True, type="transform") or []
 
-        if mc.objExists(flipgrpname):
-            mc.delete(flipgrpname)
-
-        mirror_grp = mc.group(empty=True, name=flipgrpname)
-
-        # ---------- get children only ----------
-        children = mc.listRelatives(grp, c=True, f=False) or []
+        new_name = grp.replace("_L_", "_R_")
+        
+        flipgrp = mc.group(empty=True, name=new_name)
+        mc.parent(flipgrp, 'UEFace_guides')
 
         for child in children:
 
-            if "_L_" not in child:
+            short = child.split('|')[-1]
+
+            if "_L_" not in short:
                 continue
 
-            new_name = child.replace("_L_", "_R_")
+            new_name = short.replace("_L_", "_R_")
 
-            dup = mc.duplicate(child, rr=True, name=new_name)[0]
+            # duplicate transform + shapes
+            dup = mc.duplicate(child, rr=True)[0]
+            dup = mc.rename(dup, new_name)
 
-            mc.parent(dup, mirror_grp)
+            # -------- store rotation --------
+            rot = mc.getAttr(dup + ".rotate")[0]   # (rx, ry, rz)
 
-        # ---------- flip the whole side ----------
-        flip = mc.group(empty=True, name=flipgrpname + "_flip")
-        mc.parent(mirror_grp, flip)
-        #flip = mc.group(mirror_grp, name=flipgrpname + "_flip")
+            # -------- zero rotations --------
+            mc.setAttr(dup + ".rotate", 0, 0, 0)
 
-        mc.setAttr(f"{flip}.scaleX", -1)
+            # -------- flip translate X --------
+            tx = mc.getAttr(dup + ".translateX")
+            mc.setAttr(dup + ".translateX", tx * -1)
 
-        # ---------- parent where you want ----------
-        mc.parent(mirror_grp, "UEFace_guides")
-        mc.delete(flip)
+            # -------- reapply rotations (invert Y) --------
+            rx, ry, rz = rot
+            mc.setAttr(dup + ".rotate", rx, ry* -1, rz* -1)
+            mc.parent(dup, flipgrp)
 
 
     for grp in ['Mouth_guides', 'Nose_guides', 'Tongue_M_guides']:
