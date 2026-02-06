@@ -185,22 +185,15 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_l
 
     # ---- Remap for scale up ----
 
-    scale_up_remap = mc.createNode('remapValue', n=f'{mus_descriptor}_scaleUp_RMAP')
-    mc.setAttr(f'{scale_up_remap}.outputMax', 2)
+    
 
-    mc.connectAttr(f'{norm_md}.outputY', f'{scale_up_remap}.inputValue')
-    mc.connectAttr(f'{scale_up_remap}.outValue', f'{mid_jnt}.scaleZ')
-    mc.connectAttr(f'{scale_up_remap}.outValue', f'{mid_jnt}.scaleX')
 
-    # ---- Remap for scale down (inverted) ----
 
-    scale_down_remap = mc.createNode('remapValue', n=f'{mus_descriptor}_scaleDown_RMAP')
-    mc.setAttr(f'{scale_down_remap}.outputMin', 2)
-    mc.setAttr(f'{scale_down_remap}.outputMax', 0)
-    mc.connectAttr(f'{scale_down_remap}.outValue', f'{mid_jnt}.scaleY')
 
-    mc.connectAttr(f'{norm_md}.outputY', f'{scale_down_remap}.inputValue')
 
+
+
+    # ------- Split Jnts ----------
 
     split_joint = created_joints[0]
     split_joints: list[str] = [created_joints[0], created_joints[3], created_joints[1],]
@@ -226,5 +219,6 @@ build_simple_muscle_chain(
     mus_descriptor='pec01',
     tgt_limb='joint4',
     tgt_limb_twist='Y',
-    tgt_limb_pop = 'X'
+    tgt_limb_pop = 'X',
+    tgt_extra = None
 )
