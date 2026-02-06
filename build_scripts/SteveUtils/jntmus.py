@@ -1,7 +1,7 @@
 import maya.cmds as mc
 
 
-def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
+def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_limb_twist, tgt_limb_pop,):
     created_joints = []
     created_groups = []
 
@@ -40,8 +40,12 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
 
     # Bake rotations into jointOrient
 
+
+    mc.select(clear=True)
+    end_null = mc.joint(n=f'{mus_descriptor}_endNULL_JNT', p=end_pos)
+
     rot = mc.getAttr(f'{root_jnt}.rotate')[0]
-    for j in [root_jnt, end_jnt]:
+    for j in [root_jnt, end_jnt, end_null]:
         mc.setAttr(f'{j}.jointOrientX', rot[0])
         mc.setAttr(f'{j}.jointOrientY', rot[1])
         mc.setAttr(f'{j}.jointOrientZ', rot[2])
@@ -50,7 +54,11 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
         mc.setAttr(f'{j}.rotateZ', 0)
 
     # Parent end under root
-    mc.parent(end_jnt, root_jnt)
+
+
+    #mc.parent(end_jnt, root_jnt)
+    mc.parent(end_jnt, end_null)
+    mc.parent(end_null, root_jnt)
 
 
     # Store orient for later use if needed
@@ -78,17 +86,27 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
     
 
     # ----------------------------
-    # Mid joint
+    # Mid jointa
     # ----------------------------
 
     mc.select(clear=True)
     mid_jnt = mc.joint(n=f'{mus_descriptor}_mid_JNT', p=root_pos)
+    mc.select(clear=True)
+    mid_null = mc.joint(n=f'{mus_descriptor}_midNULL_JNT', p=root_pos)
+
 
     mc.setAttr(f'{mid_jnt}.jointOrientX', root_orient[0])
     mc.setAttr(f'{mid_jnt}.jointOrientY', root_orient[1])
     mc.setAttr(f'{mid_jnt}.jointOrientZ', root_orient[2])
 
-    mc.parent(mid_jnt, root_jnt)
+    mc.setAttr(f'{mid_null}.jointOrientX', root_orient[0])
+    mc.setAttr(f'{mid_null}.jointOrientY', root_orient[1])
+    mc.setAttr(f'{mid_null}.jointOrientZ', root_orient[2])
+
+    #mc.parent(mid_jnt, root_jnt)
+    mc.parent(mid_null, root_jnt)
+    mc.parent(mid_jnt, mid_null)
+
 
     created_joints.append(mid_jnt)
 
@@ -139,7 +157,7 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
         mo=False
     )
 
-    mc.parentConstraint(tgt_loc, end_jnt, mo=True)
+    mc.parentConstraint(tgt_loc, end_null, mo=True)
 
     # ----------------------------
     # Mid translate driver (simple MD)
@@ -148,8 +166,8 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
     mid_md = mc.createNode('multiplyDivide', n=f'{mus_descriptor}_mid_translate_MD')
     mc.setAttr(f'{mid_md}.input2Y', 0.5)
 
-    mc.connectAttr(f'{end_jnt}.translateY', f'{mid_md}.input1Y')
-    mc.connectAttr(f'{mid_md}.outputY', f'{mid_jnt}.translateY')
+    mc.connectAttr(f'{end_null}.translateY', f'{mid_md}.input1Y')
+    mc.connectAttr(f'{mid_md}.outputY', f'{mid_null}.translateY')
 
     # ============================================================
     # ===================== FUN SECTION ==========================
@@ -160,10 +178,10 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
     norm_md = mc.createNode('multiplyDivide', n=f'{mus_descriptor}_normalize_MD')
     mc.setAttr(f'{norm_md}.operation', 2)  # divide
 
-    current_len = mc.getAttr(f'{end_jnt}.translateY')
+    current_len = mc.getAttr(f'{end_null}.translateY')
     mc.setAttr(f'{norm_md}.input2Y', current_len)
 
-    mc.connectAttr(f'{end_jnt}.translateY', f'{norm_md}.input1Y')
+    mc.connectAttr(f'{end_null}.translateY', f'{norm_md}.input1Y')
 
     # ---- Remap for scale up ----
 
@@ -171,13 +189,15 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
     mc.setAttr(f'{scale_up_remap}.outputMax', 2)
 
     mc.connectAttr(f'{norm_md}.outputY', f'{scale_up_remap}.inputValue')
-    mc.connectAttr(f'{scale_up_remap}.outValue', f'{mid_jnt}.scaleY')
+    mc.connectAttr(f'{scale_up_remap}.outValue', f'{mid_jnt}.scaleZ')
+    mc.connectAttr(f'{scale_up_remap}.outValue', f'{mid_jnt}.scaleX')
 
     # ---- Remap for scale down (inverted) ----
 
     scale_down_remap = mc.createNode('remapValue', n=f'{mus_descriptor}_scaleDown_RMAP')
     mc.setAttr(f'{scale_down_remap}.outputMin', 2)
     mc.setAttr(f'{scale_down_remap}.outputMax', 0)
+    mc.connectAttr(f'{scale_down_remap}.outValue', f'{mid_jnt}.scaleY')
 
     mc.connectAttr(f'{norm_md}.outputY', f'{scale_down_remap}.inputValue')
 
@@ -201,8 +221,10 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb):
                 
                                 
 build_simple_muscle_chain(
-    mus_root='tempPivot_loc_01',
-    mus_end='tempPivot_loc_04',
+    mus_root='joint9',
+    mus_end='joint10',
     mus_descriptor='pec01',
-    tgt_limb='arm_L_01_JNT'
+    tgt_limb='joint4',
+    tgt_limb_twist='Y',
+    tgt_limb_pop = 'X'
 )
