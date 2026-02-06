@@ -1,7 +1,7 @@
 import maya.cmds as mc
 
 
-def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_limb_twist, tgt_limb_pop,):
+def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_limb_twist, tgt_limb_pop, tgt_limb_stretch, tgt_extra):
     created_joints = []
     created_groups = []
 
@@ -173,6 +173,8 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_l
     # ===================== FUN SECTION ==========================
     # ============================================================
 
+
+
     # ---- Divide normalize MD ----
 
     norm_md = mc.createNode('multiplyDivide', n=f'{mus_descriptor}_normalize_MD')
@@ -185,15 +187,25 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_l
 
     # ---- Remap for scale up ----
 
-    
+    md = mc.createNode('multiplyDivide', name=f'{mus_descriptor}_MD')
 
+    mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{md}.input1X')
+    mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{md}.input1Y')
+    mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_stretch}', f'{md}.input1Z')
+    mc.setAttr(f'{md}.input2X', -.5)
+    mc.setAttr(f'{md}.input2Y', .1)
+    mc.setAttr(f'{md}.input2Z', -.5)
 
-
-
-
+    mc.connectAttr(f'{md}.outputX', f'{end_jnt}.rotate{tgt_limb_stretch}')
+    mc.connectAttr(f'{md}.outputY', f'{mid_jnt}.translate{tgt_limb_pop}')
+    mc.connectAttr(f'{md}.outputZ', f'{end_jnt}.rotate{tgt_limb_pop}')
 
 
     # ------- Split Jnts ----------
+
+    dup = mc.duplicate(root_jnt, renameChildren=True, inputConnections=False)
+    
+
 
     split_joint = created_joints[0]
     split_joints: list[str] = [created_joints[0], created_joints[3], created_joints[1],]
@@ -220,5 +232,8 @@ build_simple_muscle_chain(
     tgt_limb='joint4',
     tgt_limb_twist='Y',
     tgt_limb_pop = 'X',
-    tgt_extra = None
+    tgt_limb_stretch = 'Z',
+    tgt_extra = None,
+    par_jnt = ''
+
 )
