@@ -1,7 +1,58 @@
 import maya.cmds as mc
 
+def build_basic_control(name='Main', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=(0, 0, 0), rotation=(0, 0, 0)):
+    """
+    Builds a basic control with an offset group. The offset group holds the transform.
+    Uses RGB override color instead of color index.
 
-def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_limb_twist, tgt_limb_pop, tgt_limb_stretch, tgt_extra):
+    Args:
+        name (str): Control name.
+        shape (str): Shape type (currently just 'circle' supported).
+        size (float): Size of the control.
+        color_rgb (tuple): RGB color override.
+        position (tuple): World position (x, y, z).
+        rotation (tuple): World rotation (x, y, z).
+
+    Returns:
+        ctrl (str): The name of the control.
+        offset_grp (str): The name of the offset group.
+    """
+    # Create the control
+    ctrl = mc.circle(name=f'{name}_CTRL', normal=[0, 1, 0], radius=size, ch=False)[0]
+
+    # Create offset group
+    offset_grp = mc.group(empty=True, name=f"{name}_GRP")
+    mc.parent(ctrl, offset_grp)
+
+    # Apply world-space transform to the group
+    mc.xform(offset_grp, ws=True, translation=position, rotation=rotation)
+
+    # Set control color using RGB
+    mc.setAttr(f"{ctrl}.overrideEnabled", 1)
+    mc.setAttr(f"{ctrl}.overrideRGBColors", 1)
+    mc.setAttr(f"{ctrl}.overrideColorRGB", color_rgb[0], color_rgb[1], color_rgb[2], type="double3")
+
+    return ctrl, offset_grp
+
+
+def build_simple_muscle_chain(
+    mus_root='joint9',
+    mus_end='joint10',
+    mus_descriptor='pec01',
+    tgt_limb='joint4',
+    tgt_limb_twist='Y',
+    tgt_limb_pop = 'X',
+    tgt_limb_stretch = 'Z',
+    tgt_extra = None,
+    par_jnt = 'joint2',
+    tgt_name = 'pec_insert',
+    pop_mult=.1,
+    slide_mult = -2,
+    segments = 1,
+    match_index=None,
+    buildControl=True,
+    Control_parent=None
+):
     created_joints = []
     created_groups = []
 
@@ -129,20 +180,31 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_l
 
         created_groups.extend([top_grp, offset_grp])
 
-        # Locator
-        tgt_loc = mc.spaceLocator(n=f'{tgt_limb}_tgt_loc')[0]
-        mc.xform(tgt_loc, ws=True, t=end_pos)
-
-        loc_grp = mc.group(tgt_loc, n=f'{tgt_limb}_tgt_loc_GRP')
-        mc.parent(loc_grp, offset_grp)
-
         mc.parentConstraint(tgt_limb, top_grp, mo=True)
+
+        
+
 
     else:
         offset_grp = mc.listRelatives(top_grp, c=True, type='transform')[0]
         created_groups.extend([top_grp, offset_grp])
-        tgt_loc = f'{tgt_limb}_tgt_loc'
-        loc_grp = f'{tgt_limb}_tgt_loc_GRP'
+        #tgt_loc = f'{tgt_limb}_tgt_loc'
+        #loc_grp = f'{tgt_limb}_tgt_loc_GRP'
+
+    # Locator
+    if not mc.objExists(f'{tgt_limb}_{tgt_name}_tgt_loc'):
+
+        tgt_loc = mc.spaceLocator(n=f'{tgt_limb}_{tgt_name}_tgt_loc')[0]
+        mc.xform(tgt_loc, ws=True, t=end_pos)
+
+        loc_grp = mc.group(tgt_loc, n=f'{tgt_limb}_{tgt_name}_tgt_loc_GRP')
+        mc.parent(loc_grp, offset_grp)
+    else:
+        tgt_loc = f'{tgt_limb}_{tgt_name}_tgt_loc'
+        loc_grp = f'{tgt_limb}_{tgt_name}_tgt_loc_GRP'
+
+    
+
 
     # ----------------------------
     # Constraints
@@ -188,29 +250,79 @@ def build_simple_muscle_chain(mus_root, mus_end, mus_descriptor, tgt_limb, tgt_l
     # ---- Remap for scale up ----
 
     md = mc.createNode('multiplyDivide', name=f'{mus_descriptor}_MD')
+    mdslide = mc.createNode('multiplyDivide', name=f'{mus_descriptor}Slide_MD')
 
-    mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{md}.input1X')
-    mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{md}.input1Y')
-    mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_stretch}', f'{md}.input1Z')
-    mc.setAttr(f'{md}.input2X', -.5)
-    mc.setAttr(f'{md}.input2Y', .1)
-    mc.setAttr(f'{md}.input2Z', -.5)
+    if tgt_extra:
+        adpop = mc.createNode('addDL', name=f'{mus_descriptor}_pop_AD')
+        mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{adpop}.input1')
+        mc.connectAttr(f'{tgt_extra}.rotate{tgt_limb_pop}', f'{adpop}.input2')
+        tgt_swingpop = f'{adpop}.output'
+        adstretch = mc.createNode('addDL', name=f'{mus_descriptor}_stretch_AD')
+        mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_stretch}', f'{adstretch}.input1')
+        mc.connectAttr(f'{tgt_extra}.rotate{tgt_limb_stretch}', f'{adstretch}.input2')
+        tgt_swingstretch = f'{adstretch}.output'
+    else:
+        tgt_swingpop = f'{tgt_limb}.rotate{tgt_limb_pop}'
+        tgt_swingstretch = f'{tgt_limb}.rotate{tgt_limb_stretch}'
+
+    mc.connectAttr(tgt_swingpop, f'{md}.input1X')
+    mc.connectAttr(tgt_swingpop, f'{md}.input1Y')
+    mc.connectAttr(tgt_swingstretch, f'{md}.input1Z')
+    mc.connectAttr(tgt_swingpop, f'{mdslide}.input1X')
+
+    mc.addAttr(root_jnt, longName='PopMult', at='double', dv=pop_mult, k=True)
+    mc.addAttr(root_jnt, longName='AutoRot', at='double', dv=-.5, k=True)
+    mc.addAttr(root_jnt, longName='Slide_mult', at='double', dv=slide_mult, k=True)
+
+    mc.connectAttr(f'{root_jnt}.AutoRot', f'{md}.input2X')
+    mc.connectAttr(f'{root_jnt}.PopMult', f'{md}.input2Y')
+    mc.connectAttr(f'{root_jnt}.AutoRot', f'{md}.input2Z')
+    mc.connectAttr(f'{root_jnt}.Slide_mult', f'{mdslide}.input2X')
+
+    #mc.setAttr(f'{md}.input2X', -.5)
+    #mc.setAttr(f'{md}.input2Y', .1)
+    #mc.setAttr(f'{md}.input2Z', -.5)
 
     mc.connectAttr(f'{md}.outputX', f'{end_jnt}.rotate{tgt_limb_stretch}')
     mc.connectAttr(f'{md}.outputY', f'{mid_jnt}.translate{tgt_limb_pop}')
     mc.connectAttr(f'{md}.outputZ', f'{end_jnt}.rotate{tgt_limb_pop}')
+    mc.connectAttr(f'{mdslide}.outputX', f'{mid_jnt}.translate{tgt_limb_twist}')
 
 
     # ------- Split Jnts ----------
-
-    dup = mc.duplicate(root_jnt, renameChildren=True, inputConnections=False)
     
+    bind_jnts = []
+    for i, jnt in enumerate([root_jnt, mid_jnt, end_jnt]):
+
+        pos = mc.xform(jnt, q=True, ws=True, t=True)
+        mc.select(clear=True)
+        j = mc.joint(n=f'{mus_descriptor}_{i}_JNT', p=pos)
+
+        mc.setAttr(f'{j}.jointOrientX', rot[0])
+        mc.setAttr(f'{j}.jointOrientY', rot[1])
+        mc.setAttr(f'{j}.jointOrientZ', rot[2])
+
+        if i == 0:
+            mc.parent(j, par_jnt)
+        else:
+            mc.parent(j, f'{mus_descriptor}_0_JNT')
+
+        if i == 1 and buildControl:
+            ctrl, offset = build_basic_control(name=f'{mus_descriptor}', shape='circle', size=1.0, color_rgb=(1, 1, 0), position=pos, rotation=rot)
+            mc.parentConstraint(ctrl, j)
+            mc.parentConstraint(jnt, offset)
+        else:
+            mc.parentConstraint(jnt, j)
+        
+        bind_jnts.append(j)
+        
 
 
-    split_joint = created_joints[0]
-    split_joints: list[str] = [created_joints[0], created_joints[3], created_joints[1],]
+    split_joint = bind_jnts[0]
+    split_joints: list[str] = [bind_jnts[0], bind_jnts[1], bind_jnts[2],]
     mc.addAttr(split_joint, longName="split_joints", dataType="string")
     mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
+    mc.parentConstraint(par_jnt, root_null, mo=True)
 
     # ============================================================
     # ============================================================
@@ -233,7 +345,13 @@ build_simple_muscle_chain(
     tgt_limb_twist='Y',
     tgt_limb_pop = 'X',
     tgt_limb_stretch = 'Z',
-    tgt_extra = None,
-    par_jnt = ''
+    tgt_extra = 'joint3',
+    par_jnt = 'joint2',
+    tgt_name = 'pec_insert',
+    pop_mult=.05,
+    slide_mult = -2,
+    segments = 1,
+    match_index=None,
+    buildControl=True
 
 )
