@@ -692,6 +692,12 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         for side in ['L', 'R']:
             from rjg.build.parts.LucianaCorrectives import Build_Correctives
             Build_Correctives(side=side)
+
+
+    if character in ['Basemesh']:
+        for side in ['L', 'R']:
+            from rjg.build.parts.BaseCorrectives import Build_Correctives
+            Build_Correctives(side=side)
     
     if character == 'Sharkguy':
         tail = rBuild.build_module(module_type='tail', side='M', part='tail', guide_list=['Tail01', 'Tail02', 'Tail03', 'Tail04', 'Tail05', 'Tail06', 'TailFin01', 'TailFin02', 'TailFin03'], ctrl_scale=10, pad=2)
