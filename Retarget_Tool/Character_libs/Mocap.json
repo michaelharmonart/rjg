@@ -55,7 +55,7 @@
         },
         "Type": "FK",
         "MO": true,
-        "Mirror": false,
+        "Mirror": true,
         "Mirror_Label": [
             "Left",
             "Right"
@@ -76,7 +76,7 @@
         },
         "Type": "FK",
         "MO": true,
-        "Mirror": false,
+        "Mirror": true,
         "Mirror_Label": [
             "Left",
             "Right"
@@ -115,7 +115,7 @@
         },
         "Type": "Root",
         "MO": true,
-        "Mirror": false,
+        "Mirror": true,
         "Mirror_Label": [
             "Left",
             "Right"

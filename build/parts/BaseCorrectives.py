@@ -31,6 +31,7 @@ def build_simple_muscle_chain(
     Control_parent=None,
     split=False,
     Extra_Twist=None,
+    rig_module=None
 ):
     created_joints = []
     created_groups = []
@@ -48,8 +49,10 @@ def build_simple_muscle_chain(
 
     mc.select(clear=True)
     root_jnt = mc.joint(n=f'{mus_descriptor}_root_JNT', p=root_pos)
+    mc.setAttr(f'{root_jnt}.segmentScaleCompensate', 0)
     mc.select(clear=True)
     end_jnt = mc.joint(n=f'{mus_descriptor}_end_JNT', p=end_pos)
+    mc.setAttr(f'{end_jnt}.segmentScaleCompensate', 0)
 
     created_joints.extend([root_jnt, end_jnt])
 
@@ -73,6 +76,7 @@ def build_simple_muscle_chain(
 
     mc.select(clear=True)
     end_null = mc.joint(n=f'{mus_descriptor}_endNULL_JNT', p=end_pos)
+    mc.setAttr(f'{end_null}.segmentScaleCompensate', 0)
 
     rot = mc.getAttr(f'{root_jnt}.rotate')[0]
     for j in [root_jnt, end_jnt, end_null]:
@@ -104,6 +108,7 @@ def build_simple_muscle_chain(
 
     mc.select(clear=True)
     root_null = mc.joint(n=f'{mus_descriptor}_RootNULL_JNT', p=root_pos)
+    mc.setAttr(f'{root_null}.segmentScaleCompensate', 0)
 
     mc.setAttr(f'{root_null}.jointOrientX', root_orient[0])
     mc.setAttr(f'{root_null}.jointOrientY', root_orient[1])
@@ -121,8 +126,10 @@ def build_simple_muscle_chain(
 
     mc.select(clear=True)
     mid_jnt = mc.joint(n=f'{mus_descriptor}_mid_JNT', p=root_pos)
+    mc.setAttr(f'{mid_jnt}.segmentScaleCompensate', 0)
     mc.select(clear=True)
     mid_null = mc.joint(n=f'{mus_descriptor}_midNULL_JNT', p=root_pos)
+    mc.setAttr(f'{mid_null}.segmentScaleCompensate', 0)
 
 
     mc.setAttr(f'{mid_jnt}.jointOrientX', root_orient[0])
@@ -209,7 +216,14 @@ def build_simple_muscle_chain(
     md = mc.createNode('multiplyDivide', name=f'{mus_descriptor}_MD')
     mdslide = mc.createNode('multiplyDivide', name=f'{mus_descriptor}Slide_MD')
 
+    #if tgt_limb.startswith('clavicle_'):
+    #    tgt_limb_pop, tgt_limb_stretch = tgt_limb_stretch, tgt_limb_pop
+
     if tgt_extra:
+        #if tgt_extra.startswith('clavicle_'):
+        #    exttgt_limb_pop, exttgt_limb_stretch = tgt_limb_stretch, tgt_limb_pop
+        #else:
+        #    exttgt_limb_pop, exttgt_limb_stretch = tgt_limb_pop, tgt_limb_stretch
         adpop = mc.createNode('addDL', name=f'{mus_descriptor}_pop_AD')
         mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{adpop}.input1')
         mc.connectAttr(f'{tgt_extra}.rotate{tgt_limb_pop}', f'{adpop}.input2')
@@ -246,17 +260,24 @@ def build_simple_muscle_chain(
     for i, jnt in enumerate([root_jnt, mid_jnt, end_jnt]):
 
         pos = mc.xform(jnt, q=True, ws=True, t=True)
-        mc.select(clear=True)
-        j = mc.joint(n=f'{mus_descriptor}_{i}_JNT', p=pos)
+        if i == 0:
+            mc.select(par_jnt)
+            j = mc.joint(n=f'{mus_descriptor}_{i}_JNT', p=pos)
+        else:
+            mc.select( f'{mus_descriptor}_0_JNT')
+            j = mc.joint(n=f'{mus_descriptor}_{i}_JNT', p=pos)
 
+        rig_module.tag_bind_joints(j)
+
+        mc.setAttr(f'{j}.segmentScaleCompensate', 0)
         mc.setAttr(f'{j}.jointOrientX', rot[0])
         mc.setAttr(f'{j}.jointOrientY', rot[1])
         mc.setAttr(f'{j}.jointOrientZ', rot[2])
 
-        if i == 0:
+        '''if i == 0:
             mc.parent(j, par_jnt)
         else:
-            mc.parent(j, f'{mus_descriptor}_0_JNT')
+            mc.parent(j, f'{mus_descriptor}_0_JNT')'''
 
         if i == 1 and buildControl:
             control = rCtrl.Control(parent=None, shape="hexagon", side=None, suffix='CTRL', name=f'{mus_descriptor}', axis='y', group_type='main', rig_type='primary', translate=mid_jnt, rotate=mid_jnt, ctrl_scale=1)
@@ -266,7 +287,11 @@ def build_simple_muscle_chain(
             mc.parentConstraint(jnt, j)
         
         bind_jnts.append(j)
-        
+
+    try:
+        mc.parent(root_null, control.top, top_grp, 'CorrectiveRigParts', )
+    except:
+        pass    
 
     if split:
         split_joint = bind_jnts[0]
@@ -299,6 +324,10 @@ def Build_Correctives(side='L'):
             SideShort = 'R'
             SideLong = 'Right'
 
+    cor_root = mc.group(empty=True, name='CorrectiveRigParts')
+    mc.parent(cor_root, 'RIG')
+
+
     mus_corrective_dict = {
     f"pec_{SideShort}_01": {
         "mus_root": f"{SideLong}_Pec01",
@@ -310,12 +339,12 @@ def Build_Correctives(side='L'):
         "tgt_extra":f'clavicle_{SideShort}_01_JNT',
         "par_jnt":f'chest_M_JNT',
         "tgt_name":f'pec_{SideShort}_insert',
-        "pop_mult":.05,
-        "slide_mult":-2,
+        "pop_mult":-.05,
+        "slide_mult":0,
         "segments":1,
         "match_index":None,
         "buildControl":True,
-        "split":True,
+        "split":False,
         "Extra_Twist":f'arm_{SideShort}_02_JNT',
         "Control_parent":f'clavicle_{SideShort}_CTRL'
         },
@@ -330,12 +359,12 @@ def Build_Correctives(side='L'):
         "tgt_extra":f'clavicle_{SideShort}_01_JNT',
         "par_jnt":f'chest_M_JNT',
         "tgt_name":f'pec_{SideShort}_insert',
-        "pop_mult":.05,
-        "slide_mult":-2,
+        "pop_mult":-.05,
+        "slide_mult":0,
         "segments":1,
         "match_index":None,
         "buildControl":True,
-        "split":True,
+        "split":False,
         "Extra_Twist":f'arm_{SideShort}_02_JNT',
         "Control_parent":f'clavicle_{SideShort}_CTRL'
         },
@@ -351,11 +380,11 @@ def Build_Correctives(side='L'):
         "par_jnt":f'chest_M_JNT',
         "tgt_name":f'trap_{SideShort}_insert01',
         "pop_mult":.05,
-        "slide_mult":-2,
+        "slide_mult":0,
         "segments":1,
         "match_index":None,
         "buildControl":True,
-        "split":True,
+        "split":False,
         "Extra_Twist":f'arm_{SideShort}_02_JNT',
         "Control_parent":f'clavicle_{SideShort}_CTRL'
         },
@@ -370,11 +399,11 @@ def Build_Correctives(side='L'):
         "par_jnt":f'chest_M_JNT',
         "tgt_name":f'trap_{SideShort}_insert01',
         "pop_mult":.05,
-        "slide_mult":-2,
+        "slide_mult":0,
         "segments":1,
         "match_index":None,
         "buildControl":True,
-        "split":True,
+        "split":False,
         "Extra_Twist":f'arm_{SideShort}_02_JNT',
         "Control_parent":f'clavicle_{SideShort}_CTRL'
         },
@@ -383,21 +412,120 @@ def Build_Correctives(side='L'):
         "mus_end": f"{SideLong}_TrapInsert03",
         "tgt_limb": f'clavicle_{SideShort}_01_JNT',
         "tgt_limb_twist":'Y',
-        "tgt_limb_pop":'X',
-        "tgt_limb_stretch":'Z',
+        "tgt_limb_pop":'Z',
+        "tgt_limb_stretch":'X',
         "tgt_extra":None,
         "par_jnt":f'neck_M_01_JNT',
         "tgt_name":f'trap_{SideShort}_insert03',
         "pop_mult":.05,
-        "slide_mult":-2,
+        "slide_mult":.2,
         "segments":1,
         "match_index":None,
         "buildControl":True,
-        "split":True,
+        "split":False,
         "Extra_Twist":None,
         "Control_parent":f'clavicle_{SideShort}_CTRL'
         },
 
+    f"bicep_{SideShort}_01": {
+        "mus_root": f"{SideLong}_Bicep01",
+        "mus_end": f"{SideLong}_BicepInsert",
+        "tgt_limb": f'arm_{SideShort}_05_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
+        "tgt_extra":None,
+        "par_jnt":f'arm_{SideShort}_02_JNT',
+        "tgt_name":f'bicep_{SideShort}_insert',
+        "pop_mult":.003,
+        "slide_mult":-.05,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":None,
+        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        },
+
+    f"delt_{SideShort}_01": {
+        "mus_root": f"{SideLong}_Delt01",
+        "mus_end": f"{SideLong}_DeltInsert",
+        "tgt_limb": f'arm_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
+        "tgt_extra":None,
+        "par_jnt":f'clavicle_{SideShort}_01_JNT',
+        "tgt_name":f'delt_{SideShort}_insert',
+        "pop_mult":.02,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":None,
+        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        },
+
+    f"delt_{SideShort}_02": {
+        "mus_root": f"{SideLong}_Delt02",
+        "mus_end": f"{SideLong}_DeltInsert",
+        "tgt_limb": f'arm_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'Z',
+        "tgt_limb_stretch":'X',
+        "tgt_extra":None,
+        "par_jnt":f'clavicle_{SideShort}_01_JNT',
+        "tgt_name":f'delt_{SideShort}_insert',
+        "pop_mult":.02,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":None,
+        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        },
+
+    f"delt_{SideShort}_03": {
+        "mus_root": f"{SideLong}_Delt03",
+        "mus_end": f"{SideLong}_DeltInsert",
+        "tgt_limb": f'arm_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
+        "tgt_extra":None,
+        "par_jnt":f'clavicle_{SideShort}_01_JNT',
+        "tgt_name":f'delt_{SideShort}_insert',
+        "pop_mult":-.02,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":None,
+        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        },
+
+    f"SCM_{SideShort}_03": {
+        "mus_root": f"{SideLong}_SCM01",
+        "mus_end": f"{SideLong}_SCMInsert",
+        "tgt_limb": f'neck_M_03_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'Z',
+        "tgt_limb_stretch":'X',
+        "tgt_extra":None,
+        "par_jnt":f'neck_M_01_JNT',
+        "tgt_name":f'SCM_{SideShort}_insert',
+        "pop_mult":-.02,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":True,
+        "Extra_Twist":'head_M_JNT',
+        "Control_parent":f'chest_M_CTRL'
+        },
 
 
 
@@ -406,5 +534,6 @@ def Build_Correctives(side='L'):
     for mus_descriptor, data in mus_corrective_dict.items():
         build_simple_muscle_chain(
             mus_descriptor=mus_descriptor,
+            rig_module=rig_module,
             **data
         )

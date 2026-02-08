@@ -431,8 +431,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     curlaxis = 'Z' if character != 'Gretchen' else 'X'
     if character in ['Basemesh', 'Drummer','CrowdB']:
         clavshape = 'Arch'
+        Clavmo=True
     else:
         clavshape = 'cube'
+        Clavmo=False
 
 
 
@@ -459,7 +461,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 guide_list=[fs + piece for piece in ["Shoulder", "Arm"]],
                 local_orient=False,
                 ctrl_scale=9,
-                shape = clavshape
+                shape = clavshape,
+                mo=Clavmo,
             )
         if character in ['Luciana']:
             prop_control = False
