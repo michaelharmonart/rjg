@@ -31,6 +31,8 @@ def build_simple_muscle_chain(
     Control_parent=None,
     split=False,
     Extra_Twist=None,
+    upClamp= 180,
+    downClamp=-180,
     rig_module=None
 ):
     created_joints = []
@@ -199,6 +201,14 @@ def build_simple_muscle_chain(
         mo=True
     )
     mc.parentConstraint(tgt_loc, end_null, mo=True)
+
+    mc.addAttr(root_jnt, longName='PopMult', at='double', dv=pop_mult, k=True)
+    mc.addAttr(root_jnt, longName='AutoRot', at='double', dv=-.5, k=True)
+    mc.addAttr(root_jnt, longName='Slide_mult', at='double', dv=slide_mult, k=True)
+    mc.addAttr(root_jnt, longName='upClamp', at='double', dv=upClamp, k=True)
+    mc.addAttr(root_jnt, longName='downClamp', at='double', dv=downClamp, k=True)
+
+
     # ----------------------------
     # Mid translate driver (simple MD)
     # ----------------------------
@@ -223,6 +233,12 @@ def build_simple_muscle_chain(
     md = mc.createNode('multiplyDivide', name=f'{mus_descriptor}_MD')
     mdslide = mc.createNode('multiplyDivide', name=f'{mus_descriptor}Slide_MD')
 
+    clampremap = mc.createNode('remapValue', name=f'{mus_descriptor}_clamp_remap')
+    mc.connectAttr(f'{root_jnt}.upClamp', f'{clampremap}.inputMax')
+    mc.connectAttr(f'{root_jnt}.upClamp', f'{clampremap}.outputMax')
+    mc.connectAttr(f'{root_jnt}.downClamp', f'{clampremap}.inputMin')
+    mc.connectAttr(f'{root_jnt}.downClamp', f'{clampremap}.outputMin')
+
     #if tgt_limb.startswith('clavicle_'):
     #    tgt_limb_pop, tgt_limb_stretch = tgt_limb_stretch, tgt_limb_pop
 
@@ -234,13 +250,17 @@ def build_simple_muscle_chain(
         adpop = mc.createNode('addDL', name=f'{mus_descriptor}_pop_AD')
         mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{adpop}.input1')
         mc.connectAttr(f'{tgt_extra}.rotate{tgt_limb_pop}', f'{adpop}.input2')
-        tgt_swingpop = f'{adpop}.output'
+        mc.connectAttr(f'{adpop}.output', f'{clampremap}.inputValue')
+        tgt_swingpop = f'{clampremap}.outValue'
+        #tgt_swingpop = f'{adpop}.output'
         adstretch = mc.createNode('addDL', name=f'{mus_descriptor}_stretch_AD')
         mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_stretch}', f'{adstretch}.input1')
         mc.connectAttr(f'{tgt_extra}.rotate{tgt_limb_stretch}', f'{adstretch}.input2')
         tgt_swingstretch = f'{adstretch}.output'
     else:
-        tgt_swingpop = f'{tgt_limb}.rotate{tgt_limb_pop}'
+        #tgt_swingpop = f'{tgt_limb}.rotate{tgt_limb_pop}'
+        mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{clampremap}.inputValue')
+        tgt_swingpop = f'{clampremap}.outValue'
         tgt_swingstretch = f'{tgt_limb}.rotate{tgt_limb_stretch}'
 
     mc.connectAttr(tgt_swingpop, f'{md}.input1X')
@@ -248,9 +268,7 @@ def build_simple_muscle_chain(
     mc.connectAttr(tgt_swingstretch, f'{md}.input1Z')
     mc.connectAttr(tgt_swingpop, f'{mdslide}.input1X')
 
-    mc.addAttr(root_jnt, longName='PopMult', at='double', dv=pop_mult, k=True)
-    mc.addAttr(root_jnt, longName='AutoRot', at='double', dv=-.5, k=True)
-    mc.addAttr(root_jnt, longName='Slide_mult', at='double', dv=slide_mult, k=True)
+    
 
     mc.connectAttr(f'{root_jnt}.AutoRot', f'{md}.input2X')
     mc.connectAttr(f'{root_jnt}.PopMult', f'{md}.input2Y')
@@ -327,9 +345,11 @@ def Build_Correctives(side='L'):
         if side == 'L':
             SideShort = 'L'
             SideLong = 'Left'
+            mod=1
         elif side == 'R':
             SideShort = 'R'
             SideLong = 'Right'
+            mod=-1
 
     cor_root = mc.group(empty=True, name='CorrectiveRigParts')
     mc.parent(cor_root, 'RIG')
@@ -353,7 +373,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":f'arm_{SideShort}_02_JNT',
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
 
     f"pec_{SideShort}_02": {
@@ -373,7 +395,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":f'arm_{SideShort}_02_JNT',
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
 
     f"trap_{SideShort}_01": {
@@ -393,7 +417,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":f'arm_{SideShort}_02_JNT',
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
     f"trap_{SideShort}_02": {
         "mus_root": f"{SideLong}_Trap02",
@@ -412,7 +438,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":f'arm_{SideShort}_02_JNT',
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
     f"trap_{SideShort}_03": {
         "mus_root": f"{SideLong}_Trap03",
@@ -431,7 +459,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":None,
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":45,
+        "downClamp":-45,
         },
 
     f"bicep_{SideShort}_01": {
@@ -451,7 +481,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":None,
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
 
     f"delt_{SideShort}_01": {
@@ -471,7 +503,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":None,
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
 
     f"delt_{SideShort}_02": {
@@ -491,7 +525,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":None,
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
 
     f"delt_{SideShort}_03": {
@@ -511,7 +547,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":False,
         "Extra_Twist":None,
-        "Control_parent":f'clavicle_{SideShort}_CTRL'
+        "Control_parent":f'clavicle_{SideShort}_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
 
     f"SCM_{SideShort}_03": {
@@ -531,7 +569,9 @@ def Build_Correctives(side='L'):
         "buildControl":True,
         "split":True,
         "Extra_Twist":'head_M_JNT',
-        "Control_parent":f'chest_M_CTRL'
+        "Control_parent":f'chest_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
         },
 
 
