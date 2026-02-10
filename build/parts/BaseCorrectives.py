@@ -183,13 +183,20 @@ def build_simple_muscle_chain(
     # ----------------------------
     # Constraints
     # ----------------------------
+    if mc.objExists(f'UP_{tgt_limb}_LOC'):
+        upvectorloc = f'UP_{tgt_limb}_LOC'
+    else:
+        upvectorloc = mc.spaceLocator(name = f'UP_{tgt_limb}_LOC', position=(0,100,0))[0]
+        mc.parentConstraint(tgt_limb, upvectorloc, mo=True)
+        mc.parent(upvectorloc, 'CorrectiveRigParts')
     mc.aimConstraint(
         tgt_loc,
         root_jnt,
         aimVector=(0, 1, 0),
         upVector=(0, 0, 1),
-        worldUpType='vector',
-        mo=False
+        worldUpType='object',
+        worldUpObject=upvectorloc,
+        mo=True
     )
     mc.parentConstraint(tgt_loc, end_null, mo=True)
     # ----------------------------
