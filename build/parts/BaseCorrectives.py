@@ -33,6 +33,7 @@ def build_simple_muscle_chain(
     Extra_Twist=None,
     upClamp= 180,
     downClamp=-180,
+    flip_pop=False,
     rig_module=None
 ):
     created_joints = []
@@ -188,8 +189,9 @@ def build_simple_muscle_chain(
     if mc.objExists(f'UP_{tgt_limb}_LOC'):
         upvectorloc = f'UP_{tgt_limb}_LOC'
     else:
-        upvectorloc = mc.spaceLocator(name = f'UP_{tgt_limb}_LOC', position=(0,100,0))[0]
-        mc.parentConstraint(tgt_limb, upvectorloc, mo=True)
+        upvectorloc = mc.spaceLocator(name = f'UP_{tgt_limb}_LOC', r=False)[0]
+        mc.xform(upvectorloc, t=(0,400,0), ws=True)
+        mc.parentConstraint(par_jnt, upvectorloc, mo=True)
         mc.parent(upvectorloc, 'CorrectiveRigParts')
     mc.aimConstraint(
         tgt_loc,
@@ -275,10 +277,17 @@ def build_simple_muscle_chain(
     mc.connectAttr(f'{root_jnt}.AutoRot', f'{md}.input2Z')
     mc.connectAttr(f'{root_jnt}.Slide_mult', f'{mdslide}.input2X')
 
-    mc.connectAttr(f'{md}.outputX', f'{end_jnt}.rotate{tgt_limb_stretch}')
-    mc.connectAttr(f'{md}.outputY', f'{mid_jnt}.translate{tgt_limb_pop}')
-    mc.connectAttr(f'{md}.outputZ', f'{end_jnt}.rotate{tgt_limb_pop}')
-    mc.connectAttr(f'{mdslide}.outputX', f'{mid_jnt}.translate{tgt_limb_twist}')
+    if flip_pop == False:
+        mc.connectAttr(f'{md}.outputX', f'{end_jnt}.rotate{tgt_limb_stretch}')
+        mc.connectAttr(f'{md}.outputY', f'{mid_jnt}.translate{tgt_limb_pop}')
+        mc.connectAttr(f'{md}.outputZ', f'{end_jnt}.rotate{tgt_limb_pop}')
+        mc.connectAttr(f'{mdslide}.outputX', f'{mid_jnt}.translate{tgt_limb_twist}')
+    elif flip_pop == True:
+        mc.connectAttr(f'{md}.outputX', f'{end_jnt}.rotate{tgt_limb_stretch}')
+        mc.connectAttr(f'{md}.outputY', f'{mid_jnt}.translate{tgt_limb_stretch}')
+        mc.connectAttr(f'{md}.outputZ', f'{end_jnt}.rotate{tgt_limb_pop}')
+        mc.connectAttr(f'{mdslide}.outputX', f'{mid_jnt}.translate{tgt_limb_twist}')
+
 
     # ------- Bind Jnts ---------- 
     bind_jnts = []
@@ -376,6 +385,7 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":90,
         "downClamp":-90,
+        "flip_pop":False,
         },
 
     f"pec_{SideShort}_02": {
@@ -398,6 +408,7 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":90,
         "downClamp":-90,
+        "flip_pop":False,
         },
 
     f"trap_{SideShort}_01": {
@@ -420,18 +431,19 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":180,
         "downClamp":-180,
+        "flip_pop":False,
         },
     f"trap_{SideShort}_02": {
         "mus_root": f"{SideLong}_Trap02",
         "mus_end": f"{SideLong}_TrapInsert01",
         "tgt_limb": f"arm_{SideShort}_01_JNT",
         "tgt_limb_twist":'Y',
-        "tgt_limb_pop":'X'* mod,
+        "tgt_limb_pop":'X',
         "tgt_limb_stretch":'Z',
         "tgt_extra":f'clavicle_{SideShort}_01_JNT',
         "par_jnt":f'chest_M_JNT',
         "tgt_name":f'trap_{SideShort}_insert01',
-        "pop_mult":.09,
+        "pop_mult":.09* mod,
         "slide_mult":-.1,
         "segments":1,
         "match_index":None,
@@ -441,6 +453,7 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":180,
         "downClamp":-180,
+        "flip_pop":False,
         },
     f"trap_{SideShort}_03": {
         "mus_root": f"{SideLong}_Trap03",
@@ -462,6 +475,7 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":45,
         "downClamp":-45,
+        "flip_pop":False,
         },
 
     f"bicep_{SideShort}_01": {
@@ -484,6 +498,7 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":180,
         "downClamp":-180,
+        "flip_pop":False,
         },
 
     f"delt_{SideShort}_01": {
@@ -506,6 +521,7 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":180,
         "downClamp":-180,
+        "flip_pop":False,
         },
 
     f"delt_{SideShort}_02": {
@@ -528,6 +544,7 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":180,
         "downClamp":-180,
+        "flip_pop":False,
         },
 
     f"delt_{SideShort}_03": {
@@ -550,6 +567,7 @@ def Build_Correctives(side='L'):
         "Control_parent":f'clavicle_{SideShort}_CTRL',
         "upClamp":180,
         "downClamp":-180,
+        "flip_pop":False,
         },
 
     f"SCM_{SideShort}_03": {
@@ -572,6 +590,147 @@ def Build_Correctives(side='L'):
         "Control_parent":f'chest_M_CTRL',
         "upClamp":180,
         "downClamp":-180,
+        "flip_pop":False,
+        },
+
+        #HIP CORRECTIVES
+
+    f"PSOAS_{SideShort}_01": {
+        "mus_root": f"{SideLong}_PSOAS_01",
+        "mus_end": f"{SideLong}_PSOAS_Insert",
+        "tgt_limb": f'leg_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
+        "tgt_extra":None,
+        "par_jnt":f'COG_M_JNT',
+        "tgt_name":f'PSOAS_{SideShort}_insert',
+        "pop_mult":.1,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":f'leg_{SideShort}_01_JNT',
+        "Control_parent":f'chest_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
+        "flip_pop":False,
+        },
+
+    f"PSOAS_{SideShort}_02": {
+        "mus_root": f"{SideLong}_PSOAS_02",
+        "mus_end": f"{SideLong}_PSOAS_Insert",
+        "tgt_limb": f'leg_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
+        "tgt_extra":None,
+        "par_jnt":f'COG_M_JNT',
+        "tgt_name":f'PSOAS_{SideShort}_insert',
+        "pop_mult":.1,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":f'leg_{SideShort}_01_JNT',
+        "Control_parent":f'hip_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
+        "flip_pop":False,
+        },
+
+    f"GluteMed_{SideShort}_01": {
+        "mus_root": f"{SideLong}_GluteMed_01",
+        "mus_end": f"{SideLong}_GluteMed_Insert",
+        "tgt_limb": f'leg_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
+        "tgt_extra":None,
+        "par_jnt":f'COG_M_JNT',
+        "tgt_name":f'GluteMed_{SideShort}_insert',
+        "pop_mult":.1,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":f'leg_{SideShort}_01_JNT',
+        "Control_parent":f'hip_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
+        "flip_pop":False,
+        },
+
+    f"GluteMax_{SideShort}_02": {
+        "mus_root": f"{SideLong}_GluteMax_02",
+        "mus_end": f"{SideLong}_GluteMax_Insert",
+        "tgt_limb": f'leg_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
+        "tgt_extra":None,
+        "par_jnt":f'COG_M_JNT',
+        "tgt_name":f'GluteMax_{SideShort}_insert',
+        "pop_mult":.1,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":f'leg_{SideShort}_01_JNT',
+        "Control_parent":f'hip_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
+        "flip_pop":False,
+        },
+
+    f"GluteMax_{SideShort}_02": {
+        "mus_root": f"{SideLong}_GluteMax_01",
+        "mus_end": f"{SideLong}_GluteMax_Insert",
+        "tgt_limb": f'leg_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
+        "tgt_extra":None,
+        "par_jnt":f'COG_M_JNT',
+        "tgt_name":f'GluteMax_{SideShort}_insert',
+        "pop_mult":.1,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":f'leg_{SideShort}_01_JNT',
+        "Control_parent":f'hip_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
+        "flip_pop":False,
+        },
+
+    f"TFL_{SideShort}_01": {
+        "mus_root": f"{SideLong}_TFL_01",
+        "mus_end": f"{SideLong}_TFL_Insert",
+        "tgt_limb": f'leg_{SideShort}_01_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'Z',
+        "tgt_limb_stretch":'X',
+        "tgt_extra":None,
+        "par_jnt":f'COG_M_JNT',
+        "tgt_name":f'TFL_{SideShort}_insert',
+        "pop_mult":.1,
+        "slide_mult":0,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":f'leg_{SideShort}_01_JNT',
+        "Control_parent":f'hip_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
+        "flip_pop":False,
         },
 
 
