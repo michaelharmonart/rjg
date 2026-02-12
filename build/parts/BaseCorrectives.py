@@ -11,6 +11,76 @@ reload(rCtrl)
 reload(rAttr)
 
 
+def pop_corrective(
+    pop_root = 'joint1',
+    par_jnt = 'COG_M_JNT',
+    pop_descriptor = 'PSOAS',
+    tgt_limb = 'leg_L_01_JNT',
+    blend_par = [],
+    pop_mult = .1,
+    tgt_limb_pop = 'X',
+    pop = 'Y',
+    buildControl = True,
+    upClamp = 180,
+    downClamp = -180,
+    tgt_influence = .5,
+    rig_module=None,
+    ):
+
+    root_pos = mc.xform(pop_root, q=True, ws=True, t=True)
+    rot = mc.getAttr(f"{pop_root}.rotate")[0]
+
+    # ----------------------------
+    # Create root and end joints
+    # ----------------------------
+
+    mc.select(clear=True)
+    null_jnt = mc.joint(n=f'{pop_descriptor}_NULL_JNT', p=root_pos)
+    root_jnt = mc.joint(n=f'{pop_descriptor}_root_JNT', p=root_pos)
+    mc.setAttr(f"{root_jnt}.jointOrient", rot[0], rot[1], rot[2])
+    end_jnt = mc.joint(n=f'{pop_descriptor}_end_JNT', p=root_pos)
+
+
+    if blend_par == []:
+        mc.parentConstraint(par_jnt, null_jnt, mo=True)
+        orc = mc.orientConstraint(tgt_limb, root_jnt, mo=True)[0]
+        mc.addAttr(root_jnt, longName='tgt_rot_influence', k=True, dv=tgt_influence)
+        mc.connectAttr(f'{root_jnt}.tgt_rot_influence', f'{orc}.{tgt_limb}W0' )
+    else:
+        for i, tgt in enumerate(blend_par):
+            con = mc.parentConstraint(tgt, root_jnt, mo=True)[0]
+            attr_name = f"{tgt}_Influence"
+            mc.addAttr(root_jnt, longName=f'{tgt}_Influence', at='double', dv=1)
+            mc.connectAttr(f"{root_jnt}.{attr_name}", f"{con}.{tgt}W{i}")
+
+    mc.addAttr(root_jnt, longName = 'Pop_Mult', dv=pop_mult, k=True)
+    mc.addAttr(root_jnt, longName = 'Up_Clamp', dv=upClamp, k=True)
+    mc.addAttr(root_jnt, longName = 'Down_Clamp', dv=downClamp, k=True)
+
+    clamp = mc.createNode('remapValue', name=f'{pop_descriptor}_clamp_remap')
+    mc.connectAttr(f'{root_jnt}.Up_Clamp', f'{clamp}.inputMax')
+    mc.connectAttr(f'{root_jnt}.Up_Clamp', f'{clamp}.outputMax')
+    mc.connectAttr(f'{root_jnt}.Down_Clamp', f'{clamp}.inputMin')
+    mc.connectAttr(f'{root_jnt}.Down_Clamp', f'{clamp}.outputMin')
+    mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{clamp}.inputValue')
+
+    md = mc.createNode('multiplyDivide', name=f'{pop_descriptor}_MD')
+    mc.connectAttr(f'{clamp}.outValue', f'{md}.input1{pop}')
+    mc.connectAttr(f'{root_jnt}.Pop_Mult', f'{md}.input2{pop}')
+
+    mc.connectAttr(f'{md}.output{pop}', f'{end_jnt}.translate{pop}')
+
+    # Bind
+    mc.select(par_jnt)
+    bindjnt = mc.joint(n=f'{pop_descriptor}_JNT', p=root_pos)
+    mc.setAttr(f"{bindjnt}.jointOrient", rot[0], rot[1], rot[2])
+    mc.parentConstraint(end_jnt, bindjnt)
+    rig_module.tag_bind_joints(bindjnt)
+
+    mc.parent(null_jnt, 'CorrectiveRigParts')
+    
+
+
 
 def build_simple_muscle_chain(
     mus_root='joint9',
@@ -595,29 +665,6 @@ def Build_Correctives(side='L'):
 
         #HIP CORRECTIVES
 
-    f"PSOAS_{SideShort}_01": {
-        "mus_root": f"{SideLong}_PSOAS_01",
-        "mus_end": f"{SideLong}_PSOAS_Insert",
-        "tgt_limb": f'leg_{SideShort}_01_JNT',
-        "tgt_limb_twist":'Y',
-        "tgt_limb_pop":'X',
-        "tgt_limb_stretch":'Z',
-        "tgt_extra":None,
-        "par_jnt":f'COG_M_JNT',
-        "tgt_name":f'PSOAS_{SideShort}_insert',
-        "pop_mult":.1,
-        "slide_mult":0,
-        "segments":1,
-        "match_index":None,
-        "buildControl":True,
-        "split":False,
-        "Extra_Twist":f'leg_{SideShort}_01_JNT',
-        "Control_parent":f'chest_M_CTRL',
-        "upClamp":180,
-        "downClamp":-180,
-        "flip_pop":True,
-        },
-
     f"GluteMax_{SideShort}_01": {
         "mus_root": f"{SideLong}_GluteMax_01",
         "mus_end": f"{SideLong}_GluteMax_Insert",
@@ -628,7 +675,7 @@ def Build_Correctives(side='L'):
         "tgt_extra":None,
         "par_jnt":f'COG_M_JNT',
         "tgt_name":f'GluteMax_{SideShort}_insert',
-        "pop_mult":-.1,
+        "pop_mult":-.15,
         "slide_mult":0,
         "segments":1,
         "match_index":None,
@@ -652,7 +699,7 @@ def Build_Correctives(side='L'):
         "par_jnt":f'COG_M_JNT',
         "tgt_name":f'TFL_{SideShort}_insert',
         "pop_mult":.1,
-        "slide_mult":0,
+        "slide_mult":-.05,
         "segments":1,
         "match_index":None,
         "buildControl":True,
@@ -675,7 +722,7 @@ def Build_Correctives(side='L'):
         "par_jnt":f'COG_M_JNT',
         "tgt_name":f'Graci_{SideShort}_insert',
         "pop_mult":.1,
-        "slide_mult":0,
+        "slide_mult":-0.05,
         "segments":1,
         "match_index":None,
         "buildControl":True,
@@ -691,9 +738,48 @@ def Build_Correctives(side='L'):
 
     }
 
+
+    pop_corrective_dict = {
+    f"PSOAS_{SideShort}_01": {
+        "pop_root" : f'{SideLong}UpLeg',
+        "par_jnt" : f'COG_M_JNT',
+        "pop_descriptor" : f'{SideShort}_PSOAS',
+        "tgt_limb" : f'leg_{SideShort}_01_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.1,
+        "tgt_limb_pop" : 'X',
+        "pop" : 'Z',
+        "buildControl" : True,
+        "upClamp" : 180,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+    
+    f"Kneecap_{SideShort}_01": {
+        "pop_root" : f'{SideLong}Leg',
+        "par_jnt" : f'leg_{SideShort}_04_JNT',
+        "pop_descriptor" : f'{SideShort}_Kneecap',
+        "tgt_limb" : f'leg_{SideShort}_05_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.1,
+        "tgt_limb_pop" : 'X',
+        "pop" : 'Z',
+        "buildControl" : True,
+        "upClamp" : 180,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+    }
+
     for mus_descriptor, data in mus_corrective_dict.items():
         build_simple_muscle_chain(
             mus_descriptor=mus_descriptor,
+            rig_module=rig_module,
+            **data
+        )
+
+    for pop_descriptor, data in pop_corrective_dict.items():
+        pop_corrective(
             rig_module=rig_module,
             **data
         )

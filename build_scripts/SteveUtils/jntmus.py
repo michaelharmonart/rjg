@@ -335,9 +335,110 @@ def build_simple_muscle_chain(
         'end_orient': end_orient
     }
         
+
+
+
+
+def pop_corrective(
+    pop_root = 'joint1',
+    par_jnt = 'COG_M_JNT',
+    pop_descriptor = 'PSOAS',
+    tgt_limb = 'leg_L_01_JNT',
+    blend_par = [],
+    pop_mult = .1,
+    tgt_limb_pop = 'X',
+    pop = 'Y',
+    buildControl = True,
+    upClamp = 180,
+    downClamp = -180,
+    ):
+
+    root_pos = mc.xform(pop_root, q=True, ws=True, t=True)
+    rot = mc.getAttr(f"{pop_root}.rotate")[0]
+
+    # ----------------------------
+    # Create root and end joints
+    # ----------------------------
+
+    mc.select(clear=True)
+    null_jnt = mc.joint(n=f'{pop_descriptor}_NULL_JNT', p=root_pos)
+    root_jnt = mc.joint(n=f'{pop_descriptor}_root_JNT', p=root_pos)
+    mc.setAttr(f"{root_jnt}.jointOrient", rot[0], rot[1], rot[2])
+    end_jnt = mc.joint(n=f'{pop_descriptor}_end_JNT', p=root_pos)
+
+
+    if blend_par == []:
+        mc.parentConstraint(par_jnt, null_jnt, mo=True)
+        mc.orientConstraint(tgt_limb, root_jnt, mo=True)
+    else:
+        for i, tgt in enumerate(blend_par):
+            con = mc.parentConstraint(tgt, root_jnt, mo=True)[0]
+            attr_name = f"{tgt}_Influence"
+            mc.addAttr(root_jnt, longName=f'{tgt}_Influence', at='double', dv=1)
+            mc.connectAttr(f"{root_jnt}.{attr_name}", f"{con}.{tgt}W{i}")
+
+    mc.addAttr(root_jnt, longName = 'Pop_Mult', dv=pop_mult, k=True)
+    mc.addAttr(root_jnt, longName = 'Up_Clamp', dv=upClamp, k=True)
+    mc.addAttr(root_jnt, longName = 'Down_Clamp', dv=downClamp, k=True)
+
+    clamp = mc.createNode('remapValue', name=f'{pop_descriptor}_clamp_remap')
+    mc.connectAttr(f'{root_jnt}.Up_Clamp', f'{clamp}.inputMax')
+    mc.connectAttr(f'{root_jnt}.Up_Clamp', f'{clamp}.outputMax')
+    mc.connectAttr(f'{root_jnt}.Down_Clamp', f'{clamp}.inputMin')
+    mc.connectAttr(f'{root_jnt}.Down_Clamp', f'{clamp}.outputMin')
+    mc.connectAttr(f'{tgt_limb}.rotate{tgt_limb_pop}', f'{clamp}.inputValue')
+
+    md = mc.createNode('multiplyDivide', name=f'{pop_descriptor}_MD')
+    mc.connectAttr(f'{clamp}.outValue', f'{md}.input1{pop}')
+    mc.connectAttr(f'{root_jnt}.Pop_Mult', f'{md}.input2{pop}')
+
+    mc.connectAttr(f'{md}.output{pop}', f'{end_jnt}.translate{pop}')
+
+    
+
+
+
+pop_corrective(
+    pop_root = 'joint1',
+    par_jnt = 'COG_M_JNT',
+    pop_descriptor = 'PSOAS',
+    tgt_limb = 'leg_L_01_JNT',
+    blend_par = [],
+    pop_mult = .1,
+    tgt_limb_pop = 'X',
+    pop = 'Z',
+    buildControl = True,
+    upClamp = 180,
+    downClamp = -180,
+    
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 
                                 
-build_simple_muscle_chain(
+"""build_simple_muscle_chain(
     mus_root='joint9',
     mus_end='joint10',
     mus_descriptor='pec01',
@@ -355,3 +456,4 @@ build_simple_muscle_chain(
     buildControl=True
 
 )
+"""
