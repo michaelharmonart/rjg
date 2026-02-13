@@ -43,9 +43,35 @@ def pop_corrective(
 
     if blend_par == []:
         mc.parentConstraint(par_jnt, null_jnt, mo=True)
-        orc = mc.orientConstraint(tgt_limb, root_jnt, mo=True)[0]
+        
         mc.addAttr(root_jnt, longName='tgt_rot_influence', k=True, dv=tgt_influence)
-        mc.connectAttr(f'{root_jnt}.tgt_rot_influence', f'{orc}.{tgt_limb}W0' )
+
+        oreintLoc = mc.spaceLocator(name=f'{tgt_limb}_{pop_descriptor}_Orient_LOC')[0]
+
+        
+        oreintgrp = mc.group(empty=True, name=f'{tgt_limb}_{pop_descriptor}_Orient_GRP')
+        mc.parent(oreintLoc, oreintgrp)
+
+        mc.setAttr(f'{oreintgrp}.translateX', root_pos[0])
+        mc.setAttr(f'{oreintgrp}.translateY', root_pos[1])
+        mc.setAttr(f'{oreintgrp}.translateZ', root_pos[2])
+
+        mc.setAttr(f'{oreintgrp}.rotateX', rot[0])
+        mc.setAttr(f'{oreintgrp}.rotateY', rot[1])
+        mc.setAttr(f'{oreintgrp}.rotateZ', rot[2])
+
+        #mc.parent(oreintLoc, oreintgrp)
+        mc.parent(oreintgrp, 'CorrectiveRigParts')
+
+        mdOrient = mc.createNode('multiplyDivide', name = f'{tgt_limb}_{pop_descriptor}_Orient_MD')
+        for ax in ["X", "Y", "Z"]:
+            mc.connectAttr(f'{tgt_limb}.rotate{ax}', f'{mdOrient}.input1{ax}')
+            mc.connectAttr(f'{root_jnt}.tgt_rot_influence', f'{mdOrient}.input2{ax}')
+            mc.connectAttr(f'{mdOrient}.output{ax}', f'{oreintLoc}.rotate{ax}',)
+        
+        orc = mc.orientConstraint(oreintLoc, root_jnt, mo=True)[0]
+        mc.parentConstraint(par_jnt, oreintgrp, mo=True)
+        #mc.connectAttr(f'{root_jnt}.tgt_rot_influence', f'{orc}.{tgt_limb}W0' )
     else:
         for i, tgt in enumerate(blend_par):
             con = mc.parentConstraint(tgt, root_jnt, mo=True)[0]
@@ -698,7 +724,7 @@ def Build_Correctives(side='L'):
         "tgt_extra":None,
         "par_jnt":f'COG_M_JNT',
         "tgt_name":f'TFL_{SideShort}_insert',
-        "pop_mult":.1,
+        "pop_mult":.2,
         "slide_mult":-.05,
         "segments":1,
         "match_index":None,
@@ -746,12 +772,12 @@ def Build_Correctives(side='L'):
         "pop_descriptor" : f'{SideShort}_PSOAS',
         "tgt_limb" : f'leg_{SideShort}_01_JNT',
         "blend_par" : [],
-        "pop_mult" : -.1,
+        "pop_mult" : .3,
         "tgt_limb_pop" : 'X',
         "pop" : 'Z',
         "buildControl" : True,
         "upClamp" : 180,
-        "downClamp" : -180,
+        "downClamp" : 0,
         "tgt_influence": .5
         },
     
@@ -765,8 +791,8 @@ def Build_Correctives(side='L'):
         "tgt_limb_pop" : 'X',
         "pop" : 'Z',
         "buildControl" : True,
-        "upClamp" : 180,
-        "downClamp" : -180,
+        "upClamp" : 0,
+        "downClamp" : -90,
         "tgt_influence": .5
         },
     }
