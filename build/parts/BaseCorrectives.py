@@ -28,7 +28,11 @@ def pop_corrective(
     ):
 
     root_pos = mc.xform(pop_root, q=True, ws=True, t=True)
-    rot = mc.getAttr(f"{pop_root}.rotate")[0]
+    #rot = mc.getAttr(f"{pop_root}.jointOrient")[0]
+    if mc.nodeType(pop_root) == "joint":
+        rot = mc.getAttr(f"{pop_root}.jointOrient")[0]
+    else:
+        rot = mc.getAttr(f"{pop_root}.rotate")[0]
 
     # ----------------------------
     # Create root and end joints
@@ -130,6 +134,7 @@ def build_simple_muscle_chain(
     upClamp= 180,
     downClamp=-180,
     flip_pop=False,
+    aimpos=(0,100,0),
     rig_module=None
 ):
     created_joints = []
@@ -286,7 +291,7 @@ def build_simple_muscle_chain(
         upvectorloc = f'UP_{tgt_limb}_LOC'
     else:
         upvectorloc = mc.spaceLocator(name = f'UP_{tgt_limb}_LOC', r=False)[0]
-        mc.xform(upvectorloc, t=(0,400,0), ws=True)
+        mc.xform(upvectorloc, t=aimpos, ws=True)
         mc.parentConstraint(par_jnt, upvectorloc, mo=True)
         mc.parent(upvectorloc, 'CorrectiveRigParts')
     mc.aimConstraint(
@@ -482,6 +487,7 @@ def Build_Correctives(side='L'):
         "upClamp":90,
         "downClamp":-90,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
 
     f"pec_{SideShort}_02": {
@@ -505,6 +511,7 @@ def Build_Correctives(side='L'):
         "upClamp":90,
         "downClamp":-90,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
 
     f"trap_{SideShort}_01": {
@@ -528,6 +535,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
     f"trap_{SideShort}_02": {
         "mus_root": f"{SideLong}_Trap02",
@@ -550,6 +558,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
     f"trap_{SideShort}_03": {
         "mus_root": f"{SideLong}_Trap03",
@@ -572,6 +581,7 @@ def Build_Correctives(side='L'):
         "upClamp":45,
         "downClamp":-45,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
 
     f"bicep_{SideShort}_01": {
@@ -595,6 +605,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
 
     f"delt_{SideShort}_01": {
@@ -618,6 +629,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
 
     f"delt_{SideShort}_02": {
@@ -641,6 +653,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
 
     f"delt_{SideShort}_03": {
@@ -664,6 +677,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
 
     f"SCM_{SideShort}_03": {
@@ -687,6 +701,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,100,0),
         },
 
         #HIP CORRECTIVES
@@ -701,7 +716,7 @@ def Build_Correctives(side='L'):
         "tgt_extra":None,
         "par_jnt":f'COG_M_JNT',
         "tgt_name":f'GluteMax_{SideShort}_insert',
-        "pop_mult":-.15,
+        "pop_mult":0,
         "slide_mult":0,
         "segments":1,
         "match_index":None,
@@ -711,7 +726,8 @@ def Build_Correctives(side='L'):
         "Control_parent":f'hip_M_CTRL',
         "upClamp":180,
         "downClamp":-180,
-        "flip_pop":True,
+        "flip_pop":False,
+        "aimpos":(0,0,100),
         },
 
     f"TFL_{SideShort}_01": {
@@ -735,6 +751,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,0,100),
         },
 
     f"Graci_{SideShort}_01": {
@@ -758,6 +775,7 @@ def Build_Correctives(side='L'):
         "upClamp":180,
         "downClamp":-180,
         "flip_pop":False,
+        "aimpos":(0,0,100),
         },
 
 
@@ -793,9 +811,55 @@ def Build_Correctives(side='L'):
         "buildControl" : True,
         "upClamp" : 0,
         "downClamp" : -90,
+        "tgt_influence": -1
+        },
+
+    f"Glute_{SideShort}_02": {
+        "pop_root" : f'{SideLong}UpLeg',
+        "par_jnt" : f'COG_M_JNT',
+        "pop_descriptor" : f'{SideShort}_Glute02',
+        "tgt_limb" : f'leg_{SideShort}_01_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.3,
+        "tgt_limb_pop" : 'X',
+        "pop" : 'Z',
+        "buildControl" : True,
+        "upClamp" : 180,
+        "downClamp" : 0,
         "tgt_influence": .5
         },
+
+    f"Gastro_{SideShort}_01": {
+        "pop_root" : f'{SideLong}Leg',
+        "par_jnt" : f'leg_{SideShort}_04_JNT',
+        "pop_descriptor" : f'{SideShort}_Gastro',
+        "tgt_limb" : f'leg_{SideShort}_05_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.1,
+        "tgt_limb_pop" : 'X',
+        "pop" : 'Z',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -90,
+        "tgt_influence": -.5
+        },
+
+    f"Elbow_{SideShort}_01": {
+        "pop_root" : f'{SideLong}Arm',
+        "par_jnt" : f'arm_{SideShort}_04_JNT',
+        "pop_descriptor" : f'{SideShort}_Elbow',
+        "tgt_limb" : f'leg_{SideShort}_05_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.1,
+        "tgt_limb_pop" : 'X',
+        "pop" : 'Z',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -90,
+        "tgt_influence": -.5
+        },
     }
+    
 
     for mus_descriptor, data in mus_corrective_dict.items():
         build_simple_muscle_chain(
