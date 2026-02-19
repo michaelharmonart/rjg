@@ -12,7 +12,7 @@ reload(rCtrl)
 Class for root joint and control.
 '''
 class Root(rModule.RigModule):
-    def __init__(self, side=None, part='root', guide_list=None, ctrl_scale=None, model_path=None, guide_path=None, global_shape='gear_2D', root_shape='circle', base=None):
+    def __init__(self, side=None, part='root', guide_list=None, ctrl_scale=None, model_path=None, guide_path=None, global_shape='gear_2D', root_shape='circle', base=None, muscle_ctrl=False):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
 
         if self.guide_list:
@@ -33,6 +33,7 @@ class Root(rModule.RigModule):
 
         #self.global_shape = global_shape    # these two shapes are unique to root
         self.root_shape = root_shape
+        self.muscle_ctrl = muscle_ctrl
 
         self.create_module()
 
@@ -60,14 +61,32 @@ class Root(rModule.RigModule):
         self.root_02.tag_as_controller()
 
         self.link_control = rCtrl.Control(parent=self.global_control.ctrl, shape='RJG_Logo', side=self.side, suffix='CTRL', name='RJG', axis='y', rig_type='global', ctrl_scale=self.ctrl_scale)
+        if self.muscle_ctrl:
+            self.musc_control = rCtrl.Control(parent=self.global_control.ctrl, shape='Muscle', side=self.side, suffix='CTRL', name='Muscle_Global', axis='y', rig_type='global', ctrl_scale=self.ctrl_scale)
+
+            attrs = mc.listAttr(self.musc_control.ctrl, keyable=True) or []
+            for attr in attrs:
+                mc.setAttr(f'{self.musc_control.ctrl}.{attr}', lock=True, keyable=False, channelBox=False)
+            mc.addAttr(self.musc_control.ctrl, longName="Mus_Visibility", attributeType='bool', keyable=True)
+
 
         attrs = mc.listAttr(self.link_control.ctrl, keyable=True) or []
         for attr in attrs:
             mc.setAttr(f'{self.link_control.ctrl}.{attr}', lock=True, keyable=False, channelBox=False)
-        mc.addAttr(self.link_control.ctrl, longName='githubURL', dataType='string', keyable=True)
-        # Set the value to your GitHub page
-        mc.setAttr(f'{self.link_control.ctrl}.githubURL', 'https://github.com/SteveDunn720/rjg', type='string')
-        mc.setAttr(f'{self.link_control.ctrl}.githubURL', lock=True, keyable=False, channelBox=True)
+        mc.addAttr(
+            self.link_control.ctrl,
+            longName='githubURL',
+            attributeType='enum',
+            enumName='github.com/SteveDunn720/rjg',
+            keyable=False
+        )
+
+        # Make it visible in Channel Box
+        mc.setAttr(
+            f"{self.link_control.ctrl}.githubURL",
+            channelBox=True
+        )
+
     '''
     Places root joint and constrains it to the innermost root control.
     '''

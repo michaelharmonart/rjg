@@ -80,9 +80,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         production = 'SG'
     else:
         production = None
+    if character in ['Basemesh', 'CrowdB']:
+        addmusc = True
+    else:
+        addmusc = False
 
     ### BUILD SCRIPT
-    root = rBuild.build_module(module_type='root', side='M', part='root', model_path=mp, guide_path=gp, base=production)
+    root = rBuild.build_module(module_type='root', side='M', part='root', model_path=mp, guide_path=gp, base=production, muscle_ctrl=addmusc)
     if ep:
         extras = rFile.import_hierarchy(ep, parent='MODEL')[0]
     #Fun Camera Thing
