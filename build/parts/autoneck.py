@@ -318,6 +318,7 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
                 driven_list += [ctrl.ctrl for ctrl in self.ik_ctrls]
             elif self.segments > 2 and hasattr(self, 'spline_ctrls'):
                 driven_list += [ctrl.ctrl for ctrl in self.ikspline_ctrls]
+                mc.parentConstraint(f'chest_M_JNT', 'neck_M_MODULE', mo=True)
 
         rAttr.Attribute(
             node=self.part_grp,

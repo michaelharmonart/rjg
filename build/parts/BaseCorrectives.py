@@ -285,7 +285,9 @@ def build_simple_muscle_chain(
     # ----------------------------
     # Constraints
     # ----------------------------
-    if mc.objExists(f'UP_{tgt_limb}_LOC'):
+    
+    #Old Aim Logic
+    """if mc.objExists(f'UP_{tgt_limb}_LOC'):
         upvectorloc = f'UP_{tgt_limb}_LOC'
     else:
         upvectorloc = mc.spaceLocator(name = f'UP_{tgt_limb}_LOC', r=False)[0]
@@ -301,7 +303,30 @@ def build_simple_muscle_chain(
         worldUpObject=upvectorloc,
         mo=True
     )
-    mc.parentConstraint(tgt_loc, end_null, mo=True)
+    mc.parentConstraint(tgt_loc, end_null, mo=True)"""
+
+    #New IK solver logic
+
+    ik, effector = mc.ikHandle(
+    name=f"{mus_descriptor}_IK",
+    sj=root_jnt,
+    ee=end_null,
+    solver="ikSCsolver"
+    )
+
+    mc.parentConstraint(tgt_loc, ik, mo=True)
+
+    dm = mc.createNode('decomposeMatrix', name=f'{mus_descriptor}_DECMATRIX')
+    mc.connectAttr(f'{root_jnt}.worldMatrix[0]', f'{dm}.inputMatrix')
+
+    db = mc.createNode('distanceBetween', name=f'{mus_descriptor}_DB')
+    mc.connectAttr(f'{dm}.outputTranslate', f'{db}.point1')
+    mc.connectAttr(f'{ik}.translate', f'{db}.point2')
+    mc.connectAttr(f'{db}.distance', f'{end_null}.translateY')
+
+
+
+
 
     mc.addAttr(root_jnt, longName='PopMult', at='double', dv=pop_mult, k=True)
     mc.addAttr(root_jnt, longName='AutoRot', at='double', dv=-.5, k=True)
