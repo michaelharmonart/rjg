@@ -38,7 +38,8 @@ class Clavicle(rModule.RigModule):
         auto_clav_forward: float = 0.25,
         auto_clav_back: float = 0.25,
         shape = 'cube',
-        mo=False
+        mo=False,
+        aim=True,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.auto_clavicle = auto_clavicle
@@ -54,6 +55,7 @@ class Clavicle(rModule.RigModule):
         self.auto_clav_back = auto_clav_back
         self.shape = shape
         self.mo=mo
+        self.aim=aim
         self.create_module()
 
     def create_module(self):
@@ -140,9 +142,11 @@ class Clavicle(rModule.RigModule):
             av = (0, -1, 0)
             uv = (0, 0, 1)
 
-
-        mc.aimConstraint(target_loc, jnt_grp, aimVector=av, upVector=uv,
-                           worldUpType='object', worldUpObject=up_loc, mo=self.mo)
+        if self.aim ==True:
+            mc.aimConstraint(target_loc, jnt_grp, aimVector=av, upVector=uv,
+                            worldUpType='object', worldUpObject=up_loc, mo=self.mo)
+        elif self.aim == False:
+            mc.parentConstraint(target_loc, jnt_grp, mo=self.mo)
 
         # add stretch
         rAttr.Attribute(node=self.main_ctrl.ctrl,

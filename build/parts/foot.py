@@ -32,6 +32,7 @@ class Foot(rModule.RigModule):
         toe_piv=None,
         toe_roll_threshold: float = 0,
         express=False,
+        mus_tgt=False,
     ):
         super(Foot, self).__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.in_piv = in_piv
@@ -40,6 +41,7 @@ class Foot(rModule.RigModule):
         self.toe_piv = toe_piv
         self.toe_roll_threshold: float = toe_roll_threshold
         self.express = express
+        self.mus_tgt = mus_tgt
 
         if not self.toe_piv:
             self.toe_piv = self.guide_list[-1]
@@ -127,6 +129,7 @@ class Foot(rModule.RigModule):
             mc.setAttr(f"{self.foot_express.ctrl}_LOWER.inputMin", 2.5)
             mc.connectAttr(f'{self.foot_express.ctrl}.Falloff', f"{self.foot_express.ctrl}_HIGHER.inputValue")
             mc.connectAttr(f'{self.foot_express.ctrl}.Falloff', f"{self.foot_express.ctrl}_LOWER.inputValue")
+
 
 
     def add_foot_attrs(self):
@@ -259,3 +262,23 @@ class Foot(rModule.RigModule):
         
         if self.express:
             mc.parentConstraint(f'foot_' + self.side + '_03_switch_JNT', self.foot_express.top, mo=True)
+
+        if self.mus_tgt:
+            if self.side == 'L':
+                longside = 'Left'
+            else:
+                longside = 'Right'
+
+
+            mustgt_par = mc.group(empty=True, name=f'Foot_{self.side}_MusTgt_Offset_GRP')
+            mustgt = mc.group(empty=True, name=f'Foot_{self.side}_MusTgt_GRP')
+            mc.matchTransform(mustgt, f'foot_{self.side}_01_JNT')
+            mc.matchTransform(mustgt_par, f'foot_{self.side}_01_JNT')
+            mc.parent(mustgt, mustgt_par)
+            mc.parentConstraint(f'foot_{self.side}_01_fk_JNT', mustgt, mo=True)
+            mc.parentConstraint(f'foot_{self.side}_01_ik_JNT', mustgt, mo=True)
+            mc.connectAttr(f'foot_{self.side}.switch', f'{mustgt}_parentConstraint1.foot_{self.side}_01_fk_JNTW0')
+            rev = mc.createNode('reverse', name = f'Foot_{self.side}_REV')
+            mc.connectAttr(f'foot_{self.side}.switch', f'{rev}.inputX')
+            mc.connectAttr(f'{rev}.outputX', f'{mustgt}_parentConstraint1.foot_{self.side}_01_ik_JNTW1')
+            mc.parent(mustgt_par, f'foot_{self.side}')

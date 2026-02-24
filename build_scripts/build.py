@@ -436,9 +436,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character in ['Basemesh', 'Drummer','CrowdB']:
         clavshape = 'Arch'
         Clavmo=True
+        Clavaim=False
+        FootMus=True
     else:
         clavshape = 'cube'
         Clavmo=False
+        Clavaim=True
+        FootMus=False
 
 
 
@@ -467,6 +471,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 ctrl_scale=9,
                 shape = clavshape,
                 mo=Clavmo,
+                aim=Clavaim,
             )
         if character in ['Luciana']:
             prop_control = False
@@ -573,7 +578,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     heel_piv=fs + "HeelPiv",
                     in_piv=fs + "In",
                     out_piv=fs + "Out",
-                    express=Fexpress
+                    express=Fexpress,
+                    mus_tgt=FootMus
                 )
         fingers = []
         

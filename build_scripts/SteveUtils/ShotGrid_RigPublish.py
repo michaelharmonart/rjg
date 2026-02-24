@@ -72,7 +72,7 @@ def get_production(selected_production, conn: DB):
     if production == 'bobo':
         gotten_list = asset_list
     elif production == 'DragonKisser':
-        gotten_list = ['Luciana', 'Domingo', 'Lute']
+        gotten_list = ['Luciana', 'Domingo', 'Lute', 'CrowdA', 'CrowdB', 'CrowdC' ]
     elif production == 'Custom':
         try:
             custom_list_location = f"{groups}/bobo/character/Rigs/Custom_rigs_list/CustomRig_List.txt"
