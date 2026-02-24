@@ -792,7 +792,7 @@ def Build_Correctives(side='L'):
         "par_jnt":f'COG_M_JNT',
         "tgt_name":f'TFL_{SideShort}_insert',
         "pop_mult":.2,
-        "slide_mult":-.05,
+        "slide_mult":-.3,
         "segments":1,
         "match_index":None,
         "buildControl":True,
@@ -831,77 +831,28 @@ def Build_Correctives(side='L'):
         "realtgt":None
         },
 
-    f"FCR_{SideShort}_01": {
-        "mus_root": f"{SideLong}_FCR01",
-        "mus_end": f"{SideLong}_FCR_Insert01",
-        "tgt_limb": f'hand_{SideShort}_JNT',
-        "tgt_limb_twist":'Y',
-        "tgt_limb_pop":'Z',
-        "tgt_limb_stretch":'X',
-        "tgt_extra":None,
-        "par_jnt":f'arm_{SideShort}_07_JNT',
-        "tgt_name":f'FCR_{SideShort}_insert01',
-        "pop_mult":.1,
-        "slide_mult":-0.05,
-        "segments":1,
-        "match_index":None,
-        "buildControl":True,
-        "split":False,
-        "Extra_Twist":f'arm_{SideShort}_09_JNT',
-        "Control_parent":f'hip_M_CTRL',
-        "upClamp":180,
-        "downClamp":-180,
-        "flip_pop":False,
-        "aimpos":(0,400, 0),
-        "realtgt":None
-        },
-
-    f"FCR_{SideShort}_02": {
-        "mus_root": f"{SideLong}_FCR02",
-        "mus_end": f"{SideLong}_FCR_Insert02",
-        "tgt_limb": f'hand_{SideShort}_JNT',
-        "tgt_limb_twist":'Y',
-        "tgt_limb_pop":'Z',
-        "tgt_limb_stretch":'X',
-        "tgt_extra":None,
-        "par_jnt":f'arm_{SideShort}_07_JNT',
-        "tgt_name":f'FCR_{SideShort}_insert02',
-        "pop_mult":.1,
-        "slide_mult":-0.05,
-        "segments":1,
-        "match_index":None,
-        "buildControl":True,
-        "split":False,
-        "Extra_Twist":f'arm_{SideShort}_09_JNT',
-        "Control_parent":f'hip_M_CTRL',
-        "upClamp":180,
-        "downClamp":-180,
-        "flip_pop":False,
-        "aimpos":(0,400, 0),
-        "realtgt":None
-        },
 
     f"Achilles_{SideShort}_02": {
         "mus_root": f"{SideLong}_Achilles01",
         "mus_end": f"{SideLong}_Achilles_Insert",
         "tgt_limb": f'Foot_{SideShort}_MusTgt_GRP', #f'foot_{SideShort}_01_JNT',
         "tgt_limb_twist":'Y',
-        "tgt_limb_pop":'Z',
-        "tgt_limb_stretch":'X',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
         "tgt_extra":None,
         "par_jnt":f'leg_{SideShort}_07_JNT',
         "tgt_name":f'Achilles_{SideShort}_insert',
-        "pop_mult":.1,
-        "slide_mult":-0.05,
+        "pop_mult":-.05,
+        "slide_mult":0,
         "segments":1,
         "match_index":None,
         "buildControl":True,
         "split":False,
         "Extra_Twist":None,
         "Control_parent":f'hip_M_CTRL',
-        "upClamp":180,
+        "upClamp":0,
         "downClamp":-180,
-        "flip_pop":False,
+        "flip_pop":True,
         "aimpos":(0, 400, 0),
         "realtgt":f'Foot_{SideShort}_MusTgt_GRP',
         },
@@ -910,22 +861,22 @@ def Build_Correctives(side='L'):
         "mus_end": f"{SideLong}_Tibialis_Insert",
         "tgt_limb": f'Foot_{SideShort}_MusTgt_GRP', #f'foot_{SideShort}_01_JNT',
         "tgt_limb_twist":'Y',
-        "tgt_limb_pop":'Z',
-        "tgt_limb_stretch":'X',
+        "tgt_limb_pop":'X',
+        "tgt_limb_stretch":'Z',
         "tgt_extra":None,
         "par_jnt":f'leg_{SideShort}_07_JNT',
         "tgt_name":f'Tibialis_{SideShort}_insert',
         "pop_mult":.1,
-        "slide_mult":0,
+        "slide_mult":-0.1,
         "segments":1,
         "match_index":None,
         "buildControl":True,
         "split":False,
         "Extra_Twist":None,
         "Control_parent":f'hip_M_CTRL',
-        "upClamp":180,
-        "downClamp":-180,
-        "flip_pop":False,
+        "upClamp":50,
+        "downClamp":0,
+        "flip_pop":True,
         "aimpos":(0, 400, 0),
         "realtgt":f'Foot_{SideShort}_MusTgt_GRP',
         },
@@ -943,7 +894,7 @@ def Build_Correctives(side='L'):
         "pop" : 'Z',
         "buildControl" : True,
         "upClamp" : 180,
-        "downClamp" : -25,
+        "downClamp" : -30,
         "tgt_influence": .5
         },
 
@@ -1074,7 +1025,7 @@ def Build_Correctives(side='L'):
         "pop_descriptor" : f'{SideShort}_Bicep04',
         "tgt_limb" : f'arm_{SideShort}_05_JNT',
         "blend_par" : [],
-        "pop_mult" : .15,
+        "pop_mult" : .11,
         "tgt_limb_pop" : 'X',
         "pop" : 'Z',
         "buildControl" : True,
@@ -1104,13 +1055,13 @@ def Build_Correctives(side='L'):
         "pop_descriptor" : f'{SideShort}_Wristin',
         "tgt_limb" : f'arm_{SideShort}_09_JNT',
         "blend_par" : [],
-        "pop_mult" : -.2,
+        "pop_mult" : .1,
         "tgt_limb_pop" : 'X',
         "pop" : 'Z',
         "buildControl" : True,
         "upClamp" : 180,
-        "downClamp" : -180,
-        "tgt_influence": 0
+        "downClamp" : -15,
+        "tgt_influence": .5
         },
     
     f"Wristout_{SideShort}_01": {
@@ -1119,27 +1070,56 @@ def Build_Correctives(side='L'):
         "pop_descriptor" : f'{SideShort}_Wristout',
         "tgt_limb" : f'arm_{SideShort}_09_JNT',
         "blend_par" : [],
-        "pop_mult" : -.2,
+        "pop_mult" : .1,
         "tgt_limb_pop" : 'X',
         "pop" : 'Z',
         "buildControl" : True,
-        "upClamp" : 180,
+        "upClamp" : 15,
         "downClamp" : -180,
-        "tgt_influence": 0
+        "tgt_influence": .5
         },
 
+    f"FCRup_{SideShort}_01": {
+        "pop_root" : f'{SideLong}Hand',
+        "par_jnt" : f'arm_{SideShort}_08_JNT',
+        "pop_descriptor" : f'{SideShort}_FCRup',
+        "tgt_limb" : f'arm_{SideShort}_09_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.1,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 180,
+        "downClamp" : -15,
+        "tgt_influence": .5
+        },
 
-    f"IndexIn_{SideShort}_02": {
+    f"FCRdown_{SideShort}_01": {
+        "pop_root" : f'{SideLong}Hand',
+        "par_jnt" : f'arm_{SideShort}_08_JNT',
+        "pop_descriptor" : f'{SideShort}_FCRdown',
+        "tgt_limb" : f'arm_{SideShort}_09_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.1,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 15,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"IndexInner_{SideShort}_02": {
         "pop_root" : f'{SideLong}HandIndex0',
         "par_jnt" : f'fingerIndex_{SideShort}_01_JNT',
         "pop_descriptor" : f'{SideShort}_IndexInner',
         "tgt_limb" : f'fingerIndex_{SideShort}_02_JNT',
         "blend_par" : [],
-        "pop_mult" : -.2,
+        "pop_mult" : .05,
         "tgt_limb_pop" : 'Z',
         "pop" : 'Y',
         "buildControl" : True,
-        "upClamp" : 180,
+        "upClamp" : 0,
         "downClamp" : -180,
         "tgt_influence": 0
         },
@@ -1150,13 +1130,13 @@ def Build_Correctives(side='L'):
         "pop_descriptor" : f'{SideShort}_IndexIn',
         "tgt_limb" : f'fingerIndex_{SideShort}_02_JNT',
         "blend_par" : [],
-        "pop_mult" : -.2,
+        "pop_mult" :-.05,
         "tgt_limb_pop" : 'Z',
         "pop" : 'X',
         "buildControl" : True,
-        "upClamp" : 180,
+        "upClamp" : 0,
         "downClamp" : -180,
-        "tgt_influence": 0
+        "tgt_influence": .5
         },
 
     f"IndexOut_{SideShort}_01": {
@@ -1165,14 +1145,393 @@ def Build_Correctives(side='L'):
         "pop_descriptor" : f'{SideShort}_IndexOut',
         "tgt_limb" : f'fingerIndex_{SideShort}_02_JNT',
         "blend_par" : [],
-        "pop_mult" : -.2,
+        "pop_mult" : -.05,
         "tgt_limb_pop" : 'Z',
         "pop" : 'Y',
         "buildControl" : True,
-        "upClamp" : 180,
+        "upClamp" : 0,
         "downClamp" : -180,
         "tgt_influence": 0
         },
+
+    f"IndexIn_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandIndex2',
+        "par_jnt" : f'fingerIndex_{SideShort}_02_JNT',
+        "pop_descriptor" : f'{SideShort}_IndexIn02',
+        "tgt_limb" : f'fingerIndex_{SideShort}_03_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"IndexOut_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandIndex1',
+        "par_jnt" : f'fingerIndex_{SideShort}_02_JNT',
+        "pop_descriptor" : f'{SideShort}_IndexOut02',
+        "tgt_limb" : f'fingerIndex_{SideShort}_03_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"IndexIn_{SideShort}_03": {
+        "pop_root" : f'{SideLong}HandIndex3',
+        "par_jnt" : f'fingerIndex_{SideShort}_03_JNT',
+        "pop_descriptor" : f'{SideShort}_IndexIn03',
+        "tgt_limb" : f'fingerIndex_{SideShort}_04_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"IndexOut_{SideShort}_03": {
+        "pop_root" : f'{SideLong}HandIndex2',
+        "par_jnt" : f'fingerIndex_{SideShort}_03_JNT',
+        "pop_descriptor" : f'{SideShort}_IndexOut03',
+        "tgt_limb" : f'fingerIndex_{SideShort}_04_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+    
+
+    f"MiddleInner_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandMiddle0',
+        "par_jnt" : f'fingerMiddle_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_MiddleInner',
+        "tgt_limb" : f'fingerMiddle_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : .05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"MiddleIn_{SideShort}_01": {
+        "pop_root" : f'{SideLong}HandMiddle1',
+        "par_jnt" : f'fingerMiddle_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_MiddleIn',
+        "tgt_limb" : f'fingerMiddle_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"MiddleOut_{SideShort}_01": {
+        "pop_root" : f'{SideLong}HandMiddle0',
+        "par_jnt" : f'fingerMiddle_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_MiddleOut',
+        "tgt_limb" : f'fingerMiddle_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"MiddleIn_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandMiddle2',
+        "par_jnt" : f'fingerMiddle_{SideShort}_02_JNT',
+        "pop_descriptor" : f'{SideShort}_MiddleIn02',
+        "tgt_limb" : f'fingerMiddle_{SideShort}_03_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"MiddleOut_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandMiddle1',
+        "par_jnt" : f'fingerMiddle_{SideShort}_02_JNT',
+        "pop_descriptor" : f'{SideShort}_MiddleOut02',
+        "tgt_limb" : f'fingerMiddle_{SideShort}_03_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"MiddleIn_{SideShort}_03": {
+        "pop_root" : f'{SideLong}HandMiddle3',
+        "par_jnt" : f'fingerMiddle_{SideShort}_03_JNT',
+        "pop_descriptor" : f'{SideShort}_MiddleIn03',
+        "tgt_limb" : f'fingerMiddle_{SideShort}_04_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"MiddleOut_{SideShort}_03": {
+        "pop_root" : f'{SideLong}HandMiddle2',
+        "par_jnt" : f'fingerMiddle_{SideShort}_03_JNT',
+        "pop_descriptor" : f'{SideShort}_MiddleOut03',
+        "tgt_limb" : f'fingerMiddle_{SideShort}_04_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+    
+
+    f"RingInner_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandRing0',
+        "par_jnt" : f'fingerRing_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_RingInner',
+        "tgt_limb" : f'fingerRing_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : .05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"RingIn_{SideShort}_01": {
+        "pop_root" : f'{SideLong}HandRing1',
+        "par_jnt" : f'fingerRing_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_RingIn',
+        "tgt_limb" : f'fingerRing_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"RingOut_{SideShort}_01": {
+        "pop_root" : f'{SideLong}HandRing0',
+        "par_jnt" : f'fingerRing_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_RingOut',
+        "tgt_limb" : f'fingerRing_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"RingIn_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandRing2',
+        "par_jnt" : f'fingerRing_{SideShort}_02_JNT',
+        "pop_descriptor" : f'{SideShort}_RingIn02',
+        "tgt_limb" : f'fingerRing_{SideShort}_03_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"RingOut_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandRing1',
+        "par_jnt" : f'fingerRing_{SideShort}_02_JNT',
+        "pop_descriptor" : f'{SideShort}_RingOut02',
+        "tgt_limb" : f'fingerRing_{SideShort}_03_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"RingIn_{SideShort}_03": {
+        "pop_root" : f'{SideLong}HandRing3',
+        "par_jnt" : f'fingerRing_{SideShort}_03_JNT',
+        "pop_descriptor" : f'{SideShort}_RingIn03',
+        "tgt_limb" : f'fingerRing_{SideShort}_04_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"RingOut_{SideShort}_03": {
+        "pop_root" : f'{SideLong}HandRing2',
+        "par_jnt" : f'fingerRing_{SideShort}_03_JNT',
+        "pop_descriptor" : f'{SideShort}_RingOut03',
+        "tgt_limb" : f'fingerRing_{SideShort}_04_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+    
+
+    f"PinkyInner_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandPinky0',
+        "par_jnt" : f'fingerPinky_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_PinkyInner',
+        "tgt_limb" : f'fingerPinky_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : .05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"PinkyIn_{SideShort}_01": {
+        "pop_root" : f'{SideLong}HandPinky1',
+        "par_jnt" : f'fingerPinky_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_PinkyIn',
+        "tgt_limb" : f'fingerPinky_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"PinkyOut_{SideShort}_01": {
+        "pop_root" : f'{SideLong}HandPinky0',
+        "par_jnt" : f'fingerPinky_{SideShort}_01_JNT',
+        "pop_descriptor" : f'{SideShort}_PinkyOut',
+        "tgt_limb" : f'fingerPinky_{SideShort}_02_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"PinkyIn_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandPinky2',
+        "par_jnt" : f'fingerPinky_{SideShort}_02_JNT',
+        "pop_descriptor" : f'{SideShort}_PinkyIn02',
+        "tgt_limb" : f'fingerPinky_{SideShort}_03_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"PinkyOut_{SideShort}_02": {
+        "pop_root" : f'{SideLong}HandPinky1',
+        "par_jnt" : f'fingerPinky_{SideShort}_02_JNT',
+        "pop_descriptor" : f'{SideShort}_PinkyOut02',
+        "tgt_limb" : f'fingerPinky_{SideShort}_03_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+
+    f"PinkyIn_{SideShort}_03": {
+        "pop_root" : f'{SideLong}HandPinky3',
+        "par_jnt" : f'fingerPinky_{SideShort}_03_JNT',
+        "pop_descriptor" : f'{SideShort}_PinkyIn03',
+        "tgt_limb" : f'fingerPinky_{SideShort}_04_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'X',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": .5
+        },
+
+    f"PinkyOut_{SideShort}_03": {
+        "pop_root" : f'{SideLong}HandPinky2',
+        "par_jnt" : f'fingerPinky_{SideShort}_03_JNT',
+        "pop_descriptor" : f'{SideShort}_PinkyOut03',
+        "tgt_limb" : f'fingerPinky_{SideShort}_04_JNT',
+        "blend_par" : [],
+        "pop_mult" : -.05,
+        "tgt_limb_pop" : 'Z',
+        "pop" : 'Y',
+        "buildControl" : True,
+        "upClamp" : 0,
+        "downClamp" : -180,
+        "tgt_influence": 0
+        },
+   
     
     }
     
@@ -1189,3 +1548,59 @@ def Build_Correctives(side='L'):
             rig_module=rig_module,
             **data
         )
+
+
+
+
+
+""" 
+f"FCR_{SideShort}_01": {
+        "mus_root": f"{SideLong}_FCR01",
+        "mus_end": f"{SideLong}_FCR_Insert01",
+        "tgt_limb": f'hand_{SideShort}_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'Z',
+        "tgt_limb_stretch":'X',
+        "tgt_extra":None,
+        "par_jnt":f'arm_{SideShort}_07_JNT',
+        "tgt_name":f'FCR_{SideShort}_insert01',
+        "pop_mult":.1,
+        "slide_mult":-0.05,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":f'arm_{SideShort}_09_JNT',
+        "Control_parent":f'hip_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
+        "flip_pop":False,
+        "aimpos":(0,400, 0),
+        "realtgt":None
+        },
+
+    f"FCR_{SideShort}_02": {
+        "mus_root": f"{SideLong}_FCR02",
+        "mus_end": f"{SideLong}_FCR_Insert02",
+        "tgt_limb": f'hand_{SideShort}_JNT',
+        "tgt_limb_twist":'Y',
+        "tgt_limb_pop":'Z',
+        "tgt_limb_stretch":'X',
+        "tgt_extra":None,
+        "par_jnt":f'arm_{SideShort}_07_JNT',
+        "tgt_name":f'FCR_{SideShort}_insert02',
+        "pop_mult":.1,
+        "slide_mult":-0.05,
+        "segments":1,
+        "match_index":None,
+        "buildControl":True,
+        "split":False,
+        "Extra_Twist":f'arm_{SideShort}_09_JNT',
+        "Control_parent":f'hip_M_CTRL',
+        "upClamp":180,
+        "downClamp":-180,
+        "flip_pop":False,
+        "aimpos":(0,400, 0),
+        "realtgt":None
+        },
+"""
