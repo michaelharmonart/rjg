@@ -256,17 +256,17 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
 
 
     #
-    if character in ['Basemesh', 'Drummer', 'CrowdB']:
+    if character in ['Basemesh', 'Drummer', 'CrowdB', 'CrowdA', 'CrowdC']:
         if face:
             for side in ['L', 'R']:
                 from rjg.build.parts.UEeye import UEeye
-                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['Eyes', 'Corneas'])
+                eye = UEeye(f'Eye_{side}_guides', ctrl_scale=1, skin=['Eyes', 'Corneas'], split=True,)
                 eye.build()
                 from rjg.build.parts.UEbrow import UEbrow
                 brow = UEbrow(f'Brow_{side}_guides', ctrl_scale=1, split=True)
                 brow.build()
                 from rjg.build.parts.UEcheek import UEcheek
-                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1, NL=True)
+                cheek = UEcheek(f'Cheek_{side}_guides', ctrl_scale=1, NL=True, split=True)
                 cheek.build()
                 from rjg.build.parts.UEear import UEear
                 ear = UEear(f'Ear_{side}_guides', ctrl_scale=1)
@@ -276,10 +276,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             nose = UEnose('Nose_guides', ctrl_scale=1)
             nose.build()
             from rjg.build.parts.UEjaw import UEjaw
-            jaw = UEjaw('Jaw_M_guides', ctrl_scale=1)
+            jaw = UEjaw('Jaw_M_guides', ctrl_scale=1, mentalis=True)
             jaw.build()
             from rjg.build.parts.UEmouth import UEmouth
-            mouth = UEmouth('Mouth_guides', ctrl_scale=1, Major_Mouth=4)
+            mouth = UEmouth('Mouth_guides', ctrl_scale=1, Major_Mouth=4, split=True,)
             mouth.build()
             from rjg.build.parts.UEteeth import UEteeth
             teeth = UEteeth('Tongue_M_guides', ctrl_scale=1, skin=['tongue', 'topteeth', 'botteeth'])

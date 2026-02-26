@@ -17,8 +17,9 @@ reload(rXform)
 
 
 class UEjaw(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1,):
+    def __init__(self, grp_name=None, ctrl_scale=1,mentalis=False):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
+        self.mentalis=mentalis
 
     @auto_profiler_tag
     def build(self):
@@ -57,6 +58,19 @@ class UEjaw(UEface):
             JNT_Size=0.9,
             CTRL_Color=(1, 0.6, 0)
         )
+
+        if self.mentalis:
+            mentalis_jnt, mentalis_ctrl, mentalis_offset = UEface.Simple_joint_and_Control(
+            guide=f'{prefix}_ee',
+            overwrite=True,
+            overwrite_name=f'{prefix}_mentalis',
+            orient=True,
+            CTRL_Size=.5,
+            JNT_Size=0.5,
+            )
+            mc.parent(mentalis_offset, ee_ctrl)
+            mc.parent(mentalis_jnt, ee_jnt)
+
 
         # Step 2: Chain root -> ee
         UEface.chain_parts([f'{prefix}_root', f'{prefix}_ee'], joints=True, controls=True)

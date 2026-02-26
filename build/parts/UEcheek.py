@@ -18,9 +18,10 @@ reload(rXform)
 
 
 class UEcheek(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, NL=True):
+    def __init__(self, grp_name=None, ctrl_scale=1, NL=True, split=False):
         super().__init__(part='Brow', grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.NL = NL
+        self.split=split
     
     @auto_profiler_tag
     def build(self):
@@ -113,6 +114,12 @@ class UEcheek(UEface):
             mc.scaleConstraint('head_M_01_CTRL', f'{top_group}')
             mc.scaleConstraint('head_M_01_CTRL', f'{prefix}_NLFold_02_Major_jnt')
             mc.scaleConstraint('head_M_01_CTRL', f'{prefix}_NLFold_05_Major_jnt')
+
+            if self.split:
+                split_joint = f'Cheek_{side}_NLFold_01_JNT'
+                split_joints: list[str] = [f'Cheek_{side}_NLFold_01_JNT', f'Cheek_{side}_NLFold_02_JNT', f'Cheek_{side}_NLFold_03_JNT', f'Cheek_{side}_NLFold_04_JNT', f'Cheek_{side}_NLFold_05_JNT']
+                mc.addAttr(split_joint, longName="split_joints", dataType="string")
+                mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
             
 
         # Step 6 - Cheek Puff & Bone

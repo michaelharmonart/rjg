@@ -16,11 +16,12 @@ reload (rGuide)
 reload(rXform)
 
 class UEeye(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, skin=None, eyetype='Human', socket=True):
+    def __init__(self, grp_name=None, ctrl_scale=1, skin=None, eyetype='Human', socket=True, split=False):
         super().__init__(part='Eye', grp_name=grp_name, ctrl_scale=ctrl_scale)
         self.skin = skin
         self.eyetype = eyetype
         self.socket = socket
+        self.split=split
         
     def get_sorted_eyelid_guides(self, prefix):
         prefix = UEface.get_prefix_from_group(self.grp_name)
@@ -377,14 +378,6 @@ class UEeye(UEface):
                     mc.setAttr(f"{prefix}_Upper_Blink_R_CTRL.blink_mult", 10)
                     mc.setAttr(f"{prefix}_Lower_Blink_R_CTRL.blink_mult", 10)
 
-
-                # Inverse offset group (matches original offset group)
-                #inverse_offset = f"{guide}_inverse"
-                #inverse_grp = mc.group(empty=True, name=inverse_offset)
-                #mc.xform(inverse_grp, ws=True, t=pos, ro=(0, 0, 0))
-                #mc.delete(mc.parentConstraint(offset, inverse_grp))
-                #mc.parent(inverse_grp, offset)
-                #mc.parent(ctrl, inverse_grp)
                 mc.parent(blink2_grp, blink3_grp)
                 mc.parent(blink_grp, blink2_grp)
                 mc.parent(offset, blink_grp)
@@ -726,6 +719,14 @@ class UEeye(UEface):
         mc.parent(f'Eye_{side}_EyeRot_Offset_{side}_CTRL_CNST_GRP', f'{prefix}_eyelid_extra_offset')
 
         mc.hide(surfs[0], surfs[1],)
+
+        if self.split:
+            for part in ['Upper', 'Lower']:
+                split_joint = f'Eye_{side}_Eyelid_Inner{part}01_JNT'
+                split_joints: list[str] = [f'Eye_{side}_Eyelid_Inner{part}01_JNT', f'Eye_{side}_Eyelid_{part}_JNT', f'Eye_{side}_Eyelid_Outer{part}01_JNT']
+                mc.addAttr(split_joint, longName="split_joints", dataType="string")
+                mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
+                
 
 
         #socket corner follow

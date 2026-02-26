@@ -19,13 +19,14 @@ reload(rGuide)
 reload(rXform)
 
 class UEmouth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=False, mastercontrol=True):
+    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=False, mastercontrol=True, split=False,):
         super().__init__(part='Mouth', grp_name=grp_name, ctrl_scale=ctrl_scale,)
         self.Major_Mouth = Major_Mouth
         self.Major_2 = Major_2
         self.rib_mouth = rib_mouth
         self.cornerhelper = cornerhelper
         self.mastercontrol = mastercontrol 
+        self.split = split
 
     def get_ordered_lip_guides(self, prefix, guides, guide_base, has_mid=True):
         """
@@ -159,6 +160,13 @@ class UEmouth(UEface):
         for loc in to_remove:
             jnt, ctrl, ctrl_offset = UEface.Simple_joint_and_Control(loc, orient=False, check_side=True, CTRL_Size=.2)
             rib_offsets.append(ctrl_offset)
+        
+        if self.split:
+            for part in ['Upper', 'Lower']:
+                split_joint = f'Mouth_L_{part}Lip_05_JNT'
+                split_joints: list[str] = [f'Mouth_L_{part}Lip_05_JNT', f'Mouth_L_{part}Lip_04_JNT', f'Mouth_L_{part}Lip_03_JNT', f'Mouth_L_{part}Lip_02_JNT', f'Mouth_M_{part}Lip_01_JNT', f'Mouth_R_{part}Lip_02_JNT', f'Mouth_R_{part}Lip_03_JNT', f'Mouth_R_{part}Lip_04_JNT', f'Mouth_R_{part}Lip_05_JNT']
+                mc.addAttr(split_joint, longName="split_joints", dataType="string")
+                mc.setAttr(f'{split_joint}.split_joints', repr(split_joints), type="string")
         
         '''
         #outer = upper_outer + lower_outer
