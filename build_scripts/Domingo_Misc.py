@@ -38,11 +38,11 @@ def Domingo_extras(skin_src, skin_trg_grp, face):
     sk_g = []
     if face:
         geo = [
-            'belt', 'vest', 'tail', 'buckle', 'ChestFeathers', 'KneeFeathers', 'HandFeathers', 'FaceFeathers'
+            'belt', 'vest', 'tail', 'buckle', 'ChestFeathers', 'KneeFeathers', 'HandFeathers', 'FaceFeathers', 'HeadFeathers', 'BotButton', 'TopButton'
         ]
     else:
         geo = [
-            'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle', 'FaceFeathers'
+            'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle', 'FaceFeathers', 'HeadFeathers', 'BotButton', 'TopButton'
         ]
 
     #rUtil.create_pxWrap('Shirt', 'Pants', 'Gretchen_UBM')
@@ -75,7 +75,7 @@ def Domingo_misc_pvis(skin_src, skin_trg_grp):
 
     sk_g = []
     geo = [
-        'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle'
+        'tongue', 'topteeth', 'belt', 'mustache', 'eyes', 'vest', 'tail', 'comb', 'beard', 'botteeth', 'corneas', 'pupils', 'buckle', 'HeadFeathers', 'BotButton', 'TopButton'
     ]
     for g in geo:
         sk = mc.skinCluster(bind_joints, g, tsb=True, skinMethod=1, n='clothingSkc')[0]

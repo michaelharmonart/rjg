@@ -435,3 +435,6 @@ class SplineTail(rModule.RigModule, rFk.Fk):
 
         for ctrl in proxylist:
             mc.addAttr(ctrl, longName="FK_IK_Switch", proxy=f"{switch}.Tail_M_IKFK")
+
+        mc.parentConstraint('COG_M_JNT', 'tail_M_MODULE', mo=True)
+        

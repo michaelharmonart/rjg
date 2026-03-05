@@ -1363,10 +1363,10 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     if character == 'Domingo':
         mc.skinCluster('arm_L_01_JNT', 'ArmFeathers', tsb=False)
         if face:
-            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'ArmFeathers', 'comb', 'Mouth_UpperLip_surf', 'Mouth_LowerLip_surf', 'Stache_L_ribbon', 'Stache_R_ribbon', 'botteeth', 'topteeth', 'corneas', 'FaceFeathers', 'ChestFeathers', 'KneeFeathers']: #'Mouth_LowerLip_surf',
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'eyes', 'mustache', 'pupils', 'Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon', 'ArmFeathers', 'comb', 'Mouth_UpperLip_surf', 'Mouth_LowerLip_surf', 'Stache_L_ribbon', 'Stache_R_ribbon', 'botteeth', 'topteeth', 'corneas', 'FaceFeathers', 'ChestFeathers', 'KneeFeathers', 'HeadFeathers', 'BotButton', 'TopButton']: #'Mouth_LowerLip_surf',
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
         else:
-            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'ArmFeathers', 'comb', 'FaceFeathers', 'ChestFeathers', 'KneeFeathers']:
+            for g in ['tail', 'vest', 'beard', 'belt', 'buckle', 'mustache', 'ArmFeathers', 'comb', 'FaceFeathers', 'ChestFeathers', 'KneeFeathers', 'HeadFeathers', 'BotButton', 'TopButton']:
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/Domingo/SkinFiles')
     
 
@@ -1670,7 +1670,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     print(f"Failed to set {attr}: {e}")
             else:
                 print(f"{attr} does not exist on {sc}")
-            if character in ['Luciana', 'Domingo', 'Basemesh', 'CrowdB']:
+            if character in ['Luciana', 'Domingo', 'Basemesh', 'CrowdB', 'CrowdA', 'CrowdC']:
                 mc.setAttr(f'{sc}.skinningMethod', 0)
     except Exception as e:
         print(f"Failed")
