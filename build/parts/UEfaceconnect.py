@@ -345,6 +345,25 @@ class UEfaceconnect(UEface):
 
             if mc.objExists('Tongue_M_Curl_CTRL_CNST_GRP'):
                 mc.parentConstraint('LowerHead_M_CTRL', 'Tongue_M_Curl_CTRL_CNST_GRP', mo=True)
+
+            mc.addAttr(f'Mouth_M_MasterControl_M_CTRL', longName='SubControls', at='bool', k=True)
+            mc.connectAttr(f'Mouth_M_MasterControl_M_CTRL.SubControls', 'Mouth_Extras_offsets.visibility')
+            
+            for side in ['L', 'R']:
+                mc.addAttr(f'Eye_{side}_MasterControl_{side}_CTRL', longName='SubControls', at='bool', k=True)
+                mc.connectAttr(f'Eye_{side}_MasterControl_{side}_CTRL.SubControls', f'Eye_{side}_eyelid_Control_GRP.visibility')
+                mc.addAttr(f'NLFold_{side}_{side}_CTRL', longName='SubControls', at='bool', k=True)
+                mc.connectAttr(f'NLFold_{side}_{side}_CTRL.SubControls', f'Cheek_{side}_NLFold_01_{side}_CTRL_CNST_GRP.visibility')
+                mc.connectAttr(f'NLFold_{side}_{side}_CTRL.SubControls', f'Cheek_{side}_NLFold_02_{side}_CTRL_CNST_GRP.visibility')
+                mc.connectAttr(f'NLFold_{side}_{side}_CTRL.SubControls', f'Cheek_{side}_NLFold_03_{side}_CTRL_CNST_GRP.visibility')
+                mc.connectAttr(f'NLFold_{side}_{side}_CTRL.SubControls', f'Cheek_{side}_NLFold_04_{side}_CTRL_CNST_GRP.visibility')
+                mc.connectAttr(f'NLFold_{side}_{side}_CTRL.SubControls', f'Cheek_{side}_NLFold_05_{side}_CTRL_CNST_GRP.visibility')
+                mc.addAttr(f'Ear_{side}_Root_{side}_CTRL', longName='SubControls', at='bool', k=True)
+                mc.connectAttr(f'Ear_{side}_Root_{side}_CTRL.SubControls', f'Ear_{side}_Upper_{side}_CTRL_CNST_GRP.visibility')
+                mc.connectAttr(f'Ear_{side}_Root_{side}_CTRL.SubControls', f'Ear_{side}_Outer_{side}_CTRL_CNST_GRP.visibility')
+                mc.connectAttr(f'Ear_{side}_Root_{side}_CTRL.SubControls', f'Ear_{side}_Lower_{side}_CTRL_CNST_GRP.visibility')
+                mc.addAttr(f'Brow_{side}_Master_{side}_CTRL', longName='SubControls', at='bool', k=True)
+                mc.connectAttr(f'Brow_{side}_Master_{side}_CTRL.SubControls', f'Brow_{side}_extras_offset_grp.visibility')
                 
 
 
@@ -370,16 +389,6 @@ class UEfaceconnect(UEface):
                 mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
                 mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
-
-                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
-                #mc.addAttr('BotTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Botteeth_spaceswitch', proxy='BotTeeth_M_CTRL.MouthMaster_spaceswitch')
-                #mc.connectAttr('BotTeeth_M_CTRL.MouthMaster_spaceswitch', 'BotTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
-
-                #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'Tongue_01_01_CTRL_CNST_GRP', mo=True)
-                #mc.addAttr('Tongue_01_01_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                #mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Tongue_spaceswitch', proxy='Tongue_01_01_CTRL.MouthMaster_spaceswitch')
-                #mc.connectAttr('Tongue_01_01_CTRL.MouthMaster_spaceswitch', 'Tongue_01_01_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
                 for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']:
                     mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
                     mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
