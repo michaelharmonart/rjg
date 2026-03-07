@@ -25,7 +25,8 @@ class Hand(rModule.RigModule):
         guide_path=None,
         expression_control=True,
         bendy_visibility: bool | None = None,
-        handroll = False
+        handroll = False,
+        handshape='box'
     ):
         super().__init__(
             side=side,
@@ -42,6 +43,10 @@ class Hand(rModule.RigModule):
         self.local_orient = local_orient
         self.bendy_visibility = bendy_visibility
         self.handroll = handroll
+        if handshape == 'wrist':
+            self.handshape = f'wrist{self.side}'
+        else:
+            self.handshape=handshape
         
         self.create_module()
 
@@ -54,7 +59,7 @@ class Hand(rModule.RigModule):
         self.add_plugs()
 
     def control_rig(self):
-        self.hand_01 = rCtrl.Control(parent=self.control_grp, shape='cube', side=None, suffix='CTRL', name=self.base_name + '_01', axis='y', group_type='main',
+        self.hand_01 = rCtrl.Control(parent=self.control_grp, shape=self.handshape, side=None, suffix='CTRL', name=self.base_name + '_01', axis='y', group_type='main',
                                      rig_type='primary', translate=self.guide_list[0], rotate=(0, 0, 0), ctrl_scale=self.ctrl_scale)
         self.hand_02 = rCtrl.Control(parent=self.hand_01.ctrl, shape='cube', side=None, suffix='CTRL', name=self.base_name + '_02', axis='y', group_type='main',
                                      rig_type='secondary', translate=self.guide_list[0], rotate=(0, 0, 0), ctrl_scale=self.ctrl_scale * 0.85)

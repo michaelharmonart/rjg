@@ -38,7 +38,7 @@ class UEface:
     @staticmethod
     def build_basic_control( name='Main', shape='circle', size=5.0, color_rgb=(1, 1, 0), position=(0, 0, 0), rotation=(0, 0, 0)):
         side = UEface.get_side_from_guide(name)
-        rCtrl.ctrl = rCtrl.Control(parent=None, 
+        control = rCtrl.Control(parent=None, 
                                        shape=shape, 
                                        side=side, 
                                        suffix='CTRL', 
@@ -49,8 +49,9 @@ class UEface:
                                        translate=position, 
                                        rotate=rotation, 
                                        ctrl_scale= size)
-        ctrl_name = rCtrl.ctrl.ctrl      # This is the shape transform node (e.g., 'Main_CTRL')
-        top_group = rCtrl.ctrl.top       # This is the topmost group (e.g., 'Main_CTRL_OFF')
+        ctrl_name = control.ctrl      # This is the shape transform node (e.g., 'Main_CTRL')
+        top_group = control.top       # This is the topmost group (e.g., 'Main_CTRL_OFF')
+        control.tag_as_controller()
     
         return ctrl_name, top_group
     

@@ -52,6 +52,7 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         handroll=False,
         pv_guide="smart_auto",
         metacarpal_ik: bool = False,
+        curlshape = 'sims'
     ):
         super().__init__(
             side=side,
@@ -81,6 +82,13 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
         self.solver= None
         self.stretchy = True
         self.metacarpal_ik = metacarpal_ik
+        if self.side == "R":
+            if curlshape == "sims":
+                self.curlshape = 'simsR'
+            else:
+                self.curlshape = curlshape
+        else:
+            self.curlshape=curlshape
         
         if self.metacarpal_ik:
             self.ik_guides: list[str] = self.guide_list[:-1]
@@ -241,9 +249,9 @@ class Finger(rModule.RigModule, rFk.Fk, rIk.Ik):
             
         if self.curl:
             if self.part == 'fingerThumb':
-                self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
+                self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape=self.curlshape, side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
             else:
-                self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape="curl", side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[1], rotate=self.guide_list[1], ctrl_scale=self.ctrl_scale)
+                self.curl_ctrl = rCtrl.Control(parent=self.control_grp, shape=self.curlshape, side=None, suffix='CTRL', name=f'{self.base_name}_curl', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[1], rotate=self.guide_list[1], ctrl_scale=self.ctrl_scale)
     
     def output_rig(self):
         self.chain_grp = mc.group(

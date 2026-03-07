@@ -2,6 +2,7 @@ import platform
 import sys
 from importlib import reload
 
+from rjg.build_scripts.bettercontrols import apply_control_file
 import maya.cmds as mc
 import maya.mel as mel
 
@@ -139,17 +140,19 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             chestoffset = True
         )
     elif character in ['Susaka', 'Domingo', 'Luciana', 'Drummer', 'SharkGuy', 'Basemesh', 'CrowdB']:
-        if character in ['Basemesh', 'CrowdB']:
+        if character in ['Basemesh', 'CrowdB', 'CrowdA', 'CrowdC']:
             split_weights = True
+            hipshape = 'hips'
         else:
             split_weights = False
+            hipshape = 'quad_arrow'
         hip = rBuild.build_module(
             module_type="hip",
             side="M",
             part="COG",
             guide_list=["Hips"],
             ctrl_scale=50,
-            cog_shape="quad_arrow",
+            cog_shape=hipshape,
             waist_shape="circle",
             generate_waist=False,
         )
@@ -433,16 +436,20 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     #Mirrored Base Rig Parts
     fing_shape = 'circle' if character in ['Susaka', 'NPC', 'Fisherman', 'Luciana', 'Domingo', 'Sharkguy', 'Gretchen', 'Drummer', 'Bobo', 'Basemesh', 'CrowdB'] else 'lollipop'
     curlaxis = 'Z' if character != 'Gretchen' else 'X'
-    if character in ['Basemesh', 'Drummer','CrowdB']:
+    if character in ['Basemesh', 'Drummer','CrowdB', 'CrowdA', 'CorwdC']:
         clavshape = 'Arch'
         Clavmo=True
         Clavaim=False
         FootMus=True
+        footshp = "shoe"
+        curlshape = "sims"
     else:
         clavshape = 'cube'
         Clavmo=False
         Clavaim=True
         FootMus=False
+        footshp = "cube"
+        curlshape= "curl"
 
 
 
@@ -522,12 +529,17 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             ik_fingers = True
         else:
             ik_fingers = False
+        
+        if character in ['Basemesh', 'CrowdB', 'CrowdA']:
+            handshape = 'wrist'
+        else:
+            handshape='box'
             
         # Hand
         if character == 'Bobo':
             hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = False, handroll=handroll)
         else:
-            hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = bendy_switch, handroll = handroll)
+            hand: Hand = rBuild.build_module(module_type='hand', side=fs[0], part='hand', guide_list=[fs + 'Hand'], ctrl_scale=8, bendy_visibility = bendy_switch, handroll = handroll, handshape=handshape)
         if hand.bendy_vis_attr is not None:
             for control in [arm.fk_ctrls[-1], arm.main_ctrl]:
                 mc.addAttr(control.ctrl, longName="handBendyVisibility", proxy=hand.bendy_vis_attr)
@@ -579,7 +591,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                     in_piv=fs + "In",
                     out_piv=fs + "Out",
                     express=Fexpress,
-                    mus_tgt=FootMus
+                    mus_tgt=FootMus,
+                    foot_shape = footshp
                 )
         fingers = []
         
@@ -609,7 +622,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 create_ik=ik_fingers,
                 bendy_vis_attr = hand.bendy_vis_attr,
                 curlaxis = curlaxis,
-                handroll = handroll
+                handroll = handroll,
+                curlshape = curlshape
             )
             fingers.append(finger)
 
@@ -627,6 +641,7 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             bendy_vis_attr = hand.bendy_vis_attr,
             curlaxis = curlaxis,
             metacarpal_ik = True,
+            curlshape = curlshape
         )
         fingers.append(thumb) 
 
@@ -1173,13 +1188,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         rFinal.final(utX=90, utY=0, DutZ=15, utScale=3, polish=False, character=character)
     else:
         rFinal.final(utX=90, utY=0, DutZ=15, utScale=3, polish=False)
-    
-    # set up control shapes
-    if cp:
-        cp_div = cp.split('/')
-        dir = '/'.join(cp_div[:-1])
-        rCtrlIO.read_ctrls(dir, curve_file=cp_div[-1][:-5])    
-    
+       
+        
     # add prop to set
     if character == 'Robin':
         mc.sets('icepick_geo', add='cache_SET')
@@ -1719,6 +1729,16 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         #mc.delete('ArmTwist_L', 'ArmTwist_R')
         #mc.parentConstraint('arm_L_01_JNT', 'ArmTwist_L_JNT', mo = False)
         #mc.parentConstraint('arm_R_01_JNT', 'ArmTwist_R_JNT', mo = False)
+
+    # set up control shapes
+    if character in ['Basemesh']:
+        apply_control_file(cp)
+    
+    else:
+        if cp:
+            cp_div = cp.split('/')
+            dir = '/'.join(cp_div[:-1])
+            rCtrlIO.read_ctrls(dir, curve_file=cp_div[-1][:-5]) 
     
         
 

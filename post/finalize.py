@@ -149,17 +149,28 @@ def add_color_attrs(x, y, z, utScale):
         mc.setAttr(thickness.attr, -1)
         for ctrl in ctrl_list:
             try:
-                for shape in mc.listRelatives(ctrl, shapes=True, type="nurbsCurve"):
-                    mc.setAttr(shape + ".overrideEnabled", 1)
-                    mc.setAttr(shape + ".overrideRGBColors", 1)
-                    if type == "primary":
-                        mc.connectAttr(ctrl_side_color_map[ctrl], shape + ".overrideColorRGB")
-                        mc.connectAttr(ctrl_side_show_on_top_map[ctrl], shape + ".alwaysDrawOnTop")
-                        mc.connectAttr(ctrl_side_thickness_map[ctrl], shape + ".lineWidth")
-                    else:
-                        mc.connectAttr(color.attr, shape + ".overrideColorRGB")
-                        mc.connectAttr(show_on_top.attr, shape + ".alwaysDrawOnTop")
-                        mc.connectAttr(thickness.attr, shape + ".lineWidth")
+                # for shape in mc.listRelatives(ctrl, shapes=True, type="nurbsCurve"):
+                #     mc.setAttr(shape + ".overrideEnabled", 1)
+                #     mc.setAttr(shape + ".overrideRGBColors", 1)
+                #     if type == "primary":
+                #         mc.connectAttr(ctrl_side_color_map[ctrl], shape + ".overrideColorRGB")
+                #         mc.connectAttr(ctrl_side_show_on_top_map[ctrl], shape + ".alwaysDrawOnTop")
+                #         mc.connectAttr(ctrl_side_thickness_map[ctrl], shape + ".lineWidth")
+                #     else:
+                #         mc.connectAttr(color.attr, shape + ".overrideColorRGB")
+                #         mc.connectAttr(show_on_top.attr, shape + ".alwaysDrawOnTop")
+                #         mc.connectAttr(thickness.attr, shape + ".lineWidth")
+                mc.setAttr(ctrl + ".overrideEnabled", 1)
+                mc.setAttr(ctrl + ".overrideRGBColors", 1)
+                if type == "primary":
+                    mc.connectAttr(ctrl_side_color_map[ctrl], ctrl + ".overrideColorRGB")
+                    mc.connectAttr(ctrl_side_show_on_top_map[ctrl], ctrl + ".alwaysDrawOnTop")
+                    mc.connectAttr(ctrl_side_thickness_map[ctrl], ctrl + ".lineWidth")
+                else:
+                    mc.connectAttr(color.attr, ctrl + ".overrideColorRGB")
+                    mc.connectAttr(show_on_top.attr, ctrl + ".alwaysDrawOnTop")
+                    mc.connectAttr(thickness.attr, ctrl + ".lineWidth")
+                
             except Exception as e:
                 print(e)
 

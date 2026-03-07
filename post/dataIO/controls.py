@@ -32,7 +32,7 @@ def read_ctrls(directory, curve_file='control_curves'):
         mc.error('Curves file {} does not exist.'.format(path))
 
     for info in curve_data.values():
-        for shape in info:
+        for shape in sorted(info):
             if mc.objExists(shape):
                 for i, pos in enumerate(info[shape]['cv_pose']):
                     mc.xform('{}.cv[{}]'.format(shape, i), objectSpace=True, translation=pos)

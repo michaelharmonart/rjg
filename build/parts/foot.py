@@ -33,6 +33,7 @@ class Foot(rModule.RigModule):
         toe_roll_threshold: float = 0,
         express=False,
         mus_tgt=False,
+        foot_shape='cube'
     ):
         super(Foot, self).__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.in_piv = in_piv
@@ -42,6 +43,7 @@ class Foot(rModule.RigModule):
         self.toe_roll_threshold: float = toe_roll_threshold
         self.express = express
         self.mus_tgt = mus_tgt
+        self.foot_shape=foot_shape
 
         if not self.toe_piv:
             self.toe_piv = self.guide_list[-1]
@@ -60,7 +62,7 @@ class Foot(rModule.RigModule):
     def control_rig(self):
         attr_util = rAttr.Attribute(add=False)
 
-        self.main_ctrl = rCtrl.Control(parent=self.control_grp, shape='cube', side=self.side, suffix='CTRL', name=self.base_name + '_01', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
+        self.main_ctrl = rCtrl.Control(parent=self.control_grp, shape=self.foot_shape, side=self.side, suffix='CTRL', name=self.base_name + '_01', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], ctrl_scale=self.ctrl_scale)
         self.second_ctrl = rCtrl.Control(parent=self.main_ctrl.ctrl, shape='cube', side=self.side, suffix='CTRL', name=self.base_name + '_02', axis='y', group_type='main', rig_type='secondary', translate=self.guide_list[0], ctrl_scale=self.ctrl_scale * 0.85)
         self.toe_piv = rCtrl.Control(parent=self.second_ctrl.ctrl, shape='cube', side=self.side, suffix='CTRL', name=self.base_name + '_toe_piv', axis='y', group_type='main', rig_type='pivot', translate=self.toe_piv, rotate=self.guide_list[-1], ctrl_scale=self.ctrl_scale * 0.2)
         self.heel_piv = rCtrl.Control(parent=self.toe_piv.ctrl, shape='cube', side=self.side, suffix='CTRL', name=self.base_name + '_heel_piv', axis='y', group_type='main', rig_type='pivot', translate=self.heel_piv, ctrl_scale=self.ctrl_scale * 0.2)
