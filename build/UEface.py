@@ -51,7 +51,7 @@ class UEface:
                                        ctrl_scale= size)
         ctrl_name = control.ctrl      # This is the shape transform node (e.g., 'Main_CTRL')
         top_group = control.top       # This is the topmost group (e.g., 'Main_CTRL_OFF')
-        control.tag_as_controller()
+        #control.tag_as_controller()
     
         return ctrl_name, top_group
     

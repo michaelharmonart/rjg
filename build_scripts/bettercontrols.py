@@ -159,7 +159,7 @@ def get_tagged_controls() -> list[str]:
         connected: list[str] = cmds.listConnections(
             f"{control_node}.controllerObject", source=True, destination=False
         )
-        if connected[0] not in ['vis_CTRL', 'color_CTRL', 'switch_CTRL']:
+        if connected[0] in ['hand_L_01_CTRL', 'hand_R_01_CTRL', 'foot_L_01_L_CTRL', 'foot_R_01_R_CTRL', 'COG_M_CTRL', ]:
             tagged_controls.append(connected[0])
 
     return tagged_controls
@@ -224,27 +224,36 @@ def apply_control_file(filepath: str) -> None:
     for control in control_dict:
         if control in current_control_dict:
             shapes: list[str] = get_shapes(transform=control)
-            for shape in shapes:
-                cmds.delete(shape)
-            curve_data = control_dict[control]
-            for index, shape in enumerate(curve_data):
-                info = curve_data[shape]
-                positions: list[tuple[float, float, float]] = info["cv_positions"]
-                degree: int = info["degree"]
-                periodic: bool = True if info["form"] == 2 else False
-                knots: list[float] = info["knots"]
-                weights: list[float] = info["cv_weights"]
-                draw_on_top: bool = info["draw_on_top"]
-                position_weights: list[tuple[float, float, float, float]] = [
-                    (position[0], position[1], position[2], weights[index])
-                    for index, position in enumerate(positions)
-                ]
+            try:
+                for shape in shapes:
+                    attr = f"{shape}.alwaysDrawOnTop"
+                    #incoming = cmds.listConnections(attr, source=True, destination=False, plugs=True)
+                    src = cmds.connectionInfo(attr, sourceFromDestination=True)
+                    cmds.delete(shape)
+                curve_data = control_dict[control]
+                for index, shape in enumerate(curve_data):
+                    info = curve_data[shape]
+                    positions: list[tuple[float, float, float]] = info["cv_positions"]
+                    degree: int = info["degree"]
+                    periodic: bool = True if info["form"] == 2 else False
+                    knots: list[float] = info["knots"]
+                    weights: list[float] = info["cv_weights"]
+                    draw_on_top: bool = info["draw_on_top"]
+                    position_weights: list[tuple[float, float, float, float]] = [
+                        (position[0], position[1], position[2], weights[index])
+                        for index, position in enumerate(positions)
+                    ]
 
-                child_curve_transform: str = cmds.curve(
-                    pointWeight=position_weights, knot=knots, periodic=periodic, degree=degree
-                )
-                curve_shape_node: str = get_shapes(child_curve_transform)[0]
-                curve_shape_node = cmds.rename(curve_shape_node, shape)
-                cmds.setAttr(f"{curve_shape_node}.alwaysDrawOnTop", 1 if draw_on_top else 0)
-                cmds.parent(curve_shape_node, control, shape=True, relative=True)
-                cmds.delete(child_curve_transform)
+                    child_curve_transform: str = cmds.curve(
+                        pointWeight=position_weights, knot=knots, periodic=periodic, degree=degree
+                    )
+                    curve_shape_node: str = get_shapes(child_curve_transform)[0]
+                    curve_shape_node = cmds.rename(curve_shape_node, shape)
+                    xray_attr = f"{curve_shape_node}.alwaysDrawOnTop"
+                    cmds.setAttr(f"{curve_shape_node}.alwaysDrawOnTop", 1 if draw_on_top else 0)
+                    if src:
+                        cmds.connectAttr(src, xray_attr)
+                    cmds.parent(curve_shape_node, control, shape=True, relative=True)
+                    cmds.delete(child_curve_transform)
+            except:
+                pass

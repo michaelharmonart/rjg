@@ -1725,14 +1725,13 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         mc.hide('ClothingProxy')
 
 
-        #mc.delete('ArmTwist_L_JNT_parentConstraint1', 'ArmTwist_R_JNT_parentConstraint1')
-        #mc.delete('ArmTwist_L', 'ArmTwist_R')
-        #mc.parentConstraint('arm_L_01_JNT', 'ArmTwist_L_JNT', mo = False)
-        #mc.parentConstraint('arm_R_01_JNT', 'ArmTwist_R_JNT', mo = False)
-
     # set up control shapes
-    if character in ['Basemesh']:
+    if character in []:
         apply_control_file(cp)
+        #fix the root ones
+        cp_div = cp.split('/')
+        dir = '/'.join(cp_div[:-1])
+        rCtrlIO.read_ctrls(dir, curve_file=cp_div[-1][:-5])
     
     else:
         if cp:

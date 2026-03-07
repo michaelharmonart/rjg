@@ -183,6 +183,7 @@ class BipedLimb(rModule.RigModule, rIk.Ik, rFk.Fk):
                 rotate=self.guide_list[-1],
                 ctrl_scale=self.ctrl_scale,
             )
+            self.prop_control.tag_as_controller()
             prop_control_vis = rAttr.Attribute(node=self.control_grp, type="double", min=0, max=1, keyable=True, name="propControlVisibility", value=1)
             for control in [self.fk_ctrls[-1].ctrl, self.main_ctrl.ctrl, self.prop_control.ctrl]:
                 mc.addAttr(control, longName="propControlVisibility", proxy=prop_control_vis.attr)

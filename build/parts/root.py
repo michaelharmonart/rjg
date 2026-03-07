@@ -63,6 +63,7 @@ class Root(rModule.RigModule):
         self.link_control = rCtrl.Control(parent=self.global_control.ctrl, shape='RJG_Logo', side=self.side, suffix='CTRL', name='RJG', axis='y', rig_type='global', ctrl_scale=self.ctrl_scale)
         if self.muscle_ctrl:
             self.musc_control = rCtrl.Control(parent=self.global_control.ctrl, shape='Muscle', side=self.side, suffix='CTRL', name='Muscle_Global', axis='y', rig_type='global', ctrl_scale=self.ctrl_scale)
+            self.musc_control.tag_as_controller()
 
             attrs = mc.listAttr(self.musc_control.ctrl, keyable=True) or []
             for attr in attrs:
