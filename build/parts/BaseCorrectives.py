@@ -49,6 +49,7 @@ def pop_corrective(
         mc.addAttr(root_jnt, longName='tgt_rot_influence', k=True, dv=tgt_influence)
 
         oreintLoc = mc.spaceLocator(name=f'{tgt_limb}_{pop_descriptor}_Orient_LOC')[0]
+        mc.connectAttr("CorrectiveRigParts.Comp_Vis", f'{oreintLoc}.visibility')
 
         
         oreintgrp = mc.group(empty=True, name=f'{tgt_limb}_{pop_descriptor}_Orient_GRP')
@@ -102,7 +103,17 @@ def pop_corrective(
     mc.select(par_jnt)
     bindjnt = mc.joint(n=f'{pop_descriptor}_JNT', p=root_pos)
     mc.setAttr(f"{bindjnt}.jointOrient", rot[0], rot[1], rot[2])
-    mc.parentConstraint(end_jnt, bindjnt)
+
+    if buildControl:
+        control = rCtrl.Control(parent=None, shape="hexagon", side=None, suffix='CTRL', name=f'{pop_descriptor}', axis='y', group_type='main', rig_type='primary', translate=pop_root, rotate=pop_root, ctrl_scale=1)
+
+        mc.parentConstraint(end_jnt, control.top)
+        mc.parentConstraint(control.ctrl, bindjnt)
+        mc.connectAttr('Muscle_Global_M_CTRL.Mus_Visibility', f'{control.top}.visibility')
+        mc.parent(control.top, 'CorrectiveRigParts')
+
+    else:
+        mc.parentConstraint(end_jnt, bindjnt)
     rig_module.tag_bind_joints(bindjnt)
 
     mc.parent(null_jnt, 'CorrectiveRigParts')
@@ -448,6 +459,7 @@ def build_simple_muscle_chain(
             control = rCtrl.Control(parent=None, shape="hexagon", side=None, suffix='CTRL', name=f'{mus_descriptor}', axis='y', group_type='main', rig_type='primary', translate=mid_jnt, rotate=mid_jnt, ctrl_scale=1)
             mc.parentConstraint(control.ctrl, j)
             mc.parentConstraint(jnt, control.top)
+            mc.parent(control.top, 'CorrectiveRigParts')
         else:
             mc.parentConstraint(jnt, j)
         
@@ -502,6 +514,7 @@ def Build_Correctives(side='L'):
         cor_root = mc.group(empty=True, name='CorrectiveRigParts')
         mc.parent(cor_root, 'RIG')
         mc.addAttr(cor_root, longName='Comp_Vis', at='bool', k=True)
+        mc.addAttr("Muscle_Global_M_CTRL", longName='Corrective_rig_Vis', proxy=f'{cor_root}.Comp_Vis')
 
 
 
