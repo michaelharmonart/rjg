@@ -370,6 +370,7 @@ class autoneck(rModule.RigModule, rIk.Ik, rFk.Fk):
 
         mc.parentConstraint('chest_top_M_CTRL', 'neck_M_IK_CTRL_GRP', mo=True)
         mc.parentConstraint('chest_top_M_CTRL', self.Ikhead.top, mo=True)
+        mc.parentConstraint('chest_M_JNT', 'neck_M_MODULE')
         if self.create_ik and self.create_fk:
             ikfkswitchattr = []
             ikfkswitchattr.extend(self.iklist)

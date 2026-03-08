@@ -443,6 +443,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         FootMus=True
         footshp = "shoe"
         curlshape = "sims"
+        chest_control=True,
+        scap_control=True,
     else:
         clavshape = 'cube'
         Clavmo=False
@@ -450,6 +452,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
         FootMus=False
         footshp = "cube"
         curlshape= "curl"
+        chest_control=False,
+        scap_control=False,
 
 
 
@@ -479,6 +483,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
                 shape = clavshape,
                 mo=Clavmo,
                 aim=Clavaim,
+                chest_control=chest_control,
+                scap_control=scap_control,
             )
         if character in ['Luciana']:
             prop_control = False

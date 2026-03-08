@@ -40,6 +40,8 @@ class Clavicle(rModule.RigModule):
         shape = 'cube',
         mo=False,
         aim=True,
+        chest_control=False,
+        scap_control=False,
     ):
         super().__init__(side=side, part=part, guide_list=guide_list, ctrl_scale=ctrl_scale, model_path=model_path, guide_path=guide_path)
         self.auto_clavicle = auto_clavicle
@@ -56,6 +58,8 @@ class Clavicle(rModule.RigModule):
         self.shape = shape
         self.mo=mo
         self.aim=aim
+        self.chest_control=chest_control
+        self.scap_control=scap_control
         self.create_module()
 
     def create_module(self):
@@ -93,7 +97,36 @@ class Clavicle(rModule.RigModule):
 
         attr_util = rAttr.Attribute(add=False)
         attr_util.lock_and_hide(node=self.main_ctrl.ctrl, translate=False, rotate=False)
+        
+        if self.chest_control:
+            self.chest_ctrl = rCtrl.Control(parent=self.control_grp, shape='circle', side=self.side, suffix='CTRL', name='chest', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=rotate, ctrl_scale=self.ctrl_scale)
+            self.chest_ctrl.tag_as_controller()
+            pos = mc.xform(self.guide_list[0], q=True, ws=True, t=True)
+            rot = mc.xform(self.guide_list[0], q=True, ws=True, ro=True)
+            clav_offset_follow = mc.group(empty=True, name = f'{self.side}_clavFollow_offset_GRP', )
+            clav_follow = mc.group(empty=True, name = f'{self.side}_clavFollow_GRP')
+            mc.parent(clav_follow, clav_offset_follow)
+            mc.xform(clav_offset_follow, ws=True, translation=pos, rotation=rot)
+            mc.parentConstraint('chest_M_JNT',clav_offset_follow, mo=True)
+            mc.addAttr(self.chest_ctrl.ctrl, longName='Follow_Mult', k=True, at='double', max=1, min=0, dv=.5)
+            rot_md= mc.createNode('multiplyDivide', name=f'{self.side}_clav_follow_MD')
+            trans_md= mc.createNode('multiplyDivide', name=f'{self.side}_clav_follow_MD')
+            for axe in ["X", "Y", "Z"]:
+                mc.connectAttr(f'clavicle_{self.side}_CTRL.rotate{axe}', f'{rot_md}.input1{axe}')
+                mc.connectAttr(f'{self.chest_ctrl.ctrl}.Follow_Mult', f'{rot_md}.input2{axe}')
+                mc.connectAttr( f'{rot_md}.output{axe}', f'{clav_follow}.rotate{axe}')
+                mc.connectAttr(f'clavicle_{self.side}_CTRL.translate{axe}', f'{trans_md}.input1{axe}')
+                mc.connectAttr(f'{self.chest_ctrl.ctrl}.Follow_Mult', f'{trans_md}.input2{axe}')
+                mc.connectAttr( f'{trans_md}.output{axe}', f'{clav_follow}.translate{axe}')
+            
+            mc.parentConstraint(clav_follow, self.chest_ctrl.top, mo=True)
+            mc.parent(clav_offset_follow, f'clavicle_{self.side}_MODULE')
 
+
+        if self.scap_control:
+            self.scap_ctrl = rCtrl.Control(parent=self.control_grp, shape='circle', side=self.side, suffix='CTRL', name='scapula', axis='y', group_type='main', rig_type='primary', translate=self.guide_list[0], rotate=rotate, ctrl_scale=self.ctrl_scale)
+            self.scap_ctrl.tag_as_controller()
+            mc.parentConstraint(self.main_ctrl.ctrl, self.scap_ctrl.top, mo=True)
 
     def output_rig(self):
         
@@ -188,6 +221,27 @@ class Clavicle(rModule.RigModule):
                          bta + '.attributesBlender')
         # connect final output
         mc.connectAttr(bta + '.output', self.clav_chain.joints[0] + '.scaleY')
+
+        if self.chest_control:
+            pos = mc.xform(self.guide_list[0], q=True, ws=True, t=True)
+            rot = mc.xform(self.guide_list[0], q=True, ws=True, ro=True)
+            mc.select('chest_M_JNT')
+            self.chest_jnt = mc.joint(n=f'chest_{self.side}_JNT', p=pos)
+            mc.setAttr(f"{self.chest_jnt}.jointOrient", rot[0], rot[1], rot[2])
+            mc.parentConstraint(self.chest_ctrl.ctrl, self.chest_jnt, mo=True)
+            self.tag_bind_joints(self.chest_jnt)
+
+        if self.scap_control:
+            pos = mc.xform(self.guide_list[0], q=True, ws=True, t=True)
+            rot = mc.xform(self.guide_list[0], q=True, ws=True, ro=True)
+            mc.select('chest_M_JNT')
+            self.scap_jnt = mc.joint(n=f'scapula_{self.side}_JNT', p=pos)
+            mc.setAttr(f"{self.scap_jnt}.jointOrient", rot[0], rot[1], rot[2])
+            mc.parentConstraint(self.scap_ctrl.ctrl, self.scap_jnt, mo=True)
+            self.tag_bind_joints(self.scap_jnt)
+
+
+
 
     def create_auto_clavicle(self) -> None:
         self.create_inputs(group=self.module_grp)

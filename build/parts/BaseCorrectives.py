@@ -38,9 +38,12 @@ def pop_corrective(
 
     mc.select(clear=True)
     null_jnt = mc.joint(n=f'{pop_descriptor}_NULL_JNT', p=root_pos)
+    mc.setAttr(f"{null_jnt}.segmentScaleCompensate", 0)
     root_jnt = mc.joint(n=f'{pop_descriptor}_root_JNT', p=root_pos)
+    mc.setAttr(f"{root_jnt}.segmentScaleCompensate", 0)
     mc.setAttr(f"{root_jnt}.jointOrient", rot[0], rot[1], rot[2])
     end_jnt = mc.joint(n=f'{pop_descriptor}_end_JNT', p=root_pos)
+    mc.setAttr(f"{end_jnt}.segmentScaleCompensate", 0)
 
 
     if blend_par == []:
@@ -102,6 +105,7 @@ def pop_corrective(
     # Bind
     mc.select(par_jnt)
     bindjnt = mc.joint(n=f'{pop_descriptor}_JNT', p=root_pos)
+    mc.setAttr(f"{bindjnt}.segmentScaleCompensate", 0)
     mc.setAttr(f"{bindjnt}.jointOrient", rot[0], rot[1], rot[2])
 
     if buildControl:
@@ -117,6 +121,11 @@ def pop_corrective(
     rig_module.tag_bind_joints(bindjnt)
 
     mc.parent(null_jnt, 'CorrectiveRigParts')
+
+    mc.scaleConstraint(par_jnt, null_jnt, mo=True)
+
+    ################ FIX THIS LATER ###########################
+    mc.scaleConstraint(par_jnt, {control.top}, mo=True)
 
     #mc.connectAttr('Muscle_Global_M_CTRL.Mus_Visibility', f'{control.top}.visibility')
     mc.connectAttr(f'CorrectiveRigParts.Comp_Vis', f'{null_jnt}.visibility')
@@ -152,6 +161,11 @@ def build_simple_muscle_chain(
 ):
     created_joints = []
     created_groups = []
+
+    mus_grp = mc.group(empty=True, name=f'{mus_descriptor}_GRP')
+    mc.parent(mus_grp, 'CorrectiveRigParts')
+    #mc.parentConstraint(par_jnt, mus_grp, mo=True)
+    #mc.scaleConstraint(par_jnt, mus_grp, mo=True)
 
     # ----------------------------
     # Get guide positions
@@ -331,7 +345,7 @@ def build_simple_muscle_chain(
     )
 
     mc.parentConstraint(tgt_loc, ik, mo=True)
-    mc.parent(ik, 'CorrectiveRigParts')
+    mc.parent(ik, mus_grp)
 
 
     dm = mc.createNode('decomposeMatrix', name=f'{mus_descriptor}_DECMATRIX')
@@ -364,13 +378,13 @@ def build_simple_muscle_chain(
 
     # ---- Divide normalize MD ----
 
-    norm_md = mc.createNode('multiplyDivide', n=f'{mus_descriptor}_normalize_MD')
-    mc.setAttr(f'{norm_md}.operation', 2)  # divide
+    #norm_md = mc.createNode('multiplyDivide', n=f'{mus_descriptor}_normalize_MD')
+    #mc.setAttr(f'{norm_md}.operation', 2)  # divide
 
-    current_len = mc.getAttr(f'{end_null}.translateY')
-    mc.setAttr(f'{norm_md}.input2Y', current_len)
+    #current_len = mc.getAttr(f'{end_null}.translateY')
+    #mc.setAttr(f'{norm_md}.input2Y', current_len)
 
-    mc.connectAttr(f'{end_null}.translateY', f'{norm_md}.input1Y')
+    #mc.connectAttr(f'{end_null}.translateY', f'{norm_md}.input1Y')
 
     # ---- Remap for scale up ----
 
@@ -439,9 +453,11 @@ def build_simple_muscle_chain(
         if i == 0:
             mc.select(par_jnt)
             j = mc.joint(n=f'{mus_descriptor}_{i}_JNT', p=pos)
+            mc.setAttr(f"{j}.segmentScaleCompensate", 0)
         else:
             mc.select( f'{mus_descriptor}_0_JNT')
             j = mc.joint(n=f'{mus_descriptor}_{i}_JNT', p=pos)
+            mc.setAttr(f"{j}.segmentScaleCompensate", 0)
 
         rig_module.tag_bind_joints(j)
 
@@ -459,14 +475,14 @@ def build_simple_muscle_chain(
             control = rCtrl.Control(parent=None, shape="hexagon", side=None, suffix='CTRL', name=f'{mus_descriptor}', axis='y', group_type='main', rig_type='primary', translate=mid_jnt, rotate=mid_jnt, ctrl_scale=1)
             mc.parentConstraint(control.ctrl, j)
             mc.parentConstraint(jnt, control.top)
-            mc.parent(control.top, 'CorrectiveRigParts')
+            mc.parent(control.top, mus_grp)
         else:
             mc.parentConstraint(jnt, j)
         
         bind_jnts.append(j)
 
     try:
-        mc.parent(root_null, control.top, top_grp, 'CorrectiveRigParts', )
+        mc.parent(root_null, control.top, top_grp, mus_grp )
     except:
         pass    
 
@@ -480,6 +496,11 @@ def build_simple_muscle_chain(
     mc.connectAttr('Muscle_Global_M_CTRL.Mus_Visibility', f'{control.top}.visibility')
     mc.connectAttr(f'CorrectiveRigParts.Comp_Vis', f'{ik}.visibility')
     mc.connectAttr(f'CorrectiveRigParts.Comp_Vis', f'{root_null}.visibility')
+
+    mc.scaleConstraint(par_jnt, root_null, mo=True)
+
+    ################ FIX THIS LATER ###########################
+    mc.scaleConstraint(par_jnt, {control.bot}, mo=True)
 
 
     # ============================================================
