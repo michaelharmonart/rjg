@@ -299,6 +299,7 @@ def build_simple_muscle_chain(
 
         mc.parentConstraint(tgt_limb, top_grp, mo=True)
         mc.connectAttr(f'CorrectiveRigParts.Comp_Vis', f'{top_grp}.visibility')
+        mc.scaleConstraint(tgt_limb,top_grp, mo=True)
     else:
         offset_grp = mc.listRelatives(top_grp, c=True, type='transform')[0]
         created_groups.extend([top_grp, offset_grp])
