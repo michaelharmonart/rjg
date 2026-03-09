@@ -2,4 +2,4 @@
 
 "C:\Program Files\Autodesk\Maya2026\bin\mayapy.exe" -m pip install cattrs
 
-pip install PySide6
+& "C:\Program Files\Autodesk\Maya2026\bin\mayapy.exe" -m pip install Qt.py
