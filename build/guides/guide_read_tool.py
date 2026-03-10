@@ -1116,4 +1116,4 @@ def show_guide_reader():
     guide_reader_ui = GuideReaderUI()
     guide_reader_ui.show()
 
-show_guide_reader()
+#show_guide_reader()

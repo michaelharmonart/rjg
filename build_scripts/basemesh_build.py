@@ -5,6 +5,11 @@ import maya.cmds as mc
 import maya.api.OpenMaya as om
 import platform
 
+import rjg.build.guides.guide_read_tool as gr
+import rjg.build_scripts.basemesh_buildhelper as sb
+
+import shutil
+
 groups = 'G:' if platform.system() == 'Windows' else '/groups'
 
 # ---------------- PYQT FALLBACK ----------------
@@ -18,12 +23,25 @@ except:
 import maya.OpenMayaUI as omui
 
 # ---------------- PATH ----------------
+
+RIGS_ROOT = f"{groups}/bobo/character/Rigs"
+
+
 # -----------------------------
 # Maya Main Window
 # -----------------------------
 def maya_main_window():
     ptr = omui.MQtUtil.mainWindow()
     return wrapInstance(int(ptr), QtWidgets.QWidget)
+
+# ---------------- UI COLORS ----------------
+
+GOOD_COLOR = "rgb(70,140,70)"
+WARN_COLOR = "rgb(160,140,60)"
+BAD_COLOR  = "rgb(160,60,60)"
+
+TEXT_COLOR = "white"
+FIELD_TEXT = "black"
 
 
 # -----------------------------
@@ -39,52 +57,21 @@ CHAR_JSON = os.path.join(SCRIPT_DIR, "characters.json")
 
 print("TopoAutoRig JSON PATH:", CHAR_JSON)
 
-# -----------------------------
-# Dummy Functions
-# -----------------------------
-def check_compatibility(self):
 
-    # TEMP result
-    compatible = True
+# ---------------- TOPOLOGY DATA ----------------
 
-    if compatible:
-
-        self.compat_button.setStyleSheet(
-            "QPushButton {background-color: rgb(120,180,120);}"
-        )
-
-        print("Compatibility check PASSED")
-
-    else:
-
-        self.compat_button.setStyleSheet(
-            "QPushButton {background-color: rgb(200,80,80);}"
-        )
-
-        print("Compatibility check FAILED")
-
-
-def read_guides():
-    print("Read Guides function worked")
-
-
-def normalize_ubm():
-    print("Normalize UBM function worked")
-
-
-def restore_ubm():
-    print("Restore UBM function worked")
-
-
-def export_guides():
-    print("Export Guides function worked")
-
-
-def full_build():
-    print("Full Build function worked")
-
-def manual_build(self):
-    print("Manual Build function worked")
+TOPOLOGY_DATA = {
+    "Basemesh": {
+        "ubm": "Basemesh_UBM",
+        "meshes": [
+            "Eyes",
+            "Corneas",
+            "botteeth",
+            "topteeth",
+            "tongue"
+        ]
+    }
+}
 
 
 # -----------------------------
@@ -108,6 +95,271 @@ def load_characters():
 def save_characters(chars):
     with open(CHAR_JSON, "w") as f:
         json.dump(chars, f, indent=4)
+
+#------------------------------
+#Build Helper Class
+#------------------------------
+def manual_build_popup(character, rig_root, topology):
+    """
+    Opens a warning popup and runs the manual build script with fully resolved arguments.
+    """
+
+    # ----------------------------
+    # Popup Dialog
+    # ----------------------------
+    class ManualBuildDialog(QtWidgets.QDialog):
+        def __init__(self):
+            super().__init__(maya_main_window())
+            self.setWindowTitle("Manual Build Warning")
+            self.setMinimumWidth(400)
+            self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+            layout = QtWidgets.QVBoxLayout(self)
+
+            warning_label = QtWidgets.QLabel(
+                "Warning: The current scene will NOT be saved.\n"
+                "Do you want to proceed with the manual build?"
+            )
+            warning_label.setWordWrap(True)
+            layout.addWidget(warning_label)
+
+            # Buttons
+            btn_layout = QtWidgets.QHBoxLayout()
+            self.proceed_btn = QtWidgets.QPushButton("Proceed")
+            self.cancel_btn = QtWidgets.QPushButton("Cancel")
+            btn_layout.addWidget(self.proceed_btn)
+            btn_layout.addWidget(self.cancel_btn)
+
+            layout.addLayout(btn_layout)
+
+            self.proceed_btn.clicked.connect(self.accept)
+            self.cancel_btn.clicked.connect(self.reject)
+
+    # ----------------------------
+    # Show Dialog
+    # ----------------------------
+    dialog = ManualBuildDialog()
+    result = dialog.exec_()
+
+    if result != QtWidgets.QDialog.Accepted:
+        print("Manual build canceled.")
+        return
+
+    # ----------------------------
+    # Resolve paths for sb.run
+    # ----------------------------
+    char_dir = os.path.join(rig_root, character)
+
+    mp = os.path.join(char_dir, f"{character}_Model.mb")
+    gp = os.path.join(char_dir, f"{character}_Guides.mb")
+    ep = os.path.join(char_dir, f"{character}_Extras.mb")
+
+    # Control curves file
+    cp1 = os.path.join(char_dir, "controls", f"{character}_control_curves.json")
+    cp2 = os.path.join(char_dir, "controls", f"{topology}_control_curves.json")
+    cp = cp1 if os.path.exists(cp1) else cp2
+
+    # Skin file
+    sp1 = os.path.join(char_dir, "SkinFiles", f"{character}_Skin.json")
+    sp2 = os.path.join(char_dir, "SkinFiles", f"{topology}_Skin.json")
+    sp = sp1 if os.path.exists(sp1) else sp2
+
+    # ----------------------------
+    # Call the build
+    # ----------------------------
+    print(f"Running manual build for {character}...")
+    print(f"Model: {mp}\nGuides: {gp}\nExtras: {ep}\nControls: {cp}\nSkin: {sp}")
+
+    sb.run(
+        character=character,
+        mp=mp,
+        gp=gp,
+        ep=ep,
+        cp=cp,
+        sp=sp,
+        pp=None,
+        face=True,
+        previs=False
+    )
+
+    print("Manual build complete.")
+
+#------------------------------
+#Export Helper class
+#------------------------------
+class GuideExportHelper():
+
+    def __init__(self, character):
+
+        self.character = character
+        self.base_path = f"{groups}/bobo/character/Rigs/{character}"
+
+        self.model_file = f"{self.base_path}/{character}_Model.mb"
+        self.guides_file = f"{self.base_path}/{character}_Guides.mb"
+        self.extras_file = f"{self.base_path}/{character}_Extras.mb"
+
+
+    # -------------------------
+    # VALIDATION
+    # -------------------------
+
+    def character_initialized(self):
+        return os.path.exists(self.base_path)
+
+
+    def existing_files(self):
+
+        files = []
+
+        if os.path.exists(self.model_file):
+            files.append(self.model_file)
+
+        if os.path.exists(self.guides_file):
+            files.append(self.guides_file)
+
+        if os.path.exists(self.extras_file):
+            files.append(self.extras_file)
+
+        return files
+
+
+    # -------------------------
+    # FILE MANAGEMENT
+    # -------------------------
+
+    def backup_file(self, filepath):
+
+        base, ext = os.path.splitext(filepath)
+
+        i = 1
+        new_path = f"{base}_{i}{ext}"
+
+        while os.path.exists(new_path):
+            i += 1
+            new_path = f"{base}_{i}{ext}"
+
+        os.rename(filepath, new_path)
+
+        print(f"Backed up {filepath} -> {new_path}")
+
+
+    def conflict_popup(self):
+
+        result = mc.confirmDialog(
+            title="Export Conflict",
+            message="Export files already exist.\nWhat would you like to do?",
+            button=["Overwrite", "Backup", "Cancel"],
+            defaultButton="Overwrite",
+            cancelButton="Cancel",
+            dismissString="Cancel"
+        )
+
+        return result
+
+
+    # -------------------------
+    # EXPORTS
+    # -------------------------
+
+    def export_model(self):
+
+        obj = f"{self.character}_UBM"
+
+        if mc.objExists(obj):
+
+            mc.select(obj)
+
+            mc.file(
+                self.model_file,
+                force=True,
+                options="v=0;",
+                type="mayaBinary",
+                exportSelected=True
+            )
+
+        else:
+            mc.warning(f"{obj} not found.")
+
+
+    def export_guides(self):
+
+        guides = "Guides"
+        char_check = f"{self.character}_UBM"
+
+        if mc.objExists(char_check):
+
+            if mc.objExists(guides):
+
+                mc.select(guides)
+
+                mc.file(
+                    self.guides_file,
+                    force=True,
+                    options="v=0;",
+                    type="mayaBinary",
+                    exportSelected=True
+                )
+
+            else:
+                mc.warning("Guides group not found.")
+
+        else:
+            mc.warning(f"{char_check} not found.")
+
+
+    def export_extras(self):
+
+        obj = f"{self.character}_EXTRAS"
+
+        if mc.objExists(obj):
+
+            mc.select(obj)
+
+            mc.file(
+                self.extras_file,
+                force=True,
+                options="v=0;",
+                type="mayaBinary",
+                exportSelected=True
+            )
+
+        else:
+            mc.warning(f"{obj} not found.")
+
+
+    # -------------------------
+    # MAIN RUN
+    # -------------------------
+
+    def run(self):
+
+        if not self.character_initialized():
+            mc.warning(f"{self.character} has not been initialized.")
+            return
+
+        existing = self.existing_files()
+
+        action = "Overwrite"
+
+        if existing:
+
+            action = self.conflict_popup()
+
+            if action == "Cancel":
+                print("Export cancelled.")
+                return
+
+            if action == "Backup":
+
+                for file in existing:
+                    self.backup_file(file)
+
+        self.export_model()
+        self.export_guides()
+        self.export_extras()
+
+        print("Export complete.")
+
 
 
 # -----------------------------
@@ -179,6 +431,40 @@ class TopoAutoRigUI(QtWidgets.QDialog):
 
     def build_ui(self):
 
+        # -----------------------
+        # Global UI Style
+        # -----------------------
+
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background-color: rgb(80,80,80);
+                color: {TEXT_COLOR};
+                border-radius: 4px;
+                padding: 6px;
+            }}
+
+            QPushButton:hover {{
+                background-color: rgb(95,95,95);
+            }}
+
+            QComboBox {{
+                padding: 4px;
+            }}
+
+            QGroupBox {{
+                font-weight: bold;
+                border: 1px solid rgb(90,90,90);
+                border-radius: 4px;
+                margin-top: 6px;
+            }}
+
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 8px;
+                padding: 0 3px 0 3px;
+            }}
+        """)
+
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(10, 10, 10, 10)
@@ -229,7 +515,6 @@ class TopoAutoRigUI(QtWidgets.QDialog):
         # -----------------------
 
         manual_section = CollapsibleSection("Manual")
-        
 
         self.read_guides_btn = QtWidgets.QPushButton("Read Guides")
         self.normalize_btn = QtWidgets.QPushButton("Normalize UBM")
@@ -242,7 +527,6 @@ class TopoAutoRigUI(QtWidgets.QDialog):
         manual_section.content_layout.addWidget(self.restore_btn)
         manual_section.content_layout.addWidget(self.export_btn)
         manual_section.content_layout.addWidget(self.build_btn)
-        
 
         main_layout.addWidget(manual_section)
 
@@ -286,39 +570,187 @@ class TopoAutoRigUI(QtWidgets.QDialog):
 
     def check_compatibility(self):
 
-        # TEMP result
-        compatible = True
+        topology = self.topo_dropdown.currentText()
+        topo_data = TOPOLOGY_DATA[topology]
 
-        if compatible:
+        base_file = f"{RIGS_ROOT}/{topology}/{topology}_BASE.mb"
+
+        print("\n----- Compatibility Check -----")
+
+        if not os.path.exists(base_file):
+
+            print("Base topology file missing:")
+            print(base_file)
 
             self.compat_button.setStyleSheet(
-                "QPushButton {background-color: rgb(120,180,120);}"
+                f"QPushButton {{background-color: {BAD_COLOR}; color: {TEXT_COLOR};}}"
+            )
+            return
+
+        # --------------------------------
+        # Import Base File
+        # --------------------------------
+
+        mc.file(
+            base_file,
+            i=True,
+            namespace="TOPO_CHECK",
+            preserveReferences=True
+        )
+
+        # --------------------------------
+        # Find UBM In Scene
+        # --------------------------------
+
+        ubm_meshes = mc.ls("*_UBM", type="transform")
+
+        if not ubm_meshes:
+
+            print("No _UBM mesh found in scene")
+
+            self.compat_button.setStyleSheet(
+                f"QPushButton {{background-color: {BAD_COLOR}; color: {TEXT_COLOR};}}"
             )
 
-            print("Compatibility check PASSED")
+            return
+
+        scene_ubm = ubm_meshes[0]
+
+        print(f"Checking UBM mesh: {scene_ubm}")
+
+        if len(ubm_meshes) > 1:
+            print("WARNING: Multiple UBM meshes detected")
+
+        base_ubm = f"TOPO_CHECK:{topo_data['ubm']}"
+
+        # --------------------------------
+        # Compare UBM Topology
+        # --------------------------------
+
+        scene_vtx = mc.polyEvaluate(scene_ubm, v=True)
+        base_vtx = mc.polyEvaluate(base_ubm, v=True)
+
+        if scene_vtx != base_vtx:
+
+            print("UBM vertex count mismatch")
+            print(scene_vtx, "vs", base_vtx)
+
+            self.compat_button.setStyleSheet(
+                f"QPushButton {{background-color: {BAD_COLOR}; color: {TEXT_COLOR};}}"
+            )
+
+            ubm_failed = True
+
+        else:
+
+            print("UBM vertex count matches")
+            ubm_failed = False
+
+        # --------------------------------
+        # Check Required Meshes
+        # --------------------------------
+
+        other_failures = False
+
+        for mesh in topo_data["meshes"]:
+
+            scene_mesh = mc.ls(mesh)
+
+            if not scene_mesh:
+
+                print(f"{mesh} missing from scene")
+                other_failures = True
+                continue
+
+            base_mesh = f"TOPO_CHECK:{mesh}"
+
+            if not mc.objExists(base_mesh):
+
+                print(f"{mesh} missing in base file")
+                other_failures = True
+                continue
+
+            scene_vtx = mc.polyEvaluate(scene_mesh[0], v=True)
+            base_vtx = mc.polyEvaluate(base_mesh, v=True)
+
+            if scene_vtx == base_vtx:
+
+                print(f"{mesh} topology matches")
+
+            else:
+
+                print(f"{mesh} topology mismatch")
+                other_failures = True
+
+        # --------------------------------
+        # Set Button Color
+        # --------------------------------
+
+        if ubm_failed:
+
+            self.compat_button.setStyleSheet(
+                f"QPushButton {{background-color: {BAD_COLOR}; color: {TEXT_COLOR};}}"
+            )
+
+        elif other_failures:
+
+            self.compat_button.setStyleSheet(
+                f"QPushButton {{background-color: {WARN_COLOR}; color: {TEXT_COLOR};}}"
+            )
 
         else:
 
             self.compat_button.setStyleSheet(
-                "QPushButton {background-color: rgb(200,80,80);}"
+                f"QPushButton {{background-color: {GOOD_COLOR}; color: {TEXT_COLOR};}}"
             )
 
-            print("Compatibility check FAILED")
+        print("Compatibility check complete\n")
+
+        # --------------------------------
+        # Clean Up Imported Namespace
+        # --------------------------------
+
+        if mc.namespace(exists="TOPO_CHECK"):
+
+            mc.namespace(setNamespace=":")
+
+            objs = mc.ls("TOPO_CHECK:*")
+
+            if objs:
+                mc.delete(objs)
+
+            mc.namespace(removeNamespace="TOPO_CHECK")
+            print("Compatibility check complete\n")
 
     def read_guides(self):
-        print("Read Guides function worked")
+        gr.build_all_guides()
 
     def normalize_ubm(self):
-        print("Normalize UBM function worked")
+        gr.normalize_ubm_mesh()
 
     def restore_ubm(self):
-        print("Restore UBM function worked")
+        gr.restore_ubm_mesh()
 
     def manual_build(self):
-        print("Manual Build function worked")
+        """
+        Opens the manual build warning popup and runs the build if Proceed is clicked.
+        """
+        character = self.char_dropdown.currentText()
+        rig_root = f"{groups}/bobo/character/Rigs"
+        topology = self.topo_dropdown.currentText()
+        
+        manual_build_popup(character, rig_root, topology)
 
-    def export_guides(self):
-        print("Export Guides function worked")
+    def export_guides(self, *args):
+        selected_char = self.char_dropdown.currentText().strip()
+        print(f"Export button clicked. Selected character: '{selected_char}'")
+
+        exporter = GuideExportHelper(selected_char)
+
+        print("Character initialized?", exporter.character_initialized())
+        print("Existing files:", exporter.existing_files())
+
+        exporter.run()
 
     def full_build(self):
         print("Full Build function worked")
@@ -334,28 +766,146 @@ class TopoAutoRigUI(QtWidgets.QDialog):
         if name in self.characters:
 
             self.char_dropdown.setStyleSheet(
-                "QComboBox {background-color: rgb(120,180,120);}"
+                f"""
+                QComboBox {{
+                    background-color: {GOOD_COLOR};
+                    color: {FIELD_TEXT};
+                }}
+                QComboBox QLineEdit {{
+                    background-color: {GOOD_COLOR};
+                    color: {FIELD_TEXT};
+                }}
+                """
             )
 
         else:
 
             self.char_dropdown.setStyleSheet(
-                "QComboBox {background-color: rgb(200,200,120);}"
-            )
+                f"""
+                QComboBox {{
+                    background-color: {WARN_COLOR};
+                    color: {FIELD_TEXT};
+                }}
+                QComboBox QLineEdit {{
+                    background-color: {WARN_COLOR};
+                    color: {FIELD_TEXT};
+                }}
+        """
+    )
 
     def initialize_character(self):
 
-        name = self.char_dropdown.currentText()
+        character = self.char_dropdown.currentText()
+        topology = self.topo_dropdown.currentText()
 
-        if name not in self.characters:
+        rigs_root = f"{groups}/bobo/character/Rigs"
+        char_dir = os.path.join(rigs_root, character)
 
-            self.characters.append(name)
+        print(f"\nInitializing Character: {character}")
+
+        # -----------------------------------
+        # Create Character Folder
+        # -----------------------------------
+
+        if not os.path.exists(char_dir):
+
+            os.makedirs(char_dir)
+
+            print(f"Created character folder: {char_dir}")
+
+        else:
+
+            print("Character folder already exists")
+
+        # -----------------------------------
+        # Controls / SkinFiles
+        # -----------------------------------
+
+        folders = ["Controls", "SkinFiles"]
+
+        for folder in folders:
+
+            target_folder = os.path.join(char_dir, folder)
+            source_folder = os.path.join(rigs_root, topology, folder)
+
+            if not os.path.exists(target_folder):
+
+                if os.path.exists(source_folder):
+
+                    shutil.copytree(source_folder, target_folder)
+
+                    print(f"Copied {folder} folder")
+
+                else:
+
+                    print(f"Source {folder} folder missing: {source_folder}")
+
+            else:
+
+                print(f"{folder} Folder already exists")
+
+        # -----------------------------------
+        # Maya Files
+        # -----------------------------------
+
+        maya_files = [
+            f"{character}_ALL.mb",
+            f"{character}_Model.mb",
+            f"{character}_Guides.mb",
+            f"{character}_Extras.mb"
+        ]
+
+        for file in maya_files:
+
+            file_path = os.path.join(char_dir, file)
+
+            if os.path.exists(file_path):
+
+                print(f"{file} exists")
+
+            else:
+
+                print(f"{file} missing")
+
+        # -----------------------------------
+        # JSON Character List
+        # -----------------------------------
+
+        if character not in self.characters:
+
+            self.characters.append(character)
 
             save_characters(self.characters)
 
-            self.char_dropdown.addItem(name)
+            self.char_dropdown.addItem(character)
 
-            print(f"Character '{name}' initialized")
+            print(f"Character '{character}' added to JSON")
+
+
+        all_exist = True
+
+        for file in maya_files:
+
+            file_path = os.path.join(char_dir, file)
+
+            if os.path.exists(file_path):
+
+                print(f"{file} exists")
+
+            else:
+
+                print(f"{file} missing")
+                all_exist = False
+
+
+        if all_exist:
+            self.init_char_button.setStyleSheet(
+                "QPushButton {background-color: rgb(120,180,120);}"
+            )
+        else:
+            self.init_char_button.setStyleSheet(
+                "QPushButton {background-color: rgb(200,200,120);}"
+            )
 
         self.check_character_state()
 
