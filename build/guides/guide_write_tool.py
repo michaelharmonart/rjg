@@ -10,6 +10,10 @@ try:
 except:
     from PySide2 import QtWidgets, QtCore
 
+
+import numpy as np
+
+
 def get_selected_mesh():
     sel = mc.ls(sl=True, o=True)
     if not sel:
@@ -72,6 +76,124 @@ def get_middle_position_from_vert_ids(mesh, vert_ids):
 
     return mid_pos
 
+def build_plane_from_selected_verts():
+
+    verts = mc.filterExpand(mc.ls(sl=True, fl=True), sm=31)
+    if not verts:
+        mc.warning("Select verts.")
+        return
+
+    # -----------------------------
+    # Get positions
+    # -----------------------------
+
+    points = []
+
+    for v in verts:
+        pos = mc.xform(v, q=True, ws=True, t=True)
+        points.append(pos)
+
+    points = np.array(points)
+
+    # -----------------------------
+    # center
+    # -----------------------------
+
+    center = points.mean(axis=0)
+
+    # -----------------------------
+    # best-fit plane
+    # -----------------------------
+
+    cov = np.cov(points.T)
+    eigvals, eigvecs = np.linalg.eig(cov)
+
+    normal = eigvecs[:, eigvals.argmin()]
+    normal = om.MVector(*normal).normalize()
+
+    # -----------------------------
+    # build axes
+    # -----------------------------
+
+    up = om.MVector(0,1,0)
+
+    if abs(normal * up) > 0.99:
+        up = om.MVector(1,0,0)
+
+    tangent = normal ^ up
+    tangent.normalize()
+
+    bitangent = normal ^ tangent
+    bitangent.normalize()
+
+    # -----------------------------
+    # plane-space bounds
+    # -----------------------------
+
+    u_vals = []
+    v_vals = []
+
+    center_vec = om.MVector(*center)
+
+    for p in points:
+
+        vec = om.MVector(*p) - center_vec
+
+        u_vals.append(vec * tangent)
+        v_vals.append(vec * bitangent)
+
+    width = max(u_vals) - min(u_vals)
+    height = max(v_vals) - min(v_vals)
+
+    # -----------------------------
+    # create plane with center loops
+    # -----------------------------
+
+    plane = mc.polyPlane(
+        w=width,
+        h=height,
+        sx=2,
+        sy=2
+    )[0]
+
+    # -----------------------------
+    # build transform matrix
+    # -----------------------------
+
+    matrix = [
+        tangent.x, tangent.y, tangent.z, 0,
+        normal.x, normal.y, normal.z, 0,
+        bitangent.x, bitangent.y, bitangent.z, 0,
+        center[0], center[1], center[2], 1
+    ]
+
+    mc.xform(plane, matrix=matrix)
+
+    # -----------------------------
+    # store attrs
+    # -----------------------------
+
+    orient_data = [
+        [tangent.x, tangent.y, tangent.z],
+        [normal.x, normal.y, normal.z],
+        [bitangent.x, bitangent.y, bitangent.z]
+    ]
+
+    size_data = [width, height]
+
+    if not mc.attributeQuery("guideOrient", n=plane, ex=True):
+        mc.addAttr(plane, ln="guideOrient", dt="string")
+
+    if not mc.attributeQuery("guideSize", n=plane, ex=True):
+        mc.addAttr(plane, ln="guideSize", dt="string")
+
+    mc.setAttr(plane + ".guideOrient", json.dumps(orient_data), type="string")
+    mc.setAttr(plane + ".guideSize", json.dumps(size_data), type="string")
+
+    print("Created guide plane:", plane)
+
+    return plane
+
 def get_preview_grp():
     if not mc.objExists("preview_guide_grp"):
         return mc.group(em=True, n="preview_guide_grp")
@@ -125,7 +247,7 @@ class GuideWriteTool(QtWidgets.QDialog):
         # Type dropdown
         layout.addWidget(QtWidgets.QLabel("Type"))
         self.type_cb = QtWidgets.QComboBox()
-        self.type_cb.addItems(["chain", "single", "sequence"])
+        self.type_cb.addItems(["chain", "single", "sequence", "plane"])
         layout.addWidget(self.type_cb)
 
         # Parent field
@@ -269,10 +391,56 @@ class GuideWriteTool(QtWidgets.QDialog):
 
                 print(f"Created {jnt}")
                 idx = idx + 1
+
+        if self.type_cb.currentText() == "plane":
+            mesh = get_selected_mesh()
+            
+            if not mesh:
+                mc.warning("No mesh selected.")
+                return
+
+            vert_ids = get_selected_vert_ids_in_order()
+            if not vert_ids:
+                mc.warning("No verts selected.")
+                return
+
+            pos = get_middle_position_from_vert_ids(mesh, vert_ids)
+            if not pos:
+                mc.warning("Could not compute position.")
+                return
+
+            plane = build_plane_from_selected_verts()
+
+            idx = get_next_chain_index()
+
+            null = mc.group(em=True, n=f"plane_guide_NULL_{idx:02d}")
+            jnt = mc.joint(n=f"plane_guide_{idx:02d}")
+
+            mc.parent(jnt, null)
+            mc.parent(plane, get_preview_grp())
+            mc.parent(null, get_preview_grp())
+
+            mc.xform(null, ws=True, t=pos)
+
+            # Custom attrs
+            if not mc.attributeQuery("vertList", n=jnt, ex=True):
+                mc.addAttr(jnt, ln="vertList", dt="string")
+            if not mc.attributeQuery("mesh", n=jnt, ex=True):
+                mc.addAttr(jnt, ln="mesh", dt="string")
+
+            mc.setAttr(jnt+".vertList", json.dumps(vert_ids), type="string")
+            mc.setAttr(jnt+".mesh", mesh, type="string")
+            mc.setAttr(jnt+".upVectorVert", "None", type="string")
+
+            self.last_joint = jnt
+
+            print(f"Created {jnt}")
+
+
         
         else:
             #if self.type_cb.currentText() not in  ["chain", 'sequence']:
-            mc.warning("Only chain and sequence mode implemented.")
+            mc.warning("Only chain sequence and plane mode implemented.")
             return
 
     # -------------------------
@@ -298,7 +466,7 @@ class GuideWriteTool(QtWidgets.QDialog):
 
     def write_part(self):
 
-        path = r"G:\bobo\pipeline\pipeline\software\maya\scripts\rjg\build\guides\parts"
+        path = r"G:\dragonkisser\pipeline\pipeline\software\maya\scripts\rjg\build\guides\parts"
         os.makedirs(path, exist_ok=True)
 
         data = {
@@ -312,13 +480,18 @@ class GuideWriteTool(QtWidgets.QDialog):
             guides = mc.ls("chain_guide_*", type="joint")
         elif self.type_cb.currentText() == 'sequence':
             guides = mc.ls("seq_guide_*", type="joint")
+        elif self.type_cb.currentText() == 'plane':
+            guides = mc.ls("plane_guide_*", type="joint")
 
         for jnt in guides:
             null = mc.listRelatives(jnt, p=True)[0]
 
             mesh = mc.getAttr(jnt+".mesh")
             vert_list = json.loads(mc.getAttr(jnt+".vertList"))
-            upvect = mc.getAttr(jnt+".upVectorVert")
+            if self.type_cb.currentText() == 'plane':
+                    upvect="None"
+            else:
+                upvect = mc.getAttr(jnt+".upVectorVert")
 
             pos = mc.xform(null, q=True, ws=True, t=True)
 

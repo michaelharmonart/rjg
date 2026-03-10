@@ -3,6 +3,7 @@ import json
 import os
 import maya.cmds as mc
 import maya.api.OpenMaya as om
+import numpy as np
 
 # ---------------- PYQT FALLBACK ----------------
 try:
@@ -16,7 +17,7 @@ import maya.OpenMayaUI as omui
 
 # ---------------- PATH ----------------
 
-GUIDE_PATH = r"G:\bobo\pipeline\pipeline\software\maya\scripts\rjg\build\guides\parts"
+GUIDE_PATH = r"G:\dragonkisser\pipeline\pipeline\software\maya\scripts\rjg\build\guides\parts"
 
 BUILD_ORDER = [
     "spine.json",
@@ -493,6 +494,124 @@ def orient_joint_primary(jnt, start_pos, next_pos, primary_axis, up_pos=None, up
 
 #
 
+def build_plane_from_selected_verts():
+
+    verts = mc.filterExpand(mc.ls(sl=True, fl=True), sm=31)
+    if not verts:
+        mc.warning("Select verts.")
+        return
+
+    # -----------------------------
+    # Get positions
+    # -----------------------------
+
+    points = []
+
+    for v in verts:
+        pos = mc.xform(v, q=True, ws=True, t=True)
+        points.append(pos)
+
+    points = np.array(points)
+
+    # -----------------------------
+    # center
+    # -----------------------------
+
+    center = points.mean(axis=0)
+
+    # -----------------------------
+    # best-fit plane
+    # -----------------------------
+
+    cov = np.cov(points.T)
+    eigvals, eigvecs = np.linalg.eig(cov)
+
+    normal = eigvecs[:, eigvals.argmin()]
+    normal = om.MVector(*normal).normalize()
+
+    # -----------------------------
+    # build axes
+    # -----------------------------
+
+    up = om.MVector(0,1,0)
+
+    if abs(normal * up) > 0.99:
+        up = om.MVector(1,0,0)
+
+    tangent = normal ^ up
+    tangent.normalize()
+
+    bitangent = normal ^ tangent
+    bitangent.normalize()
+
+    # -----------------------------
+    # plane-space bounds
+    # -----------------------------
+
+    u_vals = []
+    v_vals = []
+
+    center_vec = om.MVector(*center)
+
+    for p in points:
+
+        vec = om.MVector(*p) - center_vec
+
+        u_vals.append(vec * tangent)
+        v_vals.append(vec * bitangent)
+
+    width = max(u_vals) - min(u_vals)
+    height = max(v_vals) - min(v_vals)
+
+    # -----------------------------
+    # create plane with center loops
+    # -----------------------------
+
+    plane = mc.polyPlane(
+        w=width,
+        h=height,
+        sx=2,
+        sy=2
+    )[0]
+
+    # -----------------------------
+    # build transform matrix
+    # -----------------------------
+
+    matrix = [
+        tangent.x, tangent.y, tangent.z, 0,
+        normal.x, normal.y, normal.z, 0,
+        bitangent.x, bitangent.y, bitangent.z, 0,
+        center[0], center[1], center[2], 1
+    ]
+
+    mc.xform(plane, matrix=matrix)
+
+    # -----------------------------
+    # store attrs
+    # -----------------------------
+
+    orient_data = [
+        [tangent.x, tangent.y, tangent.z],
+        [normal.x, normal.y, normal.z],
+        [bitangent.x, bitangent.y, bitangent.z]
+    ]
+
+    size_data = [width, height]
+
+    if not mc.attributeQuery("guideOrient", n=plane, ex=True):
+        mc.addAttr(plane, ln="guideOrient", dt="string")
+
+    if not mc.attributeQuery("guideSize", n=plane, ex=True):
+        mc.addAttr(plane, ln="guideSize", dt="string")
+
+    mc.setAttr(plane + ".guideOrient", json.dumps(orient_data), type="string")
+    mc.setAttr(plane + ".guideSize", json.dumps(size_data), type="string")
+
+    print("Created guide plane:", plane)
+
+    return plane
+
 
 # ---------------- Mirror ---------------------
 
@@ -624,6 +743,8 @@ def read_type(json_file):
         read_chain_guides(json_file)
     elif part_type == "sequence":
         read_seg_guides(json_file)
+    elif part_type == "plane":
+        read_plane_guides(json_file)
 
 
 def read_chain_guides(json_file):
@@ -927,6 +1048,67 @@ def read_seg_guides(json_file):
 
         if mc.objExists(parent):
             mc.parent(jnt, parent)
+
+    return built
+
+def read_plane_guides(json_file):
+
+    with open(json_file, "r") as f:
+        data = json.load(f)
+
+    part = data["part"]
+    part_type = data["type"]
+    parent = data.get("parent")
+
+    cfg = PART_CONFIG.get(part, PART_CONFIG["default"])
+
+    axes = cfg["Axes"]
+    names = cfg["Names"]
+    delete_last = cfg["Delete_Last"]
+    BuildParent = cfg["BuildParent"]
+    Guide_Type = cfg["Guide_Type"]
+    Bake_To_Orient = cfg["Bake_To_Orient"]
+    Force_Planar = cfg["Force_Planar"]
+
+    guides = data["guides"]
+
+    built = []
+    keys = sorted(guides.keys())
+    pre_guide = None
+
+    gname = keys[0]
+    g = guides[gname]
+
+    mesh = g["mesh"]
+    vert_list = g["vert_list"]
+    offset = g["offset"]
+
+    rotoffset = g.get("rotoffset")
+    up_id = g["upvect"]
+
+    verts = [f"{mesh}.vtx[{i}]" for i in vert_list]
+
+    mc.select(verts, r=True)
+    plane = build_plane_from_selected_verts()
+
+
+    vert_ids = [1, 3, 5, 7]
+    names = ["LeftIn", "LeftHeelPiv", "LeftToePiv", "LeftOut"]
+
+    built=[]
+    for vid, name in zip(vert_ids, names):
+
+        pos = get_position_from_vert_ids(plane, [vid])
+
+        if not pos:
+            continue
+
+        loc = mc.spaceLocator(n=name)[0]
+
+        mc.xform(loc, ws=True, t=pos)
+
+        mc.parent(loc, "Guides")
+        built.append(loc)
 
     return built
 
