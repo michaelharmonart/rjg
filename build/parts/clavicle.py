@@ -103,10 +103,11 @@ class Clavicle(rModule.RigModule):
             self.chest_ctrl.tag_as_controller()
             pos = mc.xform(self.guide_list[0], q=True, ws=True, t=True)
             rot = mc.xform(self.guide_list[0], q=True, ws=True, ro=True)
+            mod = 180 if self.side == 'R' else 0
             clav_offset_follow = mc.group(empty=True, name = f'{self.side}_clavFollow_offset_GRP', )
             clav_follow = mc.group(empty=True, name = f'{self.side}_clavFollow_GRP')
             mc.parent(clav_follow, clav_offset_follow)
-            mc.xform(clav_offset_follow, ws=True, translation=pos, rotation=rot)
+            mc.xform(clav_offset_follow, ws=True, translation=pos, rotation=(mod, 0,0))
             mc.parentConstraint('chest_M_JNT',clav_offset_follow, mo=True)
             mc.addAttr(self.chest_ctrl.ctrl, longName='Follow_Mult', k=True, at='double', max=1, min=0, dv=.5)
             rot_md= mc.createNode('multiplyDivide', name=f'{self.side}_clav_follow_MD')
