@@ -1209,7 +1209,17 @@ def build_all_guides():
 
     mc.parent('Tongue_M_guides', 'Nose_guides', 'Mouth_guides', 'Jaw_M_guides', 'Eye_L_guides', 'Ear_L_guides', 'Cheek_L_guides', 'Brow_L_guides', 'UEFace_guides')
     mc.parent('UEFace_guides', 'Guides')
+    mc.parent('L_Brow_Crease', 'R_Brow_Crease')
 
+    for piv in ['In', 'Out', 'HeelPiv', 'ToePiv']:
+        newname = f'Right{piv}'
+        mc.duplicate(f'Left{piv}', name=newname)
+        preflipX = mc.getAttr(f'{newname}.translateX')
+        mc.setAttr(f'{newname}.translateX', preflipX * -1)
+
+    hippiv = mc.xform(f'Spine', q=True, ws=True, t=True)
+    hippiv_loc = mc.spaceLocator(name='HipPivot', position=hippiv)[0]
+    mc.parent(hippiv_loc, 'Guides')
 
 
 
