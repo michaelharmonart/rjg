@@ -1,0 +1,53 @@
+{
+    "part": "GluteMax01",
+    "type": "chain",
+    "parent": "Mus_Cor",
+    "guides": {
+        "chain_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                2.7871729135513306,
+                86.4838900595196,
+                -7.526397364443454
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                8048,
+                8129
+            ]
+        },
+        "chain_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                11.151940534437152,
+                71.50128156037658,
+                -4.122207137138197
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                8185,
+                8186
+            ]
+        }
+    }
+}

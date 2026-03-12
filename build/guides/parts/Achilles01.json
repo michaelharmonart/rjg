@@ -1,0 +1,53 @@
+{
+    "part": "Achilles01",
+    "type": "chain",
+    "parent": "Mus_Cor",
+    "guides": {
+        "chain_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                7.559876441955566,
+                12.649988174438477,
+                -7.286401388335591
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                8756,
+                8778
+            ]
+        },
+        "chain_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                7.805466175079346,
+                2.6486922667092294,
+                -7.810385849563897
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                3685,
+                3686
+            ]
+        }
+    }
+}

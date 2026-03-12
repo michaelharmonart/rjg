@@ -1,0 +1,51 @@
+{
+    "part": "TFL01",
+    "type": "chain",
+    "parent": "Mus_Cor",
+    "guides": {
+        "chain_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                12.335188511961483,
+                97.40490370277035,
+                1.3555870056152344
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                6200
+            ]
+        },
+        "chain_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                14.860472866793895,
+                72.49593976840207,
+                -0.7940421104431152
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                8203
+            ]
+        }
+    }
+}

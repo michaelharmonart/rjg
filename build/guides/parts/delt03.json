@@ -1,0 +1,54 @@
+{
+    "part": "delt03",
+    "type": "chain",
+    "parent": "Mus_Cor",
+    "guides": {
+        "chain_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                8.966259241104126,
+                128.2680860421097,
+                -4.314137717932137
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                18,
+                6090,
+                7399,
+                7400
+            ]
+        },
+        "chain_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                20.08517074584961,
+                126.6922836303711,
+                -0.9384744167327881
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                7136
+            ]
+        }
+    }
+}

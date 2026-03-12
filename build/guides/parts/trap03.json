@@ -1,0 +1,55 @@
+{
+    "part": "trap03",
+    "type": "chain",
+    "parent": "Mus_Cor",
+    "guides": {
+        "chain_guide_01": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                3.943692248124946,
+                138.19106710475512,
+                0.18835149705410004
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                5945,
+                7606
+            ]
+        },
+        "chain_guide_02": {
+            "mesh": "Basemesh_UBMShape",
+            "pos": [
+                13.363467825711673,
+                132.1271308044106,
+                0.3240239918231964
+            ],
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotoffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "upvect": null,
+            "vert_list": [
+                7734,
+                7735,
+                7901,
+                7905
+            ]
+        }
+    }
+}

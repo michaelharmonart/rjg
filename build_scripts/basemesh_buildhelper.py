@@ -327,10 +327,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     )"""
 
 
-    if character in ['Basemesh']:
-        for side in ['L', 'R']:
-            from rjg.build.parts.BaseCorrectives import Build_Correctives
-            Build_Correctives(side=side)
+    for side in ['L', 'R']:
+        from rjg.build.parts.BaseCorrectives import Build_Correctives
+        Build_Correctives(side=side)
 
     #Clearing Guides grom the scene
     mc.delete('Guides')

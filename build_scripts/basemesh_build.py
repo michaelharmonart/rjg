@@ -331,7 +331,7 @@ class GuideExportHelper():
     # MAIN RUN
     # -------------------------
 
-    def run(self):
+    def run(self, force_backup=False):
 
         if not self.character_initialized():
             mc.warning(f"{self.character} has not been initialized.")
@@ -343,14 +343,16 @@ class GuideExportHelper():
 
         if existing:
 
-            action = self.conflict_popup()
+            if force_backup:
+                action = "Backup"
+            else:
+                action = self.conflict_popup()
 
             if action == "Cancel":
                 print("Export cancelled.")
                 return
 
             if action == "Backup":
-
                 for file in existing:
                     self.backup_file(file)
 
@@ -753,7 +755,54 @@ class TopoAutoRigUI(QtWidgets.QDialog):
         exporter.run()
 
     def full_build(self):
-        print("Full Build function worked")
+
+        character = self.char_dropdown.currentText().strip()
+        topology = self.topo_dropdown.currentText()
+        rig_root = f"{groups}/bobo/character/Rigs"
+
+        print("\n===== FULL BUILD START =====")
+        print(f"Character: {character}")
+        print(f"Topology: {topology}")
+
+        # -------------------------
+        # Normalize UBM
+        # -------------------------
+
+        print("\n--- Normalizing UBM ---")
+        gr.normalize_ubm_mesh()
+
+        # -------------------------
+        # Read Guides
+        # -------------------------
+
+        print("\n--- Reading Guides ---")
+        gr.build_all_guides()
+
+        # -------------------------
+        # Restore UBM
+        # -------------------------
+
+        print("\n--- Restoring UBM ---")
+        gr.restore_ubm_mesh()
+
+        # -------------------------
+        # Export Guides (Backup)
+        # -------------------------
+
+        print("\n--- Exporting Guides (Backup Enabled) ---")
+
+        exporter = GuideExportHelper(character)
+        exporter.run(force_backup=True)
+
+        # -------------------------
+        # Run Build
+        # -------------------------
+
+        print("\n--- Running Manual Build ---")
+
+        manual_build_popup(character, rig_root, topology)
+
+        print("\n===== FULL BUILD COMPLETE =====")
 
     # ------------------------------------------------
     # Character Logic

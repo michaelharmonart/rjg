@@ -49,6 +49,25 @@ BUILD_ORDER = [
     "UEbotteeth.json",
     "UEtopteeth.json",
     "UEtounge.json",
+    "FootRoll.json",
+    "pec01.json",
+    "pec02.json",
+    "bicep01.json",
+    "trap01.json",
+    "trap02.json",
+    "trap03.json",
+    "delt01.json",
+    "delt02.json",
+    "delt03.json",
+    "Achilles01.json",
+    "FRC01.json",
+    "FRC02.json",
+    "Glutemax01.json",
+    "Graci01.json",
+    "Purlicue01.json",
+    "SCM01.json",
+    "TFL01.json",
+    "Tibialis01.json",
 
 
 ]
@@ -108,7 +127,7 @@ PART_CONFIG = {
     },
 
     "middlefinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandMiddle0", "LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3", "LeftHandMiddle4"],
         "Delete_Last": False,
         "Guide_Type": 'Joints',
@@ -118,7 +137,7 @@ PART_CONFIG = {
     },
 
     "ringfinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandRing0", "LeftHandRing1", "LeftHandRing2", "LeftHandRing3", "LeftHandRing4"],
         "Delete_Last": False,
         "Guide_Type": 'Joints',
@@ -128,7 +147,7 @@ PART_CONFIG = {
     },
 
     "pinkyfinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandPinky0", "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", "LeftHandPinky4"],
         "Delete_Last": False,
         "Guide_Type": 'Joints',
@@ -138,7 +157,7 @@ PART_CONFIG = {
     },
 
     "thumbfinger": {
-        "Axes": ["Y", "X", "Z"],
+        "Axes": ["Y", "-X", "Z"],
         "Names": ["LeftHandThumb1", "LeftHandThumb2", "LeftHandThumb3", "LeftHandThumb4"],
         "Delete_Last": False,
         "Guide_Type": 'Joints',
@@ -402,11 +421,201 @@ PART_CONFIG = {
         "Names": ['Mouth_M_center'],
         "Delete_Last": True,
         "Guide_Type": 'Loc',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "FootRoll": { 
+        "Axes": ["Y", "Z", "X"],
+        "Names": [],
+        "Delete_Last": False,
+        "Guide_Type": 'Loc',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "pec01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Pec01", "Left_PecInsert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
         "BuildParent":True,
         "Bake_To_Orient":False,
         "Force_Planar":False
-    },    
-    
+    }, 
+
+    "pec02": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Pec02", "Left_PecInsert02"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    }, 
+
+    "trap01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Trap01", "Left_TrapInsert01"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    }, 
+
+    "trap02": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Trap02", "Left_TrapInsert02"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "trap03": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Trap03", "Left_TrapInsert03"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "SCM01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_SCM01", "Left_SCMInsert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "bicep01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Bicep01", "Left_BicepInsert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "delt01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Delt01", "Left_DeltInsert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "delt02": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Delt02", "Left_DeltInsert02"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "delt03": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Delt03", "Left_DeltInsert03"],
+        "Delete_Last": True,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "TFL01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_TFL_01", "Left_TFL_Insert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "GluteMax01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_GluteMax_01", "Left_GluteMax_Insert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "Graci01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Graci_01", "Left_Graci_02"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "Tibialis01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Tibialis01", "Left_Tibialis_Insert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "Achilles01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Achilles01", "Left_Achilles_Insert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "FRC01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_FRC01", "Left_FRC_Insert01"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "FRC02": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_FRC02", "Left_FRC_Insert02"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
+    "Purlicue01": {
+        "Axes": ["Y", "Z", "X"],
+        "Names": ["Left_Purlicue_01", "Left_Purlicue_Insert"],
+        "Delete_Last": False,
+        "Guide_Type": 'Joint',
+        "BuildParent":False,
+        "Bake_To_Orient":False,
+        "Force_Planar":False
+    },
+
 }
 
 # ---------------- HELPERS ----------------
@@ -493,6 +702,37 @@ def orient_joint_primary(jnt, start_pos, next_pos, primary_axis, up_pos=None, up
     ])
 
 #
+
+def mirror_muscle_joints(group="Mus_Cor"):
+
+    if not mc.objExists(group):
+        mc.warning(f"{group} does not exist.")
+        return
+
+    joints = mc.listRelatives(group, ad=True, type="joint") or []
+
+    left_joints = [j for j in joints if j.startswith("Left_")]
+
+    if not left_joints:
+        mc.warning("No Left_ joints found.")
+        return
+
+    for jnt in left_joints:
+
+        right_name = jnt.replace("Left_", "Right_")
+
+        if mc.objExists(right_name):
+            print(f"{right_name} already exists, skipping")
+            continue
+
+        mc.mirrorJoint(
+            jnt,
+            mirrorYZ=True,              # mirrors across X axis
+            mirrorBehavior=True,
+            searchReplace=("Left_", "Right_")
+        )
+
+    print("Muscle mirroring complete.")
 
 def build_plane_from_selected_verts():
 
@@ -1185,7 +1425,7 @@ def build_all_guides():
         print(f"Building: {filename}")
         read_type(path)
 
-    guides = ['Jaw_M_ee', 'Eye_L_Aim', 'LowerHead_guide', 'botTeeth', 'Tongue_02', 'Tongue_03', 'Tongue_04', 'Tongue_05', 'Tongue_06' ]
+    guides = ['Jaw_M_ee', 'Eye_L_Aim', 'LowerHead_guide', 'botTeeth', 'Tongue_02', 'Tongue_03', 'Tongue_04', 'Tongue_05', 'Tongue_06', 'Left_TrapInsert03', 'Left_DeltInsert', 'Left_PecInsert', 'Left_BicepInsert', 'Left_TrapInsert01', 'Left_Achilles_Insert', 'Left_GluteMax_Insert', 'Left_Graci_02', 'Left_SCMInsert', 'Left_TFL_Insert', 'Left_Tibialis_Insert', "Left_Purlicue_Insert", "Left_FRC_Insert02", "Left_FRC_Insert01"]
 
     for guide in guides:
         # Get parent
@@ -1206,10 +1446,12 @@ def build_all_guides():
     flip_legs()
     flip_feet()
     mirror_face()
+    mirror_muscle_joints(group="Mus_Cor")
 
     mc.parent('Tongue_M_guides', 'Nose_guides', 'Mouth_guides', 'Jaw_M_guides', 'Eye_L_guides', 'Ear_L_guides', 'Cheek_L_guides', 'Brow_L_guides', 'UEFace_guides')
     mc.parent('UEFace_guides', 'Guides')
-    mc.parent('L_Brow_Crease', 'R_Brow_Crease')
+    mc.parent("Mus_Cor", 'Guides')
+    mc.parent('Brow_L_Crease', 'Brow_R_Crease','UEFace_guides')
 
     for piv in ['In', 'Out', 'HeelPiv', 'ToePiv']:
         newname = f'Right{piv}'
