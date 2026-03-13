@@ -22,6 +22,7 @@ from rjg.build.parts.hand import Hand
 from rjg.libs.skin import auto_split_all_weights
 from rjg.libs.profile import add_profiler_tag
 import rjg.post.PoseInterpExtras as expi
+import rjg.post.character_defaults as char_default
 
 reload(rUtil)
 reload(rProp)
@@ -33,6 +34,38 @@ reload(rUSD)
 import pipe.m.space_switch as spsw
 from ngSkinTools2.api import plugin
 
+
+
+def auto_apply_defaults():
+    import os
+    import maya.cmds as mc
+
+    ubm_nodes = mc.ls("*_UBM")
+
+    if not ubm_nodes:
+        print("No *_UBM found, skipping defaults")
+        return
+
+    character = ubm_nodes[0].replace("_UBM", "")
+    DEFAULT_DIR = rf"{groups}\dragonkisser\pipeline\pipeline\software\maya\scripts\rjg\build_scripts\character_defaults"
+
+    json_path = os.path.join(
+        DEFAULT_DIR,
+        f"{character}_defaults.json"
+    )
+
+    if not os.path.exists(json_path):
+        print(f"No defaults file found for {character}")
+        return
+
+    print(f"Applying stored defaults for {character}")
+
+    tool = char_default.ControlDefaultsTool()
+
+    tool.character = character
+    tool.json_path = json_path
+
+    tool.read_all()
 
 def ensure_ng_initialized():
     if not plugin.is_plugin_loaded():
@@ -444,6 +477,8 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             rCtrlIO.read_ctrls(dir, curve_file=cp_div[-1][:-5]) 
 
     auto_split_all_weights('MODEL')
+
+    auto_apply_defaults()
 
 
     print(f"\n{character} rig build complete.")

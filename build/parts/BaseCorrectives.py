@@ -116,6 +116,10 @@ def pop_corrective(
         mc.connectAttr('Muscle_Global_M_CTRL.Mus_Visibility', f'{control.top}.visibility')
         mc.parent(control.top, 'CorrectiveRigParts')
 
+        for attr in ['tgt_rot_influence', 'Pop_Mult', 'Up_Clamp', 'Down_Clamp']:
+            mc.addAttr(control.ctrl, longName = attr, proxy=f'{root_jnt}.{attr}')
+        
+
     else:
         mc.parentConstraint(end_jnt, bindjnt)
     rig_module.tag_bind_joints(bindjnt)
@@ -477,6 +481,9 @@ def build_simple_muscle_chain(
             mc.parentConstraint(control.ctrl, j)
             mc.parentConstraint(jnt, control.top)
             mc.parent(control.top, mus_grp)
+            
+            for attr in ['PopMult', 'AutoRot', 'Slide_mult', 'upClamp', 'downClamp']:
+                mc.addAttr(control.ctrl, longName=attr, proxy=f'{root_jnt}.{attr}')
         else:
             mc.parentConstraint(jnt, j)
         

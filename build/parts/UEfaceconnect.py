@@ -140,7 +140,7 @@ class UEfaceconnect(UEface):
             if self.mastermouth:
                 mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'TopTeeth_M_CTRL_CNST_GRP', mo=True)
                 mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
+                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch', k=True)
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
                 #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
@@ -156,7 +156,7 @@ class UEfaceconnect(UEface):
                     mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
                     mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
                     mc.addAttr(control, longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0)
-                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch')
+                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch', k=True)
                     for axes in ['X', 'Y','Z']:
                         mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.translate{axes}", f'{mdnodetranslate}.input1{axes}')
                         mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.rotate{axes}", f'{mdnoderotate}.input1{axes}')
@@ -246,13 +246,13 @@ class UEfaceconnect(UEface):
             if self.mastermouth:
                 mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'TopTeeth_M_CTRL_CNST_GRP', mo=True)
                 mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
+                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch', k=True)
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
                 for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']:
                     mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
                     mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
                     mc.addAttr(control, longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0)
-                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch')
+                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch', k=True)
                     for axes in ['X', 'Y','Z']:
                         mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.translate{axes}", f'{mdnodetranslate}.input1{axes}')
                         mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.rotate{axes}", f'{mdnoderotate}.input1{axes}')
@@ -320,16 +320,16 @@ class UEfaceconnect(UEface):
             for side in ['L', 'R']:
                 mod = -1 if side == "R" else 1
 
-                mc.addAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', longName='AutoMouth', dv=5 * mod)
+                mc.addAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', longName='AutoMouth', dv=5 * mod, k=True)
                 for axe in ['X', 'Z']:
                     num = -2 * mod if axe == "X" else 2.5
                     nl = mc.createNode('remapValue', name = f'nl{axe}_{side}_remap')
-                    mc.addAttr(f'NLFold_{side}_{side}_CTRL', longName=f'{axe}_mult', at='double', dv=num,)
+                    mc.addAttr(f'NLFold_{side}_{side}_CTRL', longName=f'{axe}_mult', at='double', dv=num, k=True)
                     mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.AutoMouth', f'{nl}.inputMax')
                     mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.translateX', f'{nl}.inputValue')
                     mc.connectAttr(f'NLFold_{side}_{side}_CTRL.{axe}_mult', f'{nl}.outputMax') #NLFold_L_L_CTRL_SDK_GRP
                     mc.connectAttr(f'{nl}.outValue', f'NLFold_{side}_{side}_CTRL_SDK_GRP.translate{axe}')
-                mc.addAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', longName='AutoMouthMult', dv=25 * mod)
+                mc.addAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL', longName='AutoMouthMult', dv=25 * mod, k=True)
                 rotremap = mc.createNode('remapValue', name = f'cornerRot_{side}_remap')
                 mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.AutoMouth', f'{rotremap}.inputMax')
                 mc.connectAttr(f'Major_Mouth_{side}_CornerLip_Mouth_CTRL.AutoMouthMult', f'{rotremap}.outputMax')
@@ -387,13 +387,13 @@ class UEfaceconnect(UEface):
             if self.mastermouth:
                 mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'TopTeeth_M_CTRL_CNST_GRP', mo=True)
                 mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
+                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch', k=True)
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
                 for control in ['Tongue_01_01_CTRL', 'BotTeeth_M_CTRL']:
                     mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
                     mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
                     mc.addAttr(control, longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0)
-                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch')
+                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch', k=True)
                     for axes in ['X', 'Y','Z']:
                         mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.translate{axes}", f'{mdnodetranslate}.input1{axes}')
                         mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.rotate{axes}", f'{mdnoderotate}.input1{axes}')
@@ -498,7 +498,7 @@ class UEfaceconnect(UEface):
             if self.mastermouth:
                 mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'TopTeeth_M_CTRL_CNST_GRP', mo=True)
                 mc.addAttr('TopTeeth_M_CTRL', longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0) #TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0
-                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch')
+                mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName='Topteeth_spaceswitch', proxy='TopTeeth_M_CTRL.MouthMaster_spaceswitch', k=True)
                 mc.connectAttr('TopTeeth_M_CTRL.MouthMaster_spaceswitch', 'TopTeeth_M_CTRL_CNST_GRP_parentConstraint1.Mouth_M_MasterControl_M_CTRLW0')
 
                 #mc.parentConstraint('Mouth_M_MasterControl_M_CTRL', 'BotTeeth_M_CTRL_CNST_GRP', mo=True)
@@ -514,7 +514,7 @@ class UEfaceconnect(UEface):
                     mdnodetranslate = mc.createNode('multiplyDivide', name=f'{control}MDtranslate')
                     mdnoderotate = mc.createNode('multiplyDivide', name=f'{control}MDrotate')
                     mc.addAttr(control, longName='MouthMaster_spaceswitch', at='bool', k=True, dv=0)
-                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch')
+                    mc.addAttr('Mouth_M_MasterControl_M_CTRL', longName=f'{control}_spaceswitch', proxy=f'{control}.MouthMaster_spaceswitch', k=True)
                     for axes in ['X', 'Y','Z']:
                         mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.translate{axes}", f'{mdnodetranslate}.input1{axes}')
                         mc.connectAttr(f"Mouth_M_MasterControl_M_CTRL.rotate{axes}", f'{mdnoderotate}.input1{axes}')
