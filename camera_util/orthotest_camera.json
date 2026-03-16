@@ -1,0 +1,17 @@
+{
+    "camera": "snapshot_cam",
+    "translate": [
+        2.6702880859375e-05,
+        81.53599202632904,
+        1.9409985542297363
+    ],
+    "rotate": [
+        0.0,
+        0.0,
+        0.0
+    ],
+    "orthographic": true,
+    "orthographicWidth": 161.09143753458426,
+    "swivel": 0.0,
+    "tilt": 0.0
+}

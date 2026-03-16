@@ -1,0 +1,77 @@
+{
+  "general": {
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "name": "CrowdB_Picker_body",
+    "panels": [
+      [
+        1.0,
+        [
+          1.0
+        ]
+      ]
+    ],
+    "panels.orientation": "vertical",
+    "panels.zoom_locked": [
+      false
+    ],
+    "panels.as_sub_tab": false,
+    "panels.colors": [
+      null
+    ],
+    "panels.names": [
+      "Panel 1"
+    ],
+    "hidden_layers": [],
+    "menu_commands": []
+  },
+  "shapes": [
+    {
+      "background": true,
+      "visibility_layer": null,
+      "shape.ignored_by_focus": true,
+      "panel": 0,
+      "shape": "square",
+      "shape.space": "world",
+      "shape.anchor": "top_left",
+      "shape.path": [],
+      "shape.left": 0.0,
+      "shape.top": 0.0,
+      "shape.width": 2048.0,
+      "shape.height": 2048.0,
+      "shape.cornersx": 4,
+      "shape.cornersy": 4,
+      "border": false,
+      "borderwidth.normal": 1.0,
+      "borderwidth.hovered": 1.25,
+      "borderwidth.clicked": 2,
+      "bordercolor.normal": "#000000",
+      "bordercolor.hovered": "#393939",
+      "bordercolor.clicked": "#FFFFFF",
+      "bordercolor.transparency": 0,
+      "bgcolor.normal": "#000000",
+      "bgcolor.hovered": "#000000",
+      "bgcolor.clicked": "#000000",
+      "bgcolor.transparency": 255,
+      "text.content": "",
+      "text.size": 12,
+      "text.bold": false,
+      "text.italic": false,
+      "text.color": "#FFFFFF",
+      "text.valign": "center",
+      "text.halign": "center",
+      "action.targets": [],
+      "action.commands": [],
+      "action.menu_commands": [],
+      "image.path": "G:/dragonkisser/pipeline/pipeline/software/maya/scripts/rjg/picker_files/CrowdB.0.png",
+      "image.fit": true,
+      "image.ratio": true,
+      "image.height": 2048,
+      "image.width": 2048,
+      "id": "b173db1a-8d82-4f05-80c7-e1786bf83be9"
+    }
+  ]
+}

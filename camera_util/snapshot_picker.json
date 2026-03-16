@@ -1,0 +1,33 @@
+{
+  "general": {
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "name": "My New Picker",
+    "zoom_locked": false,
+    "panels": [
+      [
+        1.0,
+        [
+          1.0
+        ]
+      ]
+    ],
+    "panels.orientation": "vertical",
+    "panels.zoom_locked": [
+      false
+    ],
+    "panels.as_sub_tab": false,
+    "panels.colors": [
+      null
+    ],
+    "panels.names": [
+      "Panel 1"
+    ],
+    "hidden_layers": [],
+    "menu_commands": []
+  },
+  "shapes": []
+}
