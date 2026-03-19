@@ -7,6 +7,12 @@ import platform
 
 import rjg.build.guides.guide_read_tool as gr
 import rjg.build_scripts.basemesh_buildhelper as sb
+import rjg.build_scripts.SteveUtils.guide_flip as rib
+import rjg.build_scripts.SteveUtils.control_filp_helper as cflip
+import rjg.post.dataIO.controls as rCtrlIO
+import rjg.libs.control.draw as draw
+import rjg.build_scripts.bettercontrols as c
+import rjg.post.character_defaults as char_def
 
 import shutil
 
@@ -504,9 +510,11 @@ class TopoAutoRigUI(QtWidgets.QDialog):
         self.char_dropdown.addItems(self.characters)
 
         self.init_char_button = QtWidgets.QPushButton("Initialize Character")
+        self.load_all_btn = QtWidgets.QPushButton("Load ALL File")
 
         char_layout.addWidget(self.char_dropdown)
         char_layout.addWidget(self.init_char_button)
+        char_layout.addWidget(self.load_all_btn)
 
         char_group.setLayout(char_layout)
 
@@ -546,6 +554,23 @@ class TopoAutoRigUI(QtWidgets.QDialog):
 
         main_layout.addStretch()
 
+
+        # -----------------------
+        # UTILS Section
+        # -----------------------
+
+        utils_section = CollapsibleSection("UTILS")
+
+        self.flip_guides_btn = QtWidgets.QPushButton("Flip Guides")
+        self.save_controls_btn = QtWidgets.QPushButton("Save Out Controls")
+        self.save_defaults_btn = QtWidgets.QPushButton("Save Control Defaults")
+
+        utils_section.content_layout.addWidget(self.flip_guides_btn)
+        utils_section.content_layout.addWidget(self.save_controls_btn)
+        utils_section.content_layout.addWidget(self.save_defaults_btn)
+
+        main_layout.addWidget(utils_section)
+
     # ------------------------------------------------
     # Connections
     # ------------------------------------------------
@@ -566,9 +591,60 @@ class TopoAutoRigUI(QtWidgets.QDialog):
 
         self.char_dropdown.lineEdit().textChanged.connect(self.check_character_state)
 
+        self.flip_guides_btn.clicked.connect(self.flip_guides)
+        self.save_controls_btn.clicked.connect(self.save_out_controls)
+        self.save_defaults_btn.clicked.connect(self.save_control_defaults)
+        self.load_all_btn.clicked.connect(self.load_all_file)
+
     # ------------------------------------------------
-    # Dummy Functions
+    # Class Functions
     # ------------------------------------------------
+
+    def load_all_file(self):
+        """
+        Warn user, then open the character ALL file.
+        """
+
+        character = self.char_dropdown.currentText().strip()
+        rig_root = f"{groups}/bobo/character/Rigs"
+
+        # ----------------------------
+        # Confirmation Popup
+        # ----------------------------
+
+        result = QtWidgets.QMessageBox.warning(
+            self,
+            "Load ALL File",
+            "Warning: The current scene will NOT be saved.\n\nDo you want to proceed?",
+            QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel,
+            QtWidgets.QMessageBox.Cancel
+        )
+
+        if result != QtWidgets.QMessageBox.Ok:
+            print("Load ALL cancelled.")
+            return
+
+        # ----------------------------
+        # Build File Path
+        # ----------------------------
+
+        all_file = os.path.join(
+            rig_root,
+            character,
+            f"{character}_ALL.mb"
+        )
+
+        if not os.path.exists(all_file):
+            mc.warning(f"ALL file not found: {all_file}")
+            return
+
+        print(f"Opening: {all_file}")
+
+        # ----------------------------
+        # Open File
+        # ----------------------------
+
+        mc.file(all_file, open=True, force=True)
 
     def check_compatibility(self):
 
@@ -805,6 +881,25 @@ class TopoAutoRigUI(QtWidgets.QDialog):
         print("\n===== FULL BUILD COMPLETE =====")
 
     # ------------------------------------------------
+    # UTILS - Dummy Functions
+    # ------------------------------------------------
+
+    def flip_guides(self):
+        rib.launch_ui()
+
+    def save_out_controls(self):
+        character = self.char_dropdown.currentText().strip()
+        controls = ["COG_M_CTRL", "global_M_CTRL", "foot_L_01_L_CTRL", "foot_R_01_R_CTRL", "hand_L_01_CTRL", "hand_R_01_CTRL", "RJG_M_CTRL"]
+        cflip.flip_controls(controls, flip=True)
+        rCtrlIO.write_ctrls(f"{groups}/bobo/character/Rigs/{character}/Controls", force=True, name=f'{character}_control_curves')
+        cflip.flip_controls(controls, flip=False)
+        c.write_control_shapes(f"{groups}/bobo/character/Rigs/{character}/Controls/controls.json")
+
+
+    def save_control_defaults(self):
+        char_def.run()
+
+    # ------------------------------------------------a
     # Character Logic
     # ------------------------------------------------
 

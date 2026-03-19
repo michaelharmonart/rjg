@@ -23,6 +23,7 @@ from rjg.libs.skin import auto_split_all_weights
 from rjg.libs.profile import add_profiler_tag
 import rjg.post.PoseInterpExtras as expi
 import rjg.post.character_defaults as char_default
+import rjg.post.smoothribbon as smooth_rib
 
 reload(rUtil)
 reload(rProp)
@@ -436,6 +437,11 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
             for g in ['Eye_L_Eye_L_Upper_curve_ribbon', 'Eye_R_Eye_R_Lower_curve_ribbon', 'Eye_R_Eye_R_Upper_curve_ribbon', 'Eye_L_Eye_L_Lower_curve_ribbon',]: #'Mouth_LowerLip_surf',
                 import_weights(geo=g, path=f'{groups}/bobo/character/Rigs/{character}/SkinFiles')
 
+                smooth_rib.smooth_nurbs_skin("Mouth_UpperLip_surf", strength=0.4, iterations=3)
+                smooth_rib.smooth_nurbs_skin("Mouth_LowerLip_surf", strength=0.4, iterations=3)
+
+
+
 
     if face == False:
         for obj in ['Eyes', 'topteeth', 'botteeth', 'tongue','Corneas']:
@@ -479,6 +485,9 @@ def run(character, mp=None, gp=None, ep=None, cp=None, sp=None, pp=None, face=Tr
     auto_split_all_weights('MODEL')
 
     auto_apply_defaults()
+    from rjg.build_scripts.bettercontrols import apply_control_file
+
+    apply_control_file(f"{groups}/bobo/character/Rigs/{character}/Controls/controls.json")
 
 
     print(f"\n{character} rig build complete.")
