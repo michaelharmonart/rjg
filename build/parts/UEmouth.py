@@ -19,7 +19,7 @@ reload(rGuide)
 reload(rXform)
 
 class UEmouth(UEface):
-    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=False, mastercontrol=True, split=False,):
+    def __init__(self, grp_name=None, ctrl_scale=1, Major_Mouth=3, Major_2=None, rib_mouth=0.2, cornerhelper=False, mastercontrol=True, split=False, jawfix=True):
         super().__init__(part='Mouth', grp_name=grp_name, ctrl_scale=ctrl_scale,)
         self.Major_Mouth = Major_Mouth
         self.Major_2 = Major_2
@@ -27,6 +27,7 @@ class UEmouth(UEface):
         self.cornerhelper = cornerhelper
         self.mastercontrol = mastercontrol 
         self.split = split
+        self.jawfix = jawfix
 
     def get_ordered_lip_guides(self, prefix, guides, guide_base, has_mid=True):
         """
@@ -220,6 +221,19 @@ class UEmouth(UEface):
             position=pos,
             size=1,)
         mc.select(clear=True)
+
+
+        if self.jawfix ==  True:
+            jaw_pos = mc.xform('Jaw_M_root', q=True, ws=True, t=True)
+            jaw_offset = mc.group(name = 'UpperLip_M_Jaw_Offset_GRP', empty=True)
+            mc.xform(jaw_offset, ws=True, t=jaw_pos)
+            mc.parent(upper_offset, jaw_offset)
+            upper_top = jaw_offset
+        else:
+            upper_top = 'UpperLip_M_M_CTRL_CNST_GRP'
+
+
+
         upperjnt = mc.joint(name="uppermouth_JNT", position=pos)
         rAttr.Attribute(node="uppermouth_JNT", type='bool', value=True, keyable=False, name='bindJoint')
         mc.parentConstraint(upper_ctrl, upperjnt, mo=True)
@@ -286,6 +300,6 @@ class UEmouth(UEface):
             
         
         if self.mastercontrol:
-            mc.parent('Major_Mouth_L_CornerLip_Mouth_CTRL_CNST_GRP', 'Major_Mouth_R_CornerLip_Mouth_CTRL_CNST_GRP', 'UpperLip_M_M_CTRL_CNST_GRP', masterctrl)
+            mc.parent('Major_Mouth_L_CornerLip_Mouth_CTRL_CNST_GRP', 'Major_Mouth_R_CornerLip_Mouth_CTRL_CNST_GRP', upper_top, masterctrl)
             mc.connectAttr(f"{masterctrl}.translate", 'LowerLip_M_M_CTRL_OFF_GRP.translate')
             mc.connectAttr(f"{masterctrl}.rotate", 'LowerLip_M_M_CTRL_OFF_GRP.rotate')

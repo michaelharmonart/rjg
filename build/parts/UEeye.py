@@ -397,6 +397,12 @@ class UEeye(UEface):
                 mc.connectAttr(f"{blinkctrl}.blink_mult2", f"{mult2_node}.input2X")
                 mc.connectAttr(f"{mult2_node}.outputX", f"{blink2_grp}.translateZ")
 
+
+                mc.connectAttr(f"{blinkctrl}.rotateZ", f"{blink2_grp}.rotateZ")
+
+                for attr in ['translateX', 'translateZ', 'rotateX', 'rotateY', 'scaleX', 'scaleZ', 'scaleY']:
+                    mc.setAttr(f'{blinkctrl}.{attr}', lock=True, keyable=False)
+
                 # Connect inverse translateY * -1 → translateY
                 #mc.connectAttr(f"{ctrl}.translateY", f"{inverse_mult}.input1Y")
                 #mc.setAttr(f"{inverse_mult}.input2Y", -1)
