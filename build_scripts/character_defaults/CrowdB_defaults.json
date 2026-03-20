@@ -23,6 +23,95 @@
             "blink_mult": -10.0,
             "blink_mult2": -0.01,
             "AutoSwivel": 0.0
+        },
+        "neck_02_FK_M_CTRL": {
+            "rotateOrder": 0,
+            "FK_IK_Switch": 1.0
+        },
+        "trap_L_03_CTRL": {
+            "rotateOrder": 0,
+            "PopMult": 0.05,
+            "AutoRot": -0.5,
+            "Slide_mult": 0.4,
+            "upClamp": 45.0,
+            "downClamp": -45.0
+        },
+        "trap_R_03_CTRL": {
+            "rotateOrder": 0,
+            "PopMult": 0.05,
+            "AutoRot": -0.5,
+            "Slide_mult": 0.4,
+            "upClamp": 45.0,
+            "downClamp": -45.0
+        },
+        "L_Bicep02_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 0.0,
+            "Pop_Mult": 0.2,
+            "Up_Clamp": 180.0,
+            "Down_Clamp": 0.0
+        },
+        "TFL_L_01_CTRL": {
+            "rotateOrder": 0,
+            "PopMult": 0.2,
+            "AutoRot": -0.5,
+            "Slide_mult": -0.4,
+            "upClamp": 180.0,
+            "downClamp": -180.0
+        },
+        "TFL_R_01_CTRL": {
+            "rotateOrder": 0,
+            "PopMult": 0.2,
+            "AutoRot": -0.5,
+            "Slide_mult": -0.4,
+            "upClamp": 180.0,
+            "downClamp": -180.0
+        },
+        "R_Bicep05_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 0.5,
+            "Pop_Mult": -0.2,
+            "Up_Clamp": 180.0,
+            "Down_Clamp": 0.0
+        },
+        "L_Bicep05_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 0.5,
+            "Pop_Mult": 0.2,
+            "Up_Clamp": 180.0,
+            "Down_Clamp": 0.0
+        },
+        "R_HipBone_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 0.4,
+            "Pop_Mult": -0.3,
+            "Up_Clamp": 90.0,
+            "Down_Clamp": 0.0
+        },
+        "L_HipBone_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 0.4,
+            "Pop_Mult": 0.3,
+            "Up_Clamp": 90.0,
+            "Down_Clamp": 0.0
+        },
+        "R_Glute02_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 0.7,
+            "Pop_Mult": -0.5,
+            "Up_Clamp": 0.0,
+            "Down_Clamp": -180.0
+        },
+        "L_Glute02_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 0.7,
+            "Pop_Mult": 0.5,
+            "Up_Clamp": 0.0,
+            "Down_Clamp": -180.0
+        },
+        "Look_M_M_CTRL": {
+            "rotateOrder": 0,
+            "spaceSwitch": true
         }
     }
 }
