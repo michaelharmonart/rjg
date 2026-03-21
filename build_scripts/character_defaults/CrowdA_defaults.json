@@ -3,6 +3,46 @@
         "Muscle_Global_M_CTRL": {
             "Mus_Visibility": false,
             "Corrective_rig_Vis": false
+        },
+        "trap_R_03_CTRL": {
+            "rotateOrder": 0,
+            "PopMult": 0.25,
+            "AutoRot": -0.5,
+            "Slide_mult": 0.7,
+            "upClamp": 45.0,
+            "downClamp": -45.0
+        },
+        "trap_L_03_CTRL": {
+            "rotateOrder": 0,
+            "PopMult": 0.25,
+            "AutoRot": -0.5,
+            "Slide_mult": 0.7,
+            "upClamp": 45.0,
+            "downClamp": -45.0
+        },
+        "L_Gastro_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 1.0,
+            "Pop_Mult": 0.2,
+            "Up_Clamp": 0.0,
+            "Down_Clamp": -90.0
+        },
+        "R_Gastro_CTRL": {
+            "rotateOrder": 0,
+            "tgt_rot_influence": 1.0,
+            "Pop_Mult": -0.2,
+            "Up_Clamp": 0.0,
+            "Down_Clamp": -90.0
+        },
+        "Major_Mouth_L_CornerLip_Mouth_CTRL": {
+            "rotateOrder": 0,
+            "AutoMouth": 5.0,
+            "AutoMouthMult": 25.0
+        },
+        "Major_Mouth_R_CornerLip_Mouth_CTRL": {
+            "rotateOrder": 0,
+            "AutoMouth": -5.0,
+            "AutoMouthMult": -25.0
         }
     }
 }

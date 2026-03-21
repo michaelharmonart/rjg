@@ -459,7 +459,10 @@ class UEfaceconnect(UEface):
 
                 mc.connectAttr(f'{jaw_side_MD}.outputX', f'Major_Mouth_{side}_CornerLip_Mouth_CTRL_SDK_GRP.translateY')
 
-                mc.orientConstraint('Mouth_M_MasterControl_M_CTRL', f'NLFold_{side}_{side}_CTRL_CNST_GRP')
+                mc.orientConstraint('Mouth_M_MasterControl_M_CTRL', f'NLFold_{side}_{side}_CTRL_CNST_GRP', mo=True)
+                mc.scaleConstraint('Mouth_M_MasterControl_M_CTRL', f'NLFold_{side}_{side}_CTRL_CNST_GRP', mo=True)
+
+                mc.parentConstraint('Nose_M_NoseRoot_M_CTRL', f'Nose_{side}_UpperCorner_{side}_CTRL_CNST_GRP', mo=True)
 
 
 
